@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -520,6 +521,7 @@
             .performance-metrics { grid-template-columns: 1fr 1fr; }
         }
     </style>
+  <script src="navigation.js"></script>
 </head>
 <body>
     <div class="floating-elements" id="floatingElements"></div>
@@ -703,7 +705,7 @@
             <h2 class="section-title">Hyperparameter Tuning Methods</h2>
             
             <div class="tuning-methods">
-                <div class="method-card">
+                <div class="method-card" onclick="showModal('Click for details', '<p>Details about this method.</p>')">
                     <div class="method-icon">🔍</div>
                     <div class="method-title">Grid Search</div>
                     <div class="method-description">
@@ -711,7 +713,7 @@
                     </div>
                 </div>
                 
-                <div class="method-card">
+                <div class="method-card" onclick="showModal('Click for details', '<p>Details about this method.</p>')">
                     <div class="method-icon">🎲</div>
                     <div class="method-title">Random Search</div>
                     <div class="method-description">
@@ -719,7 +721,7 @@
                     </div>
                 </div>
                 
-                <div class="method-card">
+                <div class="method-card" onclick="showModal('Click for details', '<p>Details about this method.</p>')">
                     <div class="method-icon">🧠</div>
                     <div class="method-title">Bayesian Optimization</div>
                     <div class="method-description">
@@ -807,309 +809,25 @@
     </div>
 
     <script>
-        // Modal System
-        class ModalSystem {
-            constructor() {
-                this.overlay = document.getElementById('modalOverlay');
-                this.title = document.getElementById('modalTitle');
-                this.content = document.getElementById('modalContent');
-                this.closeBtn = document.getElementById('modalClose');
-                
-                this.closeBtn.addEventListener('click', () => this.close());
-                this.overlay.addEventListener('click', (e) => {
-                    if (e.target === this.overlay) this.close();
-                });
-                
-                document.addEventListener('keydown', (e) => {
-                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
-                        this.close();
-                    }
-                });
-            }
-            
-            show(title, content) {
-                this.title.textContent = title;
-                this.content.innerHTML = content;
-                this.overlay.classList.add('active');
-                document.body.style.overflow = 'hidden';
-            }
-            
-            close() {
-                this.overlay.classList.remove('active');
-                document.body.style.overflow = '';
-            }
-        }
-
-        const modal = new ModalSystem();
-
-        // Create floating ML elements
-        function createFloatingElements() {
-            const container = document.getElementById('floatingElements');
-            for (let i = 0; i < 35; i++) {
-                const element = document.createElement('div');
-                element.className = 'floating-element';
-                element.style.left = Math.random() * 100 + '%';
-                element.style.animationDelay = Math.random() * 18 + 's';
-                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
-                container.appendChild(element);
-            }
-        }
-
-        // Interactive parameter cards
-        document.querySelectorAll('.parameter-card').forEach(card => {
-            card.addEventListener('click', function() {
-                const paramName = this.querySelector('.param-name').textContent;
-                
-                const paramDetails = {
-                    'C Parameter': {
-                        fullName: 'Regularization Parameter C',
-                        mathematical: 'C controls the penalty for misclassification in the SVM objective function',
-                        objective: 'min(½||w||² + C∑ξᵢ) where ξᵢ are slack variables for misclassified points',
-                        practical: 'Think of C as the "strictness" of the classifier',
-                        ranges: 'Common values: 0.1, 1, 10, 100. Try logarithmic scale: [10⁻³, 10⁻², 10⁻¹, 1, 10¹, 10², 10³]',
-                        tips: 'Start with C=1. Increase if underfitting, decrease if overfitting. Use cross-validation to find optimal value.'
-                    },
-                    'Gamma (γ)': {
-                        fullName: 'RBF Kernel Bandwidth Parameter',
-                        mathematical: 'γ defines the kernel coefficient: K(x,y) = exp(-γ||x-y||²)',
-                        objective: 'Higher γ makes the influence of each training example more localized',
-                        practical: 'γ = 1/(2σ²) where σ is the bandwidth of the RBF kernel',
-                        ranges: 'Common values: 0.001, 0.01, 0.1, 1. Try: [10⁻⁴, 10⁻³, 10⁻², 10⁻¹, 1]',
-                        tips: 'Default is 1/n_features. High γ → overfitting, low γ → underfitting. Tune together with C.'
-                    },
-                    'Kernel Type': {
-                        fullName: 'Kernel Function Selection',
-                        mathematical: 'Determines the feature space mapping φ(x) through kernel K(x,y) = φ(x)·φ(y)',
-                        objective: 'Choose kernel based on data characteristics and problem complexity',
-                        practical: 'Linear for high-dim data, RBF for general use, Polynomial for smooth boundaries',
-                        ranges: 'Options: linear, rbf, poly, sigmoid. RBF is most commonly used (80% of cases)',
-                        tips: 'Try RBF first. Use linear for large datasets or high-dimensional data (text, genes).'
-                    },
-                    'Degree (d)': {
-                        fullName: 'Polynomial Kernel Degree',
-                        mathematical: 'K(x,y) = (γ(x·y) + r)ᵈ where d is the polynomial degree',
-                        objective: 'Higher degree allows more complex decision boundaries but increases computation',
-                        practical: 'Degree 1 = linear, degree 2 = quadratic boundaries, degree 3 = cubic, etc.',
-                        ranges: 'Common values: 2, 3, 4. Rarely go beyond 5 due to computational cost',
-                        tips: 'Start with degree=2. Higher degrees may overfit. Consider RBF kernel instead for complex patterns.'
-                    }
-                };
-                
-                const details = paramDetails[paramName];
-                modal.show(details.fullName, `
-                    <div class="modal-highlight">
-                        <strong>${details.practical}</strong>
-                    </div>
-                    
-                    <div class="modal-code">
-                        Mathematical Definition:<br>
-                        ${details.mathematical}
-                    </div>
-                    
-                    <p><strong>Objective Function Impact:</strong></p>
-                    <p>${details.objective}</p>
-                    
-                    <p><strong>Typical Ranges:</strong></p>
-                    <div style="background: rgba(251, 191, 36, 0.1); padding: 15px; border-radius: 10px; margin: 15px 0;">
-                        ${details.ranges}
-                    </div>
-                    
-                    <p><strong>Tuning Tips:</strong></p>
-                    <div style="background: rgba(16, 185, 129, 0.1); padding: 15px; border-radius: 10px; margin: 15px 0;">
-                        ${details.tips}
-                    </div>
-                `);
-            });
-        });
-
-        // Interactive tuning methods
-        document.querySelectorAll('.method-card').forEach(card => {
-            card.addEventListener('click', function() {
-                const methodName = this.querySelector('.method-title').textContent;
-                
-                const methodDetails = {
-                    'Grid Search': {
-                        description: 'Exhaustively searches all combinations of specified parameter values',
-                        code: `from sklearn.model_selection import GridSearchCV
-from sklearn.svm import SVC
-
-# Define parameter grid
-param_grid = {
-    'C': [0.1, 1, 10, 100],
-    'gamma': [0.001, 0.01, 0.1, 1],
-    'kernel': ['rbf']
-}
-
-# Create grid search object
-grid_search = GridSearchCV(
-    SVM(), param_grid, 
-    cv=5, scoring='accuracy'
-)
-
-# Fit and find best parameters
-grid_search.fit(X_train, y_train)
-best_params = grid_search.best_params_`,
-                        pros: ['Guaranteed to find optimal combination within grid', 'Systematic and reproducible', 'Easy to implement and understand'],
-                        cons: ['Computationally expensive (O(n^k) where k is number of parameters)', 'Curse of dimensionality', 'May miss optimal values between grid points'],
-                        when: 'Use when you have limited parameters to tune and sufficient computational resources'
-                    },
-                    'Random Search': {
-                        description: 'Randomly samples parameter combinations from specified distributions',
-                        code: `from sklearn.model_selection import RandomizedSearchCV
-from scipy.stats import uniform, reciprocal
-
-# Define parameter distributions
-param_dist = {
-    'C': reciprocal(0.1, 100),  # log-uniform
-    'gamma': reciprocal(0.001, 1),
-    'kernel': ['rbf']
-}
-
-# Create random search object
-random_search = RandomizedSearchCV(
-    SVM(), param_dist,
-    n_iter=50, cv=5, scoring='accuracy'
-)
-
-# Fit and find best parameters
-random_search.fit(X_train, y_train)
-best_params = random_search.best_params_`,
-                        pros: ['More efficient than grid search', 'Can find better results with same budget', 'Naturally handles continuous parameters'],
-                        cons: ['No guarantee of finding optimal solution', 'Results may vary between runs', 'Harder to reproduce exact results'],
-                        when: 'Use when you have many parameters or large parameter spaces to explore'
-                    },
-                    'Bayesian Optimization': {
-                        description: 'Uses probabilistic models to intelligently choose next parameters to evaluate',
-                        code: `from skopt import BayesSearchCV
-from skopt.space import Real, Categorical
-
-# Define search space
-search_space = {
-    'C': Real(0.1, 100, prior='log-uniform'),
-    'gamma': Real(1e-4, 1, prior='log-uniform'),
-    'kernel': Categorical(['linear', 'rbf'])
-}
-
-# Create Bayesian search object
-bayes_search = BayesSearchCV(
-    SVM(), search_space,
-    n_iter=50, cv=5, scoring='accuracy'
-)
-
-# Fit and find best parameters
-bayes_search.fit(X_train, y_train)
-best_params = bayes_search.best_params_`,
-                        pros: ['Most sample-efficient method', 'Learns from previous evaluations', 'Handles mixed parameter types well'],
-                        cons: ['More complex to implement', 'Requires additional libraries', 'May get stuck in local optima'],
-                        when: 'Use when evaluation is expensive and you need the most efficient search'
-                    }
-                };
-                
-                const details = methodDetails[methodName];
-                modal.show(methodName + ' - Hyperparameter Tuning', `
-                    <div class="modal-highlight">
-                        <strong>${details.description}</strong>
-                    </div>
-                    
-                    <div class="modal-code">
-                        ${details.code}
-                    </div>
-                    
-                    <div style="margin: 20px 0;">
-                        <h4 style="color: #10b981;">✅ Advantages:</h4>
-                        <ul style="color: #475569; line-height: 1.6; margin-left: 20px;">
-                            ${details.pros.map(pro => `<li>${pro}</li>`).join('')}
-                        </ul>
-                    </div>
-                    
-                    <div style="margin: 20px 0;">
-                        <h4 style="color: #ef4444;">❌ Disadvantages:</h4>
-                        <ul style="color: #475569; line-height: 1.6; margin-left: 20px;">
-                            ${details.cons.map(con => `<li>${con}</li>`).join('')}
-                        </ul>
-                    </div>
-                    
-                    <div style="background: rgba(251, 191, 36, 0.1); padding: 15px; border-radius: 10px; margin-top: 20px;">
-                        <strong>💡 When to use:</strong><br>
-                        ${details.when}
-                    </div>
-                `);
-            });
-        });
-
-        // Interactive tuner
-        const cSlider = document.getElementById('cSlider');
-        const gammaSlider = document.getElementById('gammaSlider');
-        const kernelSelect = document.getElementById('kernelSelect');
-        
-        const cValue = document.getElementById('cValue');
-        const gammaValue = document.getElementById('gammaValue');
-        
-        const trainAccuracy = document.getElementById('trainAccuracy');
-        const valAccuracy = document.getElementById('valAccuracy');
-        const supportVectors = document.getElementById('supportVectors');
-        const trainTime = document.getElementById('trainTime');
-
-        function updatePerformance() {
-            const c = parseFloat(cSlider.value);
-            const gamma = parseFloat(gammaSlider.value);
-            const kernel = kernelSelect.value;
-            
-            // Update display values
-            cValue.textContent = c.toFixed(1);
-            gammaValue.textContent = gamma.toFixed(3);
-            
-            // Simulate performance metrics (simplified model)
-            let trainAcc, valAcc, supportVecs, time;
-            
-            if (kernel === 'linear') {
-                trainAcc = Math.min(95, 75 + Math.log10(c) * 5);
-                valAcc = trainAcc - Math.abs(Math.log10(c)) * 2;
-                supportVecs = Math.max(50, 200 - c * 10);
-                time = 0.8 + Math.random() * 0.4;
-            } else if (kernel === 'rbf') {
-                // RBF kernel simulation
-                const complexity = c * gamma;
-                trainAcc = Math.min(99, 70 + complexity * 15);
-                valAcc = trainAcc - Math.max(0, (complexity - 1) * 8);
-                supportVecs = Math.max(30, 150 + gamma * 100 - c * 5);
-                time = 1.5 + gamma * 2 + Math.random() * 0.5;
-            } else {
-                // Polynomial kernel simulation
-                trainAcc = Math.min(97, 80 + c * 2);
-                valAcc = trainAcc - Math.abs(c - 10) * 1.5;
-                supportVecs = Math.max(40, 180 - c * 8);
-                time = 2.0 + c * 0.1 + Math.random() * 0.6;
-            }
-            
-            // Ensure validation accuracy doesn't exceed training accuracy
-            valAcc = Math.min(valAcc, trainAcc - Math.random() * 3);
-            valAcc = Math.max(valAcc, 60); // Minimum reasonable accuracy
-            
-            // Update display
-            trainAccuracy.textContent = trainAcc.toFixed(1) + '%';
-            valAccuracy.textContent = valAcc.toFixed(1) + '%';
-            supportVectors.textContent = Math.round(supportVecs);
-            trainTime.textContent = time.toFixed(1) + 's';
-        }
-
-        // Add event listeners
-        cSlider.addEventListener('input', updatePerformance);
-        gammaSlider.addEventListener('input', updatePerformance);
-        kernelSelect.addEventListener('change', updatePerformance);
-
-        // Initialize components
-        createFloatingElements();
-        updatePerformance();
-
-        // Keyboard navigation
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'ArrowLeft') {
-                window.location.href = 'Week4_Slide76.html';
-            } else if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
-                window.location.href = 'Week4_Slide78.html';
-            }
-        });
-    </script>
+    (function() {
+        const overlay = document.getElementById('modalOverlay');
+        const titleEl = document.getElementById('modalTitle');
+        const contentEl = document.getElementById('modalContent');
+        const closeBtn = document.getElementById('modalClose');
+        window.showModal = function(title, content) {
+            titleEl.textContent = title;
+            contentEl.innerHTML = content;
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        };
+        window.closeModal = function() {
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        };
+        closeBtn.addEventListener('click', window.closeModal);
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) window.closeModal(); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && overlay.classList.contains('active')) window.closeModal(); });
+    })();
+</script>
 </body>
 </html>

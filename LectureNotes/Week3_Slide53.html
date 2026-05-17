@@ -5,895 +5,99 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CS5710 - Choosing k in k-NN</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            color: #134e4a;
-            overflow-x: hidden;
-        }
-
-        .slide-container {
-            flex: 1;
-            padding: 40px;
-            max-width: 1400px;
-            margin: 0 auto;
-            position: relative;
-        }
-
-        .slide-title {
-            font-size: 3.5em;
-            text-align: center;
-            margin-bottom: 50px;
-            color: #0d9488;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-            animation: slideInFromTop 1.2s ease-out;
-            font-weight: 700;
-        }
-
-        .content-layout {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 50px;
-            margin-bottom: 40px;
-        }
-
-        .theory-section {
-            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
-            animation: slideInFromLeft 1s ease-out 0.3s both;
-            border: 1px solid rgba(13, 148, 136, 0.1);
-        }
-
-        .guidelines-section {
-            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
-            animation: slideInFromRight 1s ease-out 0.3s both;
-            border: 1px solid rgba(13, 148, 136, 0.1);
-        }
-
-        .section-title {
-            font-size: 1.8em;
-            color: #0d9488;
-            margin-bottom: 25px;
-            font-weight: 600;
-            position: relative;
-        }
-
-        .section-title::after {
-            content: '';
-            position: absolute;
-            bottom: -8px;
-            left: 0;
-            width: 60px;
-            height: 3px;
-            background: linear-gradient(90deg, #0d9488, #14b8a6);
-            border-radius: 2px;
-        }
-
-        .theory-text {
-            font-size: 1.2em;
-            line-height: 1.8;
-            color: #1e293b;
-            margin-bottom: 30px;
-            padding: 25px;
-            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
-            border-radius: 15px;
-            border-left: 4px solid #0d9488;
-        }
-
-        .k-effects {
-            display: grid;
-            gap: 20px;
-        }
-
-        .k-effect-card {
-            padding: 20px;
-            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
-            border-radius: 15px;
-            border-left: 4px solid rgba(13, 148, 136, 0.8);
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .k-effect-card:hover {
-            transform: translateX(5px);
-            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
-        }
-
-        .k-value {
-            font-size: 1.3em;
-            font-weight: 700;
-            color: #0d9488;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-        }
-
-        .k-icon {
-            font-size: 1.5em;
-            margin-right: 10px;
-        }
-
-        .k-description {
-            font-size: 1em;
-            color: #475569;
-            line-height: 1.6;
-        }
-
-        .guidelines-list {
-            list-style: none;
-        }
-
-        .guideline-item {
-            padding: 20px;
-            margin: 15px 0;
-            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
-            border-radius: 12px;
-            border-left: 4px solid #14b8a6;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .guideline-item:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
-        }
-
-        .guideline-title {
-            font-weight: 600;
-            color: #0d9488;
-            margin-bottom: 8px;
-            font-size: 1.1em;
-        }
-
-        .guideline-desc {
-            font-size: 0.95em;
-            color: #475569;
-            line-height: 1.5;
-        }
-
-        .demo-section {
-            grid-column: 1 / -1;
-            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
-            animation: slideInFromBottom 1s ease-out 0.6s both;
-            border: 1px solid rgba(13, 148, 136, 0.1);
-        }
-
-        .demo-title {
-            font-size: 1.8em;
-            color: #0d9488;
-            text-align: center;
-            margin-bottom: 30px;
-            font-weight: 600;
-        }
-
-        .demo-grid {
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 40px;
-            margin-top: 30px;
-        }
-
-        .demo-controls {
-            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-            border-radius: 15px;
-            padding: 30px;
-        }
-
-        .demo-visualization {
-            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-            border-radius: 15px;
-            padding: 30px;
-            text-align: center;
-        }
-
-        .k-slider {
-            width: 100%;
-            margin: 20px 0;
-        }
-
-        .slider-container {
-            margin: 15px 0;
-        }
-
-        .slider-label {
-            font-weight: 600;
-            color: #0d9488;
-            margin-bottom: 10px;
-            display: block;
-        }
-
-        .slider {
-            width: 100%;
-            height: 8px;
-            border-radius: 5px;
-            background: #cbd5e1;
-            outline: none;
-            appearance: none;
-        }
-
-        .slider::-webkit-slider-thumb {
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #0d9488, #14b8a6);
-            cursor: pointer;
-        }
-
-        .demo-output {
-            background: #1e293b;
-            color: #5eead4;
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 15px;
-            font-family: 'Courier New', monospace;
-            min-height: 200px;
-        }
-
-        .bias-variance-chart {
-            width: 100%;
-            height: 300px;
-            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-            border: 2px solid #cbd5e1;
-            border-radius: 10px;
-            position: relative;
-            margin-top: 20px;
-        }
-
-        .floating-elements {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            overflow: hidden;
-            z-index: -1;
-        }
-
-        .floating-element {
-            position: absolute;
-            width: 5px;
-            height: 5px;
-            background: linear-gradient(135deg, #0d9488, #14b8a6);
-            border-radius: 50%;
-            opacity: 0.5;
-            animation: mlFloat 18s linear infinite;
-        }
-
-        .navigation {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            display: flex;
-            gap: 15px;
-        }
-
-        .nav-btn {
-            padding: 15px 25px;
-            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
-            border: 2px solid rgba(13, 148, 136, 0.2);
-            border-radius: 30px;
-            color: #134e4a;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(20px);
-            font-weight: 600;
-        }
-
-        .nav-btn:hover {
-            background: linear-gradient(135deg, #0d9488, #14b8a6);
-            color: white;
-            transform: translateY(-3px);
-            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
-        }
-
-        .slide-number {
-            position: fixed;
-            top: 30px;
-            right: 30px;
-            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
-            padding: 12px 20px;
-            border-radius: 25px;
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(13, 148, 136, 0.2);
-            color: #134e4a;
-            font-weight: 600;
-        }
-
-        .course-info {
-            position: fixed;
-            top: 30px;
-            left: 30px;
-            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
-            padding: 12px 20px;
-            border-radius: 25px;
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(13, 148, 136, 0.2);
-            color: #134e4a;
-            font-weight: 600;
-        }
-
-        @keyframes slideInFromTop {
-            from { transform: translateY(-80px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-
-        @keyframes slideInFromLeft {
-            from { transform: translateX(-60px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-
-        @keyframes slideInFromRight {
-            from { transform: translateX(60px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-
-        @keyframes slideInFromBottom {
-            from { transform: translateY(60px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-
-        @keyframes mlFloat {
-            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
-            10% { opacity: 0.5; }
-            90% { opacity: 0.5; }
-            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
-        }
-
-        @media (max-width: 768px) {
-            .content-layout { grid-template-columns: 1fr; }
-            .slide-title { font-size: 2.5em; }
-            .demo-grid { grid-template-columns: 1fr; }
-        }
-
-        /* Modal Styles */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(5px);
-        }
-
-        .modal-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .modal-container {
-            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
-            border-radius: 25px;
-            padding: 40px;
-            max-width: 600px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-            transform: scale(0.9) translateY(20px);
-            transition: transform 0.3s ease;
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
-            border: 2px solid rgba(13, 148, 136, 0.2);
-        }
-
-        .modal-overlay.active .modal-container {
-            transform: scale(1) translateY(0);
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
-        }
-
-        .modal-title {
-            font-size: 1.8em;
-            color: #0d9488;
-            font-weight: 600;
-        }
-
-        .modal-close {
-            background: none;
-            border: none;
-            font-size: 1.5em;
-            color: #64748b;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-close:hover {
-            background: rgba(13, 148, 136, 0.1);
-            color: #0d9488;
-            transform: rotate(90deg);
-        }
-
-        .modal-content {
-            font-size: 1.1em;
-            line-height: 1.8;
-            color: #1e293b;
-        }
-
-        .modal-highlight {
-            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
-            padding: 20px;
-            border-radius: 15px;
-            margin: 20px 0;
-            border-left: 4px solid #0d9488;
-        }
-
-        .modal-code {
-            background: #1e293b;
-            color: #5eead4;
-            padding: 20px;
-            border-radius: 10px;
-            font-family: 'Courier New', monospace;
-            font-size: 0.9em;
-            overflow-x: auto;
-            margin: 15px 0;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%); min-height: 100vh; display: flex; flex-direction: column; color: #134e4a; overflow-x: hidden; }
+        .slide-container { flex: 1; padding: 40px; max-width: 1400px; margin: 0 auto; position: relative; }
+        .slide-title { font-size: 3.2em; text-align: center; margin-bottom: 40px; color: #0d9488; text-shadow: 2px 2px 4px rgba(0,0,0,0.1); animation: slideInFromTop 1.2s ease-out; font-weight: 700; }
+        .content-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 30px; }
+        .concept-section, .comparison-section { background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%); border-radius: 20px; padding: 35px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); animation: slideInFromLeft 1s ease-out 0.3s both; border: 1px solid rgba(13, 148, 136, 0.1); }
+        .comparison-section { animation: slideInFromRight 1s ease-out 0.3s both; }
+        .section-title { font-size: 1.6em; color: #0d9488; margin-bottom: 20px; font-weight: 600; position: relative; }
+        .section-title::after { content: ''; position: absolute; bottom: -8px; left: 0; width: 60px; height: 3px; background: linear-gradient(90deg, #0d9488, #14b8a6); border-radius: 2px; }
+        .definition-text { font-size: 1.1em; line-height: 1.7; color: #1e293b; margin-bottom: 25px; padding: 20px; background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%); border-radius: 15px; border-left: 4px solid #0d9488; }
+        .formula-box { background: #1e293b; color: #5eead4; padding: 25px; border-radius: 15px; margin: 20px 0; font-family: 'Courier New', monospace; text-align: center; font-size: 1.3em; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
+        .formula-main { font-size: 1.4em; padding-bottom: 15px; border-bottom: 1px solid rgba(94, 234, 212, 0.2); margin-bottom: 15px; }
+        .formula-detail { font-size: 0.85em; color: #94a3b8; line-height: 1.5; }
+        .method-card { padding: 20px; border-radius: 15px; text-align: center; transition: all 0.3s ease; cursor: pointer; border: 2px solid; margin: 15px 0; }
+        .method-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.1); }
+        .small-k { background: linear-gradient(135deg, #fef3c7, #fde68a); border-color: #f59e0b; color: #92400e; }
+        .large-k { background: linear-gradient(135deg, #f0fdfa, #ccfbf1); border-color: #14b8a6; color: #0d9488; }
+        .method-icon { font-size: 2.5em; margin-bottom: 10px; }
+        .method-title { font-size: 1.2em; font-weight: 600; margin-bottom: 10px; }
+        .method-features { list-style: none; text-align: left; font-size: 0.85em; }
+        .method-features li { margin: 6px 0; padding: 6px 0; border-bottom: 1px solid rgba(0,0,0,0.1); }
+        .derivation-section { grid-column: 1 / -1; background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%); border-radius: 20px; padding: 35px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); animation: slideInFromBottom 1s ease-out 0.6s both; border: 1px solid rgba(13, 148, 136, 0.1); }
+        .derivation-steps { list-style: none; margin-top: 15px; }
+        .derivation-item { padding: 15px; margin: 12px 0; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border-radius: 12px; border-left: 4px solid #0d9488; transition: all 0.3s ease; cursor: pointer; }
+        .derivation-item:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15); }
+        .step-number { display: inline-block; background: #0d9488; color: white; width: 28px; height: 28px; border-radius: 50%; text-align: center; line-height: 28px; font-weight: 600; margin-right: 12px; font-size: 0.85em; }
+        .step-content { display: inline-block; vertical-align: top; width: calc(100% - 45px); }
+        .step-text { font-size: 1em; color: #1e293b; line-height: 1.5; }
+        .step-formula { background: #1e293b; color: #5eead4; padding: 12px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.9em; margin-top: 8px; }
+        .navigation { position: fixed; bottom: 30px; right: 30px; display: flex; gap: 15px; }
+        .nav-btn { padding: 15px 25px; background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9)); border: 2px solid rgba(13, 148, 136, 0.2); border-radius: 30px; color: #134e4a; text-decoration: none; transition: all 0.3s ease; backdrop-filter: blur(20px); font-weight: 600; }
+        .nav-btn:hover { background: linear-gradient(135deg, #0d9488, #14b8a6); color: white; transform: translateY(-3px); box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4); }
+        .slide-number { position: fixed; top: 30px; right: 30px; background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9)); padding: 12px 20px; border-radius: 25px; backdrop-filter: blur(20px); border: 1px solid rgba(13, 148, 136, 0.2); color: #134e4a; font-weight: 600; }
+        .course-info { position: fixed; top: 30px; left: 30px; background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9)); padding: 12px 20px; border-radius: 25px; backdrop-filter: blur(20px); border: 1px solid rgba(13, 148, 136, 0.2); color: #134e4a; font-weight: 600; }
+        @keyframes slideInFromTop { from { transform: translateY(-80px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes slideInFromLeft { from { transform: translateX(-60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideInFromRight { from { transform: translateX(60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideInFromBottom { from { transform: translateY(60px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @media (max-width: 768px) { .content-layout { grid-template-columns: 1fr; } .slide-title { font-size: 2.5em; } }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.3s ease; backdrop-filter: blur(5px); }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-container { background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%); border-radius: 25px; padding: 40px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; transform: scale(0.9) translateY(20px); transition: transform 0.3s ease; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3); border: 2px solid rgba(13, 148, 136, 0.2); }
+        .modal-overlay.active .modal-container { transform: scale(1) translateY(0); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid rgba(13, 148, 136, 0.1); }
+        .modal-title { font-size: 1.6em; color: #0d9488; font-weight: 600; }
+        .modal-close { background: none; border: none; font-size: 1.4em; color: #64748b; cursor: pointer; transition: all 0.3s ease; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .modal-close:hover { background: rgba(13, 148, 136, 0.1); color: #0d9488; transform: rotate(90deg); }
+        .modal-content { font-size: 1.05em; line-height: 1.7; color: #1e293b; }
+        .modal-highlight { background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%); padding: 18px; border-radius: 12px; margin: 15px 0; border-left: 4px solid #0d9488; }
+        .modal-formula { background: #1e293b; color: #5eead4; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; margin: 12px 0; }
     </style>
+    <script src="navigation.js"></script>
 </head>
 <body>
-    <div class="floating-elements" id="floatingElements"></div>
-    
-    <!-- Modal Dialog -->
-    <div class="modal-overlay" id="modalOverlay">
-        <div class="modal-container">
-            <div class="modal-header">
-                <h3 class="modal-title" id="modalTitle">Title</h3>
-                <button class="modal-close" id="modalClose">×</button>
-            </div>
-            <div class="modal-content" id="modalContent">Content</div>
-        </div>
-    </div>
-
+    <div class="modal-overlay" id="modalOverlay"><div class="modal-container"><div class="modal-header"><h3 class="modal-title" id="modalTitle">Title</h3><button class="modal-close" id="modalClose">×</button></div><div class="modal-content" id="modalContent">Content</div></div></div></div>
     <div class="course-info">CS5710 - Week 3</div>
     <div class="slide-number">Slide 53 of 60</div>
-    
     <div class="slide-container">
         <h1 class="slide-title">Choosing k in k-NN</h1>
-        
         <div class="content-layout">
-            <div class="theory-section">
-                <h2 class="section-title">The k Dilemma</h2>
-                
-                <div class="theory-text">
-                    Choosing the right value of <strong>k</strong> is crucial for k-NN performance. It controls the <strong>bias-variance tradeoff</strong> and determines how local vs global the decision making becomes.
-                </div>
-                
-                <div class="k-effects">
-                    <div class="k-effect-card">
-                        <div class="k-value">
-                            <span class="k-icon">🎯</span>
-                            Small k (k=1,3,5)
-                        </div>
-                        <div class="k-description">
-                            <strong>Low Bias, High Variance:</strong> Very sensitive to noise and outliers. Decision boundary is complex and wiggly. May overfit.
-                        </div>
-                    </div>
-                    
-                    <div class="k-effect-card">
-                        <div class="k-value">
-                            <span class="k-icon">🎛️</span>
-                            Medium k (k=7,9,15)
-                        </div>
-                        <div class="k-description">
-                            <strong>Balanced:</strong> Good compromise between bias and variance. Usually optimal for most datasets.
-                        </div>
-                    </div>
-                    
-                    <div class="k-effect-card">
-                        <div class="k-value">
-                            <span class="k-icon">📊</span>
-                            Large k (k=50,100)
-                        </div>
-                        <div class="k-description">
-                            <strong>High Bias, Low Variance:</strong> Smooth decision boundary. Less sensitive to noise but may underfit and miss local patterns.
-                        </div>
-                    </div>
-                </div>
+            <div class="concept-section">
+                <h2 class="section-title">Small k vs Large k</h2>
+                <div class="definition-text">The choice of <strong>k</strong> balances between fitting noise (small k) and smooth boundaries (large k). k=1 is most sensitive to noise, while large k provides smoothing.</div>
+                <div class="formula-box"><div class="formula-main">k should be odd for binary classification</div><div class="formula-detail">Avoid ties in voting</div></div>
             </div>
-
-            <div class="guidelines-section">
-                <h2 class="section-title">Selection Guidelines</h2>
-                
-                <ul class="guidelines-list">
-                    <li class="guideline-item">
-                        <div class="guideline-title">📏 Square Root Rule</div>
-                        <div class="guideline-desc">
-                            Start with k = √n, where n is the number of training samples. Good initial guess.
-                        </div>
-                    </li>
-                    
-                    <li class="guideline-item">
-                        <div class="guideline-title">🔢 Odd Numbers</div>
-                        <div class="guideline-desc">
-                            Use odd k values to avoid ties in binary classification (especially important for k=2, 4, 6...).
-                        </div>
-                    </li>
-                    
-                    <li class="guideline-item">
-                        <div class="guideline-title">📈 Cross Validation</div>
-                        <div class="guideline-desc">
-                            Use k-fold CV to test different k values. Plot validation error vs k to find the optimal value.
-                        </div>
-                    </li>
-                    
-                    <li class="guideline-item">
-                        <div class="guideline-title">⚖️ Class Balance</div>
-                        <div class="guideline-desc">
-                            For imbalanced datasets, ensure k is not larger than the minority class size.
-                        </div>
-                    </li>
-                    
-                    <li class="guideline-item">
-                        <div class="guideline-title">🎯 Domain Knowledge</div>
-                        <div class="guideline-desc">
-                            Consider the nature of your data. Noisy data needs larger k; clean data can use smaller k.
-                        </div>
-                    </li>
-                </ul>
+            <div class="comparison-section">
+                <h2 class="section-title">Trade-offs</h2>
+                <div class="method-card small-k" onclick="showModal('Small k', smallKContent)"><div class="method-icon">📊</div><div class="method-title">Small k (k=1,3,5)</div><ul class="method-features"><li>🎯 Complex boundary</li><li>⚠️ Sensitive to noise</li><li>📉 High variance</li><li>🎯 Good for many classes</li></ul></div>
+                <div class="method-card large-k" onclick="showModal('Large k', largeKContent)"><div class="method-icon">📈</div><div class="method-title">Large k (k=10,20)</div><ul class="method-features"><li>📐 Smooth boundary</li><li>🎯 Robust to noise</li><li>📈 Low variance</li><li>⚠️ May underfit</li></ul></div>
             </div>
         </div>
-
-        <div class="demo-section">
-            <h2 class="demo-title">🎮 Interactive k Selection Simulator</h2>
-            <p style="text-align: center; color: #475569; margin-bottom: 20px;">
-                Explore how different k values affect model behavior and performance
-            </p>
-            
-            <div class="demo-grid">
-                <div class="demo-controls">
-                    <h4 style="color: #0d9488; margin-bottom: 20px;">Model Parameters</h4>
-                    
-                    <div class="slider-container">
-                        <label class="slider-label">k value: <span id="k-value-display">5</span></label>
-                        <input type="range" class="slider" id="k-slider" min="1" max="50" value="5" step="2">
-                    </div>
-                    
-                    <div class="slider-container">
-                        <label class="slider-label">Training samples: <span id="n-value-display">100</span></label>
-                        <input type="range" class="slider" id="n-slider" min="20" max="1000" value="100" step="10">
-                    </div>
-                    
-                    <div class="slider-container">
-                        <label class="slider-label">Noise level: <span id="noise-value-display">0.1</span></label>
-                        <input type="range" class="slider" id="noise-slider" min="0" max="0.5" value="0.1" step="0.05">
-                    </div>
-                    
-                    <button style="background: linear-gradient(135deg, #0d9488, #14b8a6); color: white; border: none; padding: 12px 25px; border-radius: 10px; font-size: 1em; font-weight: 600; cursor: pointer; margin-top: 20px; width: 100%;" onclick="analyzeK()">Analyze k Performance</button>
-                </div>
-                
-                <div class="demo-visualization">
-                    <h4 style="color: #0d9488; margin-bottom: 20px;">Performance Analysis</h4>
-                    <div class="demo-output" id="analysisOutput">
-                        Adjust the sliders and click "Analyze k Performance" to see the bias-variance tradeoff
-                    </div>
-                    <div class="bias-variance-chart" id="biasVarianceChart"></div>
-                </div>
-            </div>
+        <div class="derivation-section">
+            <h2 class="section-title">How to Choose k</h2>
+            <ul class="derivation-steps">
+                <li class="derivation-item" onclick="showModal('Cross-Validation', cvContent)"><div class="step-number">1</div><div class="step-content"><div class="step-text">Use cross-validation to try different k</div><div class="step-formula">k = 1,3,5,7,9,... with CV score</div></div></li>
+                <li class="derivation-item" onclick="showModal('Odd k', oddContent)"><div class="step-number">2</div><div class="step-content"><div class="step-text">Keep k odd for binary classification</div><div class="step-formula">k odd = avoid ties in vote</div></div></li>
+                <li class="derivation-item" onclick="showModal('k=√m', sqrtContent)"><div class="step-number">3</div><div class="step-content"><div class="step-text">Start with k ≈ √m</div><div class="step-formula">if m=100, try k≈10</div></div></li>
+                <li class="derivation-item" onclick="showModal('Consider Data', considerContent)"><div class="step-number">4</div><div class="step-content"><div class="step-text">Consider class balance and data size</div><div class="step-formula">More neighbors = more data needed</div></div></li>
+            </ul>
         </div>
     </div>
-
-    <div class="navigation">
-        <a href="Week3_Slide52.html" class="nav-btn">← Previous</a>
-        <a href="Week3_Slide54.html" class="nav-btn">Next →</a>
-    </div>
-
-    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
-        <strong>Prepared by Dr. Gorkem Kar</strong>
-    </div>
-
+    <div class="navigation"><a href="Week3_Slide52.html" class="nav-btn">← Previous</a><a href="Week3_Slide54.html" class="nav-btn">Next →</a></div>
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;"><strong>Prepared by Dr. Gorkem Kar</strong></div>
     <script>
-        // Modal System
-        class ModalSystem {
-            constructor() {
-                this.overlay = document.getElementById('modalOverlay');
-                this.title = document.getElementById('modalTitle');
-                this.content = document.getElementById('modalContent');
-                this.closeBtn = document.getElementById('modalClose');
-                
-                this.closeBtn.addEventListener('click', () => this.close());
-                this.overlay.addEventListener('click', (e) => {
-                    if (e.target === this.overlay) this.close();
-                });
-                
-                document.addEventListener('keydown', (e) => {
-                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
-                        this.close();
-                    }
-                });
-            }
-            
-            show(title, content) {
-                this.title.textContent = title;
-                this.content.innerHTML = content;
-                this.overlay.classList.add('active');
-                document.body.style.overflow = 'hidden';
-            }
-            
-            close() {
-                this.overlay.classList.remove('active');
-                document.body.style.overflow = '';
-            }
-        }
-
-        const modal = new ModalSystem();
-
-        // Create floating ML elements
-        function createFloatingElements() {
-            const container = document.getElementById('floatingElements');
-            for (let i = 0; i < 35; i++) {
-                const element = document.createElement('div');
-                element.className = 'floating-element';
-                element.style.left = Math.random() * 100 + '%';
-                element.style.animationDelay = Math.random() * 18 + 's';
-                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
-                container.appendChild(element);
-            }
-        }
-
-        // Update slider displays
-        document.getElementById('k-slider').addEventListener('input', function() {
-            document.getElementById('k-value-display').textContent = this.value;
-        });
-
-        document.getElementById('n-slider').addEventListener('input', function() {
-            document.getElementById('n-value-display').textContent = this.value;
-        });
-
-        document.getElementById('noise-slider').addEventListener('input', function() {
-            document.getElementById('noise-value-display').textContent = this.value;
-        });
-
-        // Interactive k-effect cards
-        document.querySelectorAll('.k-effect-card').forEach(card => {
-            card.addEventListener('click', function() {
-                const kText = this.querySelector('.k-value').textContent.trim();
-                
-                const kEffectDetails = {
-                    '🎯 Small k (k=1,3,5)': {
-                        characteristics: 'Highly flexible decision boundary, captures local patterns very well',
-                        problems: 'Sensitive to outliers and noise, high variance, potential overfitting',
-                        example: 'k=1: Each point classified by its single nearest neighbor (most extreme case)',
-                        when: 'Use when data is clean and you need to capture fine-grained patterns'
-                    },
-                    '🎛️ Medium k (k=7,9,15)': {
-                        characteristics: 'Balanced approach between local and global patterns',
-                        problems: 'May still be sensitive to local irregularities in some cases',
-                        example: 'k=7: Classification based on majority vote of 7 nearest neighbors',
-                        when: 'Best general choice for most datasets, good starting point'
-                    },
-                    '📊 Large k (k=50,100)': {
-                        characteristics: 'Smooth decision boundary, stable predictions, low variance',
-                        problems: 'May miss important local patterns, potential underfitting',
-                        example: 'k=100: Very global view, essentially approximates class distributions',
-                        when: 'Use with noisy data or when you want very stable, conservative predictions'
-                    }
-                };
-                
-                const detail = kEffectDetails[kText];
-                if (detail) {
-                    modal.show(kText.replace(/[🎯🎛️📊]\s/, 'k Value: '), `
-                        <div class="modal-highlight">
-                            <strong>Characteristics:</strong><br>
-                            ${detail.characteristics}
-                        </div>
-                        
-                        <p><strong>Potential Problems:</strong><br>${detail.problems}</p>
-                        <p><strong>Example:</strong><br>${detail.example}</p>
-                        <p><strong>When to Use:</strong><br>${detail.when}</p>
-                        
-                        <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
-                            <strong>💡 Pro Tip:</strong><br>
-                            The bias-variance tradeoff is key: small k = low bias, high variance; large k = high bias, low variance.
-                        </div>
-                    `);
-                }
-            });
-        });
-
-        // Interactive guideline items
-        document.querySelectorAll('.guideline-item').forEach(item => {
-            item.addEventListener('click', function() {
-                const title = this.querySelector('.guideline-title').textContent.trim();
-                
-                const guidelineDetails = {
-                    '📏 Square Root Rule': {
-                        formula: 'k = √n (rounded to nearest odd number)',
-                        reasoning: 'Provides a reasonable balance between bias and variance based on dataset size',
-                        example: 'n=100 → k=√100=10 → Use k=9 or k=11 (odd numbers)',
-                        limitations: 'Not optimal for all datasets, just a starting point'
-                    },
-                    '🔢 Odd Numbers': {
-                        formula: 'k = 1, 3, 5, 7, 9, 11, ...',
-                        reasoning: 'Prevents ties in binary classification voting',
-                        example: 'k=4: Could get 2 votes for each class (tie!). k=5: Always has majority.',
-                        limitations: 'Less important for multi-class problems or when using weighted voting'
-                    },
-                    '📈 Cross Validation': {
-                        formula: 'Test k = 1, 3, 5, ..., k_max using k-fold CV',
-                        reasoning: 'Empirically finds the k that minimizes validation error',
-                        example: 'Plot validation accuracy vs k, choose k at peak performance',
-                        limitations: 'Computationally expensive, may overfit to validation set'
-                    },
-                    '⚖️ Class Balance': {
-                        formula: 'k < min(class_sizes)',
-                        reasoning: 'Ensures minority classes can still influence predictions',
-                        example: 'Classes: 900 A, 100 B → Use k < 100 to avoid drowning out class B',
-                        limitations: 'May require very small k for severely imbalanced data'
-                    },
-                    '🎯 Domain Knowledge': {
-                        formula: 'No fixed formula - depends on data characteristics',
-                        reasoning: 'Your understanding of the problem informs the choice',
-                        example: 'Medical diagnosis: Prefer smaller k to catch rare conditions',
-                        limitations: 'Subjective, may introduce human bias'
-                    }
-                };
-                
-                const detail = guidelineDetails[title];
-                if (detail) {
-                    modal.show(title.replace(/[📏🔢📈⚖️🎯]\s/, ''), `
-                        <div class="modal-highlight">
-                            <strong>Formula/Approach:</strong><br>
-                            ${detail.formula}
-                        </div>
-                        
-                        <p><strong>Reasoning:</strong><br>${detail.reasoning}</p>
-                        <p><strong>Example:</strong><br>${detail.example}</p>
-                        <p><strong>Limitations:</strong><br>${detail.limitations}</p>
-                        
-                        <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
-                            <strong>🔍 Remember:</strong><br>
-                            These are guidelines, not rules. Always validate your choice with cross-validation!
-                        </div>
-                    `);
-                }
-            });
-        });
-
-        // k analysis function
-        function analyzeK() {
-            const k = parseInt(document.getElementById('k-slider').value);
-            const n = parseInt(document.getElementById('n-slider').value);
-            const noise = parseFloat(document.getElementById('noise-slider').value);
-            
-            // Simulate bias and variance based on k
-            const bias = Math.max(0.05, k / 100); // Increases with k
-            const variance = Math.max(0.05, 1 / (k + 1) + noise); // Decreases with k, increases with noise
-            const totalError = bias + variance + 0.02; // Irreducible error
-            
-            const sqrtRule = Math.round(Math.sqrt(n));
-            const sqrtRuleOdd = sqrtRule % 2 === 0 ? sqrtRule + 1 : sqrtRule;
-            
-            const output = document.getElementById('analysisOutput');
-            output.innerHTML = `
-                <strong>Analysis for k=${k}, n=${n}, noise=${noise}:</strong><br><br>
-                
-                <strong>📊 Bias-Variance Analysis:</strong><br>
-                Bias: ${(bias * 100).toFixed(1)}%<br>
-                Variance: ${(variance * 100).toFixed(1)}%<br>
-                Total Error: ${(totalError * 100).toFixed(1)}%<br><br>
-                
-                <strong>📏 Square Root Rule Suggestion:</strong><br>
-                k = √${n} ≈ ${sqrtRuleOdd} (odd number)<br><br>
-                
-                <strong>💡 Recommendation:</strong><br>
-                ${k < 5 ? 'Small k: Watch for overfitting!' : 
-                  k > 30 ? 'Large k: May underfit local patterns' : 
-                  'Moderate k: Good balance'}
-            `;
-            
-            // Simple visualization
-            drawBiasVarianceChart(k, bias, variance);
-            
-            // Show detailed analysis
-            setTimeout(() => {
-                modal.show('Detailed k Analysis', `
-                    <div class="modal-highlight">
-                        <strong>Current Configuration:</strong><br>
-                        k = ${k}, Training samples = ${n}, Noise = ${noise}
-                    </div>
-                    
-                    <div style="background: #1e293b; color: #5eead4; padding: 20px; border-radius: 10px; font-family: monospace; margin: 20px 0;">
-                        Bias: ${(bias * 100).toFixed(2)}%<br>
-                        Variance: ${(variance * 100).toFixed(2)}%<br>
-                        Noise: ${(noise * 100).toFixed(1)}%<br>
-                        Total Error: ${(totalError * 100).toFixed(2)}%
-                    </div>
-                    
-                    <h4 style="color: #0d9488;">Interpretation:</h4>
-                    <ul style="line-height: 1.8;">
-                        <li><strong>Bias ${bias > 0.3 ? '(High)' : bias > 0.1 ? '(Moderate)' : '(Low)'}:</strong> ${bias > 0.3 ? 'Model may be too simple' : 'Model complexity is appropriate'}</li>
-                        <li><strong>Variance ${variance > 0.3 ? '(High)' : variance > 0.1 ? '(Moderate)' : '(Low)'}:</strong> ${variance > 0.3 ? 'Predictions are unstable' : 'Predictions are stable'}</li>
-                        <li><strong>Recommendation:</strong> ${totalError > 0.4 ? 'Try different k value' : 'Current k looks reasonable'}</li>
-                    </ul>
-                    
-                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
-                        <strong>🎯 Next Steps:</strong><br>
-                        ${k > sqrtRuleOdd + 10 ? 'Try smaller k values for lower bias' : 
-                          k < sqrtRuleOdd - 10 ? 'Try larger k values for lower variance' :
-                          'Your k is close to the square root rule - good choice!'}
-                    </div>
-                `);
-            }, 1000);
-        }
-
-        // Simple chart drawing function
-        function drawBiasVarianceChart(currentK, bias, variance) {
-            const chart = document.getElementById('biasVarianceChart');
-            chart.innerHTML = '';
-            
-            // Create a simple text-based visualization
-            const chartText = document.createElement('div');
-            chartText.style.cssText = `
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                text-align: center;
-                font-family: monospace;
-                color: #0d9488;
-            `;
-            
-            const biasBar = '█'.repeat(Math.max(1, Math.round(bias * 20)));
-            const varianceBar = '█'.repeat(Math.max(1, Math.round(variance * 20)));
-            
-            chartText.innerHTML = `
-                <strong>k = ${currentK}</strong><br><br>
-                Bias:     ${biasBar}<br>
-                Variance: ${varianceBar}<br><br>
-                <small>Lower is better</small>
-            `;
-            
-            chart.appendChild(chartText);
-        }
-
-        // Initialize components
-        createFloatingElements();
-
-        // Enhanced keyboard navigation
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
-                window.location.href = 'Week3_Slide52.html';
-            } else if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
-                window.location.href = 'Week3_Slide54.html';
-            }
-        });
+        const smallKContent = `<p><strong>Small k</strong> creates complex, flexible decision boundaries.</p><div class="modal-highlight"><p><strong>Pros:</strong> Captures local patterns</p><p><strong>Cons:</strong> Sensitive to noise, can overfit</p></div><p>k=1 can perfectly fit training data (overfits!)</p>`;
+        const largeKContent = `<p><strong>Large k</strong> creates smoother decision boundaries.</p><div class="modal-highlight"><p><strong>Pros:</strong> More robust, smoother</p><p><strong>Cons:</strong> May miss important patterns</p></div><p>Can approach the majority class mean</p>`;
+        const cvContent = `<p><strong>Cross-validation</strong> is the standard approach:</p><ol><li>Split data into folds</li><li>For each k, train on k-1 folds, test on 1</li><li>Repeat and average</li><li>Select k with best CV accuracy</li></ol><p>This gives reliable estimates!</p>`;
+        const oddContent = `<p><strong>Odd k</strong> prevents ties in binary classification.</p><div class="modal-formula">k=1,3,5,7,9 = 1/2/3/4/5 votes to win</div><p>Even k could cause ties: k=2 means each class gets 1 vote!</p>`;
+        const sqrtContent = `<p><strong>Rule of thumb:</strong> Start with √m.</p><div class="modal-formula">if m=100 → k≈10<br>if m=1000 → k≈32</div><p>This is often a reasonable starting point</p>`;
+        const considerContent = `<p><strong>Other considerations:</strong></p><ul><li>Class imbalance: use weighted voting</li><li>Large dataset: larger k is fine</li><li>High dimensions: curse of dimensionality</li></ul><p>More neighbors needed in high dimensions!</p>`;
+        class ModalSystem { constructor() { this.overlay = document.getElementById('modalOverlay'); this.title = document.getElementById('modalTitle'); this.content = document.getElementById('modalContent'); this.closeBtn = document.getElementById('modalClose'); this.closeBtn.addEventListener('click', () => this.close()); this.overlay.addEventListener('click', (e) => { if (e.target === this.overlay) this.close(); }); document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && this.overlay.classList.contains('active')) this.close(); }); } show(title, content) { this.title.textContent = title; this.content.innerHTML = content; this.overlay.classList.add('active'); document.body.style.overflow = 'hidden'; } close() { this.overlay.classList.remove('active'); document.body.style.overflow = ''; } }
+        const modal = new ModalSystem(); function showModal(title, content) { modal.show(title, content); }
+        document.addEventListener('keydown', function(e) { if (!document.getElementById('modalOverlay').classList.contains('active')) { if (e.key === 'ArrowLeft') window.location.href = 'Week3_Slide52.html'; else if (e.key === 'ArrowRight' || e.key === ' ') window.location.href = 'Week3_Slide54.html'; } });
     </script>
 </body>
 </html>

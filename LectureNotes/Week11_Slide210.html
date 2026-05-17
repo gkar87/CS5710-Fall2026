@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -408,7 +409,15 @@
             .info-panels { grid-template-columns: 1fr; }
             .q-values-display { grid-template-columns: repeat(2, 1fr); }
         }
+    
+        .visualization-section {
+            background: #1e293b;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 30px;
+        }
     </style>
+  <script src="navigation.js"></script>
 </head>
 <body>
     <div class="floating-elements" id="floatingElements"></div>
@@ -820,7 +829,7 @@
                         <div class="modal-highlight">
                             An episode is a complete sequence from start state to terminal state.
                         </div>
-                        <p><strong>Current Episode Count:</strong> ${env.episodeCount}</p>
+                        <p><strong>Current Episode Count:</strong> $\{env.episodeCount}</p>
                         <p>Each episode allows the agent to:</p>
                         <ul>
                             <li>Explore the environment</li>
@@ -842,7 +851,7 @@
                         <div class="modal-highlight">
                             Rewards guide the agent's learning process.
                         </div>
-                        <p><strong>Current Total:</strong> ${env.totalReward.toFixed(2)}</p>
+                        <p><strong>Current Total:</strong> $\{env.totalReward.toFixed(2)}</p>
                         <h4>Reward Structure:</h4>
                         <div class="modal-code">
                             Goal reached: +10
@@ -858,7 +867,7 @@
                         <div class="modal-highlight">
                             Steps measure the length of the current episode.
                         </div>
-                        <p><strong>Current Steps:</strong> ${env.stepCount}</p>
+                        <p><strong>Current Steps:</strong> $\{env.stepCount}</p>
                         <p>Fewer steps generally mean:</p>
                         <ul>
                             <li>More efficient policy</li>
@@ -912,6 +921,58 @@
                 }
             }
         });
+    
+        // RL Visualization
+        function drawRL() {
+            const canvas = document.getElementById('rlCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.offsetWidth;
+            canvas.height = 400;
+            
+            // Draw grid
+            const gridSize = 40;
+            const rows = Math.floor(canvas.height / gridSize);
+            const cols = Math.floor(canvas.width / gridSize);
+            
+            ctx.strokeStyle = '#334155';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= rows; i++) {
+                ctx.beginPath();
+                ctx.moveTo(0, i * gridSize);
+                ctx.lineTo(canvas.width, i * gridSize);
+                ctx.stroke();
+            }
+            for (let j = 0; j <= cols; j++) {
+                ctx.beginPath();
+                ctx.moveTo(j * gridSize, 0);
+                ctx.lineTo(j * gridSize, canvas.height);
+                ctx.stroke();
+            }
+            
+            // Draw agent
+            ctx.fillStyle = '#0d9488';
+            ctx.beginPath();
+            ctx.arc(cols * 0.7 * gridSize, rows * 0.5 * gridSize, 15, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Draw goal
+            ctx.fillStyle = '#10b981';
+            ctx.beginPath();
+            ctx.arc(cols * 0.9 * gridSize, rows * 0.3 * gridSize, 15, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Draw obstacles
+            ctx.fillStyle = '#64748b';
+            for (let i = 0; i < 5; i++) {
+                const x = Math.random() * (cols - 2) + 1;
+                const y = Math.random() * (rows - 2) + 1;
+                ctx.fillRect(x * gridSize, y * gridSize, gridSize, gridSize);
+            }
+        }
+        
+        // Initialize RL visualization
+        setTimeout(drawRL, 500);
     </script>
 </body>
 </html>

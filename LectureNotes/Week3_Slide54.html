@@ -5,896 +5,99 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CS5710 - k-NN for Regression</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            color: #134e4a;
-            overflow-x: hidden;
-        }
-
-        .slide-container {
-            flex: 1;
-            padding: 40px;
-            max-width: 1400px;
-            margin: 0 auto;
-            position: relative;
-        }
-
-        .slide-title {
-            font-size: 3.5em;
-            text-align: center;
-            margin-bottom: 50px;
-            color: #0d9488;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-            animation: slideInFromTop 1.2s ease-out;
-            font-weight: 700;
-        }
-
-        .content-layout {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 50px;
-            margin-bottom: 40px;
-        }
-
-        .concept-section {
-            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
-            animation: slideInFromLeft 1s ease-out 0.3s both;
-            border: 1px solid rgba(13, 148, 136, 0.1);
-        }
-
-        .methods-section {
-            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
-            animation: slideInFromRight 1s ease-out 0.3s both;
-            border: 1px solid rgba(13, 148, 136, 0.1);
-        }
-
-        .section-title {
-            font-size: 1.8em;
-            color: #0d9488;
-            margin-bottom: 25px;
-            font-weight: 600;
-            position: relative;
-        }
-
-        .section-title::after {
-            content: '';
-            position: absolute;
-            bottom: -8px;
-            left: 0;
-            width: 60px;
-            height: 3px;
-            background: linear-gradient(90deg, #0d9488, #14b8a6);
-            border-radius: 2px;
-        }
-
-        .concept-text {
-            font-size: 1.2em;
-            line-height: 1.8;
-            color: #1e293b;
-            margin-bottom: 30px;
-            padding: 25px;
-            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
-            border-radius: 15px;
-            border-left: 4px solid #0d9488;
-        }
-
-        .comparison-table {
-            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-            border-radius: 15px;
-            padding: 20px;
-            margin-top: 20px;
-        }
-
-        .comparison-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 15px;
-            margin: 10px 0;
-            padding: 15px;
-            background: rgba(255, 255, 255, 0.7);
-            border-radius: 10px;
-            font-size: 0.95em;
-        }
-
-        .comparison-header {
-            background: linear-gradient(135deg, #0d9488, #14b8a6);
-            color: white;
-            font-weight: 600;
-        }
-
-        .method-cards {
-            display: grid;
-            gap: 20px;
-        }
-
-        .method-card {
-            padding: 25px;
-            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
-            border-radius: 15px;
-            border: 2px solid rgba(13, 148, 136, 0.3);
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .method-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.15);
-        }
-
-        .method-title {
-            font-size: 1.3em;
-            font-weight: 600;
-            color: #0d9488;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-        }
-
-        .method-icon {
-            font-size: 1.5em;
-            margin-right: 10px;
-        }
-
-        .method-formula {
-            background: #1e293b;
-            color: #5eead4;
-            padding: 15px;
-            border-radius: 10px;
-            font-family: 'Courier New', monospace;
-            font-size: 1em;
-            margin: 15px 0;
-            text-align: center;
-        }
-
-        .method-desc {
-            font-size: 1em;
-            color: #475569;
-            line-height: 1.6;
-        }
-
-        .demo-section {
-            grid-column: 1 / -1;
-            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
-            animation: slideInFromBottom 1s ease-out 0.6s both;
-            border: 1px solid rgba(13, 148, 136, 0.1);
-        }
-
-        .demo-title {
-            font-size: 1.8em;
-            color: #0d9488;
-            text-align: center;
-            margin-bottom: 30px;
-            font-weight: 600;
-        }
-
-        .demo-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-            margin-top: 30px;
-        }
-
-        .demo-controls {
-            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-            border-radius: 15px;
-            padding: 30px;
-        }
-
-        .demo-visualization {
-            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-            border-radius: 15px;
-            padding: 30px;
-        }
-
-        .demo-input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #cbd5e1;
-            border-radius: 10px;
-            font-size: 1em;
-            margin: 10px 0;
-        }
-
-        .demo-button {
-            background: linear-gradient(135deg, #0d9488, #14b8a6);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 10px;
-            font-size: 1em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin: 10px 5px;
-            width: 100%;
-        }
-
-        .demo-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(13, 148, 136, 0.3);
-        }
-
-        .demo-output {
-            background: #1e293b;
-            color: #5eead4;
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 15px;
-            font-family: 'Courier New', monospace;
-            min-height: 150px;
-        }
-
-        .regression-plot {
-            width: 100%;
-            height: 200px;
-            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-            border: 2px solid #cbd5e1;
-            border-radius: 10px;
-            position: relative;
-            margin-top: 20px;
-        }
-
-        .floating-elements {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            overflow: hidden;
-            z-index: -1;
-        }
-
-        .floating-element {
-            position: absolute;
-            width: 5px;
-            height: 5px;
-            background: linear-gradient(135deg, #0d9488, #14b8a6);
-            border-radius: 50%;
-            opacity: 0.5;
-            animation: mlFloat 18s linear infinite;
-        }
-
-        .navigation {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            display: flex;
-            gap: 15px;
-        }
-
-        .nav-btn {
-            padding: 15px 25px;
-            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
-            border: 2px solid rgba(13, 148, 136, 0.2);
-            border-radius: 30px;
-            color: #134e4a;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(20px);
-            font-weight: 600;
-        }
-
-        .nav-btn:hover {
-            background: linear-gradient(135deg, #0d9488, #14b8a6);
-            color: white;
-            transform: translateY(-3px);
-            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
-        }
-
-        .slide-number {
-            position: fixed;
-            top: 30px;
-            right: 30px;
-            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
-            padding: 12px 20px;
-            border-radius: 25px;
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(13, 148, 136, 0.2);
-            color: #134e4a;
-            font-weight: 600;
-        }
-
-        .course-info {
-            position: fixed;
-            top: 30px;
-            left: 30px;
-            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
-            padding: 12px 20px;
-            border-radius: 25px;
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(13, 148, 136, 0.2);
-            color: #134e4a;
-            font-weight: 600;
-        }
-
-        @keyframes slideInFromTop {
-            from { transform: translateY(-80px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-
-        @keyframes slideInFromLeft {
-            from { transform: translateX(-60px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-
-        @keyframes slideInFromRight {
-            from { transform: translateX(60px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-
-        @keyframes slideInFromBottom {
-            from { transform: translateY(60px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-
-        @keyframes mlFloat {
-            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
-            10% { opacity: 0.5; }
-            90% { opacity: 0.5; }
-            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
-        }
-
-        @media (max-width: 768px) {
-            .content-layout { grid-template-columns: 1fr; }
-            .slide-title { font-size: 2.5em; }
-            .demo-grid { grid-template-columns: 1fr; }
-            .comparison-row { grid-template-columns: 1fr; }
-        }
-
-        /* Modal Styles */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(5px);
-        }
-
-        .modal-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .modal-container {
-            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
-            border-radius: 25px;
-            padding: 40px;
-            max-width: 600px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-            transform: scale(0.9) translateY(20px);
-            transition: transform 0.3s ease;
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
-            border: 2px solid rgba(13, 148, 136, 0.2);
-        }
-
-        .modal-overlay.active .modal-container {
-            transform: scale(1) translateY(0);
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
-        }
-
-        .modal-title {
-            font-size: 1.8em;
-            color: #0d9488;
-            font-weight: 600;
-        }
-
-        .modal-close {
-            background: none;
-            border: none;
-            font-size: 1.5em;
-            color: #64748b;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-close:hover {
-            background: rgba(13, 148, 136, 0.1);
-            color: #0d9488;
-            transform: rotate(90deg);
-        }
-
-        .modal-content {
-            font-size: 1.1em;
-            line-height: 1.8;
-            color: #1e293b;
-        }
-
-        .modal-highlight {
-            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
-            padding: 20px;
-            border-radius: 15px;
-            margin: 20px 0;
-            border-left: 4px solid #0d9488;
-        }
-
-        .modal-code {
-            background: #1e293b;
-            color: #5eead4;
-            padding: 20px;
-            border-radius: 10px;
-            font-family: 'Courier New', monospace;
-            font-size: 0.9em;
-            overflow-x: auto;
-            margin: 15px 0;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%); min-height: 100vh; display: flex; flex-direction: column; color: #134e4a; overflow-x: hidden; }
+        .slide-container { flex: 1; padding: 40px; max-width: 1400px; margin: 0 auto; position: relative; }
+        .slide-title { font-size: 3.2em; text-align: center; margin-bottom: 40px; color: #0d9488; text-shadow: 2px 2px 4px rgba(0,0,0,0.1); animation: slideInFromTop 1.2s ease-out; font-weight: 700; }
+        .content-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 30px; }
+        .concept-section, .comparison-section { background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%); border-radius: 20px; padding: 35px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); animation: slideInFromLeft 1s ease-out 0.3s both; border: 1px solid rgba(13, 148, 136, 0.1); }
+        .comparison-section { animation: slideInFromRight 1s ease-out 0.3s both; }
+        .section-title { font-size: 1.6em; color: #0d9488; margin-bottom: 20px; font-weight: 600; position: relative; }
+        .section-title::after { content: ''; position: absolute; bottom: -8px; left: 0; width: 60px; height: 3px; background: linear-gradient(90deg, #0d9488, #14b8a6); border-radius: 2px; }
+        .definition-text { font-size: 1.1em; line-height: 1.7; color: #1e293b; margin-bottom: 25px; padding: 20px; background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%); border-radius: 15px; border-left: 4px solid #0d9488; }
+        .formula-box { background: #1e293b; color: #5eead4; padding: 25px; border-radius: 15px; margin: 20px 0; font-family: 'Courier New', monospace; text-align: center; font-size: 1.3em; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
+        .formula-main { font-size: 1.4em; padding-bottom: 15px; border-bottom: 1px solid rgba(94, 234, 212, 0.2); margin-bottom: 15px; }
+        .formula-detail { font-size: 0.85em; color: #94a3b8; line-height: 1.5; }
+        .method-card { padding: 20px; border-radius: 15px; text-align: center; transition: all 0.3s ease; cursor: pointer; border: 2px solid; margin: 15px 0; }
+        .method-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.1); }
+        .class-card { background: linear-gradient(135deg, #fef3c7, #fde68a); border-color: #f59e0b; color: #92400e; }
+        .reg-card { background: linear-gradient(135deg, #f0fdfa, #ccfbf1); border-color: #14b8a6; color: #0d9488; }
+        .method-icon { font-size: 2.5em; margin-bottom: 10px; }
+        .method-title { font-size: 1.2em; font-weight: 600; margin-bottom: 10px; }
+        .method-features { list-style: none; text-align: left; font-size: 0.85em; }
+        .method-features li { margin: 6px 0; padding: 6px 0; border-bottom: 1px solid rgba(0,0,0,0.1); }
+        .derivation-section { grid-column: 1 / -1; background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%); border-radius: 20px; padding: 35px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); animation: slideInFromBottom 1s ease-out 0.6s both; border: 1px solid rgba(13, 148, 136, 0.1); }
+        .derivation-steps { list-style: none; margin-top: 15px; }
+        .derivation-item { padding: 15px; margin: 12px 0; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border-radius: 12px; border-left: 4px solid #0d9488; transition: all 0.3s ease; cursor: pointer; }
+        .derivation-item:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15); }
+        .step-number { display: inline-block; background: #0d9488; color: white; width: 28px; height: 28px; border-radius: 50%; text-align: center; line-height: 28px; font-weight: 600; margin-right: 12px; font-size: 0.85em; }
+        .step-content { display: inline-block; vertical-align: top; width: calc(100% - 45px); }
+        .step-text { font-size: 1em; color: #1e293b; line-height: 1.5; }
+        .step-formula { background: #1e293b; color: #5eead4; padding: 12px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.9em; margin-top: 8px; }
+        .navigation { position: fixed; bottom: 30px; right: 30px; display: flex; gap: 15px; }
+        .nav-btn { padding: 15px 25px; background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9)); border: 2px solid rgba(13, 148, 136, 0.2); border-radius: 30px; color: #134e4a; text-decoration: none; transition: all 0.3s ease; backdrop-filter: blur(20px); font-weight: 600; }
+        .nav-btn:hover { background: linear-gradient(135deg, #0d9488, #14b8a6); color: white; transform: translateY(-3px); box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4); }
+        .slide-number { position: fixed; top: 30px; right: 30px; background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9)); padding: 12px 20px; border-radius: 25px; backdrop-filter: blur(20px); border: 1px solid rgba(13, 148, 136, 0.2); color: #134e4a; font-weight: 600; }
+        .course-info { position: fixed; top: 30px; left: 30px; background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9)); padding: 12px 20px; border-radius: 25px; backdrop-filter: blur(20px); border: 1px solid rgba(13, 148, 136, 0.2); color: #134e4a; font-weight: 600; }
+        @keyframes slideInFromTop { from { transform: translateY(-80px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes slideInFromLeft { from { transform: translateX(-60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideInFromRight { from { transform: translateX(60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideInFromBottom { from { transform: translateY(60px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @media (max-width: 768px) { .content-layout { grid-template-columns: 1fr; } .slide-title { font-size: 2.5em; } }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.3s ease; backdrop-filter: blur(5px); }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-container { background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%); border-radius: 25px; padding: 40px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; transform: scale(0.9) translateY(20px); transition: transform 0.3s ease; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3); border: 2px solid rgba(13, 148, 136, 0.2); }
+        .modal-overlay.active .modal-container { transform: scale(1) translateY(0); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid rgba(13, 148, 136, 0.1); }
+        .modal-title { font-size: 1.6em; color: #0d9488; font-weight: 600; }
+        .modal-close { background: none; border: none; font-size: 1.4em; color: #64748b; cursor: pointer; transition: all 0.3s ease; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .modal-close:hover { background: rgba(13, 148, 136, 0.1); color: #0d9488; transform: rotate(90deg); }
+        .modal-content { font-size: 1.05em; line-height: 1.7; color: #1e293b; }
+        .modal-highlight { background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%); padding: 18px; border-radius: 12px; margin: 15px 0; border-left: 4px solid #0d9488; }
+        .modal-formula { background: #1e293b; color: #5eead4; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; margin: 12px 0; }
     </style>
+    <script src="navigation.js"></script>
 </head>
 <body>
-    <div class="floating-elements" id="floatingElements"></div>
-    
-    <!-- Modal Dialog -->
-    <div class="modal-overlay" id="modalOverlay">
-        <div class="modal-container">
-            <div class="modal-header">
-                <h3 class="modal-title" id="modalTitle">Title</h3>
-                <button class="modal-close" id="modalClose">×</button>
-            </div>
-            <div class="modal-content" id="modalContent">Content</div>
-        </div>
-    </div>
-
+    <div class="modal-overlay" id="modalOverlay"><div class="modal-container"><div class="modal-header"><h3 class="modal-title" id="modalTitle">Title</h3><button class="modal-close" id="modalClose">×</button></div><div class="modal-content" id="modalContent">Content</div></div></div></div>
     <div class="course-info">CS5710 - Week 3</div>
     <div class="slide-number">Slide 54 of 60</div>
-    
     <div class="slide-container">
         <h1 class="slide-title">k-NN for Regression</h1>
-        
         <div class="content-layout">
             <div class="concept-section">
-                <h2 class="section-title">From Classification to Regression</h2>
-                
-                <div class="concept-text">
-                    <strong>k-NN Regression</strong> adapts the nearest neighbor concept to predict continuous values instead of discrete classes. Instead of voting, we use mathematical functions to combine neighbor values.
-                </div>
-                
-                <div style="font-size: 1.1em; line-height: 1.7; color: #1e293b; margin-bottom: 20px;">
-                    <strong>Key Differences:</strong>
-                    <br><br>
-                    • <strong>Output:</strong> Continuous numerical value, not class label
-                    <br>
-                    • <strong>Combination:</strong> Mathematical functions (mean, weighted average)
-                    <br>
-                    • <strong>Evaluation:</strong> MSE, MAE, R² instead of accuracy
-                    <br>
-                    • <strong>Smoothness:</strong> Creates smooth prediction surfaces
-                </div>
-
-                <div class="comparison-table">
-                    <div class="comparison-row comparison-header">
-                        <div>Aspect</div>
-                        <div>Classification</div>
-                        <div>Regression</div>
-                    </div>
-                    <div class="comparison-row">
-                        <div><strong>Output</strong></div>
-                        <div>Class labels</div>
-                        <div>Real numbers</div>
-                    </div>
-                    <div class="comparison-row">
-                        <div><strong>Combining</strong></div>
-                        <div>Majority vote</div>
-                        <div>Average/Weighted</div>
-                    </div>
-                    <div class="comparison-row">
-                        <div><strong>Example</strong></div>
-                        <div>Spam/Not spam</div>
-                        <div>House price: $350K</div>
-                    </div>
-                </div>
+                <h2 class="section-title">Regression Variant</h2>
+                <div class="definition-text"><strong>k-NN regression</strong> predicts a continuous value by averaging the y-values of k nearest neighbors. The algorithm is identical - only the prediction step differs.</div>
+                <div class="formula-box"><div class="formula-main">ŷ = (1/k) Σ yᵢ</div><div class="formula-detail">Average of k neighbors' y-values</div></div>
             </div>
-
-            <div class="methods-section">
-                <h2 class="section-title">Aggregation Methods</h2>
-                
-                <div class="method-cards">
-                    <div class="method-card">
-                        <div class="method-title">
-                            <span class="method-icon">📊</span>
-                            Simple Average
-                        </div>
-                        <div class="method-formula">
-                            ŷ = (1/k) × Σyᵢ
-                        </div>
-                        <div class="method-desc">
-                            Equal weight to all k neighbors. Simple but ignores distance information.
-                        </div>
-                    </div>
-                    
-                    <div class="method-card">
-                        <div class="method-title">
-                            <span class="method-icon">⚖️</span>
-                            Weighted Average
-                        </div>
-                        <div class="method-formula">
-                            ŷ = Σ(wᵢ × yᵢ) / Σwᵢ
-                        </div>
-                        <div class="method-desc">
-                            Closer neighbors get higher weights. More accurate but computationally intensive.
-                        </div>
-                    </div>
-                    
-                    <div class="method-card">
-                        <div class="method-title">
-                            <span class="method-icon">🎯</span>
-                            Distance Weighting
-                        </div>
-                        <div class="method-formula">
-                            wᵢ = 1/dᵢ² or wᵢ = e^(-dᵢ)
-                        </div>
-                        <div class="method-desc">
-                            Common weight functions based on inverse distance or Gaussian kernel.
-                        </div>
-                    </div>
-                </div>
+            <div class="comparison-section">
+                <h2 class="section-title">Classification vs Regression</h2>
+                <div class="method-card class-card" onclick="showModal('Classification', classContent)"><div class="method-icon">📊</div><div class="method-title">k-NN Classification</div><ul class="method-features"><li>🎯 Discrete labels</li><li>🗳️ Mode voting</li><li>✅ Class predictions</li><li>📊 Category output</li></ul></div>
+                <div class="method-card reg-card" onclick="showModal('Regression', regContent)"><div class="method-icon">📈</div><div class="method-title">k-NN Regression</div><ul class="method-features"><li>📐 Continuous values</li><li>➗ Mean averaging</li><li>📈 Numeric predictions</li><li>🗺️ Value output</li></ul></div>
             </div>
         </div>
-
-        <div class="demo-section">
-            <h2 class="demo-title">🎮 Interactive k-NN Regression Demo</h2>
-            <p style="text-align: center; color: #475569; margin-bottom: 20px;">
-                Predict house prices using k-NN regression with different aggregation methods
-            </p>
-            
-            <div class="demo-grid">
-                <div class="demo-controls">
-                    <h4 style="color: #0d9488; margin-bottom: 20px;">House Features</h4>
-                    
-                    <input type="number" class="demo-input" id="house-size" placeholder="House size (sq ft)" value="2000">
-                    <input type="number" class="demo-input" id="house-bedrooms" placeholder="Number of bedrooms" value="3">
-                    <input type="number" class="demo-input" id="house-age" placeholder="Age (years)" value="10">
-                    <input type="number" class="demo-input" id="k-value" placeholder="k value" value="5">
-                    
-                    <select class="demo-input" id="method-select">
-                        <option value="simple">Simple Average</option>
-                        <option value="weighted">Weighted Average</option>
-                        <option value="distance">Distance Weighted</option>
-                    </select>
-                    
-                    <button class="demo-button" onclick="predictHousePrice()">Predict House Price</button>
-                </div>
-                
-                <div class="demo-visualization">
-                    <h4 style="color: #0d9488; margin-bottom: 20px;">Prediction Results</h4>
-                    <div class="demo-output" id="predictionOutput">
-                        Enter house features and click "Predict House Price" to see k-NN regression in action
-                    </div>
-                    <div class="regression-plot" id="regressionPlot"></div>
-                </div>
-            </div>
+        <div class="derivation-section">
+            <h2 class="section-title">Weighted k-NN Regression</h2>
+            <ul class="derivation-steps">
+                <li class="derivation-item" onclick="showModal('Simple Average', simpleContent)"><div class="step-number">1</div><div class="step-content"><div class="step-text">Simple average (all neighbors equal)</div><div class="step-formula">ŷ = (1/k) Σ yᵢ</div></div></li>
+                <li class="derivation-item" onclick="showModal('Distance Weight', distContent)"><div class="step-number">2</div><div class="step-content"><div class="step-text">Distance-weighted average</div><div class="step-formula">ŷ = Σ wᵢyᵢ / Σ wᵢ, wᵢ = 1/dᵢ</div></div></li>
+                <li class="derivation-item" onclick="showModal('Gaussian', gaussContent)"><div class="step-number">3</div><div class="step-content"><div class="step-text">Gaussian kernel weighting</div><div class="step-formula">wᵢ = exp(-dᵢ²/2τ²)</div></div></li>
+                <li class="derivation-item" onclick="showModal('Inverse Distance', invDistContent)"><div class="step-number">4</div><div class="step-content"><div class="step-text">Inverse distance weighting</div><div class="step-formula">wᵢ = 1/(dᵢ + ε)</div></div></li>
+            </ul>
         </div>
     </div>
-
-    <div class="navigation">
-        <a href="Week3_Slide53.html" class="nav-btn">← Previous</a>
-        <a href="Week3_Slide55.html" class="nav-btn">Next →</a>
-    </div>
-
-    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
-        <strong>Prepared by Dr. Gorkem Kar</strong>
-    </div>
-
+    <div class="navigation"><a href="Week3_Slide53.html" class="nav-btn">← Previous</a><a href="Week3_Slide55.html" class="nav-btn">Next →</a></div>
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;"><strong>Prepared by Dr. Gorkem Kar</strong></div>
     <script>
-        // Modal System
-        class ModalSystem {
-            constructor() {
-                this.overlay = document.getElementById('modalOverlay');
-                this.title = document.getElementById('modalTitle');
-                this.content = document.getElementById('modalContent');
-                this.closeBtn = document.getElementById('modalClose');
-                
-                this.closeBtn.addEventListener('click', () => this.close());
-                this.overlay.addEventListener('click', (e) => {
-                    if (e.target === this.overlay) this.close();
-                });
-                
-                document.addEventListener('keydown', (e) => {
-                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
-                        this.close();
-                    }
-                });
-            }
-            
-            show(title, content) {
-                this.title.textContent = title;
-                this.content.innerHTML = content;
-                this.overlay.classList.add('active');
-                document.body.style.overflow = 'hidden';
-            }
-            
-            close() {
-                this.overlay.classList.remove('active');
-                document.body.style.overflow = '';
-            }
-        }
-
-        const modal = new ModalSystem();
-
-        // Sample house data for k-NN
-        const houseData = [
-            { size: 1500, bedrooms: 2, age: 5, price: 250000 },
-            { size: 2000, bedrooms: 3, age: 10, price: 350000 },
-            { size: 2500, bedrooms: 4, age: 3, price: 450000 },
-            { size: 1800, bedrooms: 3, age: 15, price: 290000 },
-            { size: 3000, bedrooms: 4, age: 8, price: 520000 },
-            { size: 1200, bedrooms: 2, age: 20, price: 200000 },
-            { size: 2200, bedrooms: 3, age: 12, price: 380000 },
-            { size: 1600, bedrooms: 2, age: 7, price: 270000 },
-            { size: 2800, bedrooms: 4, age: 5, price: 480000 },
-            { size: 1900, bedrooms: 3, age: 18, price: 310000 }
-        ];
-
-        // Create floating ML elements
-        function createFloatingElements() {
-            const container = document.getElementById('floatingElements');
-            for (let i = 0; i < 35; i++) {
-                const element = document.createElement('div');
-                element.className = 'floating-element';
-                element.style.left = Math.random() * 100 + '%';
-                element.style.animationDelay = Math.random() * 18 + 's';
-                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
-                container.appendChild(element);
-            }
-        }
-
-        // Interactive method cards
-        document.querySelectorAll('.method-card').forEach(card => {
-            card.addEventListener('click', function() {
-                const title = this.querySelector('.method-title').textContent.trim();
-                
-                const methodDetails = {
-                    '📊 Simple Average': {
-                        description: 'Takes the arithmetic mean of all k nearest neighbors. Each neighbor contributes equally.',
-                        advantages: 'Simple to implement, computationally efficient, stable predictions',
-                        disadvantages: 'Ignores distance information, treats far and near neighbors equally',
-                        example: 'Neighbors: $200K, $300K, $400K → Prediction: ($200K + $300K + $400K) ÷ 3 = $300K',
-                        usecases: 'When computational speed is important, or when distances are roughly equal'
-                    },
-                    '⚖️ Weighted Average': {
-                        description: 'Assigns different weights to neighbors based on custom criteria (usually distance).',
-                        advantages: 'More accurate than simple average, flexible weighting schemes',
-                        disadvantages: 'More complex, requires choosing weight function, sensitive to weight choice',
-                        example: 'Neighbors: $200K (w=0.1), $300K (w=0.3), $400K (w=0.6) → Prediction: $350K',
-                        usecases: 'When neighbors are at varying distances, when accuracy is more important than speed'
-                    },
-                    '🎯 Distance Weighting': {
-                        description: 'Specific weighted average where weights are inversely related to distance.',
-                        advantages: 'Intuitive (closer = more important), often more accurate than simple average',
-                        disadvantages: 'Division by zero issues when distance = 0, sensitive to distance metric',
-                        example: 'Close neighbor (d=1): w=1/1²=1, Far neighbor (d=3): w=1/3²=0.11',
-                        usecases: 'Standard choice for most regression problems, especially with uneven neighbor distances'
-                    }
-                };
-                
-                const detail = methodDetails[title];
-                if (detail) {
-                    modal.show(title.replace(/[📊⚖️🎯]\s/, ''), `
-                        <div class="modal-highlight">
-                            <strong>Description:</strong><br>
-                            ${detail.description}
-                        </div>
-                        
-                        <p><strong>Advantages:</strong><br>${detail.advantages}</p>
-                        <p><strong>Disadvantages:</strong><br>${detail.disadvantages}</p>
-                        
-                        <div class="modal-code">
-                            <strong>Example:</strong><br>
-                            ${detail.example}
-                        </div>
-                        
-                        <p><strong>Best Use Cases:</strong><br>${detail.usecases}</p>
-                        
-                        <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
-                            <strong>💡 Pro Tip:</strong><br>
-                            Distance weighting is usually the best default choice, but try all methods with cross-validation to find what works best for your data!
-                        </div>
-                    `);
-                }
-            });
-        });
-
-        // Calculate Euclidean distance
-        function calculateDistance(house1, house2) {
-            const sizeDiff = (house1.size - house2.size) / 1000; // Normalize
-            const bedroomDiff = house1.bedrooms - house2.bedrooms;
-            const ageDiff = (house1.age - house2.age) / 10; // Normalize
-            
-            return Math.sqrt(sizeDiff * sizeDiff + bedroomDiff * bedroomDiff + ageDiff * ageDiff);
-        }
-
-        // House price prediction function
-        function predictHousePrice() {
-            const size = parseInt(document.getElementById('house-size').value) || 2000;
-            const bedrooms = parseInt(document.getElementById('house-bedrooms').value) || 3;
-            const age = parseInt(document.getElementById('house-age').value) || 10;
-            const k = parseInt(document.getElementById('k-value').value) || 5;
-            const method = document.getElementById('method-select').value;
-            
-            const targetHouse = { size, bedrooms, age };
-            
-            // Calculate distances to all houses
-            const distances = houseData.map(house => ({
-                ...house,
-                distance: calculateDistance(targetHouse, house)
-            }));
-            
-            // Sort by distance and take k nearest
-            distances.sort((a, b) => a.distance - b.distance);
-            const neighbors = distances.slice(0, k);
-            
-            let prediction;
-            let explanation;
-            
-            if (method === 'simple') {
-                const sum = neighbors.reduce((acc, neighbor) => acc + neighbor.price, 0);
-                prediction = sum / k;
-                explanation = 'Simple average of k nearest neighbors';
-            } else if (method === 'weighted') {
-                let weightedSum = 0;
-                let weightSum = 0;
-                
-                neighbors.forEach(neighbor => {
-                    const weight = 1 / (neighbor.distance + 0.01); // Avoid division by zero
-                    weightedSum += weight * neighbor.price;
-                    weightSum += weight;
-                });
-                
-                prediction = weightedSum / weightSum;
-                explanation = 'Weighted average using inverse distance';
-            } else { // distance
-                let weightedSum = 0;
-                let weightSum = 0;
-                
-                neighbors.forEach(neighbor => {
-                    const weight = 1 / (neighbor.distance * neighbor.distance + 0.01);
-                    weightedSum += weight * neighbor.price;
-                    weightSum += weight;
-                });
-                
-                prediction = weightedSum / weightSum;
-                explanation = 'Distance-weighted using inverse squared distance';
-            }
-            
-            const output = document.getElementById('predictionOutput');
-            output.innerHTML = `
-                <strong>Target House:</strong> ${size} sq ft, ${bedrooms} bed, ${age} years<br><br>
-                
-                <strong>k=${k} Nearest Neighbors:</strong><br>
-                ${neighbors.map((n, i) => 
-                    `${i+1}. ${n.size} sq ft, ${n.bedrooms} bed, ${n.age}yr → $${n.price.toLocaleString()} (d=${n.distance.toFixed(2)})`
-                ).join('<br>')}<br><br>
-                
-                <strong>Method:</strong> ${explanation}<br>
-                <strong>Predicted Price:</strong> $${Math.round(prediction).toLocaleString()}<br><br>
-                
-                <em>Try different methods to compare results!</em>
-            `;
-            
-            // Simple visualization
-            drawRegressionPlot(neighbors, prediction);
-            
-            // Show detailed analysis
-            setTimeout(() => {
-                const avgPrice = neighbors.reduce((acc, n) => acc + n.price, 0) / neighbors.length;
-                const priceRange = Math.max(...neighbors.map(n => n.price)) - Math.min(...neighbors.map(n => n.price));
-                
-                modal.show('k-NN Regression Analysis', `
-                    <div class="modal-highlight">
-                        <strong>Prediction Results:</strong><br>
-                        ${method === 'simple' ? 'Simple Average' : method === 'weighted' ? 'Weighted Average' : 'Distance Weighted'}: $${Math.round(prediction).toLocaleString()}
-                    </div>
-                    
-                    <div style="background: #1e293b; color: #5eead4; padding: 20px; border-radius: 10px; font-family: monospace; margin: 20px 0;">
-                        Neighbor Analysis:<br>
-                        Avg neighbor price: $${Math.round(avgPrice).toLocaleString()}<br>
-                        Price range: $${Math.round(priceRange).toLocaleString()}<br>
-                        Closest neighbor: ${neighbors[0].distance.toFixed(3)} units away<br>
-                        Farthest neighbor: ${neighbors[k-1].distance.toFixed(3)} units away
-                    </div>
-                    
-                    <h4 style="color: #0d9488;">Method Comparison:</h4>
-                    <ul style="line-height: 1.8;">
-                        <li><strong>Simple Average:</strong> $${Math.round(avgPrice).toLocaleString()} (baseline)</li>
-                        <li><strong>Current Method:</strong> $${Math.round(prediction).toLocaleString()} (${prediction > avgPrice ? 'higher' : 'lower'} than average)</li>
-                        <li><strong>Confidence:</strong> ${priceRange < 100000 ? 'High' : priceRange < 200000 ? 'Medium' : 'Low'} (based on neighbor agreement)</li>
-                    </ul>
-                    
-                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
-                        <strong>🏠 Insight:</strong><br>
-                        ${prediction > avgPrice ? 'The weighted approach suggests this house should be priced above the simple average, likely due to closer high-value neighbors.' : 
-                        'The weighted approach suggests a price below the simple average, possibly due to closer lower-value neighbors.'}
-                    </div>
-                `);
-            }, 1000);
-        }
-
-        // Simple regression plot visualization
-        function drawRegressionPlot(neighbors, prediction) {
-            const plot = document.getElementById('regressionPlot');
-            plot.innerHTML = '';
-            
-            const plotText = document.createElement('div');
-            plotText.style.cssText = `
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                text-align: center;
-                font-family: monospace;
-                color: #0d9488;
-                font-size: 0.9em;
-            `;
-            
-            const prices = neighbors.map(n => n.price);
-            const minPrice = Math.min(...prices);
-            const maxPrice = Math.max(...prices);
-            
-            plotText.innerHTML = `
-                <strong>Price Distribution</strong><br><br>
-                Min: $${(minPrice/1000).toFixed(0)}K<br>
-                Prediction: $${(prediction/1000).toFixed(0)}K<br>
-                Max: $${(maxPrice/1000).toFixed(0)}K<br><br>
-                <small>Range: $${((maxPrice-minPrice)/1000).toFixed(0)}K</small>
-            `;
-            
-            plot.appendChild(plotText);
-        }
-
-        // Initialize components
-        createFloatingElements();
-
-        // Enhanced keyboard navigation
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
-                window.location.href = 'Week3_Slide53.html';
-            } else if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
-                window.location.href = 'Week3_Slide55.html';
-            }
-        });
+        const classContent = `<p><strong>k-NN for classification</strong> outputs discrete class labels.</p><div class="modal-formula">y_pred = mode(y₁, y₂, ..., y_k)</div><p>Used for categorical prediction</p>`;
+        const regContent = `<p><strong>k-NN for regression</strong> outputs continuous values.</p><div class="modal-formula">y_pred = mean(y₁, y₂, ..., y_k)</div><p>Used for price prediction, etc.</p>`;
+        const simpleContent = `<p><strong>Simple average</strong> treats all k neighbors equally.</p><div class="modal-formula">ŷ = (1/k) Σ yᵢ</div><p>Equal importance to all neighbors</p>`;
+        const distContent = `<p><strong>Distance weighting</strong> gives more weight to closer neighbors.</p><div class="modal-formula">wᵢ = 1/dᵢ</div><p>Closer neighbors have more influence!</p>`;
+        const gaussContent = `<p><strong>Gaussian kernel</strong> smooths using Gaussian function.</p><div class="modal-formula">wᵢ = exp(-dᵢ²/2τ²)</div><p>τ is bandwidth parameter</p>`;
+        const invDistContent = `<p><strong>Inverse distance</strong> weights by inverse of distance.</p><div class="modal-formula">wᵢ = 1/(dᵢ + ε)</div><p>ε prevents division by zero</p>`;
+        class ModalSystem { constructor() { this.overlay = document.getElementById('modalOverlay'); this.title = document.getElementById('modalTitle'); this.content = document.getElementById('modalContent'); this.closeBtn = document.getElementById('modalClose'); this.closeBtn.addEventListener('click', () => this.close()); this.overlay.addEventListener('click', (e) => { if (e.target === this.overlay) this.close(); }); document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && this.overlay.classList.contains('active')) this.close(); }); } show(title, content) { this.title.textContent = title; this.content.innerHTML = content; this.overlay.classList.add('active'); document.body.style.overflow = 'hidden'; } close() { this.overlay.classList.remove('active'); document.body.style.overflow = ''; } }
+        const modal = new ModalSystem(); function showModal(title, content) { modal.show(title, content); }
+        document.addEventListener('keydown', function(e) { if (!document.getElementById('modalOverlay').classList.contains('active')) { if (e.key === 'ArrowLeft') window.location.href = 'Week3_Slide53.html'; else if (e.key === 'ArrowRight' || e.key === ' ') window.location.href = 'Week3_Slide55.html'; } });
     </script>
 </body>
 </html>

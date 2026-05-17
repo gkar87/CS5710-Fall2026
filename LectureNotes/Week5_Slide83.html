@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -435,6 +436,7 @@
             .boosting-visualization { flex-direction: column; gap: 20px; }
         }
     </style>
+  <script src="navigation.js"></script>
 </head>
 <body>
     <div class="floating-elements" id="floatingElements"></div>
@@ -563,180 +565,25 @@
     </div>
 
     <script>
-        // Modal System
-        class ModalSystem {
-            constructor() {
-                this.overlay = document.getElementById('modalOverlay');
-                this.title = document.getElementById('modalTitle');
-                this.content = document.getElementById('modalContent');
-                this.closeBtn = document.getElementById('modalClose');
-                
-                this.closeBtn.addEventListener('click', () => this.close());
-                this.overlay.addEventListener('click', (e) => {
-                    if (e.target === this.overlay) this.close();
-                });
-                
-                document.addEventListener('keydown', (e) => {
-                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
-                        this.close();
-                    }
-                });
-            }
-            
-            show(title, content) {
-                this.title.textContent = title;
-                this.content.innerHTML = content;
-                this.overlay.classList.add('active');
-                document.body.style.overflow = 'hidden';
-            }
-            
-            close() {
-                this.overlay.classList.remove('active');
-                document.body.style.overflow = '';
-            }
-        }
-
-        const modal = new ModalSystem();
-
-        // Create floating ML elements
-        function createFloatingElements() {
-            const container = document.getElementById('floatingElements');
-            for (let i = 0; i < 35; i++) {
-                const element = document.createElement('div');
-                element.className = 'floating-element';
-                element.style.left = Math.random() * 100 + '%';
-                element.style.animationDelay = Math.random() * 18 + 's';
-                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
-                container.appendChild(element);
-            }
-        }
-
-        // Show learner details
-        function showLearnerDetails(learnerType) {
-            const learnerInfo = {
-                'weak1': {
-                    title: 'First Weak Learner',
-                    content: `
-                        <div class="modal-highlight">
-                            <strong>Initial Classification Attempt</strong>
-                        </div>
-                        <p><strong>Focus:</strong> General patterns in the data</p>
-                        <p><strong>Error Rate:</strong> 40% (ε₁ = 0.40)</p>
-                        <p><strong>Weight Calculation:</strong><br>
-                        α₁ = 0.5 × ln((1-0.40)/0.40) = 0.42</p>
-                        <div class="modal-code">
-                        # Simple decision stump
-                        if feature_x > threshold:
-                            return class_1
-                        else:
-                            return class_2
-                        </div>
-                        <p><strong>Impact:</strong> Identifies easy-to-classify examples, leaving harder ones for subsequent learners.</p>
-                    `
-                },
-                'weak2': {
-                    title: 'Second Weak Learner',
-                    content: `
-                        <div class="modal-highlight">
-                            <strong>Learning from Mistakes</strong>
-                        </div>
-                        <p><strong>Focus:</strong> Examples misclassified by first learner</p>
-                        <p><strong>Error Rate:</strong> 30% (ε₂ = 0.30)</p>
-                        <p><strong>Weight Calculation:</strong><br>
-                        α₂ = 0.5 × ln((1-0.30)/0.30) = 0.65</p>
-                        <div class="modal-code">
-                        # Focuses on weighted samples
-                        # Higher weight on previously wrong predictions
-                        if weighted_feature_y > new_threshold:
-                            return class_1
-                        else:
-                            return class_2
-                        </div>
-                        <p><strong>Impact:</strong> Corrects many errors from the first learner, improving overall accuracy.</p>
-                    `
-                },
-                'weak3': {
-                    title: 'Third Weak Learner',
-                    content: `
-                        <div class="modal-highlight">
-                            <strong>Fine-tuning Hard Cases</strong>
-                        </div>
-                        <p><strong>Focus:</strong> The hardest examples still misclassified</p>
-                        <p><strong>Error Rate:</strong> 20% (ε₃ = 0.20)</p>
-                        <p><strong>Weight Calculation:</strong><br>
-                        α₃ = 0.5 × ln((1-0.20)/0.20) = 0.92</p>
-                        <div class="modal-code">
-                        # Specialized for edge cases
-                        # Very high weights on difficult samples
-                        if complex_pattern_detected:
-                            return specialized_prediction
-                        </div>
-                        <p><strong>Impact:</strong> Has the highest weight due to low error rate, strongly influences final predictions.</p>
-                    `
-                }
-            };
-            
-            const info = learnerInfo[learnerType];
-            if (info) {
-                modal.show(info.title, info.content);
-            }
-        }
-
-        // Interactive key ideas
-        document.querySelectorAll('.idea-item').forEach(item => {
-            item.addEventListener('click', function() {
-                const title = this.querySelector('.idea-title').textContent;
-                const desc = this.querySelector('.idea-desc').textContent;
-                
-                const details = {
-                    '🎯 Adaptive Learning': {
-                        detail: 'AdaBoost adapts by increasing weights of misclassified samples, forcing subsequent learners to focus on hard cases.',
-                        example: 'If a sample is consistently misclassified, its weight increases exponentially, making it a priority for the next learner.',
-                        math: 'Weight update: w_i^(t+1) = w_i^(t) × exp(-α_t × y_i × h_t(x_i))'
-                    },
-                    '⚖️ Weighted Voting': {
-                        detail: 'Each weak learner votes with a weight proportional to its accuracy. Better performers have more influence.',
-                        example: 'A learner with 80% accuracy gets weight ~1.4, while 60% accuracy gets weight ~0.4',
-                        math: 'Learner weight: α_t = 0.5 × ln((1-ε_t)/ε_t)'
-                    },
-                    '📈 Sequential Improvement': {
-                        detail: 'Each new learner is trained on a reweighted dataset emphasizing previous mistakes.',
-                        example: 'Learner 1: 60% accuracy → Learner 2: 65% on hard cases → Combined: 75% overall',
-                        math: 'Final hypothesis: H(x) = sign(Σ α_t × h_t(x))'
-                    },
-                    '🔄 Sample Weighting': {
-                        detail: 'Correctly classified samples get lower weights, misclassified get higher weights for next iteration.',
-                        example: 'Initial weight: 1/n → After misclassification: weight × e^α → Can become 2-3x original',
-                        math: 'Normalization ensures: Σw_i = 1'
-                    }
-                };
-                
-                const info = details[title];
-                modal.show(title, `
-                    <div class="modal-highlight">
-                        <strong>${desc}</strong>
-                    </div>
-                    <p>${info.detail}</p>
-                    <div class="modal-code">
-                        <strong>Mathematical Foundation:</strong><br>
-                        ${info.math}
-                    </div>
-                    <p><strong>Example:</strong> ${info.example}</p>
-                `);
-            }
-        });
-
-        // Initialize components
-        createFloatingElements();
-
-        // Keyboard navigation
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
-                window.location.href = 'Week5_Slide84.html';
-            } else if (e.key === 'ArrowLeft') {
-                window.location.href = 'Week5_Slide82.html';
-            }
-        });
-    </script>
+    (function() {
+        const overlay = document.getElementById('modalOverlay');
+        const titleEl = document.getElementById('modalTitle');
+        const contentEl = document.getElementById('modalContent');
+        const closeBtn = document.getElementById('modalClose');
+        window.showModal = function(title, content) {
+            titleEl.textContent = title;
+            contentEl.innerHTML = content;
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        };
+        window.closeModal = function() {
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        };
+        closeBtn.addEventListener('click', window.closeModal);
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) window.closeModal(); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && overlay.classList.contains('active')) window.closeModal(); });
+    })();
+</script>
 </body>
 </html>

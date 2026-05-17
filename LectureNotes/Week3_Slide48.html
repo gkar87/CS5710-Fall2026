@@ -5,920 +5,102 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CS5710 - Multi-class Classification (One-vs-All)</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            color: #134e4a;
-            overflow-x: hidden;
-        }
-
-        .slide-container {
-            flex: 1;
-            padding: 40px;
-            max-width: 1400px;
-            margin: 0 auto;
-            position: relative;
-        }
-
-        .slide-title {
-            font-size: 3.5em;
-            text-align: center;
-            margin-bottom: 50px;
-            color: #0d9488;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-            animation: slideInFromTop 1.2s ease-out;
-            font-weight: 700;
-        }
-
-        .content-layout {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 50px;
-            margin-bottom: 40px;
-        }
-
-        .strategy-section {
-            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
-            animation: slideInFromLeft 1s ease-out 0.3s both;
-            border: 1px solid rgba(13, 148, 136, 0.1);
-        }
-
-        .process-section {
-            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
-            animation: slideInFromRight 1s ease-out 0.3s both;
-            border: 1px solid rgba(13, 148, 136, 0.1);
-        }
-
-        .section-title {
-            font-size: 1.8em;
-            color: #0d9488;
-            margin-bottom: 25px;
-            font-weight: 600;
-            position: relative;
-        }
-
-        .section-title::after {
-            content: '';
-            position: absolute;
-            bottom: -8px;
-            left: 0;
-            width: 60px;
-            height: 3px;
-            background: linear-gradient(90deg, #0d9488, #14b8a6);
-            border-radius: 2px;
-        }
-
-        .definition-text {
-            font-size: 1.2em;
-            line-height: 1.8;
-            color: #1e293b;
-            margin-bottom: 30px;
-            padding: 25px;
-            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
-            border-radius: 15px;
-            border-left: 4px solid #0d9488;
-        }
-
-        .formula {
-            background: #1e293b;
-            color: #5eead4;
-            padding: 20px;
-            border-radius: 15px;
-            font-family: 'Courier New', monospace;
-            font-size: 1.1em;
-            margin: 20px 0;
-            text-align: center;
-            box-shadow: inset 0 4px 8px rgba(0,0,0,0.2);
-        }
-
-        .process-steps {
-            list-style: none;
-            margin-top: 20px;
-        }
-
-        .process-step {
-            padding: 15px;
-            margin: 10px 0;
-            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
-            border-radius: 12px;
-            border-left: 4px solid #0d9488;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .process-step:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
-        }
-
-        .step-number {
-            font-weight: 600;
-            color: #0d9488;
-            margin-bottom: 5px;
-        }
-
-        .step-desc {
-            font-size: 0.95em;
-            color: #475569;
-            line-height: 1.5;
-        }
-
-        .example-banner {
-            grid-column: 1 / -1;
-            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
-            animation: slideInFromBottom 1s ease-out 0.6s both;
-            border: 1px solid rgba(13, 148, 136, 0.1);
-        }
-
-        .example-content {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin-top: 25px;
-        }
-
-        .example-card {
-            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
-            border: 2px solid #14b8a6;
-            border-radius: 15px;
-            padding: 30px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .example-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
-        }
-
-        .example-title {
-            font-size: 1.3em;
-            font-weight: 600;
-            margin-bottom: 15px;
-            color: #0d9488;
-        }
-
-        .visual-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin: 15px 0;
-        }
-
-        .class-box {
-            padding: 12px;
-            border-radius: 10px;
-            text-align: center;
-            font-size: 0.9em;
-            font-weight: 600;
-            border: 2px solid transparent;
-            transition: all 0.3s ease;
-        }
-
-        .class-a { background: #fef3c7; color: #92400e; border-color: #f59e0b; }
-        .class-b { background: #dbeafe; color: #1e40af; border-color: #3b82f6; }
-        .class-c { background: #dcfce7; color: #166534; border-color: #22c55e; }
-
-        .floating-elements {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            overflow: hidden;
-            z-index: -1;
-        }
-
-        .floating-element {
-            position: absolute;
-            width: 5px;
-            height: 5px;
-            background: linear-gradient(135deg, #0d9488, #14b8a6);
-            border-radius: 50%;
-            opacity: 0.5;
-            animation: mlFloat 18s linear infinite;
-        }
-
-        .navigation {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            display: flex;
-            gap: 15px;
-        }
-
-        .nav-btn {
-            padding: 15px 25px;
-            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
-            border: 2px solid rgba(13, 148, 136, 0.2);
-            border-radius: 30px;
-            color: #134e4a;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(20px);
-            font-weight: 600;
-        }
-
-        .nav-btn:hover {
-            background: linear-gradient(135deg, #0d9488, #14b8a6);
-            color: white;
-            transform: translateY(-3px);
-            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
-        }
-
-        .slide-number {
-            position: fixed;
-            top: 30px;
-            right: 30px;
-            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
-            padding: 12px 20px;
-            border-radius: 25px;
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(13, 148, 136, 0.2);
-            color: #134e4a;
-            font-weight: 600;
-        }
-
-        .course-info {
-            position: fixed;
-            top: 30px;
-            left: 30px;
-            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
-            padding: 12px 20px;
-            border-radius: 25px;
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(13, 148, 136, 0.2);
-            color: #134e4a;
-            font-weight: 600;
-        }
-
-        /* Modal Styles */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(5px);
-        }
-
-        .modal-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .modal-container {
-            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
-            border-radius: 25px;
-            padding: 40px;
-            max-width: 700px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-            transform: scale(0.9) translateY(20px);
-            transition: transform 0.3s ease;
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
-            border: 2px solid rgba(13, 148, 136, 0.2);
-        }
-
-        .modal-overlay.active .modal-container {
-            transform: scale(1) translateY(0);
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
-        }
-
-        .modal-title {
-            font-size: 1.8em;
-            color: #0d9488;
-            font-weight: 600;
-        }
-
-        .modal-close {
-            background: none;
-            border: none;
-            font-size: 1.5em;
-            color: #64748b;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-close:hover {
-            background: rgba(13, 148, 136, 0.1);
-            color: #0d9488;
-            transform: rotate(90deg);
-        }
-
-        .modal-content {
-            font-size: 1.1em;
-            line-height: 1.8;
-            color: #1e293b;
-        }
-
-        .modal-highlight {
-            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
-            padding: 20px;
-            border-radius: 15px;
-            margin: 20px 0;
-            border-left: 4px solid #0d9488;
-        }
-
-        .modal-code {
-            background: #1e293b;
-            color: #5eead4;
-            padding: 20px;
-            border-radius: 10px;
-            font-family: 'Courier New', monospace;
-            font-size: 0.9em;
-            overflow-x: auto;
-            margin: 15px 0;
-        }
-
-        @keyframes slideInFromTop {
-            from { transform: translateY(-80px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-
-        @keyframes slideInFromLeft {
-            from { transform: translateX(-60px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-
-        @keyframes slideInFromRight {
-            from { transform: translateX(60px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-
-        @keyframes slideInFromBottom {
-            from { transform: translateY(60px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-
-        @keyframes mlFloat {
-            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
-            10% { opacity: 0.5; }
-            90% { opacity: 0.5; }
-            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
-        }
-
-        @media (max-width: 768px) {
-            .content-layout { grid-template-columns: 1fr; }
-            .slide-title { font-size: 2.5em; }
-            .example-content { grid-template-columns: 1fr; }
-            .visual-grid { grid-template-columns: 1fr; }
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%); min-height: 100vh; display: flex; flex-direction: column; color: #134e4a; overflow-x: hidden; }
+        .slide-container { flex: 1; padding: 40px; max-width: 1400px; margin: 0 auto; position: relative; }
+        .slide-title { font-size: 3.2em; text-align: center; margin-bottom: 40px; color: #0d9488; text-shadow: 2px 2px 4px rgba(0,0,0,0.1); animation: slideInFromTop 1.2s ease-out; font-weight: 700; }
+        .content-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 30px; }
+        .concept-section, .comparison-section { background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%); border-radius: 20px; padding: 35px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); animation: slideInFromLeft 1s ease-out 0.3s both; border: 1px solid rgba(13, 148, 136, 0.1); }
+        .comparison-section { animation: slideInFromRight 1s ease-out 0.3s both; }
+        .section-title { font-size: 1.6em; color: #0d9488; margin-bottom: 20px; font-weight: 600; position: relative; }
+        .section-title::after { content: ''; position: absolute; bottom: -8px; left: 0; width: 60px; height: 3px; background: linear-gradient(90deg, #0d9488, #14b8a6); border-radius: 2px; }
+        .definition-text { font-size: 1.1em; line-height: 1.7; color: #1e293b; margin-bottom: 25px; padding: 20px; background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%); border-radius: 15px; border-left: 4px solid #0d9488; }
+        .formula-box { background: #1e293b; color: #5eead4; padding: 25px; border-radius: 15px; margin: 20px 0; font-family: 'Courier New', monospace; text-align: center; font-size: 1.3em; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
+        .formula-main { font-size: 1.4em; padding-bottom: 15px; border-bottom: 1px solid rgba(94, 234, 212, 0.2); margin-bottom: 15px; }
+        .formula-detail { font-size: 0.85em; color: #94a3b8; line-height: 1.5; }
+        .where-section { margin-top: 20px; font-size: 0.95em; line-height: 1.6; color: #1e293b; }
+        .where-section strong { color: #0d9488; }
+        .method-card { padding: 20px; border-radius: 15px; text-align: center; transition: all 0.3s ease; cursor: pointer; border: 2px solid; margin: 15px 0; }
+        .method-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.1); }
+        .ova-card { background: linear-gradient(135deg, #fef3c7, #fde68a); border-color: #f59e0b; color: #92400e; }
+        .ovo-card { background: linear-gradient(135deg, #f0fdfa, #ccfbf1); border-color: #14b8a6; color: #0d9488; }
+        .method-icon { font-size: 2.5em; margin-bottom: 10px; }
+        .method-title { font-size: 1.2em; font-weight: 600; margin-bottom: 10px; }
+        .method-features { list-style: none; text-align: left; font-size: 0.85em; }
+        .method-features li { margin: 6px 0; padding: 6px 0; border-bottom: 1px solid rgba(0,0,0,0.1); }
+        .derivation-section { grid-column: 1 / -1; background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%); border-radius: 20px; padding: 35px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); animation: slideInFromBottom 1s ease-out 0.6s both; border: 1px solid rgba(13, 148, 136, 0.1); }
+        .derivation-steps { list-style: none; margin-top: 15px; }
+        .derivation-item { padding: 15px; margin: 12px 0; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border-radius: 12px; border-left: 4px solid #0d9488; transition: all 0.3s ease; cursor: pointer; }
+        .derivation-item:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15); }
+        .step-number { display: inline-block; background: #0d9488; color: white; width: 28px; height: 28px; border-radius: 50%; text-align: center; line-height: 28px; font-weight: 600; margin-right: 12px; font-size: 0.85em; }
+        .step-content { display: inline-block; vertical-align: top; width: calc(100% - 45px); }
+        .step-text { font-size: 1em; color: #1e293b; line-height: 1.5; }
+        .step-formula { background: #1e293b; color: #5eead4; padding: 12px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.9em; margin-top: 8px; }
+        .navigation { position: fixed; bottom: 30px; right: 30px; display: flex; gap: 15px; }
+        .nav-btn { padding: 15px 25px; background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9)); border: 2px solid rgba(13, 148, 136, 0.2); border-radius: 30px; color: #134e4a; text-decoration: none; transition: all 0.3s ease; backdrop-filter: blur(20px); font-weight: 600; }
+        .nav-btn:hover { background: linear-gradient(135deg, #0d9488, #14b8a6); color: white; transform: translateY(-3px); box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4); }
+        .slide-number { position: fixed; top: 30px; right: 30px; background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9)); padding: 12px 20px; border-radius: 25px; backdrop-filter: blur(20px); border: 1px solid rgba(13, 148, 136, 0.2); color: #134e4a; font-weight: 600; }
+        .course-info { position: fixed; top: 30px; left: 30px; background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9)); padding: 12px 20px; border-radius: 25px; backdrop-filter: blur(20px); border: 1px solid rgba(13, 148, 136, 0.2); color: #134e4a; font-weight: 600; }
+        @keyframes slideInFromTop { from { transform: translateY(-80px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes slideInFromLeft { from { transform: translateX(-60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideInFromRight { from { transform: translateX(60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideInFromBottom { from { transform: translateY(60px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @media (max-width: 768px) { .content-layout { grid-template-columns: 1fr; } .slide-title { font-size: 2.5em; } }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.3s ease; backdrop-filter: blur(5px); }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-container { background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%); border-radius: 25px; padding: 40px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; transform: scale(0.9) translateY(20px); transition: transform 0.3s ease; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3); border: 2px solid rgba(13, 148, 136, 0.2); }
+        .modal-overlay.active .modal-container { transform: scale(1) translateY(0); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid rgba(13, 148, 136, 0.1); }
+        .modal-title { font-size: 1.6em; color: #0d9488; font-weight: 600; }
+        .modal-close { background: none; border: none; font-size: 1.4em; color: #64748b; cursor: pointer; transition: all 0.3s ease; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .modal-close:hover { background: rgba(13, 148, 136, 0.1); color: #0d9488; transform: rotate(90deg); }
+        .modal-content { font-size: 1.05em; line-height: 1.7; color: #1e293b; }
+        .modal-highlight { background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%); padding: 18px; border-radius: 12px; margin: 15px 0; border-left: 4px solid #0d9488; }
+        .modal-formula { background: #1e293b; color: #5eead4; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; margin: 12px 0; }
     </style>
+    <script src="navigation.js"></script>
 </head>
 <body>
-    <div class="floating-elements" id="floatingElements"></div>
-    
-    <!-- Modal Dialog -->
-    <div class="modal-overlay" id="modalOverlay">
-        <div class="modal-container">
-            <div class="modal-header">
-                <h3 class="modal-title" id="modalTitle">Title</h3>
-                <button class="modal-close" id="modalClose">×</button>
-            </div>
-            <div class="modal-content" id="modalContent">Content</div>
-        </div>
-    </div>
-
+    <div class="modal-overlay" id="modalOverlay"><div class="modal-container"><div class="modal-header"><h3 class="modal-title" id="modalTitle">Title</h3><button class="modal-close" id="modalClose">×</button></div><div class="modal-content" id="modalContent">Content</div></div></div></div>
     <div class="course-info">CS5710 - Week 3</div>
     <div class="slide-number">Slide 48 of 60</div>
-    
     <div class="slide-container">
         <h1 class="slide-title">Multi-class Classification (One-vs-All)</h1>
-        
         <div class="content-layout">
-            <div class="strategy-section">
-                <h2 class="section-title">🎯 One-vs-All Strategy</h2>
-                
-                <div class="definition-text">
-                    <strong>One-vs-All (OvA)</strong> extends binary classifiers to handle multiple classes by training one binary classifier for each class against all other classes.
-                </div>
-
-                <div class="formula">
-                    For K classes:
-                    <br><br>
-                    Classifier i: P(y = i | x) vs P(y ≠ i | x)
-                    <br><br>
-                    Decision: class = argmax P(y = i | x)
-                    <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i ∈ {1,2,...,K}
-                </div>
-                
-                <div style="font-size: 1.1em; line-height: 1.7; color: #1e293b; margin-top: 20px;">
-                    <strong>Key Characteristics:</strong>
-                    <br><br>
-                    • Trains K binary classifiers
-                    <br>
-                    • Each classifier: "Class i" vs "Not Class i"
-                    <br>
-                    • Prediction: highest confidence score
-                    <br>
-                    • Works with any binary classifier
-                </div>
+            <div class="concept-section">
+                <h2 class="section-title">One-vs-All (OvA)</h2>
+                <div class="definition-text"><strong>One-vs-All</strong> converts a K-class problem into K binary problems. For each class k, train a classifier to distinguish "class k" from "all other classes".</div>
+                <div class="formula-box"><div class="formula-main">Train K classifiers: h_θ^(k)(x)</div><div class="formula-detail">One binary classifier per class</div></div>
+                <div class="where-section"><strong>Prediction:</strong> Choose class with highest probability</div>
             </div>
-
-            <div class="process-section">
-                <h2 class="section-title">⚙️ Training Process</h2>
-                
-                <ul class="process-steps">
-                    <li class="process-step">
-                        <div class="step-number">Step 1: Data Transformation</div>
-                        <div class="step-desc">For each class i, create binary labels: yi = 1, others = 0</div>
-                    </li>
-                    <li class="process-step">
-                        <div class="step-number">Step 2: Train Classifiers</div>
-                        <div class="step-desc">Train K binary logistic regression models independently</div>
-                    </li>
-                    <li class="process-step">
-                        <div class="step-number">Step 3: Prediction</div>
-                        <div class="step-desc">For new input x, compute Pi(x) = σ(θiTx) for all i</div>
-                    </li>
-                    <li class="process-step">
-                        <div class="step-number">Step 4: Decision</div>
-                        <div class="step-desc">Choose class with maximum probability: argmax Pi(x)</div>
-                    </li>
-                </ul>
-
-                <div style="background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%); padding: 20px; border-radius: 15px; margin-top: 20px; border-left: 4px solid #0d9488;">
-                    <strong>Advantage:</strong> Can use any binary classifier (SVM, Neural Network, etc.) and probabilities don't need to sum to 1.
-                </div>
+            <div class="comparison-section">
+                <h2 class="section-title">OvA vs OvO</h2>
+                <div class="method-card ova-card" onclick="showModal('One-vs-All', ovaContent)"><div class="method-icon">🎯</div><div class="method-title">One-vs-All</div><ul class="method-features"><li>K classifiers</li><li>🎯 Simpler training</li><li>📈 Scales well</li><li>✅ Binary classifiers</li></ul></div>
+                <div class="method-card ovo-card" onclick="showModal('One-vs-One', ovoContent)"><div class="method-icon">⚡</div><div class="method-title">One-vs-One</div><ul class="method-features"><li>K(K-1)/2 classifiers</li><li>📉 Less data per classifier</li><li>📈 Good for large K</li><li>✅ Binary classifiers</li></ul></div>
             </div>
         </div>
-
-        <div class="example-banner">
-            <div style="text-align: center; font-size: 1.4em; color: #0d9488; line-height: 1.6; margin-bottom: 30px;">
-                <strong>One-vs-All Example: 3-Class Problem</strong>
-            </div>
-            
-            <div class="example-content">
-                <div class="example-card">
-                    <div class="example-title">Training Phase</div>
-                    <div style="font-size: 1.0em; color: #1e293b; margin-bottom: 15px;">
-                        <strong>Original Data:</strong> Classes A, B, C
-                    </div>
-                    <div class="visual-grid">
-                        <div class="class-box class-a">Class A</div>
-                        <div class="class-box class-b">Class B</div>
-                        <div class="class-box class-c">Class C</div>
-                    </div>
-                    <div style="font-size: 0.95em; color: #475569; text-align: left; margin-top: 15px;">
-                        <strong>Create 3 Binary Problems:</strong>
-                        <br>• Classifier 1: A vs {B,C}
-                        <br>• Classifier 2: B vs {A,C}
-                        <br>• Classifier 3: C vs {A,B}
-                    </div>
-                </div>
-                
-                <div class="example-card">
-                    <div class="example-title">Prediction Phase</div>
-                    <div class="formula">
-                        New sample x:
-                        <br>
-                        P1(x) = 0.8  (A vs others)
-                        <br>
-                        P2(x) = 0.3  (B vs others)
-                        <br>
-                        P3(x) = 0.1  (C vs others)
-                        <br><br>
-                        Prediction: Class A (max = 0.8)
-                    </div>
-                    <div style="font-size: 0.9em; color: #475569; text-align: left; margin-top: 15px;">
-                        Each classifier outputs the probability that the input belongs to its positive class.
-                    </div>
-                </div>
-            </div>
+        <div class="derivation-section">
+            <h2 class="section-title">The Algorithm</h2>
+            <ul class="derivation-steps">
+                <li class="derivation-item" onclick="showModal('Step 1: Create Labels', step1Content)"><div class="step-number">1</div><div class="step-content"><div class="step-text">For class k: create binary labels</div><div class="step-formula">y_i^k = 1 if y_i = k else 0</div></div></li>
+                <li class="derivation-item" onclick="showModal('Step 2: Train Classifier', step2Content)"><div class="step-number">2</div><div class="step-content"><div class="step-text">Train logistic regression on y^k</div><div class="step-formula">h_θ^(k)(x) = P(y=k|x; θ)</div></div></li>
+                <li class="derivation-item" onclick="showModal('Step 3: Prediction', step3Content)"><div class="step-number">3</div><div class="step-content"><div class="step-text">Repeat for k = 1 to K</div><div class="step-formula">Train K classifiers</div></div></li>
+                <li class="derivation-item" onclick="showModal('Step 4: Inference', step4Content)"><div class="step-number">4</div><div class="step-content"><div class="step-text">At test time: pick class with max probability</div><div class="step-formula">y_pred = argmax_k h_θ^(k)(x)</div></div></li>
+            </ul>
         </div>
     </div>
-
-    <div class="navigation">
-        <a href="Week3_Slide47.html" class="nav-btn">← Previous</a>
-        <a href="Week3_Slide49.html" class="nav-btn">Next →</a>
-    </div>
-
-    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
-        <strong>Prepared by Dr. Gorkem Kar</strong>
-    </div>
-
+    <div class="navigation"><a href="Week3_Slide47.html" class="nav-btn">← Previous</a><a href="Week3_Slide49.html" class="nav-btn">Next →</a></div>
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;"><strong>Prepared by Dr. Gorkem Kar</strong></div>
     <script>
-        // Modal System
-        class ModalSystem {
-            constructor() {
-                this.overlay = document.getElementById('modalOverlay');
-                this.title = document.getElementById('modalTitle');
-                this.content = document.getElementById('modalContent');
-                this.closeBtn = document.getElementById('modalClose');
-                
-                this.closeBtn.addEventListener('click', () => this.close());
-                this.overlay.addEventListener('click', (e) => {
-                    if (e.target === this.overlay) this.close();
-                });
-                
-                document.addEventListener('keydown', (e) => {
-                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
-                        this.close();
-                    }
-                });
-            }
-            
-            show(title, content) {
-                this.title.textContent = title;
-                this.content.innerHTML = content;
-                this.overlay.classList.add('active');
-                document.body.style.overflow = 'hidden';
-            }
-            
-            close() {
-                this.overlay.classList.remove('active');
-                document.body.style.overflow = '';
-            }
-        }
-
-        const modal = new ModalSystem();
-
-        // Create floating ML elements
-        function createFloatingElements() {
-            const container = document.getElementById('floatingElements');
-            for (let i = 0; i < 35; i++) {
-                const element = document.createElement('div');
-                element.className = 'floating-element';
-                element.style.left = Math.random() * 100 + '%';
-                element.style.animationDelay = Math.random() * 18 + 's';
-                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
-                container.appendChild(element);
-            }
-        }
-
-        // Interactive process steps with modal
-        document.querySelectorAll('.process-step').forEach(step => {
-            step.addEventListener('click', function() {
-                const title = this.querySelector('.step-number').textContent;
-                const desc = this.querySelector('.step-desc').textContent;
-                
-                const details = {
-                    'Step 1: Data Transformation': {
-                        detail: 'Transform multi-class problem into multiple binary problems by creating new target variables.',
-                        math: 'For class i:<br>y_new = 1 if original_y == i<br>y_new = 0 if original_y ≠ i',
-                        example: 'Original: [A, B, A, C, B]<br>For class A: [1, 0, 1, 0, 0]<br>For class B: [0, 1, 0, 0, 1]<br>For class C: [0, 0, 0, 1, 0]',
-                        code: `# Transform labels for One-vs-All
-import numpy as np
-from sklearn.preprocessing import LabelEncoder
-
-# Original multi-class labels
-y_original = ['cat', 'dog', 'cat', 'bird', 'dog', 'bird']
-le = LabelEncoder()
-y_encoded = le.fit_transform(y_original)  # [0, 1, 0, 2, 1, 2]
-
-# Create binary targets for each class
-n_classes = len(np.unique(y_encoded))
-binary_targets = {}
-
-for class_idx in range(n_classes):
-    binary_targets[class_idx] = (y_encoded == class_idx).astype(int)
-    print(f"Class {class_idx}: {binary_targets[class_idx]}")
-
-# Output:
-# Class 0: [1 0 1 0 0 0]  # cat vs others
-# Class 1: [0 1 0 0 1 0]  # dog vs others  
-# Class 2: [0 0 0 1 0 1]  # bird vs others`
-                    },
-                    'Step 2: Train Classifiers': {
-                        detail: 'Train one binary classifier for each class independently using the transformed binary targets.',
-                        math: 'For each class i:<br>θᵢ = argmin J(θ) on binary problem (class i vs others)',
-                        example: 'If we have 3 classes, train 3 separate logistic regression models, each optimized independently.',
-                        code: `# Train K binary classifiers
-from sklearn.linear_model import LogisticRegression
-import numpy as np
-
-def train_one_vs_all(X, y):
-    classes = np.unique(y)
-    classifiers = {}
-    
-    for class_label in classes:
-        # Create binary target: 1 for current class, 0 for others
-        binary_y = (y == class_label).astype(int)
-        
-        # Train binary classifier
-        clf = LogisticRegression()
-        clf.fit(X, binary_y)
-        classifiers[class_label] = clf
-        
-        print(f"Trained classifier for class {class_label}")
-        print(f"Positive samples: {np.sum(binary_y)}")
-        print(f"Negative samples: {len(binary_y) - np.sum(binary_y)}")
-    
-    return classifiers
-
-# Example usage
-X = np.random.randn(1000, 4)  # 1000 samples, 4 features
-y = np.random.choice(['A', 'B', 'C'], 1000)  # 3 classes
-classifiers = train_one_vs_all(X, y)`
-                    },
-                    'Step 3: Prediction': {
-                        detail: 'For a new sample, get probability predictions from all K binary classifiers.',
-                        math: 'For input x:<br>P₁(x) = σ(θ₁ᵀx)  # Prob of class 1<br>P₂(x) = σ(θ₂ᵀx)  # Prob of class 2<br>...<br>Pₖ(x) = σ(θₖᵀx)  # Prob of class K',
-                        example: 'New sample x → [P₁=0.7, P₂=0.2, P₃=0.8] (Note: probabilities don\'t sum to 1)',
-                        code: `def predict_one_vs_all(classifiers, X_new):
-    predictions = {}
-    probabilities = {}
-    
-    for class_label, clf in classifiers.items():
-        # Get probability of belonging to this class
-        prob = clf.predict_proba(X_new)[:, 1]  # Prob of positive class
-        probabilities[class_label] = prob
-    
-    # For each sample, find class with highest probability
-    final_predictions = []
-    for i in range(X_new.shape[0]):
-        class_probs = {cls: probs[i] for cls, probs in probabilities.items()}
-        predicted_class = max(class_probs, key=class_probs.get)
-        final_predictions.append(predicted_class)
-    
-    return final_predictions, probabilities
-
-# Example
-X_new = np.array([[1, 2, 3, 4], [5, 6, 7, 8]])
-predictions, probs = predict_one_vs_all(classifiers, X_new)
-print("Predictions:", predictions)
-print("Probabilities:", probs)`
-                    },
-                    'Step 4: Decision': {
-                        detail: 'Choose the class whose binary classifier gives the highest confidence score.',
-                        math: 'ŷ = argmax Pᵢ(x)<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i ∈ {1,2,...,K}',
-                        example: 'If P₁(x)=0.3, P₂(x)=0.7, P₃(x)=0.1, then predict class 2',
-                        code: `def make_final_decision(class_probabilities):
-    """
-    Make final prediction based on highest probability
-    
-    Args:
-        class_probabilities: dict with class -> probability
-    
-    Returns:
-        predicted_class, confidence_score
-    """
-    predicted_class = max(class_probabilities, key=class_probabilities.get)
-    confidence = class_probabilities[predicted_class]
-    
-    return predicted_class, confidence
-
-# Example decision making
-example_probs = {'A': 0.3, 'B': 0.7, 'C': 0.1}
-pred_class, confidence = make_final_decision(example_probs)
-print(f"Predicted class: {pred_class}")
-print(f"Confidence: {confidence:.2f}")
-
-# Handle ties (rare but possible)
-def make_decision_with_tie_breaking(class_probabilities):
-    max_prob = max(class_probabilities.values())
-    tied_classes = [cls for cls, prob in class_probabilities.items() 
-                   if prob == max_prob]
-    
-    if len(tied_classes) == 1:
-        return tied_classes[0], max_prob
-    else:
-        # Tie-breaking strategy (e.g., choose first alphabetically)
-        return sorted(tied_classes)[0], max_prob`
-                    }
-                };
-                
-                const info = details[title];
-                if (info) {
-                    modal.show(title, `
-                        <div class="modal-highlight">
-                            <strong>${desc}</strong>
-                        </div>
-                        <p>${info.detail}</p>
-                        <div class="modal-code">
-                            <strong>Mathematics:</strong><br>
-                            ${info.math}
-                        </div>
-                        <p><strong>Example:</strong> ${info.example}</p>
-                        <div class="modal-code">
-                            <strong>Implementation:</strong><br>
-                            <pre>${info.code}</pre>
-                        </div>
-                    `);
-                }
-            });
-        });
-
-        // Interactive example cards with modal
-        document.querySelectorAll('.example-card').forEach(card => {
-            card.addEventListener('click', function() {
-                const title = this.querySelector('.example-title').textContent;
-                
-                const cardDetails = {
-                    'Training Phase': {
-                        description: 'How One-vs-All transforms a multi-class problem into multiple binary problems',
-                        process: `Original Problem: 3 classes {A, B, C}
-
-Binary Problems Created:
-1. Classifier 1: A vs {B,C}
-   - Positive examples: All samples labeled 'A'
-   - Negative examples: All samples labeled 'B' or 'C'
-
-2. Classifier 2: B vs {A,C}  
-   - Positive examples: All samples labeled 'B'
-   - Negative examples: All samples labeled 'A' or 'C'
-
-3. Classifier 3: C vs {A,B}
-   - Positive examples: All samples labeled 'C'
-   - Negative examples: All samples labeled 'A' or 'B'`,
-                        advantages: 'Simple to implement, works with any binary classifier, parallelizable training',
-                        code: `# Complete One-vs-All implementation
-import numpy as np
-from sklearn.linear_model import LogisticRegression
-from sklearn.datasets import make_classification
-from sklearn.model_selection import train_test_split
-
-class OneVsAllClassifier:
-    def __init__(self, binary_classifier=LogisticRegression):
-        self.binary_classifier = binary_classifier
-        self.classifiers = {}
-        self.classes = None
-    
-    def fit(self, X, y):
-        self.classes = np.unique(y)
-        self.classifiers = {}
-        
-        for class_label in self.classes:
-            # Create binary target
-            binary_y = (y == class_label).astype(int)
-            
-            # Train binary classifier
-            clf = self.binary_classifier()
-            clf.fit(X, binary_y)
-            self.classifiers[class_label] = clf
-    
-    def predict_proba(self, X):
-        probas = {}
-        for class_label, clf in self.classifiers.items():
-            probas[class_label] = clf.predict_proba(X)[:, 1]
-        return probas
-    
-    def predict(self, X):
-        probas = self.predict_proba(X)
-        predictions = []
-        
-        for i in range(X.shape[0]):
-            class_probs = {cls: probs[i] for cls, probs in probas.items()}
-            predicted_class = max(class_probs, key=class_probs.get)
-            predictions.append(predicted_class)
-        
-        return np.array(predictions)
-
-# Example usage
-X, y = make_classification(n_samples=1000, n_classes=3, n_features=4, 
-                          n_informative=3, random_state=42)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
-
-ova_clf = OneVsAllClassifier()
-ova_clf.fit(X_train, y_train)
-predictions = ova_clf.predict(X_test)
-probabilities = ova_clf.predict_proba(X_test)
-
-print("Accuracy:", np.mean(predictions == y_test))
-print("Sample probabilities:", {k: v[:3] for k, v in probabilities.items()})`
-                    },
-                    'Prediction Phase': {
-                        description: 'How One-vs-All makes predictions by combining outputs from all binary classifiers',
-                        process: `Prediction Process:
-1. Feed new sample x to all K binary classifiers
-2. Each classifier outputs P(y = class_i | x)
-3. Choose class with highest probability
-
-Key Points:
-• Probabilities don't necessarily sum to 1
-• Each classifier was trained independently
-• Decision boundary is determined by highest confidence
-• Can provide uncertainty estimates`,
-                        comparison: 'Unlike softmax regression, OvA probabilities are not normalized and may not sum to 1',
-                        code: `# Detailed prediction example
-def detailed_prediction_example():
-    # Simulate trained classifiers
-    np.random.seed(42)
-    
-    # Sample feature vector
-    x = np.array([1.5, -0.5, 2.0, 0.8]).reshape(1, -1)
-    
-    # Simulate classifier outputs (probabilities)
-    classifier_outputs = {
-        'Class_A': 0.85,  # High confidence for class A
-        'Class_B': 0.23,  # Low confidence for class B  
-        'Class_C': 0.67   # Medium confidence for class C
-    }
-    
-    print("Sample feature vector:", x.flatten())
-    print("\\nBinary Classifier Outputs:")
-    for class_name, prob in classifier_outputs.items():
-        print(f"{class_name} vs Others: {prob:.2f}")
-    
-    # Make decision
-    predicted_class = max(classifier_outputs, key=classifier_outputs.get)
-    confidence = classifier_outputs[predicted_class]
-    
-    print(f"\\nFinal Prediction: {predicted_class}")
-    print(f"Confidence: {confidence:.2f}")
-    
-    # Show decision boundary analysis
-    print("\\nDecision Analysis:")
-    print("- Class A classifier is most confident (0.85)")
-    print("- This suggests the sample is most likely class A")
-    print("- Note: probabilities don't sum to 1.0")
-    print(f"- Sum of probabilities: {sum(classifier_outputs.values()):.2f}")
-    
-    return predicted_class, confidence, classifier_outputs
-
-# Run example
-pred, conf, outputs = detailed_prediction_example()
-
-# Comparison with other methods
-print("\\nComparison with other approaches:")
-print("One-vs-All:")
-print("  + Works with any binary classifier")
-print("  + Simple and interpretable") 
-print("  + Parallelizable training")
-print("  - Probabilities don't sum to 1")
-print("  - Class imbalance in binary problems")
-print("\\nSoftmax Regression:")
-print("  + Probabilities sum to 1") 
-print("  + Unified training")
-print("  - More complex optimization")
-print("  - Requires specific model type")`
-                    }
-                };
-                
-                const details = cardDetails[title];
-                if (details) {
-                    modal.show(`One-vs-All: ${title}`, `
-                        <div class="modal-highlight">
-                            <h4>${details.description}</h4>
-                        </div>
-                        <div style="margin: 15px 0; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px; white-space: pre-line; font-family: monospace;">
-                            ${details.process}
-                        </div>
-                        <p><strong>Key Advantages:</strong> ${details.advantages}</p>
-                        ${details.comparison ? `<p><strong>Important Note:</strong> ${details.comparison}</p>` : ''}
-                        <div class="modal-code">
-                            <strong>Complete Implementation:</strong><br>
-                            <pre>${details.code}</pre>
-                        </div>
-                    `);
-                }
-            });
-        });
-
-        // Initialize components
-        createFloatingElements();
-
-        // Enhanced keyboard navigation
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'ArrowLeft') {
-                window.location.href = 'Week3_Slide47.html';
-            } else if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
-                window.location.href = 'Week3_Slide49.html';
-            }
-        });
+        const ovaContent = `<p><strong>One-vs-All (OvA)</strong> trains K binary classifiers.</p><div class="modal-highlight"><p><strong>Steps:</strong></p><ol><li>For k = 1 to K: Train classifier for "class k vs rest"</li><li>At prediction: Choose class with highest probability</li></ol></div><p>Simple and scales reasonably</p>`;
+        const ovoContent = `<p><strong>One-vs-One (OvO)</strong> trains K(K-1)/2 classifiers.</p><div class="modal-highlight"><p><strong>Each classifier:</strong> Binary classification between class i and class j</p><p><strong>Advantage:</strong> Less data per classifier (only 2 classes)</p><p><strong>Disadvantage:</strong> More classifiers to train</p>`;
+        const step1Content = `<p><strong>Create binary labels</strong> for class k.</p><div class="modal-formula">y^k = 1 if y == k, else 0</div><p>Class k is now "positive", all others are "negative"</p>`;
+        const step2Content = `<p><strong>Train logistic regression</strong> on these binary labels.</p><div class="modal-formula">h_θ^(k)(x) = P(y=k|x; θ)</div><p>Output: probability of class k vs all others</p>`;
+        const step3Content = `<p><strong>Repeat</strong> for all K classes.</p><p>You end up with K trained classifiers, one per class</p>`;
+        const step4Content = `<p><strong>Final prediction</strong> is simply the class with highest probability.</p><div class="modal-formula">y_pred = argmax_k h_θ^(k)(x)</div><p>This is a "winner-takes-all" approach</p>`;
+        class ModalSystem { constructor() { this.overlay = document.getElementById('modalOverlay'); this.title = document.getElementById('modalTitle'); this.content = document.getElementById('modalContent'); this.closeBtn = document.getElementById('modalClose'); this.closeBtn.addEventListener('click', () => this.close()); this.overlay.addEventListener('click', (e) => { if (e.target === this.overlay) this.close(); }); document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && this.overlay.classList.contains('active')) this.close(); }); } show(title, content) { this.title.textContent = title; this.content.innerHTML = content; this.overlay.classList.add('active'); document.body.style.overflow = 'hidden'; } close() { this.overlay.classList.remove('active'); document.body.style.overflow = ''; } }
+        const modal = new ModalSystem(); function showModal(title, content) { modal.show(title, content); }
+        document.addEventListener('keydown', function(e) { if (!document.getElementById('modalOverlay').classList.contains('active')) { if (e.key === 'ArrowLeft') window.location.href = 'Week3_Slide47.html'; else if (e.key === 'ArrowRight' || e.key === ' ') window.location.href = 'Week3_Slide49.html'; } });
     </script>
 </body>
 </html>

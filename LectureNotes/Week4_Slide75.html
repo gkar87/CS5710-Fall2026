@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -548,6 +549,7 @@
             .kernel-selector { flex-wrap: wrap; }
         }
     </style>
+  <script src="navigation.js"></script>
 </head>
 <body>
     <div class="floating-elements" id="floatingElements"></div>
@@ -801,306 +803,25 @@
     </div>
 
     <script>
-        // Modal System
-        class ModalSystem {
-            constructor() {
-                this.overlay = document.getElementById('modalOverlay');
-                this.title = document.getElementById('modalTitle');
-                this.content = document.getElementById('modalContent');
-                this.closeBtn = document.getElementById('modalClose');
-                
-                this.closeBtn.addEventListener('click', () => this.close());
-                this.overlay.addEventListener('click', (e) => {
-                    if (e.target === this.overlay) this.close();
-                });
-                
-                document.addEventListener('keydown', (e) => {
-                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
-                        this.close();
-                    }
-                });
-            }
-            
-            show(title, content) {
-                this.title.textContent = title;
-                this.content.innerHTML = content;
-                this.overlay.classList.add('active');
-                document.body.style.overflow = 'hidden';
-            }
-            
-            close() {
-                this.overlay.classList.remove('active');
-                document.body.style.overflow = '';
-            }
-        }
-
-        const modal = new ModalSystem();
-
-        // Create floating ML elements
-        function createFloatingElements() {
-            const container = document.getElementById('floatingElements');
-            for (let i = 0; i < 35; i++) {
-                const element = document.createElement('div');
-                element.className = 'floating-element';
-                element.style.left = Math.random() * 100 + '%';
-                element.style.animationDelay = Math.random() * 18 + 's';
-                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
-                container.appendChild(element);
-            }
-        }
-
-        // Interactive kernel cards
-        document.querySelectorAll('.kernel-card').forEach(card => {
-            card.addEventListener('click', function() {
-                const kernelName = this.querySelector('.kernel-name').textContent;
-                const formula = this.querySelector('.kernel-formula').innerHTML;
-                const useCases = this.querySelector('.use-cases-list').innerHTML;
-                
-                const kernelDetails = {
-                    'Linear Kernel': {
-                        description: 'The simplest kernel that computes the dot product between input vectors.',
-                        math: 'K(x, y) = x₁y₁ + x₂y₂ + ... + xₙyₙ + c',
-                        advantages: [
-                            'Fastest training and prediction',
-                            'Works well with high-dimensional data',
-                            'No hyperparameters to tune (except optional c)',
-                            'Most interpretable - weights have direct meaning'
-                        ],
-                        disadvantages: [
-                            'Cannot capture non-linear relationships',
-                            'Limited flexibility',
-                            'May underfit complex data'
-                        ],
-                        when: 'Use when you have many features (n > m), when data is linearly separable, or when you need fast training.'
-                    },
-                    'Polynomial Kernel': {
-                        description: 'Creates polynomial decision boundaries by raising the dot product to a power d.',
-                        math: 'K(x, y) = (γ(x·y) + r)^d where γ=1/n, r=0 typically',
-                        advantages: [
-                            'Can model smooth non-linear boundaries',
-                            'Good for image recognition tasks',
-                            'Captures global patterns in data',
-                            'Degree parameter provides flexibility'
-                        ],
-                        disadvantages: [
-                            'Computationally expensive for high degrees',
-                            'Prone to overfitting with high degrees',
-                            'Less popular than RBF in practice'
-                        ],
-                        when: 'Use for image processing, when you expect polynomial relationships, or when boundaries should be smooth curves.'
-                    },
-                    'RBF Kernel': {
-                        description: 'Radial Basis Function kernel that creates localized, flexible decision boundaries.',
-                        math: 'K(x, y) = exp(-γ||x - y||²) where γ = 1/(2σ²)',
-                        advantages: [
-                            'Most versatile - works for most problems',
-                            'Can handle complex non-linear patterns',
-                            'Single parameter γ to tune',
-                            'Creates localized decision regions'
-                        ],
-                        disadvantages: [
-                            'Can overfit with high γ values',
-                            'Requires parameter tuning',
-                            'Less interpretable than linear',
-                            'Slower than linear kernel'
-                        ],
-                        when: 'Use as default choice for most problems, especially when you have medium-sized datasets and complex patterns.'
-                    }
-                };
-                
-                const details = kernelDetails[kernelName];
-                modal.show(kernelName, `
-                    <div class="modal-highlight">
-                        <strong>${details.description}</strong>
-                    </div>
-                    
-                    <div class="modal-code">
-                        Mathematical Form:<br>
-                        ${details.math}
-                    </div>
-                    
-                    <div style="margin: 20px 0;">
-                        <h4 style="color: #10b981; margin-bottom: 10px;">✅ Advantages:</h4>
-                        <ul style="color: #475569; line-height: 1.6;">
-                            ${details.advantages.map(adv => `<li>• ${adv}</li>`).join('')}
-                        </ul>
-                    </div>
-                    
-                    <div style="margin: 20px 0;">
-                        <h4 style="color: #ef4444; margin-bottom: 10px;">❌ Disadvantages:</h4>
-                        <ul style="color: #475569; line-height: 1.6;">
-                            ${details.disadvantages.map(dis => `<li>• ${dis}</li>`).join('')}
-                        </ul>
-                    </div>
-                    
-                    <div style="background: rgba(251, 191, 36, 0.1); padding: 15px; border-radius: 10px; margin-top: 20px;">
-                        <strong>🎯 When to use:</strong><br>
-                        ${details.when}
-                    </div>
-                    
-                    <div style="background: rgba(13, 148, 136, 0.1); padding: 15px; border-radius: 10px; margin-top: 15px;">
-                        <strong>🎯 Best applications:</strong><br>
-                        ${useCases.replace(/•/g, '→').replace(/<br>/g, '<br>→ ')}
-                    </div>
-                `);
-            });
-        });
-
-        // Interactive comparison table
-        document.querySelectorAll('.comparison-table tbody tr').forEach(row => {
-            row.addEventListener('click', function() {
-                const aspect = this.querySelector('.aspect-label').textContent;
-                
-                const aspectDetails = {
-                    'Training Speed': {
-                        explanation: 'How fast the SVM can be trained on the dataset.',
-                        linear: 'Linear kernel is fastest - O(n) complexity for kernel computation.',
-                        polynomial: 'Polynomial kernel is slower - complexity increases with degree d.',
-                        rbf: 'RBF kernel has moderate speed - depends on number of support vectors.',
-                        tip: 'For large datasets (>100k samples), prefer linear kernel for speed.'
-                    },
-                    'Memory Usage': {
-                        explanation: 'Amount of memory required to store and compute the kernel matrix.',
-                        linear: 'Minimal memory - only stores weight vector.',
-                        polynomial: 'High memory for high degrees - kernel matrix can be very large.',
-                        rbf: 'Medium memory usage - scales with number of support vectors.',
-                        tip: 'Memory usage = O(n²) for kernel matrix, where n is training set size.'
-                    },
-                    'Flexibility': {
-                        explanation: 'Ability to capture complex, non-linear relationships in data.',
-                        linear: 'Low flexibility - only linear decision boundaries.',
-                        polynomial: 'Medium flexibility - polynomial curves of degree d.',
-                        rbf: 'High flexibility - can approximate any continuous function.',
-                        tip: 'More flexibility can lead to overfitting - validate carefully!'
-                    },
-                    'Interpretability': {
-                        explanation: 'How easily you can understand and explain the model decisions.',
-                        linear: 'High interpretability - each feature has a clear weight.',
-                        polynomial: 'Medium interpretability - polynomial relationships are understandable.',
-                        rbf: 'Low interpretability - complex, localized decision regions.',
-                        tip: 'For regulated industries (finance, healthcare), linear kernels are preferred.'
-                    },
-                    'Parameter Tuning': {
-                        explanation: 'Amount of hyperparameter tuning required for good performance.',
-                        linear: 'Minimal tuning - maybe just the C parameter for regularization.',
-                        polynomial: 'Medium tuning - degree d, coefficient γ, and constant r.',
-                        rbf: 'Important tuning - gamma γ parameter significantly affects performance.',
-                        tip: 'Use grid search with cross-validation for parameter optimization.'
-                    }
-                };
-                
-                const details = aspectDetails[aspect];
-                modal.show(`Kernel Comparison: ${aspect}`, `
-                    <div class="modal-highlight">
-                        <strong>${details.explanation}</strong>
-                    </div>
-                    
-                    <div style="margin: 20px 0;">
-                        <h4 style="color: #0d9488; margin-bottom: 15px;">Detailed Comparison:</h4>
-                        
-                        <div style="margin: 10px 0; padding: 12px; background: rgba(239, 68, 68, 0.1); border-radius: 8px;">
-                            <strong>📏 Linear:</strong> ${details.linear}
-                        </div>
-                        
-                        <div style="margin: 10px 0; padding: 12px; background: rgba(245, 158, 11, 0.1); border-radius: 8px;">
-                            <strong>📈 Polynomial:</strong> ${details.polynomial}
-                        </div>
-                        
-                        <div style="margin: 10px 0; padding: 12px; background: rgba(16, 185, 129, 0.1); border-radius: 8px;">
-                            <strong>🎯 RBF:</strong> ${details.rbf}
-                        </div>
-                    </div>
-                    
-                    <div style="background: rgba(251, 191, 36, 0.1); padding: 15px; border-radius: 10px; margin-top: 20px;">
-                        <strong>💡 Pro Tip:</strong><br>
-                        ${details.tip}
-                    </div>
-                `);
-            });
-        });
-
-        // Interactive playground
-        let currentKernel = 'linear';
-
-        // Parameter sliders
-        document.getElementById('degreeSlider').addEventListener('input', function() {
-            document.getElementById('degreeValue').textContent = this.value;
-            if (currentKernel === 'polynomial') {
-                updateVisualization();
-            }
-        });
-
-        document.getElementById('gammaSlider').addEventListener('input', function() {
-            document.getElementById('gammaValue').textContent = parseFloat(this.value).toFixed(1);
-            if (currentKernel === 'rbf') {
-                updateVisualization();
-            }
-        });
-
-        function selectKernel(kernel, button) {
-            // Update active button
-            document.querySelectorAll('.kernel-btn').forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
-            
-            currentKernel = kernel;
-            updateVisualization();
-        }
-
-        function updateVisualization() {
-            const boundary = document.getElementById('decisionBoundary');
-            const degree = document.getElementById('degreeSlider').value;
-            const gamma = parseFloat(document.getElementById('gammaSlider').value);
-            
-            // Remove all boundary classes
-            boundary.className = 'decision-boundary';
-            
-            switch (currentKernel) {
-                case 'linear':
-                    boundary.classList.add('boundary-linear');
-                    boundary.style.width = '400px';
-                    boundary.style.height = '2px';
-                    boundary.style.top = '150px';
-                    boundary.style.left = '100px';
-                    boundary.style.borderRadius = '0';
-                    boundary.style.transform = 'rotate(15deg)';
-                    break;
-                    
-                case 'polynomial':
-                    boundary.classList.add('boundary-poly');
-                    const polySize = 100 + degree * 20;
-                    boundary.style.width = polySize + 'px';
-                    boundary.style.height = polySize + 'px';
-                    boundary.style.top = (150 - polySize/2) + 'px';
-                    boundary.style.left = (300 - polySize/2) + 'px';
-                    boundary.style.borderRadius = '50%';
-                    boundary.style.transform = 'rotate(0deg)';
-                    break;
-                    
-                case 'rbf':
-                    boundary.classList.add('boundary-rbf');
-                    const rbfSize = Math.max(50, 200 - gamma * 20);
-                    boundary.style.width = rbfSize + 'px';
-                    boundary.style.height = rbfSize + 'px';
-                    boundary.style.top = (150 - rbfSize/2) + 'px';
-                    boundary.style.left = (300 - rbfSize/2) + 'px';
-                    boundary.style.borderRadius = '50%';
-                    boundary.style.transform = 'rotate(0deg)';
-                    break;
-            }
-        }
-
-        // Initialize components
-        createFloatingElements();
-        updateVisualization();
-
-        // Keyboard navigation
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'ArrowLeft') {
-                window.location.href = 'Week4_Slide74.html';
-            } else if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
-                window.location.href = 'Week4_Slide76.html';
-            }
-        });
-    </script>
+    (function() {
+        const overlay = document.getElementById('modalOverlay');
+        const titleEl = document.getElementById('modalTitle');
+        const contentEl = document.getElementById('modalContent');
+        const closeBtn = document.getElementById('modalClose');
+        window.showModal = function(title, content) {
+            titleEl.textContent = title;
+            contentEl.innerHTML = content;
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        };
+        window.closeModal = function() {
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        };
+        closeBtn.addEventListener('click', window.closeModal);
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) window.closeModal(); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && overlay.classList.contains('active')) window.closeModal(); });
+    })();
+</script>
 </body>
 </html>
