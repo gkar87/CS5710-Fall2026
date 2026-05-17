@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Elastic Net</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh; display: flex; flex-direction: column;
+            color: #134e4a; overflow-x: hidden;
+        }
+        .slide-container { flex: 1; padding: 40px; max-width: 1400px; margin: 0 auto; position: relative; }
+        .slide-title { font-size: 3.5em; text-align: center; margin-bottom: 50px; color: #0d9488; text-shadow: 2px 2px 4px rgba(0,0,0,0.1); animation: slideInFromTop 1.2s ease-out; font-weight: 700; }
+        .content-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; margin-bottom: 40px; }
+        .concept-section, .comparison-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px; padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+        .concept-section { animation: slideInFromLeft 1s ease-out 0.3s both; }
+        .comparison-section { animation: slideInFromRight 1s ease-out 0.3s both; }
+        .section-title {
+            font-size: 1.8em; color: #0d9488; margin-bottom: 25px; font-weight: 600; position: relative;
+        }
+        .section-title::after {
+            content: ''; position: absolute; bottom: -8px; left: 0;
+            width: 60px; height: 3px; background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+        .definition-text {
+            font-size: 1.2em; line-height: 1.8; color: #1e293b; margin-bottom: 30px;
+            padding: 25px; background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px; border-left: 4px solid #0d9488;
+        }
+        .formula-box {
+            background: #1e293b; color: #5eead4; padding: 25px; border-radius: 15px;
+            margin: 20px 0; font-family: 'Courier New', monospace; text-align: center;
+            font-size: 1.3em; box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+        .method-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-top: 25px; }
+        .method-card {
+            padding: 25px; border-radius: 15px; text-align: center;
+            transition: all 0.3s ease; cursor: pointer; border: 3px solid;
+        }
+        .method-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.1); }
+        .ridge-card { background: linear-gradient(135deg, #dbeafe, #bfdbfe); border-color: #3b82f6; }
+        .lasso-card { background: linear-gradient(135deg, #fef3c7, #fde68a); border-color: #f59e0b; }
+        .elastic-card { background: linear-gradient(135deg, #f0fdf4, #bbf7d0); border-color: #10b981; }
+        .method-title { font-size: 1.2em; font-weight: 600; margin: 15px 0; }
+        .ridge-card .method-title { color: #1e40af; }
+        .lasso-card .method-title { color: #92400e; }
+        .elastic-card .method-title { color: #047857; }
+        .method-formula { background: #1e293b; color: #5eead4; padding: 12px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.9em; margin: 10px 0; }
+        .demo-section {
+            grid-column: 1 / -1; background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px; padding: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both; border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+        .parameter-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin: 30px 0; }
+        .control-group { display: flex; flex-direction: column; gap: 10px; }
+        .control-label { font-weight: 600; color: #0d9488; }
+        .parameter-slider { width: 100%; height: 8px; border-radius: 4px; background: #cbd5e1; outline: none; -webkit-appearance: none; }
+        .parameter-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: linear-gradient(135deg, #0d9488, #14b8a6); cursor: pointer; }
+        .parameter-value { font-size: 1.1em; font-weight: 600; color: #0d9488; text-align: center; background: rgba(13, 148, 136, 0.1); padding: 8px; border-radius: 8px; }
+        .floating-elements { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; z-index: -1; }
+        .floating-element { position: absolute; width: 5px; height: 5px; background: linear-gradient(135deg, #0d9488, #14b8a6); border-radius: 50%; opacity: 0.5; animation: mlFloat 18s linear infinite; }
+        .navigation { position: fixed; bottom: 30px; right: 30px; display: flex; gap: 15px; }
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2); border-radius: 30px;
+            color: #134e4a; text-decoration: none; transition: all 0.3s ease;
+            backdrop-filter: blur(20px); font-weight: 600;
+        }
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6); color: white;
+            transform: translateY(-3px); box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+        .slide-number, .course-info {
+            position: fixed; top: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px; border-radius: 25px; backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2); color: #134e4a; font-weight: 600;
+        }
+        .slide-number { right: 30px; } .course-info { left: 30px; }
+        @keyframes slideInFromTop { from { transform: translateY(-80px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes slideInFromLeft { from { transform: translateX(-60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideInFromRight { from { transform: translateX(60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideInFromBottom { from { transform: translateY(60px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; } 90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .method-grid { grid-template-columns: 1fr; }
+            .parameter-controls { grid-template-columns: 1fr; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    <div class="course-info">CS5710 - Week 2</div>
+    <div class="slide-number">Slide 37 of 40</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Elastic Net</h1>
+        
+        <div class="content-layout">
+            <div class="concept-section">
+                <h2 class="section-title">🎯 Best of Both Worlds</h2>
+                
+                <div class="definition-text">
+                    <strong>Elastic Net</strong> combines L1 (Lasso) and L2 (Ridge) regularization to get the benefits of both feature selection and coefficient shrinkage.
+                </div>
+                
+                <div class="formula-box">
+                    J(θ) = MSE + λ₁∑|θᵢ| + λ₂∑θᵢ²
+                </div>
+                
+                <div style="font-size: 1.05em; line-height: 1.6; color: #1e293b; margin-top: 20px;">
+                    <strong>Alternative formulation:</strong><br>
+                    J(θ) = MSE + λ[α∑|θᵢ| + (1-α)∑θᵢ²]<br><br>
+                    <strong>Where:</strong><br>
+                    • α ∈ [0,1] controls L1/L2 mix<br>
+                    • α = 1 → Pure Lasso<br>
+                    • α = 0 → Pure Ridge<br>
+                    • α = 0.5 → Equal mix
+                </div>
+            </div>
+
+            <div class="comparison-section">
+                <h2 class="section-title">⚖️ Regularization Comparison</h2>
+                
+                <div class="method-grid">
+                    <div class="method-card ridge-card">
+                        <div class="method-title">🔵 Ridge</div>
+                        <div class="method-formula">λ∑θᵢ²</div>
+                        <div style="font-size: 0.9em; color: #1e40af; margin-top: 10px;">
+                            ✓ Handles multicollinearity<br>
+                            ✓ Shrinks coefficients<br>
+                            ✗ No feature selection
+                        </div>
+                    </div>
+                    
+                    <div class="method-card lasso-card">
+                        <div class="method-title">🔶 Lasso</div>
+                        <div class="method-formula">λ∑|θᵢ|</div>
+                        <div style="font-size: 0.9em; color: #92400e; margin-top: 10px;">
+                            ✓ Feature selection<br>
+                            ✓ Sparse solutions<br>
+                            ✗ Arbitrary group selection
+                        </div>
+                    </div>
+                    
+                    <div class="method-card elastic-card">
+                        <div class="method-title">🟢 Elastic Net</div>
+                        <div class="method-formula">λ[α|θᵢ| + (1-α)θᵢ²]</div>
+                        <div style="font-size: 0.9em; color: #047857; margin-top: 10px;">
+                            ✓ Feature selection<br>
+                            ✓ Group selection<br>
+                            ✓ Handles correlated features
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h3 style="font-size: 1.8em; color: #0d9488; text-align: center; margin-bottom: 20px; font-weight: 600;">
+                🎮 Interactive Elastic Net Parameters
+            </h3>
+            
+            <div class="parameter-controls">
+                <div class="control-group">
+                    <label class="control-label">L1 Ratio (α): <span id="alphaDisplay">0.5</span></label>
+                    <input type="range" min="0" max="1" step="0.1" value="0.5" class="parameter-slider" id="alphaSlider">
+                    <div class="parameter-value" id="alphaValue">Equal L1/L2 Mix</div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">Regularization Strength (λ): <span id="lambdaDisplay">1.0</span></label>
+                    <input type="range" min="0" max="5" step="0.1" value="1.0" class="parameter-slider" id="lambdaSlider">
+                    <div class="parameter-value" id="lambdaValue">Moderate Regularization</div>
+                </div>
+            </div>
+            
+            <div style="text-align: center; padding: 30px; background: linear-gradient(135deg, #f0fdf4, #bbf7d0); border-radius: 15px; margin-top: 30px;">
+                <h4 style="color: #047857; margin-bottom: 15px;">🎯 When to Use Elastic Net</h4>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; text-align: left;">
+                    <div>
+                        <strong style="color: #065f46;">✅ Perfect for:</strong><br>
+                        • High-dimensional data with groups of correlated features<br>
+                        • When you want both feature selection and stability<br>
+                        • Gene expression data, text analysis<br>
+                        • When Lasso is too aggressive in feature elimination
+                    </div>
+                    <div>
+                        <strong style="color: #065f46;">💡 Key Benefits:</strong><br>
+                        • Selects groups of correlated features together<br>
+                        • More stable than Lasso for correlated predictors<br>
+                        • Inherits Ridge's ability to handle multicollinearity<br>
+                        • Maintains Lasso's sparsity-inducing properties
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week2_Slide36.html" class="nav-btn">← Previous</a>
+        <a href="Week2_Slide38.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        const alphaSlider = document.getElementById('alphaSlider');
+        const lambdaSlider = document.getElementById('lambdaSlider');
+        const alphaDisplay = document.getElementById('alphaDisplay');
+        const lambdaDisplay = document.getElementById('lambdaDisplay');
+        const alphaValue = document.getElementById('alphaValue');
+        const lambdaValue = document.getElementById('lambdaValue');
+
+        alphaSlider.addEventListener('input', function() {
+            const alpha = parseFloat(this.value);
+            alphaDisplay.textContent = alpha.toFixed(1);
+            
+            if (alpha === 0) {
+                alphaValue.textContent = 'Pure Ridge (L2 only)';
+            } else if (alpha === 1) {
+                alphaValue.textContent = 'Pure Lasso (L1 only)';
+            } else if (alpha === 0.5) {
+                alphaValue.textContent = 'Equal L1/L2 Mix';
+            } else if (alpha < 0.5) {
+                alphaValue.textContent = 'Ridge-dominant';
+            } else {
+                alphaValue.textContent = 'Lasso-dominant';
+            }
+        });
+
+        lambdaSlider.addEventListener('input', function() {
+            const lambda = parseFloat(this.value);
+            lambdaDisplay.textContent = lambda.toFixed(1);
+            
+            if (lambda === 0) {
+                lambdaValue.textContent = 'No Regularization';
+            } else if (lambda <= 1) {
+                lambdaValue.textContent = 'Light Regularization';
+            } else if (lambda <= 3) {
+                lambdaValue.textContent = 'Moderate Regularization';
+            } else {
+                lambdaValue.textContent = 'Strong Regularization';
+            }
+        });
+
+        // Interactive method cards with modal
+        document.querySelectorAll('.method-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('.method-title').textContent.trim();
+                
+                const methodDetails = {
+                    '🔵 Ridge': {
+                        detail: 'Ridge regression adds an L2 penalty term that shrinks coefficients towards zero but never eliminates them completely.',
+                        example: 'Features: [size, bedrooms, bathrooms, age, garage]<br>Ridge result: [2.1, 1.5, 0.8, -0.3, 0.4]<br>All coefficients kept, but smaller values',
+                        math: 'Penalty: λ∑θᵢ² creates a circular constraint region',
+                        benefit: 'Stable with correlated features, handles multicollinearity well'
+                    },
+                    '🔶 Lasso': {
+                        detail: 'Lasso uses L1 penalty that can drive coefficients to exactly zero, performing automatic feature selection.',
+                        example: 'Features: [size, bedrooms, bathrooms, age, garage]<br>Lasso result: [2.5, 1.8, 0, 0, 0.6]<br>Only 3 out of 5 features selected',
+                        math: 'Penalty: λ∑|θᵢ| creates a diamond-shaped constraint with corners at axes',
+                        benefit: 'Automatic feature selection, interpretable sparse models'
+                    },
+                    '🟢 Elastic Net': {
+                        detail: 'Elastic Net combines L1 and L2 penalties to get both feature selection and coefficient shrinkage benefits.',
+                        example: 'Correlated features: [house_sqft, living_sqft]<br>Lasso: picks one randomly<br>Elastic Net: keeps both with similar coefficients',
+                        math: 'Penalty: λ[α∑|θᵢ| + (1-α)∑θᵢ²] balances both constraint types',
+                        benefit: 'Selects groups of correlated features, more stable than pure Lasso'
+                    }
+                };
+                
+                const info = methodDetails[title];
+                if (info) {
+                    modal.show(title, `
+                        <div class="modal-highlight">
+                            <strong>${info.detail}</strong>
+                        </div>
+                        <div class="modal-code">
+                            <strong>Example:</strong><br>
+                            ${info.example}
+                        </div>
+                        <p><strong>🔬 Mathematical Insight:</strong><br>${info.math}</p>
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                            <strong>💡 Key Benefit:</strong><br>
+                            ${info.benefit}
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week2_Slide36.html';
+            } else if ((e.key === 'ArrowRight' || e.key === ' ') && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week2_Slide38.html';
+            }
+        });
+    </script>
+</body>
+</html>

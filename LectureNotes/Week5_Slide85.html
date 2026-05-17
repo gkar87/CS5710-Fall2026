@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Gradient Boosting Introduction</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .concept-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .comparison-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .concept-text {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .key-features {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .feature-item {
+            padding: 20px;
+            margin: 15px 0;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .feature-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .feature-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .feature-desc {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .comparison-table th {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .comparison-table td {
+            padding: 15px;
+            border-bottom: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .comparison-table tr:nth-child(even) {
+            background: rgba(204, 251, 241, 0.3);
+        }
+
+        .visualization-banner {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .vis-title {
+            font-size: 1.4em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .gradient-flow {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 30px;
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 15px;
+        }
+
+        .flow-step {
+            text-align: center;
+            flex: 1;
+            padding: 20px;
+        }
+
+        .flow-icon {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .flow-label {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 5px;
+        }
+
+        .flow-desc {
+            font-size: 0.9em;
+            color: #64748b;
+        }
+
+        .flow-arrow {
+            font-size: 2em;
+            color: #0d9488;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .gradient-flow { flex-direction: column; gap: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    
+    <div class="course-info">CS5710 - Week 5</div>
+    <div class="slide-number">Slide 85 of 100</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Gradient Boosting Introduction</h1>
+        
+        <div class="content-layout">
+            <div class="concept-section">
+                <h2 class="section-title">Core Concept</h2>
+                
+                <div class="concept-text">
+                    <strong>Gradient Boosting</strong> builds models sequentially by optimizing a differentiable loss function using gradient descent in function space.
+                </div>
+                
+                <ul class="key-features">
+                    <li class="feature-item">
+                        <div class="feature-title">🎯 Residual Learning</div>
+                        <div class="feature-desc">Each model learns to predict residuals (errors) of previous models</div>
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-title">📉 Loss Optimization</div>
+                        <div class="feature-desc">Directly minimizes any differentiable loss function</div>
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-title">🔄 Gradient Descent</div>
+                        <div class="feature-desc">Uses gradients to find optimal direction for improvement</div>
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-title">🌳 Flexible Base Learners</div>
+                        <div class="feature-desc">Typically uses decision trees but can use any model</div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="comparison-section">
+                <h2 class="section-title">GB vs AdaBoost</h2>
+                
+                <table class="comparison-table">
+                    <tr>
+                        <th>Aspect</th>
+                        <th>Gradient Boosting</th>
+                        <th>AdaBoost</th>
+                    </tr>
+                    <tr>
+                        <td>Focus</td>
+                        <td>Residuals/Gradients</td>
+                        <td>Sample Weights</td>
+                    </tr>
+                    <tr>
+                        <td>Loss Function</td>
+                        <td>Any differentiable</td>
+                        <td>Exponential loss</td>
+                    </tr>
+                    <tr>
+                        <td>Optimization</td>
+                        <td>Gradient descent</td>
+                        <td>Weight updates</td>
+                    </tr>
+                    <tr>
+                        <td>Flexibility</td>
+                        <td>Very flexible</td>
+                        <td>Binary classification</td>
+                    </tr>
+                    <tr>
+                        <td>Regularization</td>
+                        <td>Learning rate, depth</td>
+                        <td>Number of learners</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="visualization-banner">
+            <div class="vis-title">Gradient Boosting Process Flow</div>
+            
+            <div class="gradient-flow">
+                <div class="flow-step">
+                    <div class="flow-icon">📊</div>
+                    <div class="flow-label">Initial Prediction</div>
+                    <div class="flow-desc">F₀(x) = mean(y)</div>
+                </div>
+                
+                <div class="flow-arrow">→</div>
+                
+                <div class="flow-step">
+                    <div class="flow-icon">📉</div>
+                    <div class="flow-label">Calculate Residuals</div>
+                    <div class="flow-desc">r = y - F(x)</div>
+                </div>
+                
+                <div class="flow-arrow">→</div>
+                
+                <div class="flow-step">
+                    <div class="flow-icon">🌳</div>
+                    <div class="flow-label">Fit New Model</div>
+                    <div class="flow-desc">h(x) → residuals</div>
+                </div>
+                
+                <div class="flow-arrow">→</div>
+                
+                <div class="flow-step">
+                    <div class="flow-icon">➕</div>
+                    <div class="flow-label">Update Prediction</div>
+                    <div class="flow-desc">F(x) += η·h(x)</div>
+                </div>
+                
+                <div class="flow-arrow">→</div>
+                
+                <div class="flow-step">
+                    <div class="flow-icon">🔄</div>
+                    <div class="flow-label">Repeat</div>
+                    <div class="flow-desc">Until converged</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week5_Slide84.html" class="nav-btn">← Previous</a>
+        <a href="Week5_Slide86.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive feature items
+        document.querySelectorAll('.feature-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const title = this.querySelector('.feature-title').textContent;
+                const desc = this.querySelector('.feature-desc').textContent;
+                
+                const details = {
+                    '🎯 Residual Learning': {
+                        detail: 'Instead of learning the target directly, each new model learns the errors (residuals) left by the ensemble.',
+                        example: 'If true value is 100 and current prediction is 85, the next model learns to predict +15.',
+                        math: 'residual = y - F_{m-1}(x)'
+                    },
+                    '📉 Loss Optimization': {
+                        detail: 'Gradient Boosting can optimize any differentiable loss function, making it versatile for various tasks.',
+                        example: 'MSE for regression, Log loss for classification, Huber loss for robust regression',
+                        math: 'L(y, F(x)) where L is differentiable'
+                    },
+                    '🔄 Gradient Descent': {
+                        detail: 'Uses negative gradients of the loss function to determine the direction of improvement.',
+                        example: 'Like walking downhill by always taking steps in the steepest descent direction',
+                        math: 'F_m(x) = F_{m-1}(x) - η·∇L'
+                    },
+                    '🌳 Flexible Base Learners': {
+                        detail: 'While decision trees are most common, any model that can approximate gradients works.',
+                        example: 'Shallow trees (depth 3-8) are typical to avoid overfitting',
+                        math: 'h_m(x) ≈ -∇L(y, F_{m-1}(x))'
+                    }
+                };
+                
+                const info = details[title];
+                modal.show(title, `
+                    <div class="modal-highlight">
+                        <strong>${desc}</strong>
+                    </div>
+                    <p>${info.detail}</p>
+                    <div class="modal-code">
+                        <strong>Mathematical Foundation:</strong><br>
+                        ${info.math}
+                    </div>
+                    <p><strong>Example:</strong> ${info.example}</p>
+                `);
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week5_Slide86.html';
+            } else if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week5_Slide84.html';
+            }
+        });
+    </script>
+</body>
+</html>

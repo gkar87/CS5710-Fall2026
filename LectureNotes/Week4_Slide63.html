@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Gini Impurity</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .gini-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .comparison-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .formula-box {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .formula-box:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .concept-box {
+            padding: 20px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+            margin: 15px 0;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .comparison-table th {
+            background: #0d9488;
+            color: white;
+            padding: 15px;
+            text-align: left;
+        }
+
+        .comparison-table td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .comparison-table tr:hover {
+            background: rgba(13, 148, 136, 0.05);
+        }
+
+        .visualization-container {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .gini-examples {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .gini-card {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .gini-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .gini-value {
+            font-size: 2em;
+            color: #0d9488;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .gini-examples { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    
+    <div class="course-info">CS5710 - Week 4</div>
+    <div class="slide-number">Slide 63 of 80</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Gini Impurity</h1>
+        
+        <div class="content-layout">
+            <div class="gini-section">
+                <h2 class="section-title">🎯 Gini Impurity</h2>
+                
+                <div class="concept-box">
+                    <strong>Gini Impurity</strong> measures how often a randomly chosen element would be incorrectly labeled if randomly labeled according to the distribution.
+                </div>
+                
+                <div class="formula-box" id="giniFormula">
+                    Gini(S) = 1 - Σ p(c)²
+                </div>
+                
+                <div style="margin-top: 20px; font-size: 0.95em; line-height: 1.6;">
+                    Where:
+                    <ul style="list-style: none; padding-left: 20px;">
+                        <li>• Gini(S) = Gini impurity of set S</li>
+                        <li>• p(c) = Proportion of class c</li>
+                        <li>• Range: 0 (pure) to 0.5 (binary)</li>
+                    </ul>
+                </div>
+                
+                <div class="concept-box" style="margin-top: 20px;">
+                    <strong>Key Properties:</strong><br>
+                    • Gini = 0: Pure node<br>
+                    • Gini = 0.5: Maximum impurity (binary)<br>
+                    • Used in CART algorithm<br>
+                    • Computationally efficient
+                </div>
+            </div>
+
+            <div class="comparison-section">
+                <h2 class="section-title">📊 Gini vs Entropy</h2>
+                
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Aspect</th>
+                            <th>Gini</th>
+                            <th>Entropy</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Formula</td>
+                            <td>1 - Σp²</td>
+                            <td>-Σp×log(p)</td>
+                        </tr>
+                        <tr>
+                            <td>Range</td>
+                            <td>0 to 0.5</td>
+                            <td>0 to 1</td>
+                        </tr>
+                        <tr>
+                            <td>Computation</td>
+                            <td>Faster</td>
+                            <td>Slower (log)</td>
+                        </tr>
+                        <tr>
+                            <td>Algorithm</td>
+                            <td>CART</td>
+                            <td>ID3, C4.5</td>
+                        </tr>
+                        <tr>
+                            <td>Preference</td>
+                            <td>Isolates classes</td>
+                            <td>Balanced splits</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="concept-box" style="margin-top: 20px;">
+                    <strong>When to use:</strong><br>
+                    • <strong>Gini:</strong> Default choice, faster<br>
+                    • <strong>Entropy:</strong> When you need information gain
+                </div>
+            </div>
+        </div>
+
+        <div class="visualization-container">
+            <h2 class="section-title">Gini Calculation Examples</h2>
+            
+            <div class="gini-examples">
+                <div class="gini-card" data-classes="[100, 0]">
+                    <div style="width: 100px; height: 100px; background: #10b981; border-radius: 50%; margin: 0 auto;"></div>
+                    <div class="gini-value">Gini = 0.0</div>
+                    <div>Pure Node<br>100% Class A</div>
+                </div>
+                
+                <div class="gini-card" data-classes="[75, 25]">
+                    <div style="width: 100px; height: 100px; background: conic-gradient(#10b981 0deg 270deg, #ef4444 270deg); border-radius: 50%; margin: 0 auto;"></div>
+                    <div class="gini-value">Gini = 0.375</div>
+                    <div>Impure Node<br>75% A, 25% B</div>
+                </div>
+                
+                <div class="gini-card" data-classes="[50, 50]">
+                    <div style="width: 100px; height: 100px; background: conic-gradient(#10b981 0deg 180deg, #ef4444 180deg); border-radius: 50%; margin: 0 auto;"></div>
+                    <div class="gini-value">Gini = 0.5</div>
+                    <div>Maximum Impurity<br>50% A, 50% B</div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 30px; padding: 20px; background: rgba(13, 148, 136, 0.05); border-radius: 10px;">
+                <h3 style="color: #0d9488; margin-bottom: 15px;">Step-by-Step Calculation:</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                    <div style="padding: 15px; background: white; border-radius: 8px;">
+                        <strong>Example: 80 Yes, 20 No</strong><br>
+                        p(Yes) = 0.8, p(No) = 0.2<br>
+                        Gini = 1 - (0.8² + 0.2²)<br>
+                        Gini = 1 - (0.64 + 0.04) = 0.32
+                    </div>
+                    <div style="padding: 15px; background: white; border-radius: 8px;">
+                        <strong>Interpretation:</strong><br>
+                        Lower Gini = More pure<br>
+                        0.32 suggests moderate impurity<br>
+                        Good candidate for further splitting
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week4_Slide62.html" class="nav-btn">← Previous</a>
+        <a href="Week4_Slide64.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive Gini formula
+        document.getElementById('giniFormula').addEventListener('click', function() {
+            modal.show('Gini Impurity Formula', `
+                <div class="modal-highlight">
+                    <strong>Gini(S) = 1 - Σ p(c)²</strong>
+                </div>
+                <p><strong>Understanding the Formula:</strong></p>
+                <ul>
+                    <li><strong>Simpler than entropy:</strong> No logarithm needed</li>
+                    <li><strong>Probability squared:</strong> Each class probability is squared</li>
+                    <li><strong>Subtract from 1:</strong> Inverts to measure impurity</li>
+                </ul>
+                <div class="modal-code">
+def gini_impurity(data):
+    total = len(data)
+    classes = {}
+    for item in data:
+        classes[item] = classes.get(item, 0) + 1
+    
+    gini = 1.0
+    for count in classes.values():
+        p = count / total
+        gini -= p ** 2
+    
+    return gini
+                </div>
+                <p><strong>Advantage:</strong> Computationally efficient - about 2x faster than entropy in practice!</p>
+            `);
+        });
+
+        // Interactive Gini examples
+        document.querySelectorAll('.gini-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const classes = JSON.parse(this.dataset.classes);
+                const total = classes.reduce((a, b) => a + b, 0);
+                const proportions = classes.map(c => c / total);
+                
+                let calculation = 'Gini = 1';
+                proportions.forEach((p, i) => {
+                    if (p > 0) {
+                        calculation += ` - ${p.toFixed(2)}²`;
+                    }
+                });
+                
+                const gini = 1 - proportions.reduce((sum, p) => sum + p * p, 0);
+                
+                modal.show('Gini Calculation', `
+                    <div class="modal-highlight">
+                        <strong>Dataset: ${classes.join(' vs ')} samples</strong>
+                    </div>
+                    <p><strong>Step-by-step calculation:</strong></p>
+                    <div class="modal-code">
+${calculation}
+= 1 - ${proportions.map(p => (p * p).toFixed(3)).join(' - ')}
+= ${gini.toFixed(3)}
+                    </div>
+                    <p><strong>Interpretation:</strong><br>
+                    ${gini === 0 ? 'Perfect purity - no need to split this node!' :
+                      gini >= 0.5 ? 'Maximum impurity - definitely needs splitting!' :
+                      gini < 0.2 ? 'Low impurity - might be a good leaf node.' :
+                      'Moderate impurity - consider splitting based on information gain.'}
+                    </p>
+                    <p><strong>CART Decision:</strong> The CART algorithm would ${gini > 0.1 ? 'attempt to split this node' : 'likely make this a leaf node'}.</p>
+                `);
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week4_Slide62.html';
+            } else if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week4_Slide64.html';
+            }
+        });
+    </script>
+</body>
+</html>

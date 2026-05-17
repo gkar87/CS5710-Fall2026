@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Bias-Variance Tradeoff</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .bias-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .variance-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title.bias {
+            color: #ef4444;
+        }
+
+        .section-title.variance {
+            color: #3b82f6;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            border-radius: 2px;
+        }
+
+        .section-title.bias::after {
+            background: linear-gradient(90deg, #ef4444, #f87171);
+        }
+
+        .section-title.variance::after {
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+        }
+
+        .concept-description {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            border-radius: 15px;
+            border-left: 4px solid;
+        }
+
+        .bias-description {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border-left-color: #ef4444;
+        }
+
+        .variance-description {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border-left-color: #3b82f6;
+        }
+
+        .characteristics-list {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .characteristic-item {
+            padding: 15px 20px;
+            margin: 12px 0;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border-left: 4px solid;
+            font-weight: 500;
+        }
+
+        .bias-item {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border-left-color: #ef4444;
+            color: #991b1b;
+        }
+
+        .variance-item {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border-left-color: #3b82f6;
+            color: #1e40af;
+        }
+
+        .characteristic-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        .tradeoff-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 2px solid #10b981;
+        }
+
+        .tradeoff-title {
+            font-size: 2.2em;
+            color: #10b981;
+            margin-bottom: 25px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .decomposition-formula {
+            background: linear-gradient(135deg, #1e293b, #334155);
+            color: #5eead4;
+            padding: 30px;
+            border-radius: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.3em;
+            text-align: center;
+            margin: 25px 0;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .tradeoff-scenarios {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .scenario-card {
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid;
+        }
+
+        .scenario-card.low-bias {
+            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            border-color: #3b82f6;
+        }
+
+        .scenario-card.high-bias {
+            background: linear-gradient(135deg, #fef2f2, #fee2e2);
+            border-color: #ef4444;
+        }
+
+        .scenario-card.balanced {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border-color: #10b981;
+        }
+
+        .scenario-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+
+        .scenario-title {
+            font-weight: 700;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .scenario-title.low-bias {
+            color: #3b82f6;
+        }
+
+        .scenario-title.high-bias {
+            color: #ef4444;
+        }
+
+        .scenario-title.balanced {
+            color: #10b981;
+        }
+
+        .scenario-metrics {
+            font-size: 0.9em;
+            line-height: 1.6;
+            color: #64748b;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .tradeoff-scenarios { grid-template-columns: 1fr; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .info-box {
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .warning-box {
+            background: rgba(239, 68, 68, 0.1);
+            border-left: 4px solid #ef4444;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .success-box {
+            background: rgba(16, 185, 129, 0.1);
+            border-left: 4px solid #10b981;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    
+    <div class="course-info">CS5710 - Week 1</div>
+    <div class="slide-number">Slide 13 of 20</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Bias-Variance Tradeoff</h1>
+        
+        <div class="content-layout">
+            <div class="bias-section">
+                <h2 class="section-title bias">🔴 Bias</h2>
+                
+                <div class="concept-description bias-description">
+                    <strong>Bias</strong> is the error introduced by approximating a real-world problem with a simplified model. High bias means the model makes strong assumptions.
+                </div>
+                
+                <ul class="characteristics-list">
+                    <li class="characteristic-item bias-item">
+                        Systematic errors in predictions
+                    </li>
+                    <li class="characteristic-item bias-item">
+                        Underfitting (too simple)
+                    </li>
+                    <li class="characteristic-item bias-item">
+                        High training error
+                    </li>
+                    <li class="characteristic-item bias-item">
+                        Consistent but wrong predictions
+                    </li>
+                    <li class="characteristic-item bias-item">
+                        Missing relevant relations
+                    </li>
+                </ul>
+            </div>
+
+            <div class="variance-section">
+                <h2 class="section-title variance">🔵 Variance</h2>
+                
+                <div class="concept-description variance-description">
+                    <strong>Variance</strong> is the error from sensitivity to small fluctuations in the training set. High variance means the model changes significantly with different data.
+                </div>
+                
+                <ul class="characteristics-list">
+                    <li class="characteristic-item variance-item">
+                        Predictions vary with training data
+                    </li>
+                    <li class="characteristic-item variance-item">
+                        Overfitting (too complex)
+                    </li>
+                    <li class="characteristic-item variance-item">
+                        Low training, high test error
+                    </li>
+                    <li class="characteristic-item variance-item">
+                        Inconsistent predictions
+                    </li>
+                    <li class="characteristic-item variance-item">
+                        Sensitive to noise
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="tradeoff-section">
+            <h2 class="tradeoff-title">The Fundamental Tradeoff</h2>
+            
+            <div class="decomposition-formula">
+                Total Error = Bias² + Variance + Irreducible Error
+            </div>
+            
+            <div style="text-align: center; font-size: 1.2em; color: #1e293b; margin: 25px 0;">
+                You can't minimize both bias and variance simultaneously—improving one typically hurts the other.
+            </div>
+            
+            <div class="tradeoff-scenarios">
+                <div class="scenario-card high-bias">
+                    <div class="scenario-title high-bias">High Bias<br>Low Variance</div>
+                    <div class="scenario-metrics">
+                        🎯 Consistent but inaccurate<br>
+                        📈 Underfitting<br>
+                        🔧 Linear models, simple algorithms<br>
+                        💡 Add complexity
+                    </div>
+                </div>
+                
+                <div class="scenario-card balanced">
+                    <div class="scenario-title balanced">Optimal Balance</div>
+                    <div class="scenario-metrics">
+                        ⚖️ Sweet spot achieved<br>
+                        📈 Good generalization<br>
+                        🔧 Right model complexity<br>
+                        💡 Best performance
+                    </div>
+                </div>
+                
+                <div class="scenario-card low-bias">
+                    <div class="scenario-title low-bias">Low Bias<br>High Variance</div>
+                    <div class="scenario-metrics">
+                        🎯 Accurate but inconsistent<br>
+                        📈 Overfitting<br>
+                        🔧 Deep neural networks, decision trees<br>
+                        💡 Add regularization
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week1_Slide12.html" class="nav-btn">← Previous</a>
+        <a href="Week1_Slide14.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive characteristic items with modal
+        document.querySelectorAll('.characteristic-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const text = this.textContent.trim();
+                const isBias = this.classList.contains('bias-item');
+                
+                const characteristics = {
+                    // Bias characteristics
+                    'Systematic errors in predictions': {
+                        type: 'Bias',
+                        explanation: 'The model consistently makes the same type of error due to incorrect assumptions about the data.',
+                        example: 'A linear model trying to fit curved data will always underestimate peaks and overestimate valleys',
+                        analogy: 'Like a broken thermometer that always reads 5° too high—consistently wrong'
+                    },
+                    'Underfitting (too simple)': {
+                        type: 'Bias',
+                        explanation: 'The model lacks the complexity to capture the true underlying patterns in the data.',
+                        example: 'Using a straight line to model housing prices that actually depend on location, size, and neighborhood quadratically',
+                        analogy: 'Like trying to explain Shakespeare with a 100-word vocabulary'
+                    },
+                    'High training error': {
+                        type: 'Bias',
+                        explanation: 'Even on the data it was trained on, the model performs poorly due to oversimplified assumptions.',
+                        example: 'Training accuracy of 60% because the model simply cannot learn the patterns',
+                        analogy: 'Like a student who fails the practice test they\'ve seen before'
+                    },
+                    'Consistent but wrong predictions': {
+                        type: 'Bias',
+                        explanation: 'The model makes the same mistakes repeatedly across different datasets.',
+                        example: 'Always predicting house prices 20% too low, regardless of the specific house',
+                        analogy: 'Like always arriving 10 minutes late—predictably wrong'
+                    },
+                    'Missing relevant relations': {
+                        type: 'Bias',
+                        explanation: 'The model fails to capture important relationships that exist in the data.',
+                        example: 'A model that predicts salary without considering education level or experience',
+                        analogy: 'Like judging a book by its cover and ignoring the content'
+                    },
+                    
+                    // Variance characteristics
+                    'Predictions vary with training data': {
+                        type: 'Variance',
+                        explanation: 'Small changes in training data lead to significantly different models and predictions.',
+                        example: 'Adding 10 more training examples changes all model predictions by ±50%',
+                        analogy: 'Like a nervous student whose answers change completely based on which practice questions they studied'
+                    },
+                    'Overfitting (too complex)': {
+                        type: 'Variance',
+                        explanation: 'The model has too many parameters relative to the amount of training data available.',
+                        example: 'A 15th-degree polynomial fitted to 20 data points',
+                        analogy: 'Like memorizing every detail of your textbook but failing to understand the concepts'
+                    },
+                    'Low training, high test error': {
+                        type: 'Variance',
+                        explanation: 'The model performs well on training data but poorly on new, unseen data.',
+                        example: 'Training accuracy: 99%, Test accuracy: 65%',
+                        analogy: 'Like acing practice problems but bombing the real exam'
+                    },
+                    'Inconsistent predictions': {
+                        type: 'Variance',
+                        explanation: 'The same input can produce different outputs depending on which training data was used.',
+                        example: 'Same house gets price estimates of $200K, $350K, and $280K from models trained on different datasets',
+                        analogy: 'Like getting different medical diagnoses from doctors who went to different schools'
+                    },
+                    'Sensitive to noise': {
+                        type: 'Variance',
+                        explanation: 'Random noise in the training data significantly affects the final model.',
+                        example: 'A few mislabeled examples in the training set completely change model behavior',
+                        analogy: 'Like a microphone that picks up every tiny sound and amplifies it'
+                    }
+                };
+                
+                const info = characteristics[text];
+                const colorClass = isBias ? 'warning-box' : 'info-box';
+                
+                modal.show(`${info.type} Characteristic`, `
+                    <div class="modal-highlight">
+                        <strong>${text}</strong>
+                    </div>
+                    <p><strong>What it means:</strong> ${info.explanation}</p>
+                    <div class="modal-code">
+                        <strong>Example:</strong><br>
+                        ${info.example}
+                    </div>
+                    <div class="${colorClass}">
+                        <strong>💡 Think of it like:</strong><br>
+                        ${info.analogy}
+                    </div>
+                `);
+            });
+        });
+
+        // Interactive scenario cards with modal
+        document.querySelectorAll('.scenario-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const isHighBias = this.classList.contains('high-bias');
+                const isLowBias = this.classList.contains('low-bias');
+                const isBalanced = this.classList.contains('balanced');
+                
+                if (isHighBias) {
+                    modal.show('High Bias, Low Variance', `
+                        <div class="modal-highlight">
+                            <h4>The Consistent Underperformer 📐</h4>
+                        </div>
+                        <p>Models in this category make systematic errors but are at least consistent about it.</p>
+                        
+                        <div class="warning-box">
+                            <strong>⚠️ Symptoms:</strong><br>
+                            • Poor performance on both training and test data<br>
+                            • Predictions don't change much with different datasets<br>
+                            • Model seems to miss obvious patterns
+                        </div>
+                        
+                        <div class="modal-code">
+                            # Example: Linear regression on non-linear data
+                            # Always fits a straight line, consistently wrong
+                            # Training R²: 0.4, Test R²: 0.42 (consistent!)
+                        </div>
+                        
+                        <div class="success-box">
+                            <strong>🔧 How to fix:</strong><br>
+                            • Use more complex models (polynomials, neural networks)<br>
+                            • Add more features<br>
+                            • Reduce regularization<br>
+                            • Try ensemble methods
+                        </div>
+                    `);
+                } else if (isLowBias) {
+                    modal.show('Low Bias, High Variance', `
+                        <div class="modal-highlight">
+                            <h4>The Inconsistent Perfectionist 🎭</h4>
+                        </div>
+                        <p>These models can learn almost any pattern but are too sensitive to training data specifics.</p>
+                        
+                        <div class="info-box">
+                            <strong>ℹ️ Symptoms:</strong><br>
+                            • Excellent training performance, poor test performance<br>
+                            • Predictions change dramatically with new training data<br>
+                            • Model seems to learn noise as if it were signal
+                        </div>
+                        
+                        <div class="modal-code">
+                            # Example: Deep neural network with small dataset
+                            # Memorizes training examples perfectly
+                            # Training accuracy: 100%, Test accuracy: 60%
+                        </div>
+                        
+                        <div class="success-box">
+                            <strong>🔧 How to fix:</strong><br>
+                            • Add regularization (L1, L2, dropout)<br>
+                            • Get more training data<br>
+                            • Use cross-validation<br>
+                            • Early stopping<br>
+                            • Simpler model architecture
+                        </div>
+                    `);
+                } else if (isBalanced) {
+                    modal.show('Optimal Balance', `
+                        <div class="modal-highlight">
+                            <h4>The Goldilocks Zone 🎯</h4>
+                        </div>
+                        <p>The sweet spot where bias and variance are both reasonably low, giving the best generalization.</p>
+                        
+                        <div class="success-box">
+                            <strong>✅ Characteristics:</strong><br>
+                            • Good performance on both training and test data<br>
+                            • Stable predictions across different datasets<br>
+                            • Model complexity matches problem complexity<br>
+                            • Captures true patterns without memorizing noise
+                        </div>
+                        
+                        <div class="modal-code">
+                            # Example: Well-tuned random forest
+                            # Training accuracy: 85%, Test accuracy: 82%
+                            # Consistent across different data splits
+                        </div>
+                        
+                        <div class="info-box">
+                            <strong>💡 How to achieve:</strong><br>
+                            • Use validation curves to tune complexity<br>
+                            • Cross-validation for model selection<br>
+                            • Regularization parameter tuning<br>
+                            • Sufficient but not excessive training data<br>
+                            • Domain knowledge for feature engineering
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week1_Slide12.html';
+            }
+            if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week1_Slide14.html';
+            }
+        });
+
+    </script>
+</body>
+</html>

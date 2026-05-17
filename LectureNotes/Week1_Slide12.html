@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Overfitting and Underfitting Concepts</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .overfitting-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(220, 38, 38, 0.2);
+        }
+
+        .underfitting-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title.overfitting {
+            color: #dc2626;
+        }
+
+        .section-title.underfitting {
+            color: #f59e0b;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            border-radius: 2px;
+        }
+
+        .section-title.overfitting::after {
+            background: linear-gradient(90deg, #dc2626, #ef4444);
+        }
+
+        .section-title.underfitting::after {
+            background: linear-gradient(90deg, #f59e0b, #fbbf24);
+        }
+
+        .concept-description {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            border-radius: 15px;
+            border-left: 4px solid;
+        }
+
+        .overfitting-description {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border-left-color: #dc2626;
+        }
+
+        .underfitting-description {
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            border-left-color: #f59e0b;
+        }
+
+        .symptoms-list {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .symptom-item {
+            padding: 15px 20px;
+            margin: 12px 0;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border-left: 4px solid;
+        }
+
+        .overfitting-item {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border-left-color: #dc2626;
+        }
+
+        .underfitting-item {
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            border-left-color: #f59e0b;
+        }
+
+        .symptom-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        .symptom-text {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.5;
+            font-weight: 500;
+        }
+
+        .goldilocks-zone {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 2px solid #10b981;
+            text-align: center;
+        }
+
+        .goldilocks-title {
+            font-size: 2em;
+            color: #10b981;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .goldilocks-text {
+            font-size: 1.3em;
+            color: #1e293b;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .balance-visual {
+            display: grid;
+            grid-template-columns: 1fr 100px 1fr;
+            gap: 30px;
+            align-items: center;
+            margin: 30px 0;
+        }
+
+        .balance-side {
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .balance-left {
+            background: linear-gradient(135deg, #fef2f2, #fee2e2);
+            border: 2px solid #dc2626;
+        }
+
+        .balance-right {
+            background: linear-gradient(135deg, #fffbeb, #fef3c7);
+            border: 2px solid #f59e0b;
+        }
+
+        .balance-side:hover {
+            transform: scale(1.05);
+        }
+
+        .balance-center {
+            font-size: 3em;
+            color: #10b981;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .balance-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .balance-title.overfitting {
+            color: #dc2626;
+        }
+
+        .balance-title.underfitting {
+            color: #f59e0b;
+        }
+
+        .balance-desc {
+            font-size: 0.9em;
+            color: #64748b;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .balance-visual { grid-template-columns: 1fr; }
+            .balance-center { order: 2; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .warning-box {
+            background: rgba(220, 38, 38, 0.1);
+            border-left: 4px solid #dc2626;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .success-box {
+            background: rgba(16, 185, 129, 0.1);
+            border-left: 4px solid #10b981;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    
+    <div class="course-info">CS5710 - Week 1</div>
+    <div class="slide-number">Slide 12 of 20</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Overfitting vs Underfitting</h1>
+        
+        <div class="content-layout">
+            <div class="overfitting-section">
+                <h2 class="section-title overfitting">🔴 Overfitting</h2>
+                
+                <div class="concept-description overfitting-description">
+                    <strong>Overfitting</strong> occurs when a model learns the training data <em>too well</em>, memorizing noise and specific details rather than general patterns.
+                </div>
+                
+                <ul class="symptoms-list">
+                    <li class="symptom-item overfitting-item">
+                        <div class="symptom-text">High training accuracy, low test accuracy</div>
+                    </li>
+                    <li class="symptom-item overfitting-item">
+                        <div class="symptom-text">Model memorizes training examples</div>
+                    </li>
+                    <li class="symptom-item overfitting-item">
+                        <div class="symptom-text">Poor generalization to new data</div>
+                    </li>
+                    <li class="symptom-item overfitting-item">
+                        <div class="symptom-text">Complex model, small dataset</div>
+                    </li>
+                    <li class="symptom-item overfitting-item">
+                        <div class="symptom-text">Training error keeps decreasing</div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="underfitting-section">
+                <h2 class="section-title underfitting">🟡 Underfitting</h2>
+                
+                <div class="concept-description underfitting-description">
+                    <strong>Underfitting</strong> occurs when a model is <em>too simple</em> to capture the underlying patterns in the data, resulting in poor performance.
+                </div>
+                
+                <ul class="symptoms-list">
+                    <li class="symptom-item underfitting-item">
+                        <div class="symptom-text">Low accuracy on both training and test data</div>
+                    </li>
+                    <li class="symptom-item underfitting-item">
+                        <div class="symptom-text">Model is too simple for the problem</div>
+                    </li>
+                    <li class="symptom-item underfitting-item">
+                        <div class="symptom-text">High bias in predictions</div>
+                    </li>
+                    <li class="symptom-item underfitting-item">
+                        <div class="symptom-text">Missing important patterns</div>
+                    </li>
+                    <li class="symptom-item underfitting-item">
+                        <div class="symptom-text">Training error plateaus early</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="goldilocks-zone">
+            <h2 class="goldilocks-title">🟢 The "Just Right" Zone</h2>
+            <div class="goldilocks-text">
+                The goal is to find the sweet spot between overfitting and underfitting—a model that generalizes well to new data.
+            </div>
+            
+            <div class="balance-visual">
+                <div class="balance-side balance-left">
+                    <div class="balance-title overfitting">Too Complex</div>
+                    <div class="balance-desc">Memorizes training data</div>
+                </div>
+                
+                <div class="balance-center">⚖️</div>
+                
+                <div class="balance-side balance-right">
+                    <div class="balance-title underfitting">Too Simple</div>
+                    <div class="balance-desc">Misses important patterns</div>
+                </div>
+            </div>
+            
+            <div style="font-size: 1.2em; color: #10b981; font-weight: 600; margin-top: 20px;">
+                Perfect Balance = Good generalization to unseen data!
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week1_Slide11.html" class="nav-btn">← Previous</a>
+        <a href="Week1_Slide13.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive symptom items with modal
+        document.querySelectorAll('.symptom-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const text = this.querySelector('.symptom-text').textContent;
+                const isOverfitting = this.classList.contains('overfitting-item');
+                
+                const symptoms = {
+                    // Overfitting symptoms
+                    'High training accuracy, low test accuracy': {
+                        type: 'Overfitting',
+                        explanation: 'The model performs perfectly on training data but poorly on new data because it has memorized specific examples rather than learning general patterns.',
+                        example: 'Training accuracy: 99%, Test accuracy: 65%',
+                        solution: 'Use regularization, get more data, or simplify the model'
+                    },
+                    'Model memorizes training examples': {
+                        type: 'Overfitting',
+                        explanation: 'Instead of learning rules, the model creates a lookup table for training examples.',
+                        example: 'A decision tree with a leaf node for every training example',
+                        solution: 'Prune decision trees, use cross-validation, add regularization'
+                    },
+                    'Poor generalization to new data': {
+                        type: 'Overfitting',
+                        explanation: 'The model fails to perform well on data it hasn\'t seen during training.',
+                        example: 'A spam filter that only recognizes spam emails from the training set',
+                        solution: 'Hold out validation data, use techniques like dropout or early stopping'
+                    },
+                    'Complex model, small dataset': {
+                        type: 'Overfitting',
+                        explanation: 'When the model has more parameters than data points, it can memorize rather than learn.',
+                        example: 'Using a deep neural network with 100 examples',
+                        solution: 'Collect more data or use a simpler model architecture'
+                    },
+                    'Training error keeps decreasing': {
+                        type: 'Overfitting',
+                        explanation: 'The model continues to improve on training data while validation error starts increasing.',
+                        example: 'Training loss: 0.01, Validation loss: 2.5',
+                        solution: 'Monitor validation loss and use early stopping'
+                    },
+                    
+                    // Underfitting symptoms
+                    'Low accuracy on both training and test data': {
+                        type: 'Underfitting',
+                        explanation: 'The model is too simple to capture the underlying patterns in the data.',
+                        example: 'Using linear regression for clearly non-linear data',
+                        solution: 'Use a more complex model, add features, reduce regularization'
+                    },
+                    'Model is too simple for the problem': {
+                        type: 'Underfitting',
+                        explanation: 'The chosen algorithm or architecture lacks the capacity to model the problem properly.',
+                        example: 'Using a single-layer perceptron for image recognition',
+                        solution: 'Choose a more sophisticated algorithm or add model complexity'
+                    },
+                    'High bias in predictions': {
+                        type: 'Underfitting',
+                        explanation: 'The model makes systematic errors due to oversimplified assumptions.',
+                        example: 'Always predicting the average value regardless of input features',
+                        solution: 'Add polynomial features, increase model complexity'
+                    },
+                    'Missing important patterns': {
+                        type: 'Underfitting',
+                        explanation: 'The model fails to capture relationships that exist in the data.',
+                        example: 'A house price model that ignores location and size',
+                        solution: 'Feature engineering, more complex model architecture'
+                    },
+                    'Training error plateaus early': {
+                        type: 'Underfitting',
+                        explanation: 'The model quickly reaches its learning limit and cannot improve further.',
+                        example: 'Loss stops decreasing after just a few iterations',
+                        solution: 'Increase model capacity or improve feature representation'
+                    }
+                };
+                
+                const info = symptoms[text];
+                const colorClass = isOverfitting ? 'warning-box' : 'success-box';
+                
+                modal.show(`${info.type} Symptom`, `
+                    <div class="modal-highlight">
+                        <strong>${text}</strong>
+                    </div>
+                    <p><strong>What's happening:</strong> ${info.explanation}</p>
+                    <div class="modal-code">
+                        <strong>Example:</strong><br>
+                        ${info.example}
+                    </div>
+                    <div class="${colorClass}">
+                        <strong>🔧 How to fix it:</strong><br>
+                        ${info.solution}
+                    </div>
+                `);
+            });
+        });
+
+        // Interactive balance sides with modal
+        document.querySelectorAll('.balance-side').forEach(side => {
+            side.addEventListener('click', function() {
+                const isOverfitting = this.classList.contains('balance-left');
+                
+                if (isOverfitting) {
+                    modal.show('Overfitting (Too Complex)', `
+                        <div class="modal-highlight">
+                            <h4>When Models Get Too Fancy 🎭</h4>
+                        </div>
+                        <p>Overfitting is like a student who memorizes textbook examples perfectly but can't solve new problems.</p>
+                        
+                        <div class="warning-box">
+                            <strong>⚠️ Warning Signs:</strong><br>
+                            • 98% training accuracy, 60% test accuracy<br>
+                            • Model performs worse on new data<br>
+                            • Very complex model architecture<br>
+                            • Small training dataset
+                        </div>
+                        
+                        <div class="modal-code">
+                            # Example: Overfitted polynomial
+                            # Uses 15th degree polynomial for 20 data points
+                            # Perfect fit to training data, terrible generalization
+                        </div>
+                        
+                        <div class="success-box">
+                            <strong>🛡️ Prevention Strategies:</strong><br>
+                            • Regularization (L1, L2)<br>
+                            • Cross-validation<br>
+                            • More training data<br>
+                            • Simpler model architecture<br>
+                            • Early stopping
+                        </div>
+                    `);
+                } else {
+                    modal.show('Underfitting (Too Simple)', `
+                        <div class="modal-highlight">
+                            <h4>When Models Are Too Basic 📐</h4>
+                        </div>
+                        <p>Underfitting is like trying to solve calculus problems with only basic arithmetic—the tools are too simple for the job.</p>
+                        
+                        <div class="warning-box">
+                            <strong>⚠️ Warning Signs:</strong><br>
+                            • Low accuracy on training AND test data<br>
+                            • Model seems to make systematic errors<br>
+                            • Training loss plateaus quickly<br>
+                            • High bias, low variance
+                        </div>
+                        
+                        <div class="modal-code">
+                            # Example: Linear regression for non-linear data
+                            # Trying to fit curved data with a straight line
+                            # Poor performance everywhere
+                        </div>
+                        
+                        <div class="success-box">
+                            <strong>🚀 Solutions:</strong><br>
+                            • Use more complex models<br>
+                            • Add polynomial features<br>
+                            • Reduce regularization<br>
+                            • Better feature engineering<br>
+                            • Ensemble methods
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week1_Slide11.html';
+            }
+            if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week1_Slide13.html';
+            }
+        });
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - LSTM Gates (Forget, Input, Output)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .gates-overview {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromTop 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+            text-align: center;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .gates-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+            margin-top: 40px;
+        }
+
+        .gate-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            animation: slideInFromBottom 1s ease-out both;
+        }
+
+        .gate-card:nth-child(1) { animation-delay: 0.4s; }
+        .gate-card:nth-child(2) { animation-delay: 0.6s; }
+        .gate-card:nth-child(3) { animation-delay: 0.8s; }
+
+        .gate-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.15);
+        }
+
+        .forget-gate {
+            border-left: 5px solid #ef4444;
+        }
+
+        .input-gate {
+            border-left: 5px solid #10b981;
+        }
+
+        .output-gate {
+            border-left: 5px solid #3b82f6;
+        }
+
+        .gate-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .gate-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.8em;
+            font-weight: bold;
+            margin-right: 20px;
+        }
+
+        .forget-gate .gate-icon {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        .input-gate .gate-icon {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .output-gate .gate-icon {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+        }
+
+        .gate-title {
+            font-size: 1.5em;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .gate-function {
+            color: #64748b;
+            font-size: 1.1em;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .gate-equation {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 1em;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .gate-description {
+            background: rgba(13, 148, 136, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            color: #374151;
+            line-height: 1.6;
+            margin-top: 15px;
+        }
+
+        .interactive-demo {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            margin: 40px 0;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.5s both;
+        }
+
+        .lstm-cell-demo {
+            background: #1e293b;
+            border-radius: 20px;
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cell-state-flow {
+            height: 80px;
+            background: linear-gradient(90deg, #fbbf24, #f59e0b);
+            border-radius: 10px;
+            margin: 30px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2em;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .cell-state-flow:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 30px rgba(251, 191, 36, 0.4);
+        }
+
+        .gate-controls {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 40px 0;
+        }
+
+        .demo-gate {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .demo-gate:hover {
+            transform: scale(1.1);
+        }
+
+        .demo-gate-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .demo-forget {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        .demo-input {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .demo-output {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+        }
+
+        .gate-label {
+            color: #99f6e4;
+            font-size: 0.9em;
+            text-align: center;
+        }
+
+        .hidden-state {
+            height: 50px;
+            background: linear-gradient(90deg, #8b5cf6, #7c3aed);
+            border-radius: 8px;
+            margin-top: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .hidden-state:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 30px rgba(139, 92, 246, 0.4);
+        }
+
+        .flow-equations {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            margin: 40px 0;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.7s both;
+        }
+
+        .equation-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .equation-step {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            text-align: center;
+            min-width: 200px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .equation-step:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+        }
+
+        .flow-arrow {
+            font-size: 2em;
+            color: #0d9488;
+            font-weight: bold;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .course-info {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            color: #0d9488;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            color: #0d9488;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @keyframes slideInFromTop {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInFromLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInFromRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInFromBottom {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    
+    <div class="course-info">CS5710 - Week 10</div>
+    <div class="slide-number">Slide 186 of 200</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">LSTM Gates: Forget, Input, Output</h1>
+        
+        <div class="gates-overview">
+            <h2 class="section-title">Three Gates Control Information Flow</h2>
+            <p style="text-align: center; font-size: 1.2em; line-height: 1.7; color: #1e293b; max-width: 800px; margin: 0 auto;">
+                LSTM uses three specialized neural networks (gates) to control what information flows through the cell state. Each gate outputs values between 0 and 1, acting as learned switches.
+            </p>
+        </div>
+
+        <div class="gates-grid">
+            <div class="gate-card forget-gate" data-gate="forget">
+                <div class="gate-header">
+                    <div class="gate-icon">f<sub>t</sub></div>
+                    <div class="gate-title">Forget Gate</div>
+                </div>
+                
+                <div class="gate-function">
+                    Decides what information to discard from the cell state
+                </div>
+                
+                <div class="gate-equation">
+                    f<sub>t</sub> = σ(W<sub>f</sub> · [h<sub>t-1</sub>, x<sub>t</sub>] + b<sub>f</sub>)
+                </div>
+                
+                <div class="gate-description">
+                    <strong>Function:</strong> "What old information is no longer relevant?"<br>
+                    <strong>Output:</strong> 0 = completely forget, 1 = completely keep<br>
+                    <strong>Applied to:</strong> Previous cell state C<sub>t-1</sub>
+                </div>
+            </div>
+
+            <div class="gate-card input-gate" data-gate="input">
+                <div class="gate-header">
+                    <div class="gate-icon">i<sub>t</sub></div>
+                    <div class="gate-title">Input Gate</div>
+                </div>
+                
+                <div class="gate-function">
+                    Determines what new information to store in the cell state
+                </div>
+                
+                <div class="gate-equation">
+                    i<sub>t</sub> = σ(W<sub>i</sub> · [h<sub>t-1</sub>, x<sub>t</sub>] + b<sub>i</sub>)<br>
+                    C̃<sub>t</sub> = tanh(W<sub>C</sub> · [h<sub>t-1</sub>, x<sub>t</sub>] + b<sub>C</sub>)
+                </div>
+                
+                <div class="gate-description">
+                    <strong>Function:</strong> "What new information should we store?"<br>
+                    <strong>Output:</strong> 0 = ignore new info, 1 = store all new info<br>
+                    <strong>Applied to:</strong> Candidate values C̃<sub>t</sub>
+                </div>
+            </div>
+
+            <div class="gate-card output-gate" data-gate="output">
+                <div class="gate-header">
+                    <div class="gate-icon">o<sub>t</sub></div>
+                    <div class="gate-title">Output Gate</div>
+                </div>
+                
+                <div class="gate-function">
+                    Controls what parts of cell state to output as hidden state
+                </div>
+                
+                <div class="gate-equation">
+                    o<sub>t</sub> = σ(W<sub>o</sub> · [h<sub>t-1</sub>, x<sub>t</sub>] + b<sub>o</sub>)<br>
+                    h<sub>t</sub> = o<sub>t</sub> ⊙ tanh(C<sub>t</sub>)
+                </div>
+                
+                <div class="gate-description">
+                    <strong>Function:</strong> "What stored information is relevant now?"<br>
+                    <strong>Output:</strong> 0 = hide from output, 1 = include in output<br>
+                    <strong>Applied to:</strong> Current cell state C<sub>t</sub>
+                </div>
+            </div>
+        </div>
+
+        <div class="interactive-demo">
+            <h2 class="section-title">Interactive LSTM Cell</h2>
+            <p style="text-align: center; margin-bottom: 30px; color: #64748b;">
+                Click on components to see how gates control information flow
+            </p>
+            
+            <div class="lstm-cell-demo">
+                <div class="cell-state-flow" data-component="cell-state">
+                    Cell State (C<sub>t</sub>) - Information Highway
+                </div>
+                
+                <div class="gate-controls">
+                    <div class="demo-gate" data-demo="forget">
+                        <div class="demo-gate-circle demo-forget">f<sub>t</sub></div>
+                        <div class="gate-label">Forget Gate</div>
+                    </div>
+                    
+                    <div class="demo-gate" data-demo="input">
+                        <div class="demo-gate-circle demo-input">i<sub>t</sub></div>
+                        <div class="gate-label">Input Gate</div>
+                    </div>
+                    
+                    <div class="demo-gate" data-demo="output">
+                        <div class="demo-gate-circle demo-output">o<sub>t</sub></div>
+                        <div class="gate-label">Output Gate</div>
+                    </div>
+                </div>
+                
+                <div class="hidden-state" data-component="hidden-state">
+                    Hidden State (h<sub>t</sub>) - Filtered Output
+                </div>
+            </div>
+        </div>
+
+        <div class="flow-equations">
+            <h2 class="section-title">LSTM Information Flow</h2>
+            
+            <div class="equation-flow">
+                <div class="equation-step" data-step="1">
+                    <strong>Step 1: Forget</strong><br>
+                    f<sub>t</sub> = σ(W<sub>f</sub>[h<sub>t-1</sub>, x<sub>t</sub>])
+                </div>
+                
+                <div class="flow-arrow">→</div>
+                
+                <div class="equation-step" data-step="2">
+                    <strong>Step 2: Input</strong><br>
+                    i<sub>t</sub> = σ(W<sub>i</sub>[h<sub>t-1</sub>, x<sub>t</sub>])<br>
+                    C̃<sub>t</sub> = tanh(W<sub>C</sub>[h<sub>t-1</sub>, x<sub>t</sub>])
+                </div>
+                
+                <div class="flow-arrow">→</div>
+                
+                <div class="equation-step" data-step="3">
+                    <strong>Step 3: Update</strong><br>
+                    C<sub>t</sub> = f<sub>t</sub> ⊙ C<sub>t-1</sub> + i<sub>t</sub> ⊙ C̃<sub>t</sub>
+                </div>
+                
+                <div class="flow-arrow">→</div>
+                
+                <div class="equation-step" data-step="4">
+                    <strong>Step 4: Output</strong><br>
+                    o<sub>t</sub> = σ(W<sub>o</sub>[h<sub>t-1</sub>, x<sub>t</sub>])<br>
+                    h<sub>t</sub> = o<sub>t</sub> ⊙ tanh(C<sub>t</sub>)
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week10_Slide185.html" class="nav-btn">← Previous</a>
+        <a href="Week10_Slide187.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Gate card interactions
+        document.querySelectorAll('.gate-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const gateType = this.dataset.gate;
+                
+                const gateDetails = {
+                    'forget': {
+                        title: 'Forget Gate: Selective Memory Erasure',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>The Art of Strategic Forgetting</h4>
+                                <p>The forget gate is the first gate to act in the LSTM sequence. It decides what information from the previous cell state should be discarded.</p>
+                            </div>
+                            
+                            <div class="modal-code">
+# Forget gate step by step:
+
+1. Concatenate inputs:
+   combined = [h_{t-1}, x_t]  # Previous hidden + current input
+   
+2. Linear transformation:
+   logits = W_f @ combined + b_f
+   
+3. Sigmoid activation:
+   f_t = sigmoid(logits)  # Output in [0, 1]
+   
+4. Apply to previous cell state:
+   filtered_memory = f_t ⊙ C_{t-1}  # Element-wise multiplication
+                            </div>
+                            
+                            <h4 style="color: #ef4444; margin: 20px 0;">Forget Gate Behavior Patterns:</h4>
+                            
+                            <div style="background: rgba(239, 68, 68, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Complete Forgetting (f_t ≈ 0):</strong><br>
+                                • End of sentences/paragraphs<br>
+                                • Context switches in dialogue<br>
+                                • Completion of sub-tasks<br>
+                                • Detection of contradictory information
+                            </div>
+                            
+                            <div style="background: rgba(239, 68, 68, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Partial Forgetting (f_t ≈ 0.3-0.7):</strong><br>
+                                • Updating belief with new evidence<br>
+                                • Gradual topic transitions<br>
+                                • Time-decay of temporary information<br>
+                                • Noise filtering and outlier handling
+                            </div>
+                            
+                            <div style="background: rgba(239, 68, 68, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Strong Retention (f_t ≈ 1):</strong><br>
+                                • Stable context (same topic/speaker)<br>
+                                • Important facts to maintain<br>
+                                • Long-term patterns and trends<br>
+                                • Core entity information
+                            </div>
+                            
+                            <h4 style="color: #ef4444; margin: 20px 0;">Training Dynamics:</h4>
+                            
+                            <div class="modal-code">
+# How forget gate learns:
+
+# Initially (random weights):
+f_t ≈ 0.5 everywhere  # Random forgetting
+
+# During training:
+# - Gradient descent finds patterns
+# - Learns when information becomes irrelevant
+# - Task-specific forgetting strategies emerge
+
+# Common learned patterns:
+- High forgetting at punctuation marks
+- Context-dependent forgetting (dialogue vs narrative)  
+- Gradual forgetting based on recency
+- Content-based forgetting (contradictions)
+                            </div>
+                            
+                            <h4 style="color: #ef4444; margin: 20px 0;">Real Examples:</h4>
+                            
+                            <div class="modal-code">
+# Language modeling example:
+"John went to the store. Mary called him later."
+
+Processing "Mary":
+f_t for John's info ≈ [0.7, 0.3, 0.8, 0.2, ...]
+# Partial forgetting - John still relevant (pronoun "him")
+# but Mary becomes new focus
+
+Processing "him":  
+f_t for John's info ≈ [0.9, 0.1, 0.9, 0.1, ...]
+# Strong retention - need John for pronoun resolution
+
+# Time series example:
+Stock prices: [100, 102, 98, 105, 150, 103, ...]
+                                  ^^^
+Processing anomaly (150):
+f_t ≈ [0.95, 0.95, 0.95, 0.05, 0.95, ...]
+# Keep trend, forget outlier
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                                <strong>🧠 Key Insight:</strong><br>
+                                The forget gate doesn't just "forget bad things" - it learns task-specific patterns about when information becomes irrelevant for making good predictions.
+                            </div>
+                        `
+                    },
+                    'input': {
+                        title: 'Input Gate: Selective Information Storage',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>Gated Information Acquisition</h4>
+                                <p>The input gate works in tandem with candidate values to determine what new information should be stored in the cell state.</p>
+                            </div>
+                            
+                            <div class="modal-code">
+# Input gate two-step process:
+
+1. Input gate (how much to update):
+   i_t = sigmoid(W_i @ [h_{t-1}, x_t] + b_i)
+   
+2. Candidate values (what to update with):
+   C̃_t = tanh(W_C @ [h_{t-1}, x_t] + b_C)
+   
+3. Combined effect:
+   new_info = i_t ⊙ C̃_t  # Element-wise multiplication
+   
+4. Add to cell state:
+   C_t = f_t ⊙ C_{t-1} + i_t ⊙ C̃_t
+         ^^^^^^^^^^^^^^^^   ^^^^^^^^^^^^
+         Keep old info      Add new info
+                            </div>
+                            
+                            <h4 style="color: #10b981; margin: 20px 0;">Two-Component Design:</h4>
+                            
+                            <div style="background: rgba(16, 185, 129, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Input Gate (i_t) - The Gatekeeper:</strong><br>
+                                • Sigmoid output: [0, 1]<br>
+                                • 0 = "Don't store any new information"<br>
+                                • 1 = "Store all candidate information"<br>
+                                • Learns when new info is worth storing
+                            </div>
+                            
+                            <div style="background: rgba(16, 185, 129, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Candidate Values (C̃_t) - The Content:</strong><br>
+                                • Tanh output: [-1, 1]<br>
+                                • +1 = "Strong positive information"<br>
+                                • -1 = "Strong negative information"<br>
+                                • Generates what could be stored
+                            </div>
+                            
+                            <h4 style="color: #10b981; margin: 20px 0;">Information Filtering Strategy:</h4>
+                            
+                            <div class="modal-code">
+# Example decision making:
+
+# High importance, strong signal:
+i_t = 0.9, C̃_t = 0.8 → stored = 0.72 (strong update)
+
+# High importance, weak signal:  
+i_t = 0.9, C̃_t = 0.1 → stored = 0.09 (weak update)
+
+# Low importance, strong signal:
+i_t = 0.1, C̃_t = 0.8 → stored = 0.08 (rejected)
+
+# Low importance, weak signal:
+i_t = 0.1, C̃_t = 0.1 → stored = 0.01 (ignored)
+                            </div>
+                            
+                            <h4 style="color: #10b981; margin: 20px 0;">Learning Patterns:</h4>
+                            
+                            <div style="background: rgba(16, 185, 129, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Content-Based Filtering:</strong><br>
+                                • High gate for rare/important words<br>
+                                • Low gate for common stop words<br>
+                                • Context-dependent importance assessment<br>
+                                • Adaptive vocabulary attention
+                            </div>
+                            
+                            <div style="background: rgba(16, 185, 129, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Temporal Filtering:</strong><br>
+                                • High gate at information boundaries<br>
+                                • Low gate for redundant information<br>
+                                • Novelty detection and storage<br>
+                                • Change point identification
+                            </div>
+                            
+                            <div style="background: rgba(16, 185, 129, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Task-Specific Filtering:</strong><br>
+                                • Question answering: high for entities/facts<br>
+                                • Sentiment analysis: high for emotional words<br>
+                                • Translation: high for content words<br>
+                                • Time series: high for regime changes
+                            </div>
+                            
+                            <h4 style="color: #10b981; margin: 20px 0;">Practical Examples:</h4>
+                            
+                            <div class="modal-code">
+# Named Entity Recognition:
+"Apple Inc. reported strong quarterly earnings"
+
+Processing "Apple":
+i_t ≈ 0.9  # High - potential entity
+C̃_t ≈ [0.7, -0.1, 0.8, ...]  # Entity features
+→ Store entity information
+
+Processing "Inc.":  
+i_t ≈ 0.8  # High - confirms entity type
+C̃_t ≈ [0.9, 0.0, 0.6, ...]  # Corporation type
+→ Strengthen entity representation
+
+Processing "reported":
+i_t ≈ 0.3  # Medium - action word
+C̃_t ≈ [0.2, 0.5, -0.1, ...] # Reporting action
+→ Store action but lower priority
+
+# Sentiment Analysis:
+"The movie was absolutely terrible but had great music"
+
+Processing "terrible":
+i_t ≈ 0.9  # High - strong sentiment word
+C̃_t ≈ [-0.8, 0.1, -0.6, ...]  # Negative sentiment
+→ Store strong negative sentiment
+
+Processing "but":
+i_t ≈ 0.7  # High - contrast indicator  
+C̃_t ≈ [0.0, 0.8, 0.0, ...]  # Contrast signal
+→ Store expectation of sentiment change
+
+Processing "great":
+i_t ≈ 0.9  # High - sentiment word
+C̃_t ≈ [0.7, -0.1, 0.5, ...]  # Positive sentiment  
+→ Store positive sentiment for music aspect
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(251, 191, 36, 0.1); border-radius: 10px;">
+                                <strong>🎯 Design Principle:</strong><br>
+                                Input gate learns "what's worth remembering" while candidate values learn "how to represent what's worth remembering" - separation of concerns for better learning.
+                            </div>
+                        `
+                    },
+                    'output': {
+                        title: 'Output Gate: Controlled Information Access',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>The Information Selector</h4>
+                                <p>The output gate controls what parts of the cell state should be revealed as the hidden state output, acting as a context-dependent information filter.</p>
+                            </div>
+                            
+                            <div class="modal-code">
+# Output gate computation:
+
+1. Compute gate values:
+   o_t = sigmoid(W_o @ [h_{t-1}, x_t] + b_o)
+   
+2. Normalize cell state:
+   normalized_memory = tanh(C_t)  # [-1, 1]
+   
+3. Selective output:
+   h_t = o_t ⊙ tanh(C_t)
+   
+# Key insight: Same memory, different outputs based on context
+                            </div>
+                            
+                            <h4 style="color: #3b82f6; margin: 20px 0;">Why Separate Internal vs External States?</h4>
+                            
+                            <div style="background: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Privacy and Relevance:</strong><br>
+                                • Cell state = Complete internal memory<br>
+                                • Hidden state = Task-relevant subset<br>
+                                • Prevents information overload in downstream layers<br>
+                                • Enables context-dependent processing
+                            </div>
+                            
+                            <div style="background: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Computational Efficiency:</strong><br>
+                                • Reduces effective dimensionality<br>
+                                • Focuses computation on relevant features<br>
+                                • Improves gradient flow quality<br>
+                                • Enables multi-task learning
+                            </div>
+                            
+                            <div style="background: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Adaptive Attention:</strong><br>
+                                • Same memory used differently for different queries<br>
+                                • Context-dependent relevance assessment<br>
+                                • Dynamic feature selection<br>
+                                • Task-specific information highlighting
+                            </div>
+                            
+                            <h4 style="color: #3b82f6; margin: 20px 0;">Output Patterns:</h4>
+                            
+                            <div class="modal-code">
+# Question Answering Example:
+Memory contains: [person_info, location_info, time_info, action_info]
+
+Question: "Where did John go?"
+o_t ≈ [0.1, 0.9, 0.2, 0.3]  # Focus on location
+h_t → Emphasizes location information
+
+Question: "When did this happen?"  
+o_t ≈ [0.1, 0.2, 0.9, 0.1]  # Focus on time
+h_t → Emphasizes temporal information
+
+Question: "Who was involved?"
+o_t ≈ [0.9, 0.3, 0.1, 0.2]  # Focus on person
+h_t → Emphasizes person information
+
+# Same memory C_t, different outputs h_t!
+                            </div>
+                            
+                            <h4 style="color: #3b82f6; margin: 20px 0;">Context-Dependent Behavior:</h4>
+                            
+                            <div style="background: rgba(59, 130, 246, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Mode Switching:</strong><br>
+                                • Training vs inference behavior<br>
+                                • Different tasks using same encoder<br>
+                                • User-specific personalization<br>
+                                • Domain adaptation
+                            </div>
+                            
+                            <div style="background: rgba(59, 130, 246, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Hierarchical Processing:</strong><br>
+                                • Low-level vs high-level features<br>
+                                • Detailed vs summary information<br>
+                                • Local vs global context<br>
+                                • Fine-grained vs coarse-grained output
+                            </div>
+                            
+                            <div style="background: rgba(59, 130, 246, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Temporal Dynamics:</strong><br>
+                                • Beginning vs end of sequences<br>
+                                • Stable vs transition periods<br>
+                                • Predictable vs surprising events<br>
+                                • Known vs novel situations
+                            </div>
+                            
+                            <h4 style="color: #3b82f6; margin: 20px 0;">Advanced Applications:</h4>
+                            
+                            <div class="modal-code">
+# Multi-task Learning:
+Cell state: [syntax, semantics, pragmatics, style, ...]
+
+Task 1 (POS Tagging):
+o_t focuses on: syntax features
+Output: grammatical information
+
+Task 2 (Sentiment Analysis):  
+o_t focuses on: semantic + style features
+Output: emotional content
+
+Task 3 (Named Entity Recognition):
+o_t focuses on: semantic + pragmatic features  
+Output: entity information
+
+# Conversational AI:
+Memory: [facts, emotions, user_preferences, context, ...]
+
+Answering factual question:
+o_t → [high, low, medium, high]  # Facts + context
+
+Responding to emotional statement:
+o_t → [low, high, high, medium]  # Emotions + preferences
+
+Making small talk:
+o_t → [medium, medium, high, high]  # Preferences + context
+                            </div>
+                            
+                            <h4 style="color: #3b82f6; margin: 20px 0;">Training Insights:</h4>
+                            
+                            <div class="modal-code">
+# Output gate learning:
+
+# Early training:
+o_t ≈ 0.5 everywhere  # Random output filtering
+
+# Mid training:  
+o_t learns task-relevant patterns
+- High for features needed for loss minimization
+- Low for irrelevant/distracting information
+
+# Advanced training:
+o_t learns sophisticated strategies
+- Context-dependent feature selection
+- Multi-step reasoning with memory
+- Adaptive abstraction levels
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(139, 92, 246, 0.1); border-radius: 10px;">
+                                <strong>🔬 Research Direction:</strong><br>
+                                Modern attention mechanisms in Transformers can be seen as generalized output gates that can attend to multiple memory locations simultaneously.
+                            </div>
+                        `
+                    }
+                };
+                
+                const detail = gateDetails[gateType];
+                if (detail) {
+                    modal.show(detail.title, detail.content);
+                }
+            });
+        });
+
+        // Demo gate interactions
+        document.querySelectorAll('[data-demo]').forEach(gate => {
+            gate.addEventListener('click', function() {
+                const demoType = this.dataset.demo;
+                
+                const demos = {
+                    'forget': {
+                        title: 'Forget Gate Animation',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>Forget Gate in Action</h4>
+                                <p>Watch how the forget gate selectively erases information from the cell state based on current context.</p>
+                            </div>
+                            
+                            <div style="background: #1e293b; padding: 30px; border-radius: 15px; color: #99f6e4; font-family: monospace;">
+                                <div style="text-align: center; margin-bottom: 20px;">
+                                    <strong>Forget Gate Operation</strong>
+                                </div>
+                                
+                                <div style="background: rgba(239, 68, 68, 0.2); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                    Previous Cell State: [0.8, -0.3, 0.6, 0.9, -0.5]<br>
+                                    Forget Gate Values: [0.2, 0.9, 0.1, 0.8, 0.0]<br>
+                                    <span style="color: #fbbf24;">After Forgetting: [0.16, -0.27, 0.06, 0.72, 0.0]</span>
+                                </div>
+                                
+                                <div style="margin-top: 20px;">
+                                    <strong>Interpretation:</strong><br>
+                                    • Dimension 0: 80% forgotten (0.8 → 0.16)<br>
+                                    • Dimension 1: 10% forgotten (-0.3 → -0.27)<br>
+                                    • Dimension 2: 90% forgotten (0.6 → 0.06)<br>
+                                    • Dimension 3: 20% forgotten (0.9 → 0.72)<br>
+                                    • Dimension 4: 100% forgotten (-0.5 → 0.0)
+                                </div>
+                            </div>
+                            
+                            <h4 style="color: #ef4444; margin: 20px 0;">Context-Dependent Forgetting:</h4>
+                            
+                            <div class="modal-code">
+# Example: Processing dialogue
+"Alice: I love pizza. Bob: What's your favorite movie?"
+
+# When processing "What's your favorite movie?":
+# Forget gate might output:
+f_t = [0.3, 0.8, 0.1, 0.9, ...]
+      ^^^  ^^^  ^^^  ^^^
+      |    |    |    └── Keep speaker info (Bob)
+      |    |    └──────── Forget food topic (pizza)  
+      |    └─────────────── Keep conversation context
+      └──────────────────── Partially forget previous speaker (Alice)
+
+# Result: Context shifts from food to entertainment
+                            </div>
+                        `
+                    },
+                    'input': {
+                        title: 'Input Gate Animation',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>Input Gate in Action</h4>
+                                <p>See how the input gate and candidate values work together to selectively add new information to the cell state.</p>
+                            </div>
+                            
+                            <div style="background: #1e293b; padding: 30px; border-radius: 15px; color: #99f6e4; font-family: monospace;">
+                                <div style="text-align: center; margin-bottom: 20px;">
+                                    <strong>Input Gate Operation</strong>
+                                </div>
+                                
+                                <div style="background: rgba(16, 185, 129, 0.2); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                    Input Gate Values: [0.1, 0.9, 0.3, 0.8, 0.0]<br>
+                                    Candidate Values: [0.7, -0.4, 0.9, 0.2, -0.8]<br>
+                                    <span style="color: #fbbf24;">New Information: [0.07, -0.36, 0.27, 0.16, 0.0]</span>
+                                </div>
+                                
+                                <div style="margin-top: 20px;">
+                                    <strong>Selection Process:</strong><br>
+                                    • Dimension 0: Reject (gate=0.1, strong candidate ignored)<br>
+                                    • Dimension 1: Accept (gate=0.9, negative info stored)<br>
+                                    • Dimension 2: Partial (gate=0.3, some positive info)<br>
+                                    • Dimension 3: Accept (gate=0.8, positive info stored)<br>
+                                    • Dimension 4: Block (gate=0.0, nothing gets through)
+                                </div>
+                            </div>
+                            
+                            <h4 style="color: #10b981; margin: 20px 0;">Smart Information Filtering:</h4>
+                            
+                            <div class="modal-code">
+# Example: Reading comprehension
+"The capital of France is Paris. The population is 2.1 million."
+
+# Processing "Paris":
+i_t = [0.1, 0.9, 0.8, 0.2, ...]  # High for location slot
+C̃_t = [0.2, 0.8, 0.7, -0.1, ...]  # Paris representation
+→ new_info = [0.02, 0.72, 0.56, -0.02, ...]
+# Strong storage of location information
+
+# Processing "2.1 million":  
+i_t = [0.0, 0.1, 0.2, 0.9, ...]  # High for population slot
+C̃_t = [-0.1, 0.2, 0.1, 0.8, ...]  # Population number
+→ new_info = [0.0, 0.02, 0.02, 0.72, ...]
+# Strong storage of demographic information
+
+# Result: Specialized storage based on information type
+                            </div>
+                        `
+                    },
+                    'output': {
+                        title: 'Output Gate Animation',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>Output Gate in Action</h4>
+                                <p>Observe how the output gate selectively reveals parts of the cell state as the hidden state output.</p>
+                            </div>
+                            
+                            <div style="background: #1e293b; padding: 30px; border-radius: 15px; color: #99f6e4; font-family: monospace;">
+                                <div style="text-align: center; margin-bottom: 20px;">
+                                    <strong>Output Gate Operation</strong>
+                                </div>
+                                
+                                <div style="background: rgba(59, 130, 246, 0.2); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                    Cell State: [0.8, -0.6, 0.4, 0.9, -0.3]<br>
+                                    tanh(Cell): [0.66, -0.54, 0.38, 0.71, -0.29]<br>
+                                    Output Gate: [0.2, 0.9, 0.1, 0.8, 0.0]<br>
+                                    <span style="color: #fbbf24;">Hidden State: [0.13, -0.49, 0.04, 0.57, 0.0]</span>
+                                </div>
+                                
+                                <div style="margin-top: 20px;">
+                                    <strong>Information Filtering:</strong><br>
+                                    • Dimension 0: Hidden (20% revealed)<br>
+                                    • Dimension 1: Prominent (90% revealed)<br>
+                                    • Dimension 2: Suppressed (10% revealed)<br>
+                                    • Dimension 3: Featured (80% revealed)<br>
+                                    • Dimension 4: Blocked (0% revealed)
+                                </div>
+                            </div>
+                            
+                            <h4 style="color: #3b82f6; margin: 20px 0;">Context-Aware Output:</h4>
+                            
+                            <div class="modal-code">
+# Example: Multi-task scenario
+# Same cell state used for different tasks
+
+Cell_state = [syntax_info, semantic_info, style_info, entity_info]
+
+# Task 1: Part-of-speech tagging
+o_t = [0.9, 0.3, 0.1, 0.2]  # Focus on syntax
+h_t = [high_syntax, low_semantic, low_style, low_entity]
+
+# Task 2: Sentiment analysis  
+o_t = [0.1, 0.8, 0.9, 0.2]  # Focus on semantics + style
+h_t = [low_syntax, high_semantic, high_style, low_entity]
+
+# Task 3: Named entity recognition
+o_t = [0.2, 0.7, 0.1, 0.9]  # Focus on semantics + entities
+h_t = [low_syntax, med_semantic, low_style, high_entity]
+
+# Same memory, task-specific outputs!
+                            </div>
+                        `
+                    }
+                };
+                
+                const demo = demos[demoType];
+                if (demo) {
+                    modal.show(demo.title, demo.content);
+                }
+            });
+        });
+
+        // Component interactions (cell state, hidden state)
+        document.querySelectorAll('[data-component]').forEach(component => {
+            component.addEventListener('click', function() {
+                const compType = this.dataset.component;
+                
+                if (compType === 'cell-state') {
+                    modal.show('Cell State: The Memory Core', `
+                        <div class="modal-highlight">
+                            <h4>LSTM's Memory Highway</h4>
+                            <p>The cell state is the core memory component that flows linearly through time with minimal modifications.</p>
+                        </div>
+                        
+                        <div class="modal-code">
+# Cell state update equation:
+C_t = f_t ⊙ C_{t-1} + i_t ⊙ C̃_t
+      ^^^^^^^^^^^^^^   ^^^^^^^^^^^
+      Selective keep   Selective add
+
+# Key properties:
+- Linear updates (addition, not matrix multiplication)
+- Gated control (forget and input gates)
+- Unbounded values (can grow/shrink as needed)
+- Direct gradient path (∂C_t/∂C_{t-1} = f_t)
+                        </div>
+                        
+                        <h4 style="color: #fbbf24; margin: 20px 0;">What Makes Cell State Special:</h4>
+                        
+                        <div style="background: rgba(251, 191, 36, 0.1); padding: 15px; border-radius: 10px;">
+                            <strong>1. Gradient Highway:</strong> Provides a direct path for gradients to flow back through time without degradation<br><br>
+                            <strong>2. Additive Updates:</strong> Information is added/removed via addition, not matrix multiplication<br><br>
+                            <strong>3. Gated Protection:</strong> Gates control what information flows through<br><br>
+                            <strong>4. Long-term Storage:</strong> Can maintain information for hundreds of time steps
+                        </div>
+                    `);
+                } else if (compType === 'hidden-state') {
+                    modal.show('Hidden State: The Public Interface', `
+                        <div class="modal-highlight">
+                            <h4>Filtered Memory Output</h4>
+                            <p>The hidden state is the processed, task-relevant output that other layers see and use for predictions.</p>
+                        </div>
+                        
+                        <div class="modal-code">
+# Hidden state computation:
+h_t = o_t ⊙ tanh(C_t)
+      ^^^   ^^^^^^^^^
+      Filter  Normalize
+
+# Properties:
+- Bounded values: [-1, 1] due to tanh
+- Task-relevant: filtered by output gate
+- Public interface: what other layers see
+- Context-dependent: changes based on current needs
+                        </div>
+                        
+                        <h4 style="color: #8b5cf6; margin: 20px 0;">Hidden State vs Cell State:</h4>
+                        
+                        <div style="background: rgba(139, 92, 246, 0.1); padding: 15px; border-radius: 10px;">
+                            <strong>Cell State (Private Memory):</strong><br>
+                            • Raw, unfiltered information storage<br>
+                            • Can contain irrelevant/future information<br>
+                            • Optimized for long-term retention<br>
+                            • Internal to LSTM only<br><br>
+                            
+                            <strong>Hidden State (Public Output):</strong><br>
+                            • Processed, task-relevant information<br>
+                            • Current context and immediate needs<br>
+                            • Optimized for current computation<br>
+                            • Visible to all downstream layers
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Equation step interactions
+        document.querySelectorAll('[data-step]').forEach(step => {
+            step.addEventListener('click', function() {
+                const stepNum = this.dataset.step;
+                
+                const steps = {
+                    '1': {
+                        title: 'Step 1: Forget Gate Computation',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>Deciding What to Forget</h4>
+                                <p>The first step in LSTM processing determines what information from the previous cell state should be discarded.</p>
+                            </div>
+                            
+                            <div class="modal-code">
+# Forget gate detailed computation:
+
+# Input concatenation:
+concat_input = [h_{t-1}, x_t]
+# Shape: [hidden_size + input_size]
+
+# Linear transformation:
+forget_logits = W_f @ concat_input + b_f
+# W_f shape: [hidden_size, hidden_size + input_size]
+
+# Sigmoid activation:
+f_t = sigmoid(forget_logits)
+# Output range: [0, 1] for each dimension
+
+# Interpretation:
+# f_t[i] ≈ 0: "Completely forget dimension i"
+# f_t[i] ≈ 1: "Completely keep dimension i"  
+# f_t[i] ≈ 0.5: "Partially remember dimension i"
+                            </div>
+                            
+                            <div style="background: rgba(239, 68, 68, 0.1); padding: 15px; border-radius: 10px; margin: 15px 0;">
+                                <strong>🎯 Purpose:</strong> Learn context-dependent forgetting patterns that help the model decide when stored information becomes irrelevant for future predictions.
+                            </div>
+                        `
+                    },
+                    '2': {
+                        title: 'Step 2: Input Gate and Candidates',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>Selecting New Information</h4>
+                                <p>Step 2 involves two parallel computations that decide what new information to store and how to represent it.</p>
+                            </div>
+                            
+                            <div class="modal-code">
+# Two parallel computations:
+
+# 1. Input gate (how much to update):
+input_logits = W_i @ [h_{t-1}, x_t] + b_i
+i_t = sigmoid(input_logits)  # Range: [0, 1]
+
+# 2. Candidate values (what to update with):
+candidate_logits = W_C @ [h_{t-1}, x_t] + b_C  
+C̃_t = tanh(candidate_logits)  # Range: [-1, 1]
+
+# Why separate networks?
+# - Input gate: learns WHEN to update
+# - Candidate values: learns WHAT to update with
+# - Separation of concerns → better learning
+                            </div>
+                            
+                            <div style="background: rgba(16, 185, 129, 0.1); padding: 15px; border-radius: 10px; margin: 15px 0;">
+                                <strong>🎯 Purpose:</strong> Input gate acts as an importance filter while candidates generate the actual information content - this separation allows for more sophisticated information processing.
+                            </div>
+                        `
+                    },
+                    '3': {
+                        title: 'Step 3: Cell State Update',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>Memory Integration</h4>
+                                <p>The core memory update combines selective forgetting with selective addition to update the cell state.</p>
+                            </div>
+                            
+                            <div class="modal-code">
+# Cell state update (the heart of LSTM):
+C_t = f_t ⊙ C_{t-1} + i_t ⊙ C̃_t
+      ^^^^^^^^^^^^^^   ^^^^^^^^^^^
+      Selective keep   Selective add
+
+# Element-wise operations:
+# ⊙ = Hadamard product (element-wise multiplication)
+# + = Element-wise addition
+
+# For each dimension i:
+C_t[i] = f_t[i] * C_{t-1}[i] + i_t[i] * C̃_t[i]
+
+# Gradient flow:
+∂C_t[i]/∂C_{t-1}[i] = f_t[i]  # Direct connection!
+# No matrix multiplication → stable gradients
+                            </div>
+                            
+                            <div style="background: rgba(251, 191, 36, 0.1); padding: 15px; border-radius: 10px; margin: 15px 0;">
+                                <strong>🎯 Purpose:</strong> This additive update with multiplicative gating enables both long-term memory retention and selective information updates while maintaining stable gradient flow.
+                            </div>
+                        `
+                    },
+                    '4': {
+                        title: 'Step 4: Output Gate and Hidden State',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>Generating Task-Relevant Output</h4>
+                                <p>The final step filters the cell state to produce a context-appropriate hidden state output.</p>
+                            </div>
+                            
+                            <div class="modal-code">
+# Output gate computation:
+output_logits = W_o @ [h_{t-1}, x_t] + b_o
+o_t = sigmoid(output_logits)  # Range: [0, 1]
+
+# Hidden state generation:
+h_t = o_t ⊙ tanh(C_t)
+      ^^^   ^^^^^^^^^
+      Filter Normalize
+
+# Two-stage filtering:
+# 1. tanh(C_t): Squash unbounded cell state to [-1, 1]
+# 2. o_t ⊙ (...): Select what to reveal
+
+# Result: h_t contains task-relevant, bounded output
+                            </div>
+                            
+                            <div style="background: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 10px; margin: 15px 0;">
+                                <strong>🎯 Purpose:</strong> Creates a filtered, bounded output that exposes only the task-relevant parts of the internal memory while keeping the full memory state intact for future use.
+                            </div>
+                        `
+                    }
+                };
+                
+                const stepDetail = steps[stepNum];
+                if (stepDetail) {
+                    modal.show(stepDetail.title, stepDetail.content);
+                }
+            });
+        });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week10_Slide185.html';
+            } else if (e.key === 'ArrowRight') {
+                window.location.href = 'Week10_Slide187.html';
+            }
+        });
+    </script>
+</body>
+</html>

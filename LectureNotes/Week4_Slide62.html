@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Information Gain and Entropy</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .entropy-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .gain-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .formula-box {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .formula-box:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .concept-box {
+            padding: 20px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+            margin: 15px 0;
+        }
+
+        .visualization-container {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .entropy-chart {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 30px 0;
+        }
+
+        .entropy-example {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+            margin: 0 10px;
+        }
+
+        .entropy-example:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .entropy-value {
+            font-size: 2em;
+            color: #0d9488;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .pie-chart {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            position: relative;
+        }
+
+        .example-label {
+            font-weight: 600;
+            color: #134e4a;
+            margin-top: 10px;
+        }
+
+        .calculation-steps {
+            background: rgba(13, 148, 136, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .step {
+            padding: 10px;
+            margin: 10px 0;
+            background: white;
+            border-radius: 8px;
+            border-left: 3px solid #0d9488;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .entropy-chart { flex-direction: column; }
+            .entropy-example { margin: 10px 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    
+    <div class="course-info">CS5710 - Week 4</div>
+    <div class="slide-number">Slide 62 of 80</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Information Gain and Entropy</h1>
+        
+        <div class="content-layout">
+            <div class="entropy-section">
+                <h2 class="section-title">📊 Entropy</h2>
+                
+                <div class="concept-box">
+                    <strong>Entropy</strong> measures the impurity or uncertainty in a dataset. High entropy means high disorder, low entropy means high purity.
+                </div>
+                
+                <div class="formula-box" id="entropyFormula">
+                    H(S) = -Σ p(c) × log₂(p(c))
+                </div>
+                
+                <div style="margin-top: 20px; font-size: 0.95em; line-height: 1.6;">
+                    Where:
+                    <ul style="list-style: none; padding-left: 20px;">
+                        <li>• H(S) = Entropy of set S</li>
+                        <li>• p(c) = Proportion of class c</li>
+                        <li>• log₂ = Logarithm base 2</li>
+                    </ul>
+                </div>
+                
+                <div class="concept-box" style="margin-top: 20px;">
+                    <strong>Key Points:</strong><br>
+                    • Entropy = 0: Pure node (all same class)<br>
+                    • Entropy = 1: Maximum disorder (50/50 split)<br>
+                    • Used in ID3, C4.5 algorithms
+                </div>
+            </div>
+
+            <div class="gain-section">
+                <h2 class="section-title">📈 Information Gain</h2>
+                
+                <div class="concept-box">
+                    <strong>Information Gain</strong> measures how much a feature reduces entropy when used to split the data.
+                </div>
+                
+                <div class="formula-box" id="gainFormula">
+                    IG(S,A) = H(S) - Σ |Sv|/|S| × H(Sv)
+                </div>
+                
+                <div style="margin-top: 20px; font-size: 0.95em; line-height: 1.6;">
+                    Where:
+                    <ul style="list-style: none; padding-left: 20px;">
+                        <li>• IG(S,A) = Information gain</li>
+                        <li>• H(S) = Original entropy</li>
+                        <li>• Sv = Subset for value v</li>
+                        <li>• |Sv|/|S| = Weighted average</li>
+                    </ul>
+                </div>
+                
+                <div class="concept-box" style="margin-top: 20px;">
+                    <strong>Decision Rule:</strong><br>
+                    Choose the feature with the <em>highest</em> information gain for splitting!
+                </div>
+            </div>
+        </div>
+
+        <div class="visualization-container">
+            <h2 class="section-title">Entropy Visualization</h2>
+            
+            <div class="entropy-chart">
+                <div class="entropy-example" data-entropy="0">
+                    <div class="pie-chart" style="background: linear-gradient(to right, #10b981 0%, #10b981 100%);"></div>
+                    <div class="entropy-value">H = 0.0</div>
+                    <div class="example-label">Pure Node<br>(100% Class A)</div>
+                </div>
+                
+                <div class="entropy-example" data-entropy="0.811">
+                    <div class="pie-chart" style="background: conic-gradient(#10b981 0deg 270deg, #ef4444 270deg);"></div>
+                    <div class="entropy-value">H = 0.81</div>
+                    <div class="example-label">Low Entropy<br>(75% A, 25% B)</div>
+                </div>
+                
+                <div class="entropy-example" data-entropy="1.0">
+                    <div class="pie-chart" style="background: conic-gradient(#10b981 0deg 180deg, #ef4444 180deg);"></div>
+                    <div class="entropy-value">H = 1.0</div>
+                    <div class="example-label">Max Entropy<br>(50% A, 50% B)</div>
+                </div>
+                
+                <div class="entropy-example" data-entropy="0.918">
+                    <div class="pie-chart" style="background: conic-gradient(#10b981 0deg 120deg, #ef4444 120deg 240deg, #3b82f6 240deg);"></div>
+                    <div class="entropy-value">H = 1.58</div>
+                    <div class="example-label">Multi-class<br>(33% each)</div>
+                </div>
+            </div>
+            
+            <div class="calculation-steps">
+                <h3 style="color: #0d9488; margin-bottom: 15px;">Example Calculation:</h3>
+                <div class="step">
+                    <strong>Dataset:</strong> 9 Yes, 5 No (Play Tennis?)
+                </div>
+                <div class="step">
+                    <strong>Step 1:</strong> p(Yes) = 9/14, p(No) = 5/14
+                </div>
+                <div class="step">
+                    <strong>Step 2:</strong> H(S) = -(9/14)×log₂(9/14) - (5/14)×log₂(5/14)
+                </div>
+                <div class="step">
+                    <strong>Result:</strong> H(S) = 0.940 bits
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week4_Slide61.html" class="nav-btn">← Previous</a>
+        <a href="Week4_Slide63.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive formulas
+        document.getElementById('entropyFormula').addEventListener('click', function() {
+            modal.show('Entropy Formula Explained', `
+                <div class="modal-highlight">
+                    <strong>H(S) = -Σ p(c) × log₂(p(c))</strong>
+                </div>
+                <p><strong>Understanding the Formula:</strong></p>
+                <ul>
+                    <li><strong>Summation (Σ):</strong> We sum over all classes in the dataset</li>
+                    <li><strong>p(c):</strong> Probability of each class (count/total)</li>
+                    <li><strong>log₂:</strong> Logarithm base 2 (information measured in bits)</li>
+                    <li><strong>Negative sign:</strong> Makes entropy positive (log of fractions is negative)</li>
+                </ul>
+                <div class="modal-code">
+def entropy(data):
+    total = len(data)
+    classes = {}
+    for item in data:
+        classes[item] = classes.get(item, 0) + 1
+    
+    entropy = 0
+    for count in classes.values():
+        p = count / total
+        entropy -= p * math.log2(p)
+    
+    return entropy
+                </div>
+                <p><strong>Intuition:</strong> Entropy quantifies surprise. A coin flip (50/50) has maximum entropy because the outcome is most uncertain.</p>
+            `);
+        });
+
+        document.getElementById('gainFormula').addEventListener('click', function() {
+            modal.show('Information Gain Formula', `
+                <div class="modal-highlight">
+                    <strong>IG(S,A) = H(S) - Σ |Sv|/|S| × H(Sv)</strong>
+                </div>
+                <p><strong>Breaking it down:</strong></p>
+                <ul>
+                    <li><strong>H(S):</strong> Entropy before splitting</li>
+                    <li><strong>H(Sv):</strong> Entropy of each subset after splitting</li>
+                    <li><strong>|Sv|/|S|:</strong> Weight of each subset (proportion)</li>
+                    <li><strong>Result:</strong> Reduction in entropy = Information gained</li>
+                </ul>
+                <div class="modal-code">
+def information_gain(data, feature):
+    original_entropy = entropy(data)
+    
+    # Split data by feature values
+    splits = split_by_feature(data, feature)
+    
+    weighted_entropy = 0
+    for subset in splits:
+        weight = len(subset) / len(data)
+        weighted_entropy += weight * entropy(subset)
+    
+    return original_entropy - weighted_entropy
+                </div>
+                <p><strong>Decision Strategy:</strong> Test all features, choose the one with highest information gain for the split.</p>
+            `);
+        });
+
+        // Interactive entropy examples
+        document.querySelectorAll('.entropy-example').forEach(example => {
+            example.addEventListener('click', function() {
+                const entropyValue = this.dataset.entropy;
+                const label = this.querySelector('.example-label').innerHTML;
+                
+                const calculations = {
+                    '0': {
+                        calc: 'H = -1.0 × log₂(1.0) = 0',
+                        explain: 'Pure node has zero entropy - no uncertainty!'
+                    },
+                    '0.811': {
+                        calc: 'H = -(0.75 × log₂(0.75) + 0.25 × log₂(0.25)) = 0.811',
+                        explain: 'Some uncertainty, but one class dominates'
+                    },
+                    '1.0': {
+                        calc: 'H = -(0.5 × log₂(0.5) + 0.5 × log₂(0.5)) = 1.0',
+                        explain: 'Maximum entropy for binary classification - complete uncertainty'
+                    },
+                    '0.918': {
+                        calc: 'H = -3 × (0.33 × log₂(0.33)) = 1.58',
+                        explain: 'Multi-class entropy can exceed 1.0 bit'
+                    }
+                };
+                
+                const info = calculations[entropyValue];
+                modal.show(`Entropy Example: ${label.replace('<br>', ' ')}`, `
+                    <div class="modal-highlight">
+                        <strong>${label.replace('<br>', ' ')}</strong>
+                    </div>
+                    <p><strong>Calculation:</strong></p>
+                    <div class="modal-code">${info.calc}</div>
+                    <p><strong>Interpretation:</strong><br>${info.explain}</p>
+                    <p><strong>Use in Decision Trees:</strong><br>
+                    ${entropyValue === '0' ? 'This is a leaf node - no further splitting needed!' :
+                      entropyValue === '1.0' ? 'This node needs splitting - maximum impurity!' :
+                      'This node could benefit from splitting to reduce entropy.'}
+                    </p>
+                `);
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week4_Slide61.html';
+            } else if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week4_Slide63.html';
+            }
+        });
+    </script>
+</body>
+</html>

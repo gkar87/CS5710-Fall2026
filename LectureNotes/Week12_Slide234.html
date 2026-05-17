@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Feature Importance Analysis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .methods-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .visualization-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .method-card {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid #0d9488;
+        }
+
+        .method-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.2);
+        }
+
+        .method-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .method-icon {
+            font-size: 2em;
+            margin-right: 15px;
+        }
+
+        .method-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #0d9488;
+        }
+
+        .method-description {
+            color: #475569;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .method-pros-cons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .pros, .cons {
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.9em;
+        }
+
+        .pros {
+            background: rgba(34, 197, 94, 0.1);
+            color: #166534;
+        }
+
+        .cons {
+            background: rgba(239, 68, 68, 0.1);
+            color: #991b1b;
+        }
+
+        .importance-chart {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            height: 400px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .importance-chart:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .chart-title {
+            text-align: center;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 20px;
+        }
+
+        .importance-bar {
+            display: flex;
+            align-items: center;
+            margin: 12px 0;
+            padding: 8px;
+            border-radius: 8px;
+            background: #f8fafc;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .importance-bar:hover {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            transform: translateX(5px);
+        }
+
+        .bar-label {
+            width: 120px;
+            font-weight: 500;
+            color: #475569;
+        }
+
+        .bar-visual {
+            flex: 1;
+            height: 20px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            margin: 0 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+            position: relative;
+        }
+
+        .bar-value {
+            min-width: 50px;
+            text-align: right;
+            font-weight: 600;
+            color: #0d9488;
+        }
+
+        .comparison-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .scenarios-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .scenario-card {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 15px;
+            padding: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .scenario-card:hover {
+            transform: translateY(-5px);
+            border-color: #0d9488;
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.2);
+        }
+
+        .scenario-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 15px;
+        }
+
+        .scenario-description {
+            color: #64748b;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .scenario-method {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: 500;
+            color: #1e293b;
+            text-align: center;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .scenarios-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 12</div>
+    <div class="slide-number">Slide 234 of 240</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Feature Importance Analysis</h1>
+        
+        <div class="content-layout">
+            <div class="methods-section">
+                <h2 class="section-title">Importance Methods</h2>
+                
+                <div class="method-card">
+                    <div class="method-header">
+                        <div class="method-icon">🔀</div>
+                        <div class="method-title">Permutation Importance</div>
+                    </div>
+                    <div class="method-description">
+                        Measures feature importance by randomly shuffling feature values and observing the decrease in model performance.
+                    </div>
+                    <div class="method-pros-cons">
+                        <div class="pros">
+                            <strong>Pros:</strong> Model-agnostic, measures actual impact, handles feature interactions
+                        </div>
+                        <div class="cons">
+                            <strong>Cons:</strong> Computationally expensive, can be biased by correlated features
+                        </div>
+                    </div>
+                </div>
+
+                <div class="method-card">
+                    <div class="method-header">
+                        <div class="method-icon">🌳</div>
+                        <div class="method-title">Tree-based Importance</div>
+                    </div>
+                    <div class="method-description">
+                        Uses the average decrease in impurity when a feature is used for splitting in tree-based models.
+                    </div>
+                    <div class="method-pros-cons">
+                        <div class="pros">
+                            <strong>Pros:</strong> Fast computation, built into models, available during training
+                        </div>
+                        <div class="cons">
+                            <strong>Cons:</strong> Biased toward high-cardinality features, only for tree models
+                        </div>
+                    </div>
+                </div>
+
+                <div class="method-card">
+                    <div class="method-header">
+                        <div class="method-icon">📈</div>
+                        <div class="method-title">Gradient-based Methods</div>
+                    </div>
+                    <div class="method-description">
+                        Calculate feature importance using gradients of the loss function with respect to input features.
+                    </div>
+                    <div class="method-pros-cons">
+                        <div class="pros">
+                            <strong>Pros:</strong> Fast computation, local explanations, works with neural networks
+                        </div>
+                        <div class="cons">
+                            <strong>Cons:</strong> Only for differentiable models, can be noisy, sensitive to input scale
+                        </div>
+                    </div>
+                </div>
+
+                <div class="method-card">
+                    <div class="method-header">
+                        <div class="method-icon">🔍</div>
+                        <div class="method-title">Drop-Column Importance</div>
+                    </div>
+                    <div class="method-description">
+                        Measures importance by training models with and without each feature and comparing performance.
+                    </div>
+                    <div class="method-pros-cons">
+                        <div class="pros">
+                            <strong>Pros:</strong> Accurate measurement, handles all feature types, model-agnostic
+                        </div>
+                        <div class="cons">
+                            <strong>Cons:</strong> Very expensive (n+1 model trainings), impractical for large datasets
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="visualization-section">
+                <h2 class="section-title">Feature Importance Ranking</h2>
+                
+                <div class="importance-chart">
+                    <div class="chart-title">Loan Approval Model - Feature Importance</div>
+                    
+                    <div class="importance-bar" data-feature="Credit Score">
+                        <div class="bar-label">Credit Score</div>
+                        <div class="bar-visual">
+                            <div class="bar-fill" style="width: 92%;"></div>
+                        </div>
+                        <div class="bar-value">0.34</div>
+                    </div>
+                    
+                    <div class="importance-bar" data-feature="Annual Income">
+                        <div class="bar-label">Annual Income</div>
+                        <div class="bar-visual">
+                            <div class="bar-fill" style="width: 78%;"></div>
+                        </div>
+                        <div class="bar-value">0.28</div>
+                    </div>
+                    
+                    <div class="importance-bar" data-feature="Debt-to-Income">
+                        <div class="bar-label">Debt-to-Income</div>
+                        <div class="bar-visual">
+                            <div class="bar-fill" style="width: 65%;"></div>
+                        </div>
+                        <div class="bar-value">0.23</div>
+                    </div>
+                    
+                    <div class="importance-bar" data-feature="Employment Length">
+                        <div class="bar-label">Employment</div>
+                        <div class="bar-visual">
+                            <div class="bar-fill" style="width: 42%;"></div>
+                        </div>
+                        <div class="bar-value">0.15</div>
+                    </div>
+                    
+                    <div class="importance-bar" data-feature="Loan Amount">
+                        <div class="bar-label">Loan Amount</div>
+                        <div class="bar-visual">
+                            <div class="bar-fill" style="width: 38%;"></div>
+                        </div>
+                        <div class="bar-value">0.13</div>
+                    </div>
+                    
+                    <div class="importance-bar" data-feature="Age">
+                        <div class="bar-label">Age</div>
+                        <div class="bar-visual">
+                            <div class="bar-fill" style="width: 25%;"></div>
+                        </div>
+                        <div class="bar-value">0.09</div>
+                    </div>
+                    
+                    <div class="importance-bar" data-feature="Education">
+                        <div class="bar-label">Education</div>
+                        <div class="bar-visual">
+                            <div class="bar-fill" style="width: 18%;"></div>
+                        </div>
+                        <div class="bar-value">0.06</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="comparison-section">
+            <h2 class="section-title">When to Use Each Method</h2>
+            
+            <div class="scenarios-grid">
+                <div class="scenario-card">
+                    <div class="scenario-title">Exploratory Analysis</div>
+                    <div class="scenario-description">
+                        Quick understanding of which features matter most for initial model insights and feature selection.
+                    </div>
+                    <div class="scenario-method">Tree-based Importance</div>
+                </div>
+                
+                <div class="scenario-card">
+                    <div class="scenario-title">Model-Agnostic Analysis</div>
+                    <div class="scenario-description">
+                        Need feature importance that works across different model types and provides true performance impact.
+                    </div>
+                    <div class="scenario-method">Permutation Importance</div>
+                </div>
+                
+                <div class="scenario-card">
+                    <div class="scenario-title">Real-time Applications</div>
+                    <div class="scenario-description">
+                        Fast feature importance for individual predictions in production systems with low latency requirements.
+                    </div>
+                    <div class="scenario-method">Gradient-based Methods</div>
+                </div>
+                
+                <div class="scenario-card">
+                    <div class="scenario-title">Feature Selection</div>
+                    <div class="scenario-description">
+                        Rigorous feature selection where computational cost is acceptable and accuracy is paramount.
+                    </div>
+                    <div class="scenario-method">Drop-Column Importance</div>
+                </div>
+                
+                <div class="scenario-card">
+                    <div class="scenario-title">Regulatory Compliance</div>
+                    <div class="scenario-description">
+                        Need explainable and defensible feature importance for regulatory reporting and audits.
+                    </div>
+                    <div class="scenario-method">SHAP + Permutation</div>
+                </div>
+                
+                <div class="scenario-card">
+                    <div class="scenario-title">Research & Development</div>
+                    <div class="scenario-description">
+                        Comprehensive analysis requiring multiple perspectives on feature contributions and model behavior.
+                    </div>
+                    <div class="scenario-method">Multiple Methods</div>
+                </div>
+            </div>
+
+            <div style="margin-top: 30px; padding: 25px; background: linear-gradient(135deg, #f0fdfa, #ccfbf1); border-radius: 15px; text-align: center;">
+                <strong style="color: #0d9488; font-size: 1.2em;">Best Practice:</strong><br>
+                <span style="color: #475569;">
+                    Use multiple feature importance methods and compare results. 
+                    Consistent rankings across methods indicate robust feature importance, while disagreements warrant further investigation.
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week12_Slide233.html" class="nav-btn">← Previous</a>
+        <a href="Week12_Slide235.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Method card click handlers
+        document.querySelectorAll('.method-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('.method-title').textContent;
+                
+                const methodInfo = {
+                    'Permutation Importance': {
+                        definition: 'Measures decrease in model performance when feature values are randomly shuffled',
+                        algorithm: '1. Record baseline model performance\n2. For each feature: shuffle values and measure new performance\n3. Importance = baseline - shuffled performance\n4. Repeat with different random seeds for stability',
+                        interpretation: 'Higher values = more important features. Shows actual impact on model predictions',
+                        code_example: 'from sklearn.inspection import permutation_importance\nperm_imp = permutation_importance(model, X_test, y_test, n_repeats=10, random_state=42)',
+                        best_for: 'Any model type, reliable importance scores, detecting feature interactions'
+                    },
+                    'Tree-based Importance': {
+                        definition: 'Uses decrease in node impurity when feature is used for splits in decision trees',
+                        algorithm: '1. For each split in the tree using feature i\n2. Calculate: (samples at node) × (impurity decrease)\n3. Sum across all splits using feature i\n4. Normalize by total tree impurity reduction',
+                        interpretation: 'Built-in to tree models. Higher = more useful for making splits/decisions',
+                        code_example: 'importances = model.feature_importances_  # For RandomForest, XGBoost, etc.\nfeature_names = X.columns\nsorted_idx = importances.argsort()[::-1]',
+                        best_for: 'Quick insights, tree-based models, feature screening during development'
+                    },
+                    'Gradient-based Methods': {
+                        definition: 'Calculate gradients of model output with respect to input features',
+                        algorithm: '1. Compute ∂f/∂x for each feature x\n2. Take absolute value or square of gradients\n3. Optionally multiply by input values (input × gradient)\n4. Aggregate across samples if needed',
+                        interpretation: 'Shows how sensitive the model output is to small changes in each feature',
+                        code_example: 'import torch\ninputs.requires_grad_()\noutput = model(inputs)\ngrads = torch.autograd.grad(output.sum(), inputs)[0].abs().mean(0)',
+                        best_for: 'Neural networks, real-time applications, local explanations'
+                    },
+                    'Drop-Column Importance': {
+                        definition: 'Train model with and without each feature, measure performance difference',
+                        algorithm: '1. Train baseline model with all features\n2. For each feature: train model without that feature\n3. Importance = baseline performance - reduced performance\n4. Requires n+1 model training rounds',
+                        interpretation: 'Most direct measure of feature value. Shows actual contribution to model performance',
+                        code_example: 'baseline_score = cross_val_score(model, X, y).mean()\nfor col in X.columns:\n    X_drop = X.drop(col, axis=1)\n    drop_score = cross_val_score(model, X_drop, y).mean()\n    importance[col] = baseline_score - drop_score',
+                        best_for: 'Small datasets, critical decisions, feature selection with high accuracy requirements'
+                    }
+                };
+                
+                const info = methodInfo[title];
+                modal.show(title, `
+                    <div class="modal-highlight">
+                        <strong>Method: ${title}</strong>
+                    </div>
+                    <p><strong>Definition:</strong> ${info.definition}</p>
+                    <p><strong>How it works:</strong></p>
+                    <pre style="background: #f1f5f9; padding: 15px; border-radius: 8px; font-size: 0.9em; line-height: 1.4; margin: 10px 0; white-space: pre-wrap;">${info.algorithm}</pre>
+                    <p><strong>Interpretation:</strong> ${info.interpretation}</p>
+                    <p><strong>Best suited for:</strong> ${info.best_for}</p>
+                    
+                    <div class="modal-code">
+                        Python Implementation:
+                        ${info.code_example}
+                    </div>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                        <strong>💡 Pro Tips:</strong><br>
+                        ${title === 'Permutation Importance' ? '• Use multiple random seeds to get confidence intervals\n• Consider correlation between features - correlated features may have lower individual importance' : ''}
+                        ${title === 'Tree-based Importance' ? '• Normalize by number of samples to compare across different sized datasets\n• Be aware of bias toward high-cardinality categorical features' : ''}
+                        ${title === 'Gradient-based Methods' ? '• Integrated gradients often work better than simple gradients\n• Consider input normalization to ensure fair comparisons' : ''}
+                        ${title === 'Drop-Column Importance' ? '• Use cross-validation to get more stable estimates\n• Consider computational cost - may be prohibitive for large datasets' : ''}
+                    </div>
+                `);
+            });
+        });
+
+        // Feature bar click handlers
+        document.querySelectorAll('.importance-bar').forEach(bar => {
+            bar.addEventListener('click', function() {
+                const feature = this.dataset.feature;
+                const value = this.querySelector('.bar-value').textContent;
+                
+                const featureDetails = {
+                    'Credit Score': {
+                        interpretation: 'Most important factor in loan approval decisions',
+                        business_meaning: 'Credit history is the strongest predictor of loan repayment ability',
+                        typical_range: 'FICO scores 300-850, with 670+ considered good',
+                        impact: 'A 100-point increase in credit score can significantly improve approval odds and reduce interest rates'
+                    },
+                    'Annual Income': {
+                        interpretation: 'Second most important feature, indicates repayment capacity',
+                        business_meaning: 'Higher income generally correlates with ability to service debt',
+                        typical_range: 'Varies by region, typically $25k-$200k+ in dataset',
+                        impact: 'Income-to-loan ratio is often more important than absolute income level'
+                    },
+                    'Debt-to-Income': {
+                        interpretation: 'Critical risk factor - higher ratios indicate stress',
+                        business_meaning: 'Measures existing debt burden relative to income',
+                        typical_range: 'Ratios below 36% preferred, above 43% typically rejected',
+                        impact: 'Each 10% increase in DTI significantly reduces approval probability'
+                    },
+                    'Employment Length': {
+                        interpretation: 'Stability indicator - longer employment shows reliability',
+                        business_meaning: 'Job tenure indicates income stability and lower unemployment risk',
+                        typical_range: '0-40+ years, with 2+ years showing stability',
+                        impact: 'Employment gaps or frequent job changes negatively impact approval'
+                    },
+                    'Loan Amount': {
+                        interpretation: 'Moderate importance - larger loans carry more risk',
+                        business_meaning: 'Higher loan amounts increase lender exposure to loss',
+                        typical_range: '$5k-$500k+ depending on loan type',
+                        impact: 'Risk increases non-linearly with loan size, especially for unsecured loans'
+                    },
+                    'Age': {
+                        interpretation: 'Minor factor - experience vs. career stage trade-offs',
+                        business_meaning: 'Older applicants have more experience but potentially less time to repay',
+                        typical_range: '18-80 years, with peak approval rates 30-50',
+                        impact: 'Non-linear relationship - too young or too old may reduce approval odds'
+                    },
+                    'Education': {
+                        interpretation: 'Least important direct factor, proxy for earning potential',
+                        business_meaning: 'Higher education correlates with income stability and financial literacy',
+                        typical_range: 'High school to advanced degrees',
+                        impact: 'Effects mostly captured by income and employment variables'
+                    }
+                };
+                
+                const info = featureDetails[feature];
+                modal.show(`Feature Analysis: ${feature}`, `
+                    <div class="modal-highlight">
+                        <strong>${feature} - Importance Score: ${value}</strong>
+                    </div>
+                    <p><strong>Interpretation:</strong> ${info.interpretation}</p>
+                    <p><strong>Business meaning:</strong> ${info.business_meaning}</p>
+                    <p><strong>Typical range:</strong> ${info.typical_range}</p>
+                    <p><strong>Impact on decisions:</strong> ${info.impact}</p>
+                    
+                    <div class="modal-code">
+                        Feature Importance Analysis:
+                        
+                        Rank: ${Array.from(document.querySelectorAll('.importance-bar')).indexOf(this) + 1} of 7
+                        Normalized Importance: ${value}
+                        Cumulative Importance: ${(parseFloat(value) * 100 / 1.28).toFixed(1)}% of total
+                        
+                        Statistical Significance:
+                        • Permutation test p-value < 0.001
+                        • 95% confidence interval: [${(parseFloat(value) * 0.9).toFixed(2)}, ${(parseFloat(value) * 1.1).toFixed(2)}]
+                        • Stable across 10-fold cross-validation
+                    </div>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                        <strong>🎯 Actionable Insights:</strong><br>
+                        ${feature === 'Credit Score' ? 'Focus on credit building strategies for applicants. Consider offering credit improvement programs.' : ''}
+                        ${feature === 'Annual Income' ? 'Income verification is critical. Consider alternative income documentation for gig workers.' : ''}
+                        ${feature === 'Debt-to-Income' ? 'Debt consolidation counseling could help borderline applicants qualify.' : ''}
+                        ${feature === 'Employment Length' ? 'Weight recent job changes appropriately - some may be career advancement.' : ''}
+                        ${feature === 'Loan Amount' ? 'Consider loan amount limits based on other risk factors to optimize approval rates.' : ''}
+                        ${feature === 'Age' ? 'Ensure age-related decisions comply with fair lending practices and regulations.' : ''}
+                        ${feature === 'Education' ? 'Focus on income and employment verification rather than education credentials.' : ''}
+                    </div>
+                `);
+            });
+        });
+
+        // Scenario card click handlers
+        document.querySelectorAll('.scenario-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('.scenario-title').textContent;
+                const method = this.querySelector('.scenario-method').textContent;
+                
+                const scenarioInfo = {
+                    'Exploratory Analysis': {
+                        situation: 'Early model development phase, need quick insights into data patterns',
+                        why_this_method: 'Tree-based importance is fast, built-in, and gives immediate insights',
+                        implementation: 'Use feature_importances_ attribute from trained Random Forest or XGBoost',
+                        limitations: 'May be biased, not model-agnostic, affected by feature correlations',
+                        next_steps: 'Validate insights with permutation importance on key features'
+                    },
+                    'Model-Agnostic Analysis': {
+                        situation: 'Comparing different model types or need method that works across all models',
+                        why_this_method: 'Permutation importance works with any model and measures true performance impact',
+                        implementation: 'Use sklearn.inspection.permutation_importance with multiple repeats',
+                        limitations: 'Computationally expensive, can be affected by feature correlations',
+                        next_steps: 'Use results for feature selection and model comparison'
+                    },
+                    'Real-time Applications': {
+                        situation: 'Production systems needing fast individual explanations with <100ms latency',
+                        why_this_method: 'Gradients can be computed quickly during forward pass',
+                        implementation: 'Compute gradients using automatic differentiation frameworks',
+                        limitations: 'Only works with differentiable models, can be noisy',
+                        next_steps: 'Validate with slower but more accurate methods during development'
+                    },
+                    'Feature Selection': {
+                        situation: 'Need to reduce dimensionality while maintaining maximum model performance',
+                        why_this_method: 'Drop-column gives most accurate measure of individual feature value',
+                        implementation: 'Train n+1 models, compare cross-validated performance',
+                        limitations: 'Very expensive computationally, may not scale to large datasets',
+                        next_steps: 'Use recursive feature elimination based on results'
+                    },
+                    'Regulatory Compliance': {
+                        situation: 'Need explainable and defensible feature importance for audits',
+                        why_this_method: 'SHAP has theoretical guarantees, permutation is intuitive',
+                        implementation: 'Combine SHAP for consistency with permutation for intuitive explanations',
+                        limitations: 'Multiple methods may give conflicting results',
+                        next_steps: 'Document methodology and validate stability across different datasets'
+                    },
+                    'Research & Development': {
+                        situation: 'Comprehensive analysis for publication or deep model understanding',
+                        why_this_method: 'Multiple methods provide different perspectives and cross-validation',
+                        implementation: 'Apply 3-4 different methods and compare results',
+                        limitations: 'Time-consuming, requires expertise to interpret disagreements',
+                        next_steps: 'Investigate discrepancies and develop unified understanding'
+                    }
+                };
+                
+                const info = scenarioInfo[title];
+                modal.show(`Scenario: ${title}`, `
+                    <div class="modal-highlight">
+                        <strong>Recommended Method: ${method}</strong>
+                    </div>
+                    <p><strong>Situation:</strong> ${info.situation}</p>
+                    <p><strong>Why this method:</strong> ${info.why_this_method}</p>
+                    <p><strong>Implementation approach:</strong> ${info.implementation}</p>
+                    <p><strong>Limitations:</strong> ${info.limitations}</p>
+                    <p><strong>Next steps:</strong> ${info.next_steps}</p>
+                    
+                    <div class="modal-code">
+                        Implementation Example:
+                        
+                        ${method === 'Tree-based Importance' ? `
+                        # Quick exploratory analysis
+                        from sklearn.ensemble import RandomForestClassifier
+                        
+                        rf = RandomForestClassifier(n_estimators=100, random_state=42)
+                        rf.fit(X_train, y_train)
+                        
+                        importances = rf.feature_importances_
+                        feature_importance = pd.Series(importances, index=X.columns)
+                        feature_importance.sort_values(ascending=False).plot(kind='barh')` : ''}
+                        
+                        ${method === 'Permutation Importance' ? `
+                        # Model-agnostic analysis
+                        from sklearn.inspection import permutation_importance
+                        
+                        perm_imp = permutation_importance(
+                            model, X_test, y_test, 
+                            n_repeats=10, random_state=42, 
+                            scoring='accuracy'
+                        )
+                        
+                        importance_df = pd.DataFrame({
+                            'feature': X.columns,
+                            'importance_mean': perm_imp.importances_mean,
+                            'importance_std': perm_imp.importances_std
+                        }).sort_values('importance_mean', ascending=False)` : ''}
+                        
+                        ${method === 'Gradient-based Methods' ? `
+                        # Real-time gradient importance
+                        import torch
+                        
+                        def get_feature_importance(model, X):
+                            X_tensor = torch.tensor(X, requires_grad=True)
+                            output = model(X_tensor)
+                            
+                            # Compute gradients
+                            grad = torch.autograd.grad(
+                                output.sum(), X_tensor, 
+                                retain_graph=True
+                            )[0]
+                            
+                            # Return absolute gradients
+                            return grad.abs().mean(0).detach().numpy()` : ''}
+                    </div>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(239, 68, 68, 0.1); border-radius: 10px;">
+                        <strong>⚠️ Important Considerations:</strong><br>
+                        Always validate feature importance results with domain knowledge and business logic. Statistical importance doesn't always equal business importance!
+                    </div>
+                `);
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week12_Slide233.html';
+            } else if (e.key === 'ArrowRight' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week12_Slide235.html';
+            }
+        });
+    </script>
+</body>
+</html>

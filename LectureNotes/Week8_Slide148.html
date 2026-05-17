@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Chain Rule in Backpropagation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .chain-rule-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .computation-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .rule-steps {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .rule-step {
+            padding: 20px;
+            margin: 15px 0;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .rule-step:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .step-number {
+            position: absolute;
+            left: -15px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .formula-display {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 25px;
+            border-radius: 15px;
+            font-family: 'Courier New', monospace;
+            margin-top: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .formula-display:hover {
+            transform: scale(1.02);
+            box-shadow: 0 15px 30px rgba(30, 41, 59, 0.3);
+        }
+
+        .example-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .network-diagram {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 30px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+
+        .layer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .neuron {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .neuron:hover {
+            transform: scale(1.2);
+            box-shadow: 0 10px 20px rgba(13, 148, 136, 0.4);
+        }
+
+        .connection {
+            width: 100px;
+            height: 2px;
+            background: #0d9488;
+            position: relative;
+        }
+
+        .gradient-flow-viz {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 25px;
+        }
+
+        .gradient-card {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid #14b8a6;
+        }
+
+        .gradient-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .gradient-flow-viz { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    
+    <div class="course-info">CS5710 - Week 8</div>
+    <div class="slide-number">Slide 148 of 160</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Chain Rule in Backpropagation</h1>
+        
+        <div class="content-layout">
+            <div class="chain-rule-section">
+                <h2 class="section-title">Understanding Chain Rule</h2>
+                
+                <ul class="rule-steps">
+                    <li class="rule-step">
+                        <span class="step-number">1</span>
+                        <strong>Composite Functions</strong><br>
+                        Neural networks are compositions of functions
+                    </li>
+                    <li class="rule-step">
+                        <span class="step-number">2</span>
+                        <strong>Derivative Chain</strong><br>
+                        Calculate gradients by multiplying local derivatives
+                    </li>
+                    <li class="rule-step">
+                        <span class="step-number">3</span>
+                        <strong>Backward Pass</strong><br>
+                        Propagate error from output to input layers
+                    </li>
+                    <li class="rule-step">
+                        <span class="step-number">4</span>
+                        <strong>Weight Updates</strong><br>
+                        Use accumulated gradients to update parameters
+                    </li>
+                </ul>
+            </div>
+
+            <div class="computation-section">
+                <h2 class="section-title">Mathematical Foundation</h2>
+                
+                <div class="formula-display">
+                    <strong>Chain Rule Formula:</strong><br><br>
+                    ∂L/∂w = ∂L/∂y · ∂y/∂z · ∂z/∂w<br><br>
+                    where:<br>
+                    L = Loss function<br>
+                    y = Output of layer<br>
+                    z = Pre-activation<br>
+                    w = Weight parameter
+                </div>
+
+                <div class="formula-display" style="margin-top: 20px;">
+                    <strong>General Form:</strong><br><br>
+                    dL/dx = Σ(∂L/∂yi · ∂yi/∂x)<br><br>
+                    For all paths from x to L
+                </div>
+            </div>
+        </div>
+
+        <div class="example-section">
+            <h2 class="section-title">Gradient Flow Through Network</h2>
+            
+            <div class="network-diagram">
+                <div class="layer">
+                    <div class="neuron">x₁</div>
+                    <div class="neuron">x₂</div>
+                </div>
+                <div class="connection"></div>
+                <div class="layer">
+                    <div class="neuron">h₁</div>
+                    <div class="neuron">h₂</div>
+                    <div class="neuron">h₃</div>
+                </div>
+                <div class="connection"></div>
+                <div class="layer">
+                    <div class="neuron">y</div>
+                </div>
+            </div>
+
+            <div class="gradient-flow-viz">
+                <div class="gradient-card">
+                    <strong>Forward Pass</strong><br>
+                    x → z₁ → a₁ → z₂ → y
+                </div>
+                <div class="gradient-card">
+                    <strong>Backward Pass</strong><br>
+                    ∂L/∂y ← ∂L/∂a₁ ← ∂L/∂z₁ ← ∂L/∂x
+                </div>
+                <div class="gradient-card">
+                    <strong>Local Gradients</strong><br>
+                    Multiply at each step
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week8_Slide147.html" class="nav-btn">← Previous</a>
+        <a href="Week8_Slide149.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Rule steps modal content
+        document.querySelectorAll('.rule-step').forEach((step, index) => {
+            step.addEventListener('click', function() {
+                const titles = [
+                    'Composite Functions',
+                    'Derivative Chain',
+                    'Backward Pass',
+                    'Weight Updates'
+                ];
+                
+                const contents = {
+                    'Composite Functions': `
+                        <div class="modal-highlight">
+                            Neural networks are compositions of many simple functions
+                        </div>
+                        <p>Each layer applies a transformation: f(g(h(x)))</p>
+                        <div class="modal-code">
+                            # Example: 3-layer network
+                            z1 = W1 @ x + b1      # Linear
+                            a1 = relu(z1)         # Activation
+                            z2 = W2 @ a1 + b2     # Linear
+                            a2 = relu(z2)         # Activation
+                            z3 = W3 @ a2 + b3     # Linear
+                            y = softmax(z3)       # Output
+                        </div>
+                        <p><strong>Key Insight:</strong> To find how changing weights affects the loss, we need to trace through all these functions.</p>
+                    `,
+                    'Derivative Chain': `
+                        <div class="modal-highlight">
+                            The chain rule lets us compute gradients by multiplying local derivatives
+                        </div>
+                        <p>For f(g(x)), the derivative is: df/dx = df/dg · dg/dx</p>
+                        <div class="modal-code">
+                            # Chain rule in action
+                            # If y = f(g(h(x))), then:
+                            dy/dx = dy/df · df/dg · dg/dh · dh/dx
+                            
+                            # Example with numbers:
+                            # f(x) = (x²)³
+                            # Let g = x², then f = g³
+                            # df/dx = 3g² · 2x = 3(x²)² · 2x = 6x⁵
+                        </div>
+                        <p><strong>Implementation:</strong> Each layer stores its local gradient and multiplies with the gradient from the next layer.</p>
+                    `,
+                    'Backward Pass': `
+                        <div class="modal-highlight">
+                            Gradients flow backward from the loss to the inputs
+                        </div>
+                        <p>Starting from the loss, we compute gradients layer by layer:</p>
+                        <div class="modal-code">
+                            # Backward pass algorithm
+                            def backward_pass():
+                                # 1. Compute loss gradient
+                                dL_dy = loss_gradient(y, target)
+                                
+                                # 2. Backprop through output layer
+                                dL_dz3 = dL_dy * softmax_grad(z3)
+                                dL_dW3 = dL_dz3 @ a2.T
+                                dL_da2 = W3.T @ dL_dz3
+                                
+                                # 3. Through activation
+                                dL_dz2 = dL_da2 * relu_grad(z2)
+                                
+                                # 4. Continue backward...
+                        </div>
+                        <p><strong>Efficiency:</strong> We compute all gradients in one backward pass by reusing intermediate results.</p>
+                    `,
+                    'Weight Updates': `
+                        <div class="modal-highlight">
+                            Use accumulated gradients to update network parameters
+                        </div>
+                        <p>Once we have gradients, we update weights using an optimizer:</p>
+                        <div class="modal-code">
+                            # Gradient descent update
+                            W = W - learning_rate * dL_dW
+                            b = b - learning_rate * dL_db
+                            
+                            # With momentum
+                            velocity = beta * velocity + dL_dW
+                            W = W - learning_rate * velocity
+                            
+                            # Adam optimizer
+                            m = beta1 * m + (1-beta1) * dL_dW
+                            v = beta2 * v + (1-beta2) * dL_dW²
+                            W = W - lr * m / (sqrt(v) + eps)
+                        </div>
+                        <p><strong>Batch Processing:</strong> Gradients are usually averaged over a batch before updating.</p>
+                    `
+                };
+                
+                modal.show(titles[index], contents[titles[index]]);
+            });
+        });
+
+        // Formula display modal
+        document.querySelectorAll('.formula-display').forEach((formula, index) => {
+            formula.addEventListener('click', function() {
+                const titles = ['Chain Rule Deep Dive', 'General Form Explained'];
+                const contents = [
+                    `
+                        <div class="modal-highlight">
+                            <strong>Chain Rule for Backpropagation</strong>
+                        </div>
+                        <p>The chain rule is the mathematical foundation of backpropagation:</p>
+                        <div class="modal-code">
+                            ∂L/∂w = ∂L/∂y · ∂y/∂z · ∂z/∂w
+                            
+                            Breaking it down:
+                            1. ∂L/∂y: How loss changes with output
+                            2. ∂y/∂z: How output changes with pre-activation
+                            3. ∂z/∂w: How pre-activation changes with weight
+                        </div>
+                        <p><strong>Concrete Example:</strong></p>
+                        <div class="modal-code">
+                            # For a simple neuron:
+                            z = w*x + b        # Linear combination
+                            y = sigmoid(z)     # Activation
+                            L = (y - target)²  # Loss
+                            
+                            # Gradients:
+                            ∂L/∂y = 2(y - target)
+                            ∂y/∂z = sigmoid'(z) = y(1-y)
+                            ∂z/∂w = x
+                            
+                            # Final gradient:
+                            ∂L/∂w = 2(y - target) · y(1-y) · x
+                        </div>
+                    `,
+                    `
+                        <div class="modal-highlight">
+                            <strong>General Form for Multiple Paths</strong>
+                        </div>
+                        <p>When a variable affects the output through multiple paths, we sum the contributions:</p>
+                        <div class="modal-code">
+                            dL/dx = Σ(∂L/∂yi · ∂yi/∂x)
+                            
+                            Example: x affects two neurons
+                            Path 1: x → h1 → y → L
+                            Path 2: x → h2 → y → L
+                            
+                            Total gradient:
+                            dL/dx = (∂L/∂y · ∂y/∂h1 · ∂h1/∂x) +
+                                   (∂L/∂y · ∂y/∂h2 · ∂h2/∂x)
+                        </div>
+                        <p><strong>Matrix Form:</strong></p>
+                        <div class="modal-code">
+                            # For layer with weight matrix W
+                            Z = XW + b
+                            A = activation(Z)
+                            
+                            # Gradient w.r.t W:
+                            dL/dW = X.T @ dL/dZ
+                            
+                            # This automatically sums over all samples
+                            # and all paths through the network
+                        </div>
+                    `
+                ];
+                
+                modal.show(titles[index], contents[index]);
+            });
+        });
+
+        // Network diagram interaction
+        document.querySelector('.network-diagram').addEventListener('click', function() {
+            modal.show('Neural Network Gradient Flow', `
+                <div class="modal-highlight">
+                    <strong>Visualizing Gradient Propagation</strong>
+                </div>
+                <p>Gradients flow backward through the network, layer by layer:</p>
+                <div class="modal-code">
+                    Forward Pass:
+                    x → [W1] → h → [W2] → y → Loss
+                    
+                    Backward Pass:
+                    ∂L/∂x ← [W1.T] ← ∂L/∂h ← [W2.T] ← ∂L/∂y ← ∂L/∂L=1
+                </div>
+                <p><strong>At Each Layer:</strong></p>
+                <ul style="margin-left: 20px;">
+                    <li>Receive gradient from next layer</li>
+                    <li>Multiply by local gradient (activation derivative)</li>
+                    <li>Compute weight gradients for updates</li>
+                    <li>Pass gradient to previous layer</li>
+                </ul>
+                <p><strong>Computational Graph:</strong></p>
+                <div class="modal-code">
+                    # Each operation has forward and backward
+                    class Linear:
+                        def forward(self, x):
+                            self.x = x
+                            return x @ self.W + self.b
+                        
+                        def backward(self, grad_out):
+                            self.grad_W = self.x.T @ grad_out
+                            self.grad_b = grad_out.sum(axis=0)
+                            return grad_out @ self.W.T
+                </div>
+            `);
+        });
+
+        // Gradient cards interaction
+        document.querySelectorAll('.gradient-card').forEach((card, index) => {
+            card.addEventListener('click', function() {
+                const titles = ['Forward Pass Details', 'Backward Pass Details', 'Local Gradients'];
+                const contents = [
+                    `
+                        <div class="modal-highlight">
+                            <strong>Forward Pass Computation</strong>
+                        </div>
+                        <p>Data flows forward through the network:</p>
+                        <div class="modal-code">
+                            def forward_pass(x, W1, b1, W2, b2):
+                                # Layer 1
+                                z1 = np.dot(x, W1) + b1
+                                a1 = relu(z1)
+                                
+                                # Layer 2
+                                z2 = np.dot(a1, W2) + b2
+                                y = softmax(z2)
+                                
+                                # Store for backward pass
+                                cache = (x, z1, a1, z2, y)
+                                return y, cache
+                        </div>
+                        <p><strong>Key Points:</strong></p>
+                        <ul style="margin-left: 20px;">
+                            <li>Save intermediate values for backward pass</li>
+                            <li>Each layer is a simple transformation</li>
+                            <li>Activations add non-linearity</li>
+                        </ul>
+                    `,
+                    `
+                        <div class="modal-highlight">
+                            <strong>Backward Pass Computation</strong>
+                        </div>
+                        <p>Gradients flow backward from loss to inputs:</p>
+                        <div class="modal-code">
+                            def backward_pass(dL_dy, cache, W1, W2):
+                                x, z1, a1, z2, y = cache
+                                
+                                # Output layer gradients
+                                dL_dz2 = dL_dy * softmax_grad(z2)
+                                dL_dW2 = np.dot(a1.T, dL_dz2)
+                                dL_db2 = np.sum(dL_dz2, axis=0)
+                                
+                                # Hidden layer gradients
+                                dL_da1 = np.dot(dL_dz2, W2.T)
+                                dL_dz1 = dL_da1 * relu_grad(z1)
+                                dL_dW1 = np.dot(x.T, dL_dz1)
+                                dL_db1 = np.sum(dL_dz1, axis=0)
+                                
+                                return dL_dW1, dL_db1, dL_dW2, dL_db2
+                        </div>
+                        <p><strong>Gradient Accumulation:</strong> For batches, gradients are summed/averaged across samples.</p>
+                    `,
+                    `
+                        <div class="modal-highlight">
+                            <strong>Computing Local Gradients</strong>
+                        </div>
+                        <p>Each operation computes its own gradient:</p>
+                        <div class="modal-code">
+                            # Addition: gradient passes through
+                            d(x+y)/dx = 1, d(x+y)/dy = 1
+                            
+                            # Multiplication: gradient scales by other input
+                            d(x*y)/dx = y, d(x*y)/dy = x
+                            
+                            # ReLU: gradient is 0 or 1
+                            d(relu(x))/dx = 1 if x > 0 else 0
+                            
+                            # Sigmoid: gradient depends on output
+                            d(sigmoid(x))/dx = sigmoid(x) * (1 - sigmoid(x))
+                            
+                            # Softmax: Jacobian matrix
+                            d(softmax(x)_i)/dx_j = 
+                                softmax_i * (δ_ij - softmax_j)
+                        </div>
+                        <p><strong>Chain Rule Application:</strong> Multiply local gradient with upstream gradient to get final gradient.</p>
+                    `
+                ];
+                
+                modal.show(titles[index], contents[index]);
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week8_Slide147.html';
+            } else if ((e.key === 'ArrowRight' || e.key === ' ') && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week8_Slide149.html';
+            }
+        });
+    </script>
+</body>
+</html>

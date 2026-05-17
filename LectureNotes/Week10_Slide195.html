@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Named Entity Recognition</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .entity-types-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .techniques-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .entity-card {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin: 12px 0;
+            border-left: 4px solid #0d9488;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .entity-card:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .entity-tag {
+            background: #0d9488;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .entity-example {
+            flex: 1;
+            color: #1e293b;
+            font-size: 0.95em;
+        }
+
+        .technique-card {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 4px solid #0d9488;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .technique-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .technique-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .technique-desc {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .demo-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .demo-title {
+            font-size: 1.6em;
+            color: #0d9488;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .demo-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1em;
+            border: 2px solid rgba(13, 148, 136, 0.3);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s ease;
+        }
+
+        .demo-input:focus {
+            outline: none;
+            border-color: #0d9488;
+            box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+        }
+
+        .extract-btn {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .extract-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.3);
+        }
+
+        .result-display {
+            margin-top: 30px;
+            padding: 25px;
+            background: white;
+            border-radius: 15px;
+            display: none;
+            line-height: 2;
+            font-size: 1.1em;
+        }
+
+        .result-display.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .entity-highlight {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            margin: 0 2px;
+        }
+
+        .entity-person { background: #fce7f3; color: #be185d; }
+        .entity-org { background: #ddd6fe; color: #7c3aed; }
+        .entity-location { background: #fed7aa; color: #ea580c; }
+        .entity-date { background: #bfdbfe; color: #1e40af; }
+        .entity-money { background: #d4d4d8; color: #3f3f46; }
+        .entity-product { background: #fef3c7; color: #d97706; }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: float 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    
+    <div class="course-info">CS5710 - Week 10</div>
+    <div class="slide-number">Slide 195 of 200</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Named Entity Recognition (NER)</h1>
+        
+        <div class="content-layout">
+            <div class="entity-types-section">
+                <h2 class="section-title">Common Entity Types</h2>
+                
+                <div class="entity-card">
+                    <span class="entity-tag">PERSON</span>
+                    <span class="entity-example">Steve Jobs, Dr. Smith, Mary</span>
+                </div>
+                
+                <div class="entity-card">
+                    <span class="entity-tag">ORG</span>
+                    <span class="entity-example">Apple Inc., NASA, United Nations</span>
+                </div>
+                
+                <div class="entity-card">
+                    <span class="entity-tag">LOCATION</span>
+                    <span class="entity-example">New York, Mount Everest, Pacific Ocean</span>
+                </div>
+                
+                <div class="entity-card">
+                    <span class="entity-tag">DATE</span>
+                    <span class="entity-example">January 2024, yesterday, next week</span>
+                </div>
+                
+                <div class="entity-card">
+                    <span class="entity-tag">TIME</span>
+                    <span class="entity-example">3:00 PM, midnight, this morning</span>
+                </div>
+                
+                <div class="entity-card">
+                    <span class="entity-tag">MONEY</span>
+                    <span class="entity-example">$1 million, €500, 50 cents</span>
+                </div>
+                
+                <div class="entity-card">
+                    <span class="entity-tag">PRODUCT</span>
+                    <span class="entity-example">iPhone 15, Tesla Model S, Windows 11</span>
+                </div>
+                
+                <div class="entity-card">
+                    <span class="entity-tag">EVENT</span>
+                    <span class="entity-example">World Cup, WWII, Olympic Games</span>
+                </div>
+            </div>
+
+            <div class="techniques-section">
+                <h2 class="section-title">NER Techniques</h2>
+                
+                <div class="technique-card">
+                    <div class="technique-title">📝 Rule-Based</div>
+                    <div class="technique-desc">Pattern matching, regular expressions, gazetteers</div>
+                </div>
+                
+                <div class="technique-card">
+                    <div class="technique-title">📊 Statistical Models</div>
+                    <div class="technique-desc">Hidden Markov Models, Conditional Random Fields</div>
+                </div>
+                
+                <div class="technique-card">
+                    <div class="technique-title">🤖 Machine Learning</div>
+                    <div class="technique-desc">Support Vector Machines, Decision Trees</div>
+                </div>
+                
+                <div class="technique-card">
+                    <div class="technique-title">🧠 Deep Learning</div>
+                    <div class="technique-desc">BiLSTM-CRF, CNN-based models</div>
+                </div>
+                
+                <div class="technique-card">
+                    <div class="technique-title">🔄 Transformer-Based</div>
+                    <div class="technique-desc">BERT-NER, RoBERTa, SpaCy Transformers</div>
+                </div>
+                
+                <div class="technique-card">
+                    <div class="technique-title">🎯 Few-Shot Learning</div>
+                    <div class="technique-desc">Learn from minimal labeled examples</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <div class="demo-title">Interactive NER Demo</div>
+            
+            <input type="text" class="demo-input" id="nerInput" 
+                   placeholder="Enter text to extract entities (e.g., 'Apple Inc. was founded by Steve Jobs in Cupertino in April 1976.')">
+            
+            <div style="text-align: center;">
+                <button class="extract-btn" onclick="extractEntities()">Extract Entities</button>
+            </div>
+            
+            <div class="result-display" id="resultDisplay"></div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week10_Slide194.html" class="nav-btn">← Previous</a>
+        <a href="Week10_Slide196.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Entity type details
+        const entityDetails = {
+            'PERSON': {
+                description: 'Names of people, including fictional characters',
+                examples: 'Barack Obama, Sherlock Holmes, Dr. Jane Smith, Einstein',
+                challenges: `
+                    • Disambiguation (John Smith vs John Smith Jr.)<br>
+                    • Cultural name variations<br>
+                    • Titles and honorifics<br>
+                    • Nicknames and aliases<br>
+                    • Single vs full names
+                `,
+                applications: 'Social network analysis, biography extraction, contact management, genealogy research',
+                code: `
+# SpaCy NER for PERSON entities
+import spacy
+
+nlp = spacy.load("en_core_web_sm")
+doc = nlp("Bill Gates founded Microsoft with Paul Allen")
+
+for ent in doc.ents:
+    if ent.label_ == "PERSON":
+        print(f"Person: {ent.text}")
+        # Output: Person: Bill Gates
+        # Output: Person: Paul Allen
+                `
+            },
+            'ORG': {
+                description: 'Organizations including companies, agencies, institutions, teams',
+                examples: 'Google, FBI, Harvard University, Manchester United, WHO',
+                challenges: `
+                    • Abbreviations vs full names<br>
+                    • Subsidiaries and parent companies<br>
+                    • Name changes and mergers<br>
+                    • Informal references<br>
+                    • Multi-word organization names
+                `,
+                applications: 'Company analysis, competitor tracking, institutional research, news aggregation',
+                code: `
+# Custom ORG entity extraction with context
+def extract_organizations(text):
+    doc = nlp(text)
+    orgs = []
+    
+    for ent in doc.ents:
+        if ent.label_ == "ORG":
+            # Add context window
+            start = max(0, ent.start - 3)
+            end = min(len(doc), ent.end + 3)
+            context = doc[start:end].text
+            
+            orgs.append({
+                'name': ent.text,
+                'context': context,
+                'confidence': ent._.score if hasattr(ent._, 'score') else 1.0
+            })
+    
+    return orgs
+                `
+            },
+            'LOCATION': {
+                description: 'Geographic locations including countries, cities, landmarks, addresses',
+                examples: 'Paris, France, Silicon Valley, 123 Main St, Mount Kilimanjaro',
+                challenges: `
+                    • Ambiguous locations (Paris, France vs Paris, Texas)<br>
+                    • Historical vs current names<br>
+                    • Nested locations<br>
+                    • Virtual locations<br>
+                    • Location vs organization (e.g., "Washington")
+                `,
+                applications: 'Geocoding, travel planning, location-based services, geographic analysis',
+                code: `
+# Location extraction with geocoding
+from geopy.geocoders import Nominatim
+
+def extract_and_geocode(text):
+    doc = nlp(text)
+    geolocator = Nominatim(user_agent="ner_demo")
+    
+    locations = []
+    for ent in doc.ents:
+        if ent.label_ in ["GPE", "LOC"]:
+            try:
+                location = geolocator.geocode(ent.text)
+                if location:
+                    locations.append({
+                        'name': ent.text,
+                        'latitude': location.latitude,
+                        'longitude': location.longitude
+                    })
+            except:
+                pass
+    
+    return locations
+                `
+            },
+            'DATE': {
+                description: 'Absolute or relative dates and periods',
+                examples: 'January 1, 2024, last Tuesday, the 1990s, next month',
+                challenges: `
+                    • Relative vs absolute dates<br>
+                    • Different date formats<br>
+                    • Partial dates<br>
+                    • Date ranges<br>
+                    • Cultural date representations
+                `,
+                applications: 'Event extraction, timeline creation, scheduling, historical analysis',
+                code: `
+# Date parsing and normalization
+from dateutil import parser
+import datetime
+
+def normalize_dates(text):
+    doc = nlp(text)
+    normalized = []
+    
+    for ent in doc.ents:
+        if ent.label_ == "DATE":
+            try:
+                # Try to parse the date
+                parsed = parser.parse(ent.text, fuzzy=True)
+                normalized.append({
+                    'original': ent.text,
+                    'normalized': parsed.isoformat(),
+                    'type': 'absolute'
+                })
+            except:
+                # Handle relative dates
+                normalized.append({
+                    'original': ent.text,
+                    'normalized': None,
+                    'type': 'relative'
+                })
+    
+    return normalized
+                `
+            },
+            'TIME': {
+                description: 'Times of day and durations',
+                examples: '3:30 PM, noon, morning, 2 hours, half past five',
+                challenges: `
+                    • Time zones<br>
+                    • 12-hour vs 24-hour format<br>
+                    • Relative times<br>
+                    • Duration vs point in time<br>
+                    • Colloquial expressions
+                `,
+                applications: 'Schedule extraction, meeting planning, time series analysis',
+                code: `
+# Time extraction and standardization
+import re
+
+def extract_times(text):
+    doc = nlp(text)
+    times = []
+    
+    # Pattern for various time formats
+    time_patterns = [
+        r'\\b\\d{1,2}:\\d{2}\\s*(?:AM|PM|am|pm)?\\b',
+        r'\\b\\d{1,2}\\s*(?:AM|PM|am|pm)\\b',
+        r'\\b(?:noon|midnight|morning|evening|afternoon)\\b'
+    ]
+    
+    for pattern in time_patterns:
+        matches = re.findall(pattern, text, re.IGNORECASE)
+        times.extend(matches)
+    
+    return times
+                `
+            },
+            'MONEY': {
+                description: 'Monetary values including currencies',
+                examples: '$100, €50.99, 1 million dollars, Rs. 5000',
+                challenges: `
+                    • Multiple currency formats<br>
+                    • Written vs numeric amounts<br>
+                    • Currency conversion<br>
+                    • Historical values<br>
+                    • Cryptocurrency mentions
+                `,
+                applications: 'Financial analysis, price extraction, budget tracking, invoice processing',
+                code: `
+# Money extraction with currency detection
+import re
+
+def extract_money(text):
+    doc = nlp(text)
+    money_entities = []
+    
+    for ent in doc.ents:
+        if ent.label_ == "MONEY":
+            # Extract currency and amount
+            currency_match = re.search(r'[$€£¥₹]|USD|EUR|GBP', ent.text)
+            amount_match = re.search(r'[\\d,]+\\.?\\d*', ent.text)
+            
+            if currency_match and amount_match:
+                money_entities.append({
+                    'text': ent.text,
+                    'currency': currency_match.group(),
+                    'amount': float(amount_match.group().replace(',', ''))
+                })
+    
+    return money_entities
+                `
+            },
+            'PRODUCT': {
+                description: 'Products, services, and branded items',
+                examples: 'iPhone 15 Pro, Microsoft Office, Tesla Model 3',
+                challenges: `
+                    • Version numbers<br>
+                    • Generic vs branded products<br>
+                    • Product families<br>
+                    • Service vs physical products<br>
+                    • Product nicknames
+                `,
+                applications: 'Product reviews analysis, inventory management, competitive analysis',
+                code: `
+# Product entity extraction with attributes
+def extract_products(text):
+    doc = nlp(text)
+    products = []
+    
+    for ent in doc.ents:
+        if ent.label_ == "PRODUCT":
+            # Extract version/model if present
+            version_match = re.search(r'\\d+\\.?\\d*|[A-Z]\\d+', ent.text)
+            
+            products.append({
+                'name': ent.text,
+                'base_product': re.sub(r'\\d+\\.?\\d*|[A-Z]\\d+', '', ent.text).strip(),
+                'version': version_match.group() if version_match else None
+            })
+    
+    return products
+                `
+            },
+            'EVENT': {
+                description: 'Named events including conferences, wars, sports events',
+                examples: 'World War II, Super Bowl, CES 2024, French Revolution',
+                challenges: `
+                    • Historical vs recurring events<br>
+                    • Event series<br>
+                    • Informal event names<br>
+                    • Event dates and locations<br>
+                    • Multi-part events
+                `,
+                applications: 'Event tracking, historical analysis, calendar management, news categorization',
+                code: `
+# Event extraction with metadata
+def extract_events(text):
+    doc = nlp(text)
+    events = []
+    
+    for ent in doc.ents:
+        if ent.label_ == "EVENT":
+            # Look for associated dates and locations
+            event_data = {'name': ent.text}
+            
+            # Check surrounding context for dates
+            for other_ent in doc.ents:
+                if other_ent.label_ == "DATE":
+                    if abs(other_ent.start - ent.end) < 5:
+                        event_data['date'] = other_ent.text
+                elif other_ent.label_ in ["GPE", "LOC"]:
+                    if abs(other_ent.start - ent.end) < 5:
+                        event_data['location'] = other_ent.text
+            
+            events.append(event_data)
+    
+    return events
+                `
+            }
+        };
+
+        // Add click handlers for entity cards
+        document.querySelectorAll('.entity-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const tag = this.querySelector('.entity-tag').textContent;
+                const info = entityDetails[tag];
+                
+                if (info) {
+                    modal.show(`Entity Type: ${tag}`, `
+                        <div class="modal-highlight">
+                            <strong>Description</strong>
+                        </div>
+                        <p>${info.description}</p>
+                        
+                        <div class="modal-highlight">
+                            <strong>Examples</strong>
+                        </div>
+                        <p>${info.examples}</p>
+                        
+                        <div class="modal-highlight">
+                            <strong>Common Challenges</strong>
+                        </div>
+                        <p>${info.challenges}</p>
+                        
+                        <div class="modal-code">
+${info.code}
+                        </div>
+                        
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                            <strong>📚 Applications:</strong><br>
+                            ${info.applications}
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Technique details
+        const techniqueDetails = {
+            '📝 Rule-Based': {
+                explanation: 'Uses handcrafted rules, patterns, and dictionaries to identify entities based on linguistic features and context.',
+                implementation: `
+                    • Regular expressions for patterns<br>
+                    • Gazetteers (entity lists)<br>
+                    • Grammar rules<br>
+                    • Capitalization patterns<br>
+                    • Context clues
+                `,
+                code: `
+# Rule-based NER example
+import re
+
+class RuleBasedNER:
+    def __init__(self):
+        # Gazetteers
+        self.person_titles = ['Mr.', 'Mrs.', 'Dr.', 'Prof.']
+        self.org_suffixes = ['Inc.', 'Corp.', 'Ltd.', 'LLC']
+        
+        # Patterns
+        self.money_pattern = r'[$€£]\\d+(?:,\\d{3})*(?:\\.\\d{2})?'
+        self.email_pattern = r'\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b'
+        
+    def extract_entities(self, text):
+        entities = []
+        
+        # Extract money
+        for match in re.finditer(self.money_pattern, text):
+            entities.append(('MONEY', match.group()))
+        
+        # Extract emails (as contact info)
+        for match in re.finditer(self.email_pattern, text):
+            entities.append(('EMAIL', match.group()))
+        
+        # Extract person names (simplified)
+        words = text.split()
+        for i, word in enumerate(words):
+            if word in self.person_titles and i < len(words) - 1:
+                if words[i+1][0].isupper():
+                    entities.append(('PERSON', f"{word} {words[i+1]}"))
+        
+        return entities
+                `,
+                pros: 'Fast, transparent, no training data needed, domain-specific customization',
+                cons: 'Labor-intensive, poor generalization, maintenance overhead, limited coverage'
+            },
+            '📊 Statistical Models': {
+                explanation: 'Uses probabilistic models to learn entity patterns from annotated training data.',
+                implementation: `
+                    • Hidden Markov Models (HMM)<br>
+                    • Maximum Entropy Models<br>
+                    • Conditional Random Fields (CRF)<br>
+                    • Feature engineering<br>
+                    • Sequence labeling
+                `,
+                code: `
+# CRF-based NER with sklearn-crfsuite
+import sklearn_crfsuite
+
+def word2features(sent, i):
+    word = sent[i][0]
+    features = {
+        'bias': 1.0,
+        'word.lower()': word.lower(),
+        'word[-3:]': word[-3:],
+        'word[-2:]': word[-2:],
+        'word.isupper()': word.isupper(),
+        'word.istitle()': word.istitle(),
+        'word.isdigit()': word.isdigit(),
+    }
+    
+    # Context features
+    if i > 0:
+        word1 = sent[i-1][0]
+        features.update({
+            '-1:word.lower()': word1.lower(),
+            '-1:word.istitle()': word1.istitle(),
+        })
+    
+    if i < len(sent)-1:
+        word1 = sent[i+1][0]
+        features.update({
+            '+1:word.lower()': word1.lower(),
+            '+1:word.istitle()': word1.istitle(),
+        })
+    
+    return features
+
+# Train CRF model
+crf = sklearn_crfsuite.CRF(
+    algorithm='lbfgs',
+    c1=0.1,
+    c2=0.1,
+    max_iterations=100
+)
+
+X_train = [[word2features(s, i) for i in range(len(s))] for s in train_sents]
+y_train = [[label for token, label in s] for s in train_sents]
+
+crf.fit(X_train, y_train)
+                `,
+                pros: 'Good accuracy, considers context, probabilistic outputs, feature flexibility',
+                cons: 'Requires labeled data, feature engineering, slower than rules, sequence dependencies'
+            },
+            '🤖 Machine Learning': {
+                explanation: 'Treats NER as a classification problem, using traditional ML algorithms with engineered features.',
+                implementation: `
+                    • Support Vector Machines<br>
+                    • Decision Trees<br>
+                    • Random Forests<br>
+                    • Naive Bayes<br>
+                    • Ensemble methods
+                `,
+                code: `
+# SVM-based NER classifier
+from sklearn.svm import SVC
+from sklearn.pipeline import Pipeline
+from sklearn.feature_extraction import DictVectorizer
+
+class MLBasedNER:
+    def __init__(self):
+        self.pipeline = Pipeline([
+            ('vectorizer', DictVectorizer()),
+            ('classifier', SVC(kernel='linear', probability=True))
+        ])
+    
+    def extract_features(self, tokens, index):
+        token = tokens[index]
+        features = {
+            'token': token,
+            'is_capitalized': token[0].isupper(),
+            'is_all_caps': token.isupper(),
+            'is_all_lower': token.islower(),
+            'prefix-1': token[0],
+            'prefix-2': token[:2],
+            'prefix-3': token[:3],
+            'suffix-1': token[-1],
+            'suffix-2': token[-2:],
+            'suffix-3': token[-3:],
+            'prev_word': tokens[index-1] if index > 0 else '<START>',
+            'next_word': tokens[index+1] if index < len(tokens)-1 else '<END>',
+            'has_hyphen': '-' in token,
+            'is_numeric': token.isdigit(),
+            'capitals_inside': token[1:].lower() != token[1:]
+        }
+        return features
+    
+    def train(self, X, y):
+        self.pipeline.fit(X, y)
+    
+    def predict(self, tokens):
+        features = [self.extract_features(tokens, i) for i in range(len(tokens))]
+        return self.pipeline.predict(features)
+                `,
+                pros: 'Flexible features, good with limited data, interpretable, fast inference',
+                cons: 'Manual feature engineering, limited context window, no sequence modeling'
+            },
+            '🧠 Deep Learning': {
+                explanation: 'Uses neural networks to automatically learn features and patterns from raw text.',
+                implementation: `
+                    • BiLSTM-CRF<br>
+                    • CNN for character-level features<br>
+                    • GRU networks<br>
+                    • Attention mechanisms<br>
+                    • Multi-task learning
+                `,
+                code: `
+# BiLSTM-CRF implementation in PyTorch
+import torch
+import torch.nn as nn
+
+class BiLSTM_CRF(nn.Module):
+    def __init__(self, vocab_size, tag_to_ix, embedding_dim, hidden_dim):
+        super(BiLSTM_CRF, self).__init__()
+        self.embedding_dim = embedding_dim
+        self.hidden_dim = hidden_dim
+        self.vocab_size = vocab_size
+        self.tag_to_ix = tag_to_ix
+        self.tagset_size = len(tag_to_ix)
+        
+        self.word_embeds = nn.Embedding(vocab_size, embedding_dim)
+        self.lstm = nn.LSTM(embedding_dim, hidden_dim // 2,
+                            num_layers=1, bidirectional=True)
+        
+        # Maps output of LSTM to tag space
+        self.hidden2tag = nn.Linear(hidden_dim, self.tagset_size)
+        
+        # CRF layer
+        self.crf = CRF(self.tagset_size)
+        
+    def forward(self, sentence):
+        embeds = self.word_embeds(sentence)
+        lstm_out, _ = self.lstm(embeds.view(len(sentence), 1, -1))
+        lstm_out = lstm_out.view(len(sentence), self.hidden_dim)
+        lstm_feats = self.hidden2tag(lstm_out)
+        
+        # CRF decoding
+        score, tag_seq = self.crf(lstm_feats)
+        return score, tag_seq
+                `,
+                pros: 'State-of-the-art performance, automatic feature learning, handles long dependencies',
+                cons: 'Requires large datasets, computationally expensive, less interpretable, overfitting risk'
+            },
+            '🔄 Transformer-Based': {
+                explanation: 'Leverages pre-trained transformer models like BERT for contextual understanding.',
+                implementation: `
+                    • BERT fine-tuning<br>
+                    • RoBERTa models<br>
+                    • SpaCy transformers<br>
+                    • XLNet, ALBERT<br>
+                    • Domain-specific models
+                `,
+                code: `
+# BERT-based NER using Hugging Face
+from transformers import AutoTokenizer, AutoModelForTokenClassification
+from transformers import pipeline
+
+# Load pre-trained model
+model_name = "dbmdz/bert-large-cased-finetuned-conll03-english"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForTokenClassification.from_pretrained(model_name)
+
+# Create NER pipeline
+nlp = pipeline("ner", model=model, tokenizer=tokenizer)
+
+def extract_entities_bert(text):
+    # Get predictions
+    results = nlp(text)
+    
+    # Group tokens into entities
+    entities = []
+    current_entity = None
+    
+    for token in results:
+        if token['entity'].startswith('B-'):
+            if current_entity:
+                entities.append(current_entity)
+            current_entity = {
+                'text': token['word'],
+                'label': token['entity'][2:],
+                'score': token['score']
+            }
+        elif token['entity'].startswith('I-') and current_entity:
+            current_entity['text'] += token['word'].replace('##', '')
+        else:
+            if current_entity:
+                entities.append(current_entity)
+                current_entity = None
+    
+    if current_entity:
+        entities.append(current_entity)
+    
+    return entities
+
+# Fine-tuning example
+from transformers import TrainingArguments, Trainer
+
+training_args = TrainingArguments(
+    output_dir="./results",
+    evaluation_strategy="epoch",
+    learning_rate=2e-5,
+    per_device_train_batch_size=16,
+    per_device_eval_batch_size=16,
+    num_train_epochs=3,
+    weight_decay=0.01,
+)
+
+trainer = Trainer(
+    model=model,
+    args=training_args,
+    train_dataset=train_dataset,
+    eval_dataset=eval_dataset,
+    tokenizer=tokenizer,
+)
+
+trainer.train()
+                `,
+                pros: 'Best performance, contextual understanding, transfer learning, multilingual support',
+                cons: 'Large model size, high computational cost, requires GPU, fine-tuning needed'
+            },
+            '🎯 Few-Shot Learning': {
+                explanation: 'Learns to recognize new entity types from very few labeled examples.',
+                implementation: `
+                    • Prototypical networks<br>
+                    • Matching networks<br>
+                    • MAML (Model-Agnostic Meta-Learning)<br>
+                    • Prompt-based learning<br>
+                    • In-context learning
+                `,
+                code: `
+# Few-shot NER with GPT-3 style prompting
+def few_shot_ner(text, examples):
+    prompt = "Extract named entities from the text.\\n\\n"
+    
+    # Add examples
+    for ex in examples:
+        prompt += f"Text: {ex['text']}\\n"
+        prompt += f"Entities: {ex['entities']}\\n\\n"
+    
+    # Add query
+    prompt += f"Text: {text}\\n"
+    prompt += "Entities:"
+    
+    # Use language model
+    response = gpt3_complete(prompt)
+    
+    # Parse response
+    entities = parse_entity_response(response)
+    return entities
+
+# Prototypical Networks approach
+class PrototypicalNER(nn.Module):
+    def __init__(self, encoder):
+        super().__init__()
+        self.encoder = encoder
+        
+    def compute_prototypes(self, support_set):
+        prototypes = {}
+        for label, examples in support_set.items():
+            embeddings = [self.encoder(ex) for ex in examples]
+            prototypes[label] = torch.mean(torch.stack(embeddings), dim=0)
+        return prototypes
+    
+    def classify(self, query, prototypes):
+        query_embedding = self.encoder(query)
+        distances = {}
+        
+        for label, prototype in prototypes.items():
+            distances[label] = torch.dist(query_embedding, prototype)
+        
+        return min(distances, key=distances.get)
+                `,
+                pros: 'Works with minimal data, adapts to new domains, no retraining needed',
+                cons: 'Lower accuracy than supervised, requires good examples, limited to similar domains'
+            }
+        };
+
+        // Add click handlers for technique cards
+        document.querySelectorAll('.technique-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('.technique-title').textContent;
+                const info = techniqueDetails[title];
+                
+                if (info) {
+                    modal.show(`NER Technique: ${title}`, `
+                        <div class="modal-highlight">
+                            <strong>Approach</strong>
+                        </div>
+                        <p>${info.explanation}</p>
+                        
+                        <div class="modal-highlight">
+                            <strong>Implementation Details</strong>
+                        </div>
+                        <p>${info.implementation}</p>
+                        
+                        <div class="modal-code">
+${info.code}
+                        </div>
+                        
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                            <strong>✅ Advantages:</strong><br>
+                            ${info.pros}
+                            <br><br>
+                            <strong>⚠️ Limitations:</strong><br>
+                            ${info.cons}
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Simple NER demo function
+        function extractEntities() {
+            const input = document.getElementById('nerInput').value;
+            if (!input.trim()) {
+                alert('Please enter some text to analyze');
+                return;
+            }
+            
+            // Simple rule-based entity extraction for demo
+            const patterns = {
+                PERSON: /\b[A-Z][a-z]+ [A-Z][a-z]+\b/g,
+                ORG: /\b[A-Z][a-z]+ (?:Inc\.|Corp\.|LLC|Ltd\.|Company|Organization|University|Institute)\b/g,
+                DATE: /\b(?:January|February|March|April|May|June|July|August|September|October|November|December) \d{1,2},? \d{4}\b|\b\d{1,2}\/\d{1,2}\/\d{2,4}\b|\b(?:yesterday|today|tomorrow|last \w+|next \w+)\b/gi,
+                MONEY: /\$[\d,]+(?:\.\d{2})?|\b\d+(?:,\d{3})*(?:\.\d{2})? (?:dollars?|euros?|pounds?|yen|rupees?)\b/gi,
+                LOCATION: /\b(?:New York|London|Paris|Tokyo|Beijing|Mumbai|California|Texas|Europe|Asia|America)\b/gi
+            };
+            
+            let annotatedText = input;
+            const foundEntities = [];
+            
+            // Extract entities
+            for (const [type, pattern] of Object.entries(patterns)) {
+                const matches = input.match(pattern) || [];
+                matches.forEach(match => {
+                    if (!foundEntities.some(e => e.text === match)) {
+                        foundEntities.push({ text: match, type });
+                    }
+                });
+            }
+            
+            // Sort by position in text
+            foundEntities.sort((a, b) => input.indexOf(a.text) - input.indexOf(b.text));
+            
+            // Create highlighted text
+            foundEntities.forEach(entity => {
+                const className = `entity-${entity.type.toLowerCase()}`;
+                const replacement = `<span class="${className}">${entity.text} <small>[${entity.type}]</small></span>`;
+                annotatedText = annotatedText.replace(new RegExp(entity.text, 'g'), replacement);
+            });
+            
+            // Display results
+            const resultDiv = document.getElementById('resultDisplay');
+            resultDiv.innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <strong>Annotated Text:</strong><br>
+                    <div style="margin-top: 10px; font-size: 1.1em; line-height: 2;">
+                        ${annotatedText}
+                    </div>
+                </div>
+                
+                <div style="margin-top: 25px; padding-top: 20px; border-top: 2px solid rgba(13, 148, 136, 0.2);">
+                    <strong>Extracted Entities (${foundEntities.length}):</strong>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-top: 15px;">
+                        ${foundEntities.map(e => `
+                            <div style="padding: 8px 12px; background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%); border-radius: 8px; border-left: 3px solid #0d9488;">
+                                <span style="font-weight: 600;">${e.text}</span><br>
+                                <span style="font-size: 0.85em; color: #64748b;">${e.type}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.05); border-radius: 10px; font-size: 0.9em; color: #475569;">
+                    <strong>Note:</strong> This is a simple pattern-based demo. Production NER systems use advanced ML models for better accuracy and coverage.
+                </div>
+            `;
+            
+            resultDiv.classList.add('active');
+        }
+
+        // Initialize components
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week10_Slide194.html';
+            } else if (e.key === 'ArrowRight' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week10_Slide196.html';
+            }
+        });
+
+        // Enter key for entity extraction
+        document.getElementById('nerInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                extractEntities();
+            }
+        });
+    </script>
+</body>
+</html>

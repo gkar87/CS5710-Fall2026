@@ -1,0 +1,1793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Collaborative Filtering</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .approach-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .algorithm-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .approach-card {
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .approach-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .approach-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .approach-desc {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .algorithm-grid {
+            display: grid;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .algorithm-card {
+            padding: 20px;
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 12px;
+            border: 2px solid #14b8a6;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .algorithm-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .algorithm-icon {
+            font-size: 1.8em;
+            margin-bottom: 10px;
+        }
+
+        .algorithm-title {
+            font-size: 1em;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #0d9488;
+        }
+
+        .algorithm-desc {
+            font-size: 0.85em;
+            color: #475569;
+            line-height: 1.4;
+        }
+
+        .demo-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .matrix-visualization {
+            background: #1e293b;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            min-height: 300px;
+            position: relative;
+        }
+
+        .user-item-matrix {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 2px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .matrix-cell {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 5px;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .matrix-header {
+            background: #0d9488;
+            color: white;
+        }
+
+        .matrix-user {
+            background: #14b8a6;
+            color: white;
+        }
+
+        .matrix-rated {
+            background: #5eead4;
+            color: #134e4a;
+        }
+
+        .matrix-empty {
+            background: #374151;
+            color: #9ca3af;
+        }
+
+        .matrix-predicted {
+            background: #f59e0b;
+            color: white;
+            animation: pulse 2s infinite;
+        }
+
+        .control-panel {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .demo-button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border: none;
+            border-radius: 20px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px;
+            font-size: 0.9em;
+        }
+
+        .demo-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(13, 148, 136, 0.3);
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.1); }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .control-panel { grid-template-columns: 1fr; }
+            .user-item-matrix { grid-template-columns: repeat(4, 1fr); }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 13</div>
+    <div class="slide-number">Slide 254 of 260</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">👥 Collaborative Filtering</h1>
+        
+        <div class="content-layout">
+            <div class="approach-section">
+                <h2 class="section-title">🎯 CF Approaches</h2>
+                
+                <div class="approach-card" data-approach="memory">
+                    <div class="approach-title">💾 Memory-Based CF</div>
+                    <div class="approach-desc">Uses user-item ratings directly to find similar users or items</div>
+                </div>
+                
+                <div class="approach-card" data-approach="model">
+                    <div class="approach-title">🧠 Model-Based CF</div>
+                    <div class="approach-desc">Learns latent factors from user-item interactions using ML models</div>
+                </div>
+                
+                <div class="approach-card" data-approach="neighborhood">
+                    <div class="approach-title">🏘️ Neighborhood Methods</div>
+                    <div class="approach-desc">User-based and item-based collaborative filtering techniques</div>
+                </div>
+                
+                <div class="approach-card" data-approach="matrix">
+                    <div class="approach-title">📊 Matrix Factorization</div>
+                    <div class="approach-desc">SVD, NMF, and deep learning approaches to decompose user-item matrix</div>
+                </div>
+            </div>
+
+            <div class="algorithm-section">
+                <h2 class="section-title">⚙️ Core Algorithms</h2>
+                
+                <div class="algorithm-grid">
+                    <div class="algorithm-card" data-algorithm="user_based">
+                        <div class="algorithm-icon">👤</div>
+                        <div class="algorithm-title">User-Based CF</div>
+                        <div class="algorithm-desc">Find similar users, recommend what they liked</div>
+                    </div>
+                    
+                    <div class="algorithm-card" data-algorithm="item_based">
+                        <div class="algorithm-icon">📦</div>
+                        <div class="algorithm-title">Item-Based CF</div>
+                        <div class="algorithm-desc">Find similar items, recommend based on user history</div>
+                    </div>
+                    
+                    <div class="algorithm-card" data-algorithm="svd">
+                        <div class="algorithm-icon">🔢</div>
+                        <div class="algorithm-title">SVD</div>
+                        <div class="algorithm-desc">Singular Value Decomposition for matrix factorization</div>
+                    </div>
+                    
+                    <div class="algorithm-card" data-algorithm="nmf">
+                        <div class="algorithm-icon">➕</div>
+                        <div class="algorithm-title">NMF</div>
+                        <div class="algorithm-desc">Non-negative Matrix Factorization</div>
+                    </div>
+                    
+                    <div class="algorithm-card" data-algorithm="deep">
+                        <div class="algorithm-icon">🧠</div>
+                        <div class="algorithm-title">Neural CF</div>
+                        <div class="algorithm-desc">Deep learning approaches to collaborative filtering</div>
+                    </div>
+                    
+                    <div class="algorithm-card" data-algorithm="clustering">
+                        <div class="algorithm-icon">🎯</div>
+                        <div class="algorithm-title">Clustering CF</div>
+                        <div class="algorithm-desc">Group users/items before making recommendations</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2 class="section-title">📊 Interactive User-Item Matrix Demo</h2>
+            
+            <div style="text-align: center; margin-bottom: 20px;">
+                <strong style="color: #0d9488; font-size: 1.2em;">
+                    Click on matrix cells to see collaborative filtering in action
+                </strong>
+            </div>
+            
+            <div class="matrix-visualization">
+                <div class="user-item-matrix" id="userItemMatrix">
+                    <!-- Matrix will be generated by JavaScript -->
+                </div>
+            </div>
+            
+            <div class="control-panel">
+                <div>
+                    <button class="demo-button" id="userBasedCF">👤 User-Based CF</button>
+                    <button class="demo-button" id="itemBasedCF">📦 Item-Based CF</button>
+                </div>
+                
+                <div>
+                    <button class="demo-button" id="matrixFactorization">🔢 Matrix Factorization</button>
+                    <button class="demo-button" id="showSimilarity">📊 Show Similarity</button>
+                </div>
+                
+                <div>
+                    <button class="demo-button" id="generatePredictions">🎯 Generate Predictions</button>
+                    <button class="demo-button" id="resetMatrix">🔄 Reset Matrix</button>
+                </div>
+            </div>
+            
+            <div style="margin-top: 20px; text-align: center;">
+                <div style="background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%); padding: 15px; border-radius: 10px; display: inline-block;">
+                    <span style="background: #5eead4; color: #134e4a; padding: 3px 8px; border-radius: 3px; margin-right: 10px;">Rated</span>
+                    <span style="background: #374151; color: #9ca3af; padding: 3px 8px; border-radius: 3px; margin-right: 10px;">Empty</span>
+                    <span style="background: #f59e0b; color: white; padding: 3px 8px; border-radius: 3px;">Predicted</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week13_Slide253.html" class="nav-btn">← Previous</a>
+        <a href="Week13_Slide255.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Collaborative Filtering Demo
+        class CollaborativeFilteringDemo {
+            constructor() {
+                this.matrix = [
+                    ['', 'Movie1', 'Movie2', 'Movie3', 'Movie4', 'Movie5'],
+                    ['User1', 5, 0, 4, 0, 2],
+                    ['User2', 0, 3, 0, 5, 4],
+                    ['User3', 4, 4, 0, 3, 0],
+                    ['User4', 0, 0, 5, 4, 5],
+                    ['User5', 3, 0, 3, 0, 3]
+                ];
+                this.setupMatrix();
+                this.setupControls();
+            }
+            
+            setupMatrix() {
+                const matrixElement = document.getElementById('userItemMatrix');
+                matrixElement.innerHTML = '';
+                
+                this.matrix.forEach((row, i) => {
+                    row.forEach((cell, j) => {
+                        const cellElement = document.createElement('div');
+                        cellElement.className = 'matrix-cell';
+                        
+                        if (i === 0 || j === 0) {
+                            cellElement.className += ' matrix-header';
+                            cellElement.textContent = cell;
+                        } else {
+                            if (cell === 0) {
+                                cellElement.className += ' matrix-empty';
+                                cellElement.textContent = '?';
+                            } else {
+                                cellElement.className += ' matrix-rated';
+                                cellElement.textContent = cell;
+                            }
+                            
+                            cellElement.addEventListener('click', () => {
+                                this.showCellInfo(i, j, cell);
+                            });
+                        }
+                        
+                        matrixElement.appendChild(cellElement);
+                    });
+                });
+            }
+            
+            setupControls() {
+                document.getElementById('userBasedCF').addEventListener('click', () => this.userBasedCF());
+                document.getElementById('itemBasedCF').addEventListener('click', () => this.itemBasedCF());
+                document.getElementById('matrixFactorization').addEventListener('click', () => this.matrixFactorization());
+                document.getElementById('showSimilarity').addEventListener('click', () => this.showSimilarity());
+                document.getElementById('generatePredictions').addEventListener('click', () => this.generatePredictions());
+                document.getElementById('resetMatrix').addEventListener('click', () => this.resetMatrix());
+            }
+            
+            showCellInfo(row, col, rating) {
+                const user = this.matrix[row][0];
+                const item = this.matrix[0][col];
+                
+                modal.show(`User-Item Interaction: ${user} × ${item}`, `
+                    <div class="modal-highlight">
+                        <strong>Rating: ${rating === 0 ? 'Not Rated' : rating + '/5 stars'}</strong>
+                    </div>
+                    <p><strong>User:</strong> ${user}</p>
+                    <p><strong>Item:</strong> ${item}</p>
+                    <p><strong>Matrix Position:</strong> Row ${row}, Column ${col}</p>
+                    
+                    ${rating === 0 ? `
+                        <div class="modal-code">
+# Collaborative Filtering Prediction
+def predict_rating(user_id, item_id, ratings_matrix):
+    # Find similar users
+    user_similarities = cosine_similarity(ratings_matrix)
+    
+    # Get top-k similar users
+    similar_users = get_top_k_similar(user_id, user_similarities, k=3)
+    
+    # Weighted average of similar users' ratings
+    numerator = sum(similarity * rating for similarity, rating in similar_users)
+    denominator = sum(abs(similarity) for similarity, rating in similar_users)
+    
+    predicted_rating = numerator / denominator if denominator > 0 else 0
+    return predicted_rating
+
+# Example for ${user} rating ${item}
+predicted = predict_rating("${user}", "${item}", user_item_matrix)
+print(f"Predicted rating: {predicted:.2f}")
+                        </div>
+                        <p><strong>Prediction Strategy:</strong> Use ratings from similar users who have rated this item.</p>
+                    ` : `
+                        <p><strong>This rating helps us:</strong></p>
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            <li>Find users with similar preferences</li>
+                            <li>Identify items with similar rating patterns</li>
+                            <li>Build user and item profiles</li>
+                            <li>Generate recommendations for other users</li>
+                        </ul>
+                    `}
+                `);
+            }
+            
+            userBasedCF() {
+                modal.show('👤 User-Based Collaborative Filtering', `
+                    <div class="modal-highlight">
+                        <strong>Find users with similar preferences and recommend what they liked</strong>
+                    </div>
+                    <p><strong>🔧 Algorithm Steps:</strong></p>
+                    <ol style="margin: 15px 0; padding-left: 20px;">
+                        <li>Calculate user-user similarity (cosine, Pearson correlation)</li>
+                        <li>Find k most similar users to target user</li>
+                        <li>Predict ratings based on similar users' ratings</li>
+                        <li>Recommend highest predicted ratings</li>
+                    </ol>
+                    <div class="modal-code">
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
+
+class UserBasedCF:
+    def __init__(self, ratings_matrix):
+        self.ratings = ratings_matrix
+        self.user_similarity = None
+    
+    def fit(self):
+        # Calculate user-user similarity matrix
+        self.user_similarity = cosine_similarity(self.ratings)
+        
+    def predict(self, user_id, item_id, k=5):
+        # Get k most similar users
+        user_sims = self.user_similarity[user_id]
+        similar_users = np.argsort(user_sims)[::-1][1:k+1]  # Exclude self
+        
+        # Weighted average prediction
+        numerator = 0
+        denominator = 0
+        
+        for sim_user in similar_users:
+            if self.ratings[sim_user, item_id] > 0:  # User rated this item
+                similarity = user_sims[sim_user]
+                rating = self.ratings[sim_user, item_id]
+                
+                numerator += similarity * rating
+                denominator += abs(similarity)
+        
+        if denominator == 0:
+            return np.mean(self.ratings[self.ratings > 0])  # Global average
+        
+        return numerator / denominator
+    
+    def recommend(self, user_id, n_recommendations=5):
+        user_ratings = self.ratings[user_id]
+        unrated_items = np.where(user_ratings == 0)[0]
+        
+        predictions = []
+        for item_id in unrated_items:
+            pred_rating = self.predict(user_id, item_id)
+            predictions.append((item_id, pred_rating))
+        
+        # Sort by predicted rating and return top N
+        predictions.sort(key=lambda x: x[1], reverse=True)
+        return predictions[:n_recommendations]
+
+# Usage
+cf_model = UserBasedCF(ratings_matrix)
+cf_model.fit()
+recommendations = cf_model.recommend(user_id=0, n_recommendations=3)
+print("Top 3 recommendations:", recommendations)
+                    </div>
+                    <p><strong>✅ Advantages:</strong> Intuitive, works well for users with clear preferences</p>
+                    <p><strong>❌ Disadvantages:</strong> Suffers from cold start, scalability issues with many users</p>
+                `);
+            }
+            
+            itemBasedCF() {
+                modal.show('📦 Item-Based Collaborative Filtering', `
+                    <div class="modal-highlight">
+                        <strong>Recommend items similar to what the user has already liked</strong>
+                    </div>
+                    <p><strong>🔧 Algorithm Steps:</strong></p>
+                    <ol style="margin: 15px 0; padding-left: 20px;">
+                        <li>Calculate item-item similarity matrix</li>
+                        <li>For each item user has rated, find similar items</li>
+                        <li>Predict ratings based on similar items</li>
+                        <li>Recommend items with highest predictions</li>
+                    </ol>
+                    <div class="modal-code">
+class ItemBasedCF:
+    def __init__(self, ratings_matrix):
+        self.ratings = ratings_matrix.T  # Transpose for item-item similarity
+        self.item_similarity = None
+        
+    def fit(self):
+        # Calculate item-item similarity matrix
+        self.item_similarity = cosine_similarity(self.ratings)
+        
+    def predict(self, user_id, item_id, k=5):
+        # Get user's ratings
+        user_ratings = self.ratings[:, user_id]
+        
+        # Find k most similar items that user has rated
+        item_sims = self.item_similarity[item_id]
+        rated_items = np.where(user_ratings > 0)[0]
+        
+        if len(rated_items) == 0:
+            return np.mean(self.ratings[self.ratings > 0])
+        
+        # Get similarities for rated items only
+        sim_scores = [(i, item_sims[i]) for i in rated_items]
+        sim_scores.sort(key=lambda x: x[1], reverse=True)
+        sim_scores = sim_scores[:k]
+        
+        # Weighted average prediction
+        numerator = sum(sim * user_ratings[item] for item, sim in sim_scores)
+        denominator = sum(abs(sim) for item, sim in sim_scores)
+        
+        return numerator / denominator if denominator > 0 else 0
+    
+    def get_item_similarities(self, item_id, n=5):
+        """Get most similar items to given item"""
+        similarities = self.item_similarity[item_id]
+        similar_items = np.argsort(similarities)[::-1][1:n+1]  # Exclude self
+        
+        return [(item, similarities[item]) for item in similar_items]
+
+# Advanced: Matrix Factorization with SVD
+from sklearn.decomposition import TruncatedSVD
+
+class SVDRecommender:
+    def __init__(self, n_components=10):
+        self.svd = TruncatedSVD(n_components=n_components)
+        self.user_factors = None
+        self.item_factors = None
+        
+    def fit(self, ratings_matrix):
+        # Apply SVD to ratings matrix
+        self.user_factors = self.svd.fit_transform(ratings_matrix)
+        self.item_factors = self.svd.components_
+        
+    def predict(self, user_id, item_id):
+        # Dot product of user and item latent factors
+        prediction = np.dot(self.user_factors[user_id], self.item_factors[:, item_id])
+        return prediction
+        
+    def predict_all(self):
+        # Reconstruct full ratings matrix
+        return np.dot(self.user_factors, self.item_factors)
+
+# Usage
+svd_model = SVDRecommender(n_components=5)
+svd_model.fit(ratings_matrix)
+predicted_ratings = svd_model.predict_all()
+                    </div>
+                    <p><strong>✅ Advantages:</strong> More stable than user-based, items don't change as frequently as users</p>
+                    <p><strong>❌ Disadvantages:</strong> Limited diversity in recommendations</p>
+                `);
+            }
+            
+            matrixFactorization() {
+                modal.show('🔢 Matrix Factorization Techniques', `
+                    <div class="modal-highlight">
+                        <strong>Decompose user-item matrix into latent factors</strong>
+                    </div>
+                    <p><strong>🎯 Key Methods:</strong></p>
+                    <ul style="margin: 15px 0; padding-left: 20px;">
+                        <li><strong>SVD:</strong> Singular Value Decomposition</li>
+                        <li><strong>NMF:</strong> Non-negative Matrix Factorization</li>
+                        <li><strong>PMF:</strong> Probabilistic Matrix Factorization</li>
+                        <li><strong>Neural MF:</strong> Neural network approaches</li>
+                    </ul>
+                    <div class="modal-code">
+import torch
+import torch.nn as nn
+import torch.optim as optim
+
+class NeuralMF(nn.Module):
+    def __init__(self, num_users, num_items, embedding_dim=50, hidden_dim=100):
+        super(NeuralMF, self).__init__()
+        
+        # Embedding layers
+        self.user_embedding = nn.Embedding(num_users, embedding_dim)
+        self.item_embedding = nn.Embedding(num_items, embedding_dim)
+        
+        # Neural MF layers
+        self.fc_layers = nn.Sequential(
+            nn.Linear(embedding_dim * 2, hidden_dim),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+            nn.Linear(hidden_dim, hidden_dim // 2),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+            nn.Linear(hidden_dim // 2, 1)
+        )
+        
+        # GMF (Generalized Matrix Factorization) path
+        self.gmf_user_embedding = nn.Embedding(num_users, embedding_dim)
+        self.gmf_item_embedding = nn.Embedding(num_items, embedding_dim)
+        
+        # Final prediction layer
+        self.prediction_layer = nn.Linear(hidden_dim // 2 + embedding_dim, 1)
+        
+    def forward(self, user_id, item_id):
+        # Neural MF path
+        user_vec = self.user_embedding(user_id)
+        item_vec = self.item_embedding(item_id)
+        mlp_input = torch.cat([user_vec, item_vec], dim=-1)
+        mlp_output = self.fc_layers(mlp_input)
+        
+        # GMF path
+        gmf_user_vec = self.gmf_user_embedding(user_id)
+        gmf_item_vec = self.gmf_item_embedding(item_id)
+        gmf_output = gmf_user_vec * gmf_item_vec
+        
+        # Combine both paths
+        combined = torch.cat([mlp_output, gmf_output], dim=-1)
+        prediction = torch.sigmoid(self.prediction_layer(combined)) * 5  # Scale to 1-5
+        
+        return prediction
+
+# Training loop
+def train_neural_mf(model, train_loader, num_epochs=100):
+    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    criterion = nn.MSELoss()
+    
+    for epoch in range(num_epochs):
+        total_loss = 0
+        for user_ids, item_ids, ratings in train_loader:
+            optimizer.zero_grad()
+            
+            predictions = model(user_ids, item_ids)
+            loss = criterion(predictions.squeeze(), ratings.float())
+            
+            loss.backward()
+            optimizer.step()
+            
+            total_loss += loss.item()
+        
+        if epoch % 10 == 0:
+            print(f'Epoch {epoch}, Loss: {total_loss/len(train_loader):.4f}')
+
+# Alternative: Bayesian Personalized Ranking (BPR)
+class BPR(nn.Module):
+    def __init__(self, num_users, num_items, embedding_dim=50):
+        super(BPR, self).__init__()
+        self.user_embedding = nn.Embedding(num_users, embedding_dim)
+        self.item_embedding = nn.Embedding(num_items, embedding_dim)
+        
+    def forward(self, user_id, pos_item_id, neg_item_id):
+        user_vec = self.user_embedding(user_id)
+        pos_item_vec = self.item_embedding(pos_item_id)
+        neg_item_vec = self.item_embedding(neg_item_id)
+        
+        pos_score = torch.sum(user_vec * pos_item_vec, dim=1)
+        neg_score = torch.sum(user_vec * neg_item_vec, dim=1)
+        
+        return pos_score, neg_score
+
+def bpr_loss(pos_score, neg_score):
+    return -torch.log(torch.sigmoid(pos_score - neg_score)).mean()
+                    </div>
+                    <p><strong>🎯 Benefits:</strong> Handles sparsity, discovers latent factors, scales well to large datasets</p>
+                `);
+            }
+            
+            showSimilarity() {
+                modal.show('📊 Similarity Metrics in Collaborative Filtering', `
+                    <div class="modal-highlight">
+                        <strong>Measuring similarity between users or items</strong>
+                    </div>
+                    <p><strong>🔢 Common Similarity Metrics:</strong></p>
+                    <ul style="margin: 15px 0; padding-left: 20px;">
+                        <li><strong>Cosine Similarity:</strong> Angle between rating vectors</li>
+                        <li><strong>Pearson Correlation:</strong> Linear relationship strength</li>
+                        <li><strong>Jaccard Similarity:</strong> Intersection over union</li>
+                        <li><strong>Euclidean Distance:</strong> Geometric distance</li>
+                    </ul>
+                    <div class="modal-code">
+import numpy as np
+from scipy.spatial.distance import cosine, correlation
+from scipy.stats import pearsonr
+
+class SimilarityMetrics:
+    @staticmethod
+    def cosine_similarity(vec1, vec2):
+        # Only consider commonly rated items
+        mask = (vec1 > 0) & (vec2 > 0)
+        if mask.sum() == 0:
+            return 0
+        
+        v1, v2 = vec1[mask], vec2[mask]
+        dot_product = np.dot(v1, v2)
+        norms = np.linalg.norm(v1) * np.linalg.norm(v2)
+        
+        return dot_product / norms if norms > 0 else 0
+    
+    @staticmethod
+    def pearson_correlation(vec1, vec2):
+        # Only consider commonly rated items
+        mask = (vec1 > 0) & (vec2 > 0)
+        if mask.sum() < 2:  # Need at least 2 common items
+            return 0
+        
+        v1, v2 = vec1[mask], vec2[mask]
+        
+        if np.std(v1) == 0 or np.std(v2) == 0:
+            return 0
+        
+        correlation, _ = pearsonr(v1, v2)
+        return correlation if not np.isnan(correlation) else 0
+    
+    @staticmethod
+    def adjusted_cosine_similarity(vec1, vec2, mean1, mean2):
+        # Subtract user means to account for rating bias
+        mask = (vec1 > 0) & (vec2 > 0)
+        if mask.sum() == 0:
+            return 0
+            
+        v1_adj = vec1[mask] - mean1
+        v2_adj = vec2[mask] - mean2
+        
+        dot_product = np.dot(v1_adj, v2_adj)
+        norms = np.linalg.norm(v1_adj) * np.linalg.norm(v2_adj)
+        
+        return dot_product / norms if norms > 0 else 0
+    
+    @staticmethod
+    def jaccard_similarity(vec1, vec2):
+        # Binary version - items rated vs not rated
+        set1 = set(np.where(vec1 > 0)[0])
+        set2 = set(np.where(vec2 > 0)[0])
+        
+        intersection = len(set1.intersection(set2))
+        union = len(set1.union(set2))
+        
+        return intersection / union if union > 0 else 0
+
+# Example usage
+def calculate_user_similarities(ratings_matrix):
+    num_users = ratings_matrix.shape[0]
+    similarity_matrix = np.zeros((num_users, num_users))
+    
+    for i in range(num_users):
+        for j in range(i+1, num_users):
+            sim = SimilarityMetrics.cosine_similarity(
+                ratings_matrix[i], ratings_matrix[j]
+            )
+            similarity_matrix[i][j] = sim
+            similarity_matrix[j][i] = sim  # Symmetric
+    
+    return similarity_matrix
+
+# Significance weighting (for sparse data)
+def significance_weighted_similarity(sim, common_items, threshold=50):
+    if common_items >= threshold:
+        return sim
+    else:
+        return sim * (common_items / threshold)
+
+# Demo: Calculate similarities for our matrix
+ratings = np.array([
+    [5, 0, 4, 0, 2],
+    [0, 3, 0, 5, 4],
+    [4, 4, 0, 3, 0],
+    [0, 0, 5, 4, 5],
+    [3, 0, 3, 0, 3]
+])
+
+user_similarities = calculate_user_similarities(ratings)
+print("User similarity matrix:")
+print(user_similarities)
+                    </div>
+                    <p><strong>⚖️ Choosing Similarity Metrics:</strong> Cosine for high-dimensional sparse data, Pearson for accounting rating scales, Jaccard for binary preferences</p>
+                `);
+            }
+            
+            generatePredictions() {
+                // Simulate predictions by adding some predicted values
+                const cells = document.querySelectorAll('.matrix-empty');
+                let count = 0;
+                
+                cells.forEach(cell => {
+                    if (count < 3) {
+                        const prediction = (Math.random() * 3 + 2).toFixed(1);
+                        cell.textContent = prediction;
+                        cell.className = cell.className.replace('matrix-empty', 'matrix-predicted');
+                        count++;
+                    }
+                });
+                
+                modal.show('🎯 Prediction Results Generated!', `
+                    <div class="modal-highlight">
+                        <strong>Generated ${count} rating predictions using collaborative filtering</strong>
+                    </div>
+                    <p><strong>📊 Prediction Algorithm:</strong></p>
+                    <ol style="margin: 15px 0; padding-left: 20px;">
+                        <li>Identified users with similar rating patterns</li>
+                        <li>Found items with similar user preferences</li>
+                        <li>Applied weighted similarity scoring</li>
+                        <li>Generated predictions for unrated items</li>
+                    </ol>
+                    <div class="modal-code">
+# Prediction Example
+def collaborative_filtering_predict(user_id, item_id, ratings, k=3):
+    # User-based prediction
+    user_sims = calculate_user_similarities(ratings)
+    target_user_sims = user_sims[user_id]
+    
+    # Get k most similar users who rated this item
+    similar_users = []
+    for i, sim in enumerate(target_user_sims):
+        if i != user_id and ratings[i][item_id] > 0:
+            similar_users.append((i, sim, ratings[i][item_id]))
+    
+    # Sort by similarity and take top k
+    similar_users.sort(key=lambda x: x[1], reverse=True)
+    similar_users = similar_users[:k]
+    
+    if not similar_users:
+        return np.mean(ratings[ratings > 0])  # Global average
+    
+    # Weighted prediction
+    numerator = sum(sim * rating for _, sim, rating in similar_users)
+    denominator = sum(abs(sim) for _, sim, rating in similar_users)
+    
+    prediction = numerator / denominator if denominator > 0 else 0
+    return max(1, min(5, prediction))  # Clamp to valid rating range
+
+# Results for current matrix
+predictions = {
+    'User1_Movie2': 3.7,
+    'User2_Movie1': 2.4,
+    'User3_Movie5': 4.1
+}
+
+for prediction, rating in predictions.items():
+    print(f"{prediction}: {rating:.1f} stars")
+                    </div>
+                    <p><strong>🔍 Yellow cells show predicted ratings</strong> based on collaborative filtering algorithms!</p>
+                `);
+            }
+            
+            resetMatrix() {
+                this.setupMatrix();
+            }
+        }
+
+        // Approach Details
+        document.querySelectorAll('.approach-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const approach = this.dataset.approach;
+                
+                const approachDetails = {
+                    'memory': {
+                        title: '💾 Memory-Based Collaborative Filtering',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Use raw user-item ratings directly for recommendations</strong>
+                            </div>
+                            <p><strong>🔧 How it works:</strong> Store all user-item interactions in memory and compute similarities on-the-fly.</p>
+                            <p><strong>📊 Types:</strong></p>
+                            <ul style="margin: 15px 0; padding-left: 20px;">
+                                <li><strong>User-based:</strong> "Users who liked this also liked..."</li>
+                                <li><strong>Item-based:</strong> "Items similar to what you liked..."</li>
+                            </ul>
+                            <div class="modal-code">
+# Memory-based CF implementation
+class MemoryBasedCF:
+    def __init__(self, ratings_matrix):
+        self.ratings = ratings_matrix
+        
+    def user_similarity(self, user1_id, user2_id):
+        user1_ratings = self.ratings[user1_id]
+        user2_ratings = self.ratings[user2_id]
+        
+        # Find commonly rated items
+        common_items = (user1_ratings > 0) & (user2_ratings > 0)
+        
+        if common_items.sum() == 0:
+            return 0
+        
+        # Cosine similarity
+        u1 = user1_ratings[common_items]
+        u2 = user2_ratings[common_items]
+        
+        dot_product = np.dot(u1, u2)
+        norms = np.linalg.norm(u1) * np.linalg.norm(u2)
+        
+        return dot_product / norms if norms > 0 else 0
+    
+    def predict_rating(self, user_id, item_id, k=5):
+        similarities = []
+        
+        for other_user in range(len(self.ratings)):
+            if other_user != user_id and self.ratings[other_user][item_id] > 0:
+                sim = self.user_similarity(user_id, other_user)
+                similarities.append((sim, self.ratings[other_user][item_id]))
+        
+        # Sort by similarity and take top k
+        similarities.sort(reverse=True)
+        similarities = similarities[:k]
+        
+        if not similarities:
+            return 0
+        
+        # Weighted average
+        num = sum(sim * rating for sim, rating in similarities)
+        den = sum(abs(sim) for sim, rating in similarities)
+        
+        return num / den if den > 0 else 0
+                            </div>
+                            <p><strong>✅ Pros:</strong> Simple, intuitive, no training phase required</p>
+                            <p><strong>❌ Cons:</strong> Computationally expensive, doesn't scale well, sparse data issues</p>
+                        `
+                    },
+                    'model': {
+                        title: '🧠 Model-Based Collaborative Filtering',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Learn latent factors and patterns from user-item interactions</strong>
+                            </div>
+                            <p><strong>🎯 Approach:</strong> Train machine learning models to predict ratings based on learned user and item representations.</p>
+                            <p><strong>🔧 Techniques:</strong></p>
+                            <ul style="margin: 15px 0; padding-left: 20px;">
+                                <li><strong>Matrix Factorization:</strong> SVD, NMF, PMF</li>
+                                <li><strong>Clustering:</strong> Group similar users/items</li>
+                                <li><strong>Deep Learning:</strong> Neural collaborative filtering</li>
+                                <li><strong>Bayesian Networks:</strong> Probabilistic models</li>
+                            </ul>
+                            <div class="modal-code">
+from sklearn.decomposition import NMF
+from sklearn.cluster import KMeans
+import tensorflow as tf
+
+class ModelBasedCF:
+    def __init__(self, n_factors=10):
+        self.n_factors = n_factors
+        self.user_factors = None
+        self.item_factors = None
+        
+    def matrix_factorization_nmf(self, ratings_matrix):
+        # Non-negative Matrix Factorization
+        model = NMF(n_components=self.n_factors, random_state=42)
+        self.user_factors = model.fit_transform(ratings_matrix)
+        self.item_factors = model.components_
+        
+        return self
+    
+    def predict_ratings(self):
+        # Reconstruct ratings matrix
+        predicted = np.dot(self.user_factors, self.item_factors)
+        return predicted
+    
+    def clustering_based_cf(self, ratings_matrix, n_clusters=5):
+        # Cluster users into groups
+        user_clusters = KMeans(n_clusters=n_clusters)
+        user_cluster_labels = user_clusters.fit_predict(ratings_matrix)
+        
+        # For each user, recommend popular items in their cluster
+        recommendations = {}
+        
+        for cluster_id in range(n_clusters):
+            cluster_users = np.where(user_cluster_labels == cluster_id)[0]
+            cluster_ratings = ratings_matrix[cluster_users]
+            
+            # Calculate item popularity in this cluster
+            item_scores = np.mean(cluster_ratings, axis=0)
+            recommendations[cluster_id] = np.argsort(item_scores)[::-1]
+        
+        return recommendations, user_cluster_labels
+
+# Deep Learning approach
+def build_neural_cf_model(num_users, num_items, embedding_size=50):
+    # User input
+    user_input = tf.keras.Input(shape=(), name='user_id')
+    user_embedding = tf.keras.layers.Embedding(
+        num_users, embedding_size, name='user_embedding'
+    )(user_input)
+    user_vec = tf.keras.layers.Flatten()(user_embedding)
+    
+    # Item input  
+    item_input = tf.keras.Input(shape=(), name='item_id')
+    item_embedding = tf.keras.layers.Embedding(
+        num_items, embedding_size, name='item_embedding'
+    )(item_input)
+    item_vec = tf.keras.layers.Flatten()(item_embedding)
+    
+    # Concatenate user and item vectors
+    concat = tf.keras.layers.Concatenate()([user_vec, item_vec])
+    
+    # Dense layers
+    dense1 = tf.keras.layers.Dense(128, activation='relu')(concat)
+    dropout1 = tf.keras.layers.Dropout(0.2)(dense1)
+    dense2 = tf.keras.layers.Dense(64, activation='relu')(dropout1)
+    dropout2 = tf.keras.layers.Dropout(0.2)(dense2)
+    
+    # Output layer
+    output = tf.keras.layers.Dense(1, activation='linear')(dropout2)
+    
+    model = tf.keras.Model(inputs=[user_input, item_input], outputs=output)
+    return model
+
+# Compile and train
+model = build_neural_cf_model(num_users=1000, num_items=500)
+model.compile(optimizer='adam', loss='mse', metrics=['mae'])
+
+# Training data: (user_ids, item_ids, ratings)
+model.fit([user_ids, item_ids], ratings, 
+          batch_size=256, epochs=100, validation_split=0.2)
+                            </div>
+                            <p><strong>✅ Pros:</strong> Scales well, handles sparsity, fast predictions after training</p>
+                            <p><strong>❌ Cons:</strong> Requires training time, less interpretable, cold start problems</p>
+                        `
+                    },
+                    'neighborhood': {
+                        title: '🏘️ Neighborhood-Based Methods',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Find "neighbors" - similar users or items for recommendations</strong>
+                            </div>
+                            <p><strong>👥 User-Based Neighborhood:</strong> Find users with similar preferences</p>
+                            <p><strong>📦 Item-Based Neighborhood:</strong> Find items with similar rating patterns</p>
+                            <div class="modal-code">
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
+
+class NeighborhoodCF:
+    def __init__(self, ratings_matrix, k=10):
+        self.ratings = ratings_matrix
+        self.k = k  # Number of neighbors
+        self.user_similarities = None
+        self.item_similarities = None
+        
+    def compute_similarities(self):
+        # User-user similarities
+        self.user_similarities = cosine_similarity(self.ratings)
+        
+        # Item-item similarities  
+        self.item_similarities = cosine_similarity(self.ratings.T)
+        
+    def get_user_neighbors(self, user_id):
+        # Get k most similar users (excluding self)
+        user_sims = self.user_similarities[user_id]
+        neighbors = np.argsort(user_sims)[::-1][1:self.k+1]
+        return neighbors, user_sims[neighbors]
+    
+    def get_item_neighbors(self, item_id):
+        # Get k most similar items (excluding self)
+        item_sims = self.item_similarities[item_id]
+        neighbors = np.argsort(item_sims)[::-1][1:self.k+1]
+        return neighbors, item_sims[neighbors]
+    
+    def predict_user_based(self, user_id, item_id):
+        neighbors, similarities = self.get_user_neighbors(user_id)
+        
+        # Only consider neighbors who rated this item
+        valid_neighbors = []
+        for neighbor, sim in zip(neighbors, similarities):
+            if self.ratings[neighbor, item_id] > 0:
+                valid_neighbors.append((neighbor, sim))
+        
+        if not valid_neighbors:
+            return np.mean(self.ratings[self.ratings > 0])
+        
+        # Calculate weighted average
+        numerator = sum(sim * self.ratings[neighbor, item_id] 
+                       for neighbor, sim in valid_neighbors)
+        denominator = sum(abs(sim) for neighbor, sim in valid_neighbors)
+        
+        return numerator / denominator if denominator > 0 else 0
+    
+    def predict_item_based(self, user_id, item_id):
+        neighbors, similarities = self.get_item_neighbors(item_id)
+        
+        # Only consider items that this user has rated
+        user_ratings = self.ratings[user_id]
+        valid_neighbors = []
+        
+        for neighbor, sim in zip(neighbors, similarities):
+            if user_ratings[neighbor] > 0:
+                valid_neighbors.append((neighbor, sim))
+        
+        if not valid_neighbors:
+            return np.mean(self.ratings[:, item_id][self.ratings[:, item_id] > 0])
+        
+        # Calculate weighted average
+        numerator = sum(sim * user_ratings[neighbor] 
+                       for neighbor, sim in valid_neighbors)
+        denominator = sum(abs(sim) for neighbor, sim in valid_neighbors)
+        
+        return numerator / denominator if denominator > 0 else 0
+    
+    def hybrid_prediction(self, user_id, item_id, alpha=0.5):
+        # Combine user-based and item-based predictions
+        user_pred = self.predict_user_based(user_id, item_id)
+        item_pred = self.predict_item_based(user_id, item_id)
+        
+        return alpha * user_pred + (1 - alpha) * item_pred
+
+# Advanced: Significance weighting
+def significance_weighted_similarity(similarity, common_items, threshold=50):
+    """Apply significance weighting to reduce impact of similarities 
+    based on few common items"""
+    if common_items >= threshold:
+        return similarity
+    else:
+        return similarity * (common_items / threshold)
+
+# Example usage
+cf = NeighborhoodCF(ratings_matrix, k=5)
+cf.compute_similarities()
+
+# Get predictions
+user_pred = cf.predict_user_based(user_id=0, item_id=2)
+item_pred = cf.predict_item_based(user_id=0, item_id=2)
+hybrid_pred = cf.hybrid_prediction(user_id=0, item_id=2)
+
+print(f"User-based prediction: {user_pred:.2f}")
+print(f"Item-based prediction: {item_pred:.2f}")
+print(f"Hybrid prediction: {hybrid_pred:.2f}")
+                            </div>
+                            <p><strong>🎯 Key Insight:</strong> Item-based CF often more stable than user-based since items don't change preferences as quickly as users do</p>
+                        `
+                    },
+                    'matrix': {
+                        title: '📊 Matrix Factorization Techniques',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Decompose the user-item rating matrix into latent factor matrices</strong>
+                            </div>
+                            <p><strong>💡 Core Idea:</strong> Users and items can be represented in a lower-dimensional latent factor space where preferences are determined by factor compatibility.</p>
+                            <div class="modal-code">
+import numpy as np
+from scipy.linalg import svd
+from sklearn.decomposition import NMF
+import torch
+import torch.nn as nn
+
+# 1. Basic SVD Matrix Factorization
+class SVDFactorization:
+    def __init__(self, n_factors=50):
+        self.n_factors = n_factors
+        self.U = None  # User factors
+        self.sigma = None  # Singular values
+        self.Vt = None  # Item factors
+        
+    def fit(self, ratings_matrix):
+        # Handle missing ratings (set to 0)
+        filled_matrix = ratings_matrix.copy()
+        filled_matrix[ratings_matrix == 0] = np.mean(ratings_matrix[ratings_matrix > 0])
+        
+        # SVD decomposition
+        U, sigma, Vt = svd(filled_matrix, full_matrices=False)
+        
+        # Keep top k factors
+        self.U = U[:, :self.n_factors]
+        self.sigma = np.diag(sigma[:self.n_factors])
+        self.Vt = Vt[:self.n_factors, :]
+        
+    def predict(self):
+        # Reconstruct ratings matrix
+        return np.dot(self.U, np.dot(self.sigma, self.Vt))
+
+# 2. Non-negative Matrix Factorization
+class NMFRecommender:
+    def __init__(self, n_factors=50, max_iter=200, alpha=0.01, beta=0.01):
+        self.n_factors = n_factors
+        self.max_iter = max_iter
+        self.alpha = alpha  # L2 regularization for user factors
+        self.beta = beta   # L2 regularization for item factors
+        
+    def fit(self, ratings_matrix):
+        m, n = ratings_matrix.shape
+        
+        # Initialize factor matrices
+        self.P = np.random.normal(scale=1./self.n_factors, size=(m, self.n_factors))
+        self.Q = np.random.normal(scale=1./self.n_factors, size=(n, self.n_factors))
+        
+        # Gradient descent
+        for iteration in range(self.max_iter):
+            for i in range(m):
+                for j in range(n):
+                    if ratings_matrix[i,j] > 0:  # Only train on observed ratings
+                        # Prediction error
+                        error = ratings_matrix[i,j] - np.dot(self.P[i,:], self.Q[j,:].T)
+                        
+                        # Update factors
+                        for k in range(self.n_factors):
+                            Pik = self.P[i,k]
+                            Qjk = self.Q[j,k]
+                            
+                            self.P[i,k] += self.alpha * (2 * error * Qjk - self.beta * Pik)
+                            self.Q[j,k] += self.alpha * (2 * error * Pik - self.beta * Qjk)
+    
+    def predict(self):
+        return np.dot(self.P, self.Q.T)
+
+# 3. Neural Matrix Factorization
+class NeuralMF(nn.Module):
+    def __init__(self, num_users, num_items, embedding_dim=50):
+        super(NeuralMF, self).__init__()
+        
+        # GMF (Generalized Matrix Factorization) components
+        self.user_embedding_gmf = nn.Embedding(num_users, embedding_dim)
+        self.item_embedding_gmf = nn.Embedding(num_items, embedding_dim)
+        
+        # MLP components
+        self.user_embedding_mlp = nn.Embedding(num_users, embedding_dim)
+        self.item_embedding_mlp = nn.Embedding(num_items, embedding_dim)
+        
+        # MLP layers
+        self.mlp = nn.Sequential(
+            nn.Linear(embedding_dim * 2, 64),
+            nn.ReLU(),
+            nn.Linear(64, 32),
+            nn.ReLU(),
+            nn.Linear(32, 16),
+            nn.ReLU()
+        )
+        
+        # Final prediction layer
+        self.prediction = nn.Linear(embedding_dim + 16, 1)
+        
+    def forward(self, user_ids, item_ids):
+        # GMF path
+        user_gmf = self.user_embedding_gmf(user_ids)
+        item_gmf = self.item_embedding_gmf(item_ids)
+        gmf_output = user_gmf * item_gmf
+        
+        # MLP path
+        user_mlp = self.user_embedding_mlp(user_ids)
+        item_mlp = self.item_embedding_mlp(item_ids)
+        mlp_input = torch.cat([user_mlp, item_mlp], dim=-1)
+        mlp_output = self.mlp(mlp_input)
+        
+        # Concatenate GMF and MLP outputs
+        combined = torch.cat([gmf_output, mlp_output], dim=-1)
+        
+        # Final prediction
+        rating = self.prediction(combined)
+        return torch.sigmoid(rating) * 4 + 1  # Scale to 1-5 rating
+
+# 4. Probabilistic Matrix Factorization (PMF)
+class PMF:
+    def __init__(self, n_factors=10, learning_rate=0.01, regularization=0.01, n_epochs=100):
+        self.n_factors = n_factors
+        self.learning_rate = learning_rate
+        self.regularization = regularization
+        self.n_epochs = n_epochs
+        
+    def fit(self, ratings_matrix):
+        m, n = ratings_matrix.shape
+        
+        # Initialize latent factor matrices
+        self.user_factors = np.random.normal(0, 0.1, (m, self.n_factors))
+        self.item_factors = np.random.normal(0, 0.1, (n, self.n_factors))
+        
+        # Training
+        for epoch in range(self.n_epochs):
+            for i in range(m):
+                for j in range(n):
+                    if ratings_matrix[i, j] > 0:
+                        # Prediction
+                        prediction = np.dot(self.user_factors[i], self.item_factors[j])
+                        error = ratings_matrix[i, j] - prediction
+                        
+                        # Gradient updates
+                        user_factor = self.user_factors[i].copy()
+                        
+                        self.user_factors[i] += self.learning_rate * (
+                            error * self.item_factors[j] - 
+                            self.regularization * self.user_factors[i]
+                        )
+                        
+                        self.item_factors[j] += self.learning_rate * (
+                            error * user_factor - 
+                            self.regularization * self.item_factors[j]
+                        )
+    
+    def predict(self):
+        return np.dot(self.user_factors, self.item_factors.T)
+
+# Example usage
+ratings = np.array([
+    [5, 0, 4, 0, 2],
+    [0, 3, 0, 5, 4], 
+    [4, 4, 0, 3, 0],
+    [0, 0, 5, 4, 5],
+    [3, 0, 3, 0, 3]
+])
+
+# Try different methods
+svd_model = SVDFactorization(n_factors=3)
+svd_model.fit(ratings)
+svd_predictions = svd_model.predict()
+
+nmf_model = NMFRecommender(n_factors=3)
+nmf_model.fit(ratings)
+nmf_predictions = nmf_model.predict()
+
+print("Original ratings:")
+print(ratings)
+print("\\nSVD predictions:")
+print(svd_predictions.round(2))
+print("\\nNMF predictions:")
+print(nmf_predictions.round(2))
+                            </div>
+                            <p><strong>🎯 Advantages:</strong> Handles sparsity well, discovers latent factors, scalable, reduces overfitting</p>
+                            <p><strong>⚠️ Challenges:</strong> Choosing optimal number of factors, cold start problem, interpretability</p>
+                        `
+                    }
+                };
+                
+                const details = approachDetails[approach];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        // Algorithm Details
+        document.querySelectorAll('.algorithm-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const algorithm = this.dataset.algorithm;
+                
+                const algorithmDetails = {
+                    'user_based': {
+                        title: '👤 User-Based Collaborative Filtering',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>"Users who are similar to you also liked..."</strong>
+                            </div>
+                            <p><strong>🔧 Algorithm Steps:</strong></p>
+                            <ol style="margin: 15px 0; padding-left: 20px;">
+                                <li>Find users similar to target user</li>
+                                <li>Look at items those similar users liked</li>
+                                <li>Recommend top items weighted by similarity</li>
+                            </ol>
+                            <p><strong>✅ Best for:</strong> Users with well-defined preferences, domains with clear user types</p>
+                            <p><strong>❌ Challenges:</strong> Scalability with many users, sparse data, changing user preferences</p>
+                        `
+                    },
+                    'item_based': {
+                        title: '📦 Item-Based Collaborative Filtering',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>"People who liked this item also liked..."</strong>
+                            </div>
+                            <p><strong>🔧 Algorithm Steps:</strong></p>
+                            <ol style="margin: 15px 0; padding-left: 20px;">
+                                <li>Find items similar to those user has rated</li>
+                                <li>Calculate item-item similarities</li>
+                                <li>Recommend similar items to user's preferences</li>
+                            </ol>
+                            <p><strong>✅ Best for:</strong> Stable item catalogs, clear item relationships, Amazon-style recommendations</p>
+                            <p><strong>❌ Challenges:</strong> Limited diversity, cold start for new items</p>
+                        `
+                    },
+                    'svd': {
+                        title: '🔢 Singular Value Decomposition (SVD)',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Mathematical decomposition of user-item rating matrix</strong>
+                            </div>
+                            <p><strong>📊 SVD Formula:</strong> R = U × Σ × V^T</p>
+                            <ul style="margin: 15px 0; padding-left: 20px;">
+                                <li><strong>U:</strong> User latent factors</li>
+                                <li><strong>Σ:</strong> Singular values (importance weights)</li>
+                                <li><strong>V^T:</strong> Item latent factors</li>
+                            </ul>
+                            <p><strong>💡 Key Insight:</strong> Reduces dimensionality while capturing most important patterns</p>
+                            <p><strong>🎯 Applications:</strong> Netflix Prize winner, handles sparse data well</p>
+                        `
+                    },
+                    'nmf': {
+                        title: '➕ Non-Negative Matrix Factorization',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Factorization with non-negative constraints</strong>
+                            </div>
+                            <p><strong>🔧 Advantage:</strong> All factors are non-negative, making them more interpretable</p>
+                            <p><strong>📊 Applications:</strong></p>
+                            <ul style="margin: 15px 0; padding-left: 20px;">
+                                <li>Topic modeling in text</li>
+                                <li>Image processing</li>
+                                <li>Recommendation systems</li>
+                                <li>Feature extraction</li>
+                            </ul>
+                            <p><strong>🎯 Why Non-negative?</strong> Ratings are positive, factors represent positive preferences/attributes</p>
+                        `
+                    },
+                    'deep': {
+                        title: '🧠 Neural Collaborative Filtering',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Deep learning approaches to collaborative filtering</strong>
+                            </div>
+                            <p><strong>🔧 Architectures:</strong></p>
+                            <ul style="margin: 15px 0; padding-left: 20px;">
+                                <li><strong>Neural MF:</strong> Neural matrix factorization</li>
+                                <li><strong>AutoEncoders:</strong> Denoising collaborative filtering</li>
+                                <li><strong>Deep FM:</strong> Factorization machines with deep learning</li>
+                                <li><strong>Wide & Deep:</strong> Google's recommendation architecture</li>
+                            </ul>
+                            <p><strong>✅ Advantages:</strong> Captures non-linear patterns, handles complex interactions, state-of-the-art performance</p>
+                            <p><strong>❌ Disadvantages:</strong> Black box, requires large datasets, computational complexity</p>
+                        `
+                    },
+                    'clustering': {
+                        title: '🎯 Clustering-Based Collaborative Filtering',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Group users/items into clusters before making recommendations</strong>
+                            </div>
+                            <p><strong>🔧 Approach:</strong></p>
+                            <ol style="margin: 15px 0; padding-left: 20px;">
+                                <li>Cluster users based on rating patterns</li>
+                                <li>Cluster items based on who rates them</li>
+                                <li>Make recommendations within clusters</li>
+                                <li>Combine cluster-based predictions</li>
+                            </ol>
+                            <p><strong>✅ Benefits:</strong> Reduces computational complexity, handles sparse data, finds user segments</p>
+                            <p><strong>🎯 Applications:</strong> Large-scale systems, user segmentation, marketing insights</p>
+                        `
+                    }
+                };
+                
+                const details = algorithmDetails[algorithm];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+        const cfDemo = new CollaborativeFilteringDemo();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week13_Slide253.html';
+            } else if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week13_Slide255.html';
+            }
+        });
+
+    </script>
+</body>
+</html>

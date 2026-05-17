@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Clustering Overview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .definition-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .types-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .definition-text {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .clustering-goals {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .goal-item {
+            padding: 15px;
+            margin: 10px 0;
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 10px;
+            border-left: 3px solid #14b8a6;
+            font-size: 1em;
+            line-height: 1.6;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .goal-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(13, 148, 136, 0.1);
+        }
+
+        .clustering-types {
+            display: grid;
+            gap: 15px;
+        }
+
+        .type-card {
+            padding: 20px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .type-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .type-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .type-desc {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .type-examples {
+            font-size: 0.85em;
+            color: #64748b;
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        .visual-demo {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .demo-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-top: 25px;
+        }
+
+        .demo-item {
+            text-align: center;
+        }
+
+        .demo-canvas {
+            width: 100%;
+            height: 200px;
+            background: #1e293b;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .demo-label {
+            font-size: 1.1em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .cluster-point {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            transition: all 0.5s ease;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .demo-container { grid-template-columns: 1fr; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    
+    <div class="course-info">CS5710 - Week 6</div>
+    <div class="slide-number">Slide 102 of 120</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Clustering Overview</h1>
+        
+        <div class="content-layout">
+            <div class="definition-section">
+                <h2 class="section-title">What is Clustering?</h2>
+                
+                <div class="definition-text">
+                    <strong>Clustering</strong> is the task of grouping similar objects together so that objects in the same group (cluster) are more similar to each other than to those in other groups.
+                </div>
+                
+                <ul class="clustering-goals">
+                    <li class="goal-item">
+                        <strong>🎯 Goal 1:</strong> Maximize intra-cluster similarity
+                    </li>
+                    <li class="goal-item">
+                        <strong>🎯 Goal 2:</strong> Minimize inter-cluster similarity
+                    </li>
+                    <li class="goal-item">
+                        <strong>🎯 Goal 3:</strong> Discover natural groupings in data
+                    </li>
+                    <li class="goal-item">
+                        <strong>🎯 Goal 4:</strong> No predefined categories needed
+                    </li>
+                </ul>
+            </div>
+
+            <div class="types-section">
+                <h2 class="section-title">Types of Clustering</h2>
+                
+                <div class="clustering-types">
+                    <div class="type-card">
+                        <div class="type-title">📍 Partitioning Methods</div>
+                        <div class="type-desc">Divide data into k non-overlapping clusters</div>
+                        <div class="type-examples">Examples: K-Means, K-Medoids</div>
+                    </div>
+                    
+                    <div class="type-card">
+                        <div class="type-title">🌳 Hierarchical Methods</div>
+                        <div class="type-desc">Build tree of clusters (dendrogram)</div>
+                        <div class="type-examples">Examples: Agglomerative, Divisive</div>
+                    </div>
+                    
+                    <div class="type-card">
+                        <div class="type-title">🔍 Density-Based Methods</div>
+                        <div class="type-desc">Find clusters of arbitrary shape</div>
+                        <div class="type-examples">Examples: DBSCAN, OPTICS</div>
+                    </div>
+                    
+                    <div class="type-card">
+                        <div class="type-title">📊 Model-Based Methods</div>
+                        <div class="type-desc">Assume data from mixture of distributions</div>
+                        <div class="type-examples">Examples: GMM, EM Algorithm</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="visual-demo">
+            <h2 class="section-title">Visual Clustering Examples</h2>
+            
+            <div class="demo-container">
+                <div class="demo-item">
+                    <div class="demo-canvas" id="canvas1"></div>
+                    <div class="demo-label">Well-Separated Clusters</div>
+                </div>
+                
+                <div class="demo-item">
+                    <div class="demo-canvas" id="canvas2"></div>
+                    <div class="demo-label">Overlapping Clusters</div>
+                </div>
+                
+                <div class="demo-item">
+                    <div class="demo-canvas" id="canvas3"></div>
+                    <div class="demo-label">Nested Clusters</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week6_Slide101.html" class="nav-btn">← Previous</a>
+        <a href="Week6_Slide103.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Create cluster visualizations
+        function createClusterVisualization() {
+            // Well-separated clusters
+            const canvas1 = document.getElementById('canvas1');
+            const clusters1 = [
+                { cx: 50, cy: 50, color: '#5eead4', points: 15 },
+                { cx: 150, cy: 50, color: '#fbbf24', points: 15 },
+                { cx: 100, cy: 130, color: '#f87171', points: 15 }
+            ];
+            
+            clusters1.forEach(cluster => {
+                for (let i = 0; i < cluster.points; i++) {
+                    const point = document.createElement('div');
+                    point.className = 'cluster-point';
+                    const angle = (Math.PI * 2 * i) / cluster.points;
+                    const radius = Math.random() * 25 + 5;
+                    const x = cluster.cx + Math.cos(angle) * radius;
+                    const y = cluster.cy + Math.sin(angle) * radius;
+                    point.style.left = x + 'px';
+                    point.style.top = y + 'px';
+                    point.style.background = cluster.color;
+                    canvas1.appendChild(point);
+                }
+            });
+
+            // Overlapping clusters
+            const canvas2 = document.getElementById('canvas2');
+            const clusters2 = [
+                { cx: 70, cy: 80, color: '#5eead4', points: 20 },
+                { cx: 120, cy: 90, color: '#fbbf24', points: 20 }
+            ];
+            
+            clusters2.forEach(cluster => {
+                for (let i = 0; i < cluster.points; i++) {
+                    const point = document.createElement('div');
+                    point.className = 'cluster-point';
+                    const angle = Math.random() * Math.PI * 2;
+                    const radius = Math.random() * 40 + 10;
+                    const x = cluster.cx + Math.cos(angle) * radius;
+                    const y = cluster.cy + Math.sin(angle) * radius;
+                    point.style.left = x + 'px';
+                    point.style.top = y + 'px';
+                    point.style.background = cluster.color;
+                    point.style.opacity = '0.7';
+                    canvas2.appendChild(point);
+                }
+            });
+
+            // Nested clusters
+            const canvas3 = document.getElementById('canvas3');
+            const clusters3 = [
+                { cx: 100, cy: 100, color: '#5eead4', radius: 70, points: 25 },
+                { cx: 100, cy: 100, color: '#fbbf24', radius: 35, points: 15 }
+            ];
+            
+            clusters3.forEach(cluster => {
+                for (let i = 0; i < cluster.points; i++) {
+                    const point = document.createElement('div');
+                    point.className = 'cluster-point';
+                    const angle = Math.random() * Math.PI * 2;
+                    const radius = Math.random() * cluster.radius;
+                    const x = cluster.cx + Math.cos(angle) * radius;
+                    const y = cluster.cy + Math.sin(angle) * radius;
+                    point.style.left = x + 'px';
+                    point.style.top = y + 'px';
+                    point.style.background = cluster.color;
+                    canvas3.appendChild(point);
+                }
+            });
+        }
+
+        // Interactive type cards
+        document.querySelectorAll('.type-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('.type-title').textContent;
+                const desc = this.querySelector('.type-desc').textContent;
+                const examples = this.querySelector('.type-examples').textContent;
+                
+                const details = {
+                    '📍 Partitioning Methods': {
+                        detail: 'Partitioning methods divide data into k non-overlapping subsets (clusters) such that each data point belongs to exactly one cluster.',
+                        pros: 'Fast and scalable, Works well with spherical clusters, Easy to implement',
+                        cons: 'Need to specify k in advance, Sensitive to initial conditions, Assumes spherical clusters',
+                        useCase: 'Customer segmentation, Document clustering, Image compression'
+                    },
+                    '🌳 Hierarchical Methods': {
+                        detail: 'Hierarchical clustering builds a tree of clusters, either bottom-up (agglomerative) or top-down (divisive).',
+                        pros: 'No need to specify k, Produces dendrogram for visualization, Can capture nested clusters',
+                        cons: 'Computationally expensive O(n²), Cannot undo merges/splits, Sensitive to noise',
+                        useCase: 'Taxonomy creation, Social network analysis, Biological classification'
+                    },
+                    '🔍 Density-Based Methods': {
+                        detail: 'Density-based methods find clusters as dense regions separated by low-density regions, can find arbitrary shaped clusters.',
+                        pros: 'Finds arbitrary shaped clusters, Robust to outliers, No need to specify k',
+                        cons: 'Struggles with varying densities, Sensitive to parameters, High dimensional challenges',
+                        useCase: 'Spatial data analysis, Anomaly detection, Astronomical data'
+                    },
+                    '📊 Model-Based Methods': {
+                        detail: 'Model-based clustering assumes data comes from a mixture of probability distributions, typically Gaussians.',
+                        pros: 'Provides probability of cluster membership, Can select optimal k, Sound statistical foundation',
+                        cons: 'Assumes specific distribution, Computationally intensive, May converge to local optima',
+                        useCase: 'Gene expression analysis, Market research, Pattern recognition'
+                    }
+                };
+                
+                const info = details[title];
+                modal.show(title, `
+                    <div class="modal-highlight">
+                        <strong>${desc}</strong>
+                    </div>
+                    <p>${info.detail}</p>
+                    <p><strong>✅ Advantages:</strong><br>${info.pros}</p>
+                    <p><strong>⚠️ Limitations:</strong><br>${info.cons}</p>
+                    <p><strong>📋 Use Cases:</strong><br>${info.useCase}</p>
+                    <div class="modal-code">
+                        ${examples}
+                    </div>
+                `);
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+        createClusterVisualization();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week6_Slide103.html';
+            } else if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week6_Slide101.html';
+            }
+        });
+
+    </script>
+</body>
+</html>

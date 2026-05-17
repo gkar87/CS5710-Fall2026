@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Monte Carlo Methods</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .method-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .algorithm-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .key-concept {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .mc-types {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .type-item {
+            padding: 20px;
+            margin: 15px 0;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .type-item:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .type-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .type-desc {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .algorithm-box {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 25px;
+            border-radius: 15px;
+            font-family: 'Courier New', monospace;
+            margin: 20px 0;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .algorithm-step {
+            margin: 10px 0;
+            padding-left: 20px;
+            border-left: 2px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .algorithm-step:hover {
+            background: rgba(13, 148, 136, 0.1);
+            padding-left: 30px;
+        }
+
+        .advantages-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .advantages-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+            margin-top: 25px;
+        }
+
+        .advantage-card {
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: linear-gradient(135deg, #ccfbf1, #99f6e4);
+            border: 2px solid #14b8a6;
+        }
+
+        .advantage-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .advantage-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+
+        .advantage-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #0d9488;
+        }
+
+        .advantage-text {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.4;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: float 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .formula {
+            background: rgba(13, 148, 136, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+            border: 1px solid rgba(13, 148, 136, 0.2);
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .advantages-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 11</div>
+    <div class="slide-number">Slide 209 of 220</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Monte Carlo Methods</h1>
+        
+        <div class="content-layout">
+            <div class="method-section">
+                <h2 class="section-title">What are Monte Carlo Methods?</h2>
+                
+                <div class="key-concept">
+                    <strong>Monte Carlo (MC) methods</strong> learn from complete episodes of experience without requiring a model of the environment.
+                </div>
+                
+                <div style="font-size: 1.1em; line-height: 1.7; color: #1e293b;">
+                    Key characteristics:
+                    <br><br>
+                    • Learn from <em>complete episodes</em>
+                    <br>
+                    • No bootstrapping (unlike TD methods)
+                    <br>
+                    • Model-free learning
+                    <br>
+                    • Based on averaging sample returns
+                </div>
+
+                <ul class="mc-types">
+                    <li class="type-item">
+                        <div class="type-title">🎯 First-Visit MC</div>
+                        <div class="type-desc">Estimates value as average of returns following first visits to states</div>
+                    </li>
+                    <li class="type-item">
+                        <div class="type-title">🔄 Every-Visit MC</div>
+                        <div class="type-desc">Averages returns following all visits to states</div>
+                    </li>
+                    <li class="type-item">
+                        <div class="type-title">📊 MC Prediction</div>
+                        <div class="type-desc">Evaluates a given policy using sample episodes</div>
+                    </li>
+                    <li class="type-item">
+                        <div class="type-title">⚡ MC Control</div>
+                        <div class="type-desc">Finds optimal policies through exploration and exploitation</div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="algorithm-section">
+                <h2 class="section-title">Monte Carlo Algorithm</h2>
+                
+                <div class="algorithm-box">
+                    <strong style="color: #5eead4;">First-Visit MC Prediction:</strong><br><br>
+                    <div class="algorithm-step">1. Initialize V(s) arbitrarily for all s</div>
+                    <div class="algorithm-step">2. Initialize Returns(s) ← empty list</div>
+                    <div class="algorithm-step">3. For each episode:</div>
+                    <div class="algorithm-step" style="margin-left: 40px;">a. Generate episode: S₀, A₀, R₁, S₁, A₁, R₂, ..., Sₜ</div>
+                    <div class="algorithm-step" style="margin-left: 40px;">b. G ← 0</div>
+                    <div class="algorithm-step" style="margin-left: 40px;">c. For t = T-1, T-2, ..., 0:</div>
+                    <div class="algorithm-step" style="margin-left: 60px;">• G ← γG + R_{t+1}</div>
+                    <div class="algorithm-step" style="margin-left: 60px;">• If Sₜ not in S₀, S₁, ..., Sₜ₋₁:</div>
+                    <div class="algorithm-step" style="margin-left: 80px;">- Append G to Returns(Sₜ)</div>
+                    <div class="algorithm-step" style="margin-left: 80px;">- V(Sₜ) ← average(Returns(Sₜ))</div>
+                </div>
+
+                <div class="formula">
+                    <strong>Value Update:</strong><br>
+                    V(s) ← V(s) + α[Gₜ - V(s)]<br>
+                    <em>where Gₜ is the actual return from time t</em>
+                </div>
+            </div>
+        </div>
+
+        <div class="advantages-section">
+            <h2 class="section-title">Advantages & Characteristics</h2>
+            
+            <div class="advantages-grid">
+                <div class="advantage-card">
+                    <div class="advantage-icon">🎲</div>
+                    <div class="advantage-title">No Model Required</div>
+                    <div class="advantage-text">Learn directly from experience without environment dynamics</div>
+                </div>
+                
+                <div class="advantage-card">
+                    <div class="advantage-icon">🎯</div>
+                    <div class="advantage-title">Unbiased Estimates</div>
+                    <div class="advantage-text">Converges to true values with sufficient samples</div>
+                </div>
+                
+                <div class="advantage-card">
+                    <div class="advantage-icon">🔄</div>
+                    <div class="advantage-title">Episode-Based</div>
+                    <div class="advantage-text">Natural for episodic tasks with clear endings</div>
+                </div>
+                
+                <div class="advantage-card">
+                    <div class="advantage-icon">📈</div>
+                    <div class="advantage-title">High Variance</div>
+                    <div class="advantage-text">Can have high variance but zero bias</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week11_Slide208.html" class="nav-btn">← Previous</a>
+        <a href="Week11_Slide210.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 30; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive MC type items with modal
+        document.querySelectorAll('.type-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const title = this.querySelector('.type-title').textContent;
+                const desc = this.querySelector('.type-desc').textContent;
+                
+                const details = {
+                    '🎯 First-Visit MC': {
+                        detail: 'First-visit MC estimates the value of a state by averaging returns only from the first time that state is visited in each episode.',
+                        example: `Episode: S1 → S2 → S1 → S3 (terminal)
+Returns: G(S1) = R2 + γR3 + γ²R4 (only first visit)
+        G(S2) = R3 + γR4
+        G(S3) = R4`,
+                        algorithm: `for each episode:
+    visited = set()
+    for each state s in episode:
+        if s not in visited:
+            visited.add(s)
+            compute return G from s
+            update V(s) with G`,
+                        advantage: 'Lower variance than every-visit, theoretical convergence guarantees'
+                    },
+                    '🔄 Every-Visit MC': {
+                        detail: 'Every-visit MC averages returns from all visits to a state within episodes, not just the first visit.',
+                        example: `Episode: S1 → S2 → S1 → S3 (terminal)
+Returns: G1(S1) = R2 + γR3 + γ²R4 (first visit)
+        G2(S1) = R4 (second visit)
+        Both returns are averaged`,
+                        algorithm: `for each episode:
+    for each state s in episode:
+        compute return G from s
+        update V(s) with G
+        # All visits contribute`,
+                        advantage: 'More data efficient, often converges faster in practice'
+                    },
+                    '📊 MC Prediction': {
+                        detail: 'MC Prediction evaluates a given policy π by estimating state values V^π(s) through sampling episodes.',
+                        example: `Policy π: Always go right in gridworld
+Sample episodes under π
+Compute returns for each state
+Average to get V^π(s)`,
+                        algorithm: `Given policy π:
+1. Generate episodes using π
+2. For each state visited:
+   - Calculate return G
+   - Update V(s) incrementally
+3. Repeat until convergence`,
+                        advantage: 'Simple to implement, works for any episodic MDP'
+                    },
+                    '⚡ MC Control': {
+                        detail: 'MC Control finds optimal policies by alternating between policy evaluation and improvement using epsilon-greedy exploration.',
+                        example: `Start with random policy
+Evaluate using MC prediction
+Improve: π(s) = argmax_a Q(s,a)
+Add ε-greedy exploration
+Repeat until optimal`,
+                        algorithm: `Initialize Q(s,a) arbitrarily
+Repeat:
+  Generate episode with ε-greedy
+  For each (s,a) pair:
+    Update Q(s,a) with return
+  Improve policy:
+    π(s) = argmax_a Q(s,a)`,
+                        advantage: 'Guaranteed to find optimal policy with exploring starts or ε-soft policies'
+                    }
+                };
+                
+                const info = details[title];
+                modal.show(title, `
+                    <div class="modal-highlight">
+                        <strong>${desc}</strong>
+                    </div>
+                    <p>${info.detail}</p>
+                    <div class="modal-code">
+                        <strong>Example:</strong><br>
+                        <pre>${info.example}</pre>
+                    </div>
+                    <div class="modal-code">
+                        <strong>Algorithm:</strong><br>
+                        <pre>${info.algorithm}</pre>
+                    </div>
+                    <p><strong>Key Advantage:</strong> ${info.advantage}</p>
+                `);
+            });
+        });
+
+        // Interactive algorithm steps with modal
+        document.querySelectorAll('.algorithm-step').forEach(step => {
+            step.addEventListener('click', function() {
+                const stepText = this.textContent.trim();
+                
+                const stepDetails = {
+                    '1. Initialize V(s) arbitrarily for all s': {
+                        title: 'Initialization',
+                        explanation: 'Start with any initial values for all states. Common choices include all zeros, small random values, or domain-specific heuristics.',
+                        code: `V = {}  # Value function
+for state in all_states:
+    V[state] = 0  # or np.random.randn()`,
+                        importance: 'Good initialization can speed convergence but any initialization will work'
+                    },
+                    '2. Initialize Returns(s) ← empty list': {
+                        title: 'Returns Storage',
+                        explanation: 'Keep track of all observed returns for each state to compute running averages.',
+                        code: `Returns = defaultdict(list)
+# Will store G values for averaging`,
+                        importance: 'Allows incremental updates and tracks convergence'
+                    },
+                    '• G ← γG + R_{t+1}': {
+                        title: 'Return Calculation',
+                        explanation: 'Calculate discounted return by working backwards through the episode.',
+                        code: `G = 0
+for t in reversed(range(len(episode))):
+    G = gamma * G + episode[t].reward
+    # Now G contains return from time t`,
+                        importance: 'Discounting ensures finite returns and emphasizes near-term rewards'
+                    }
+                };
+                
+                // Find matching detail
+                let detail = null;
+                for (let key in stepDetails) {
+                    if (stepText.includes(key.substring(0, 20))) {
+                        detail = stepDetails[key];
+                        break;
+                    }
+                }
+                
+                if (detail) {
+                    modal.show(detail.title, `
+                        <p>${detail.explanation}</p>
+                        <div class="modal-code">
+                            <strong>Implementation:</strong><br>
+                            <pre>${detail.code}</pre>
+                        </div>
+                        <div class="modal-highlight">
+                            <strong>Why it matters:</strong> ${detail.importance}
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Interactive advantage cards with modal
+        document.querySelectorAll('.advantage-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('.advantage-title').textContent;
+                
+                const advantageDetails = {
+                    'No Model Required': {
+                        explanation: 'Monte Carlo methods learn directly from raw experience without needing to know the transition probabilities P(s\'|s,a) or reward function R(s,a).',
+                        comparison: `Model-based: Needs P(s'|s,a) and R(s,a)
+Monte Carlo: Only needs sampled episodes
+Dynamic Programming: Requires complete model
+MC: Works with simulators or real experience`,
+                        example: 'Learning to play blackjack: MC can learn from playing games without knowing card probabilities',
+                        tradeoff: 'Pro: Works in complex/unknown environments<br>Con: Requires many samples for accuracy'
+                    },
+                    'Unbiased Estimates': {
+                        explanation: 'MC estimates are unbiased because they use actual returns, not bootstrapped estimates.',
+                        comparison: `MC: V(s) = E[Gt | St=s] (exact)
+TD: V(s) = E[Rt+1 + γV(St+1)] (approximate)
+MC: No bias, high variance
+TD: Some bias, lower variance`,
+                        example: 'Estimating lifetime value of a customer: MC waits for complete customer journey',
+                        tradeoff: 'Pro: Guaranteed correct in expectation<br>Con: High variance requires many samples'
+                    },
+                    'Episode-Based': {
+                        explanation: 'MC methods require complete episodes with terminal states, making them natural for episodic tasks.',
+                        comparison: `Good for: Games, simulations, finite tasks
+Not ideal for: Continuous control, online learning
+Episodes provide: Complete trajectories
+Limitation: Can\'t learn online during episode`,
+                        example: 'Chess game: Must wait until checkmate to update all position values',
+                        tradeoff: 'Pro: Natural for many problems<br>Con: Cannot learn from incomplete episodes'
+                    },
+                    'High Variance': {
+                        explanation: 'Returns can vary significantly between episodes, leading to noisy value estimates that converge slowly.',
+                        comparison: `Variance sources:
+- Stochastic policies
+- Random transitions
+- Long episodes accumulate noise
+Solution: Need many samples to average out`,
+                        example: 'Slot machine: Individual returns vary wildly, need many pulls to estimate expected value',
+                        tradeoff: 'Pro: Unbiased, will converge to truth<br>Con: Slow convergence, needs large sample size'
+                    }
+                };
+                
+                const details = advantageDetails[title];
+                if (details) {
+                    modal.show(`Monte Carlo: ${title}`, `
+                        <div class="modal-highlight">
+                            ${details.explanation}
+                        </div>
+                        <div style="margin: 20px 0;">
+                            <strong>Comparison:</strong>
+                            <div class="modal-code">
+                                <pre>${details.comparison}</pre>
+                            </div>
+                        </div>
+                        <p><strong>Real Example:</strong> ${details.example}</p>
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                            <strong>Trade-offs:</strong><br>
+                            ${details.tradeoff}
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (!modal.overlay.classList.contains('active')) {
+                if (e.key === 'ArrowRight' || e.key === ' ') {
+                    window.location.href = 'Week11_Slide210.html';
+                } else if (e.key === 'ArrowLeft') {
+                    window.location.href = 'Week11_Slide208.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

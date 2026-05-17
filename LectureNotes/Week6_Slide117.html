@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Clustering Evaluation Metrics</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .metrics-categories {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .category-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            transition: transform 0.3s ease;
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+        }
+
+        .category-card:nth-child(2) {
+            animation: slideInFromRight 1s ease-out 0.3s both;
+        }
+
+        .category-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .external-card { border-left: 5px solid #10b981; }
+        .internal-card { border-left: 5px solid #3b82f6; }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .category-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: white;
+        }
+
+        .external-icon { background: linear-gradient(135deg, #10b981, #059669); }
+        .internal-icon { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+
+        .category-title {
+            font-size: 1.6em;
+            font-weight: 600;
+        }
+
+        .external-card .category-title { color: #065f46; }
+        .internal-card .category-title { color: #1e40af; }
+
+        .category-description {
+            font-size: 1em;
+            line-height: 1.7;
+            color: #374151;
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .external-card .category-description { background: rgba(16, 185, 129, 0.1); }
+        .internal-card .category-description { background: rgba(59, 130, 246, 0.1); }
+
+        .metrics-grid {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .metrics-layout {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+            margin-top: 25px;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 15px;
+            padding: 25px;
+            border-left: 4px solid #14b8a6;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .metric-name {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 10px;
+        }
+
+        .metric-formula {
+            font-family: 'Courier New', monospace;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            color: #134e4a;
+            margin: 8px 0;
+        }
+
+        .metric-description {
+            font-size: 0.9em;
+            color: #475569;
+            line-height: 1.5;
+            margin-top: 10px;
+        }
+
+        .metric-range {
+            font-size: 0.8em;
+            color: #64748b;
+            font-style: italic;
+            margin-top: 8px;
+        }
+
+        .interactive-demo {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.9s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            margin-bottom: 40px;
+        }
+
+        .demo-controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(13, 148, 136, 0.3);
+        }
+
+        .demo-canvas {
+            width: 100%;
+            height: 350px;
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 15px;
+            border: 2px solid #14b8a6;
+            position: relative;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .metrics-display {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .metric-result {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            border-left: 3px solid #14b8a6;
+        }
+
+        .result-name {
+            font-size: 0.9em;
+            color: #64748b;
+            margin-bottom: 5px;
+        }
+
+        .result-value {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #0d9488;
+        }
+
+        .comparison-guide {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 1.2s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .guide-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+        }
+
+        .guide-table th,
+        .guide-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .guide-table th {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            font-weight: 600;
+        }
+
+        .guide-table tr:hover {
+            background: rgba(153, 246, 228, 0.1);
+            cursor: pointer;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: float 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        @media (max-width: 768px) {
+            .metrics-categories { grid-template-columns: 1fr; }
+            .metrics-layout { grid-template-columns: 1fr; }
+            .metrics-display { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    
+    <div class="course-info">CS5710 - Week 6</div>
+    <div class="slide-number">Slide 117 of 120</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Clustering Evaluation Metrics</h1>
+        
+        <div class="metrics-categories">
+            <div class="category-card external-card">
+                <div class="category-header">
+                    <div class="category-icon external-icon">E</div>
+                    <div class="category-title">External Metrics</div>
+                </div>
+                
+                <div class="category-description">
+                    Compare clustering results against known ground truth labels. Useful when you have labeled data for validation.
+                </div>
+                
+                <ul style="list-style: none; margin-top: 15px;">
+                    <li style="padding: 8px 0; color: #475569;">✓ Adjusted Rand Index (ARI)</li>
+                    <li style="padding: 8px 0; color: #475569;">✓ Normalized Mutual Information (NMI)</li>
+                    <li style="padding: 8px 0; color: #475569;">✓ Homogeneity & Completeness</li>
+                    <li style="padding: 8px 0; color: #475569;">✓ V-measure</li>
+                </ul>
+            </div>
+
+            <div class="category-card internal-card">
+                <div class="category-header">
+                    <div class="category-icon internal-icon">I</div>
+                    <div class="category-title">Internal Metrics</div>
+                </div>
+                
+                <div class="category-description">
+                    Evaluate clustering quality using only the data and cluster assignments. No ground truth required.
+                </div>
+                
+                <ul style="list-style: none; margin-top: 15px;">
+                    <li style="padding: 8px 0; color: #475569;">✓ Silhouette Score</li>
+                    <li style="padding: 8px 0; color: #475569;">✓ Davies-Bouldin Index</li>
+                    <li style="padding: 8px 0; color: #475569;">✓ Calinski-Harabasz Index</li>
+                    <li style="padding: 8px 0; color: #475569;">✓ Inertia/Within-cluster Sum of Squares</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="metrics-grid">
+            <h2 class="section-title">📊 Key Evaluation Metrics</h2>
+            
+            <div class="metrics-layout">
+                <div class="metric-card">
+                    <div class="metric-name">Silhouette Score</div>
+                    <div class="metric-formula">s = (b - a) / max(a, b)</div>
+                    <div class="metric-description">
+                        Measures how similar a point is to its own cluster compared to other clusters. Higher values indicate better clustering.
+                    </div>
+                    <div class="metric-range">Range: [-1, 1], Higher is better</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-name">Adjusted Rand Index</div>
+                    <div class="metric-formula">ARI = (RI - Expected_RI) / (max(RI) - Expected_RI)</div>
+                    <div class="metric-description">
+                        Measures similarity between predicted and true clustering, adjusted for chance. Handles different cluster sizes.
+                    </div>
+                    <div class="metric-range">Range: [-1, 1], Higher is better, 0 = random</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-name">Davies-Bouldin Index</div>
+                    <div class="metric-formula">DB = (1/k) Σ max((σᵢ + σⱼ)/d(cᵢ,cⱼ))</div>
+                    <div class="metric-description">
+                        Ratio of within-cluster to between-cluster distances. Lower values indicate better clustering with compact, well-separated clusters.
+                    </div>
+                    <div class="metric-range">Range: [0, ∞), Lower is better</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-name">Calinski-Harabasz Index</div>
+                    <div class="metric-formula">CH = (SSB/(k-1)) / (SSW/(n-k))</div>
+                    <div class="metric-description">
+                        Ratio of between-cluster dispersion to within-cluster dispersion. Higher values indicate better defined clusters.
+                    </div>
+                    <div class="metric-range">Range: [0, ∞), Higher is better</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-name">Normalized Mutual Information</div>
+                    <div class="metric-formula">NMI = 2 * MI(U,V) / (H(U) + H(V))</div>
+                    <div class="metric-description">
+                        Measures mutual information between predicted and true clustering, normalized by entropy. Robust to cluster imbalance.
+                    </div>
+                    <div class="metric-range">Range: [0, 1], Higher is better</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-name">V-measure</div>
+                    <div class="metric-formula">V = 2 * (h * c) / (h + c)</div>
+                    <div class="metric-description">
+                        Harmonic mean of homogeneity and completeness. Balances cluster purity with completeness of cluster assignment.
+                    </div>
+                    <div class="metric-range">Range: [0, 1], Higher is better</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="interactive-demo">
+            <h2 class="section-title">🎮 Interactive Metrics Evaluation</h2>
+            
+            <div class="demo-controls">
+                <button class="control-btn" id="generateClusters">Generate Clusters</button>
+                <button class="control-btn" id="goodClustering">Good Clustering</button>
+                <button class="control-btn" id="poorClustering">Poor Clustering</button>
+                <button class="control-btn" id="calculateMetrics">Calculate Metrics</button>
+            </div>
+            
+            <div class="demo-canvas" id="demoCanvas"></div>
+            
+            <div class="metrics-display">
+                <div class="metric-result">
+                    <div class="result-name">Silhouette Score</div>
+                    <div class="result-value" id="silhouetteResult">-</div>
+                </div>
+                <div class="metric-result">
+                    <div class="result-name">Davies-Bouldin</div>
+                    <div class="result-value" id="dbResult">-</div>
+                </div>
+                <div class="metric-result">
+                    <div class="result-name">Calinski-Harabasz</div>
+                    <div class="result-value" id="chResult">-</div>
+                </div>
+                <div class="metric-result">
+                    <div class="result-name">Inertia</div>
+                    <div class="result-value" id="inertiaResult">-</div>
+                </div>
+                <div class="metric-result">
+                    <div class="result-name">Adjusted Rand</div>
+                    <div class="result-value" id="ariResult">-</div>
+                </div>
+                <div class="metric-result">
+                    <div class="result-name">V-measure</div>
+                    <div class="result-value" id="vmeasureResult">-</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="comparison-guide">
+            <h2 class="section-title">🔍 When to Use Each Metric</h2>
+            
+            <table class="guide-table">
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Best For</th>
+                        <th>Advantages</th>
+                        <th>Limitations</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Silhouette Score</strong></td>
+                        <td>General evaluation, interpretable results</td>
+                        <td>Easy to interpret, works with any distance metric</td>
+                        <td>Biased towards convex clusters</td>
+                    </tr>
+                    <tr>
+                        <td><strong>ARI</strong></td>
+                        <td>Comparing with ground truth</td>
+                        <td>Adjusted for chance, handles different cluster sizes</td>
+                        <td>Requires true labels</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Davies-Bouldin</strong></td>
+                        <td>Compact, well-separated clusters</td>
+                        <td>Based on cluster geometry, no ground truth needed</td>
+                        <td>Assumes spherical clusters</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Calinski-Harabasz</strong></td>
+                        <td>Determining optimal number of clusters</td>
+                        <td>Fast computation, good for k selection</td>
+                        <td>Biased towards spherical clusters</td>
+                    </tr>
+                    <tr>
+                        <td><strong>NMI</strong></td>
+                        <td>Information-theoretic evaluation</td>
+                        <td>Robust to cluster imbalance</td>
+                        <td>Requires ground truth labels</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week6_Slide116.html" class="nav-btn">← Previous</a>
+        <a href="Week6_Slide118.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Clustering Evaluation Demo
+        class EvaluationDemo {
+            constructor() {
+                this.canvas = document.getElementById('demoCanvas');
+                this.points = [];
+                this.trueLabels = [];
+                this.predictedLabels = [];
+                this.centroids = [];
+                
+                this.setupEventListeners();
+                this.generateGoodClustering();
+            }
+            
+            setupEventListeners() {
+                document.getElementById('generateClusters').addEventListener('click', () => this.generateRandomClustering());
+                document.getElementById('goodClustering').addEventListener('click', () => this.generateGoodClustering());
+                document.getElementById('poorClustering').addEventListener('click', () => this.generatePoorClustering());
+                document.getElementById('calculateMetrics').addEventListener('click', () => this.calculateAllMetrics());
+            }
+            
+            generateRandomClustering() {
+                this.points = [];
+                this.canvas.innerHTML = '';
+                
+                // Generate random points
+                for (let i = 0; i < 100; i++) {
+                    const point = {
+                        x: Math.random() * 90 + 5,
+                        y: Math.random() * 90 + 5,
+                        trueLabel: Math.floor(Math.random() * 3),
+                        predictedLabel: Math.floor(Math.random() * 3)
+                    };
+                    
+                    this.createPointElement(point, i);
+                    this.points.push(point);
+                }
+                
+                this.calculateAllMetrics();
+            }
+            
+            generateGoodClustering() {
+                this.points = [];
+                this.canvas.innerHTML = '';
+                
+                // Generate well-separated clusters
+                const clusters = [
+                    { center: [25, 25], label: 0, points: 35 },
+                    { center: [75, 25], label: 1, points: 35 },
+                    { center: [50, 75], label: 2, points: 30 }
+                ];
+                
+                clusters.forEach((cluster, clusterIndex) => {
+                    for (let i = 0; i < cluster.points; i++) {
+                        const angle = Math.random() * 2 * Math.PI;
+                        const radius = Math.random() * 80 + 20;
+                        const point = {
+                            x: Math.max(5, Math.min(95, cluster.center[0] + Math.cos(angle) * radius / 6)),
+                            y: Math.max(5, Math.min(95, cluster.center[1] + Math.sin(angle) * radius / 6)),
+                            trueLabel: cluster.label,
+                            predictedLabel: cluster.label // Perfect clustering
+                        };
+                        
+                        this.createPointElement(point, this.points.length);
+                        this.points.push(point);
+                    }
+                });
+                
+                this.calculateAllMetrics();
+            }
+            
+            generatePoorClustering() {
+                this.points = [];
+                this.canvas.innerHTML = '';
+                
+                // Generate clusters with poor separation/assignment
+                const trueClusters = [
+                    { center: [30, 50], label: 0, points: 40 },
+                    { center: [50, 50], label: 1, points: 40 }, // Overlapping
+                    { center: [70, 50], label: 2, points: 20 }
+                ];
+                
+                trueClusters.forEach((cluster, clusterIndex) => {
+                    for (let i = 0; i < cluster.points; i++) {
+                        const angle = Math.random() * 2 * Math.PI;
+                        const radius = Math.random() * 120 + 40; // Large spread
+                        const point = {
+                            x: Math.max(5, Math.min(95, cluster.center[0] + Math.cos(angle) * radius / 4)),
+                            y: Math.max(5, Math.min(95, cluster.center[1] + Math.sin(angle) * radius / 4)),
+                            trueLabel: cluster.label,
+                            predictedLabel: Math.floor(Math.random() * 3) // Random assignment
+                        };
+                        
+                        this.createPointElement(point, this.points.length);
+                        this.points.push(point);
+                    }
+                });
+                
+                this.calculateAllMetrics();
+            }
+            
+            createPointElement(point, index) {
+                const element = document.createElement('div');
+                element.style.position = 'absolute';
+                element.style.width = '8px';
+                element.style.height = '8px';
+                element.style.borderRadius = '50%';
+                element.style.left = point.x + '%';
+                element.style.top = point.y + '%';
+                element.style.transform = 'translate(-50%, -50%)';
+                element.style.transition = 'all 0.3s ease';
+                
+                const colors = ['#ef4444', '#3b82f6', '#10b981'];
+                element.style.backgroundColor = colors[point.predictedLabel];
+                element.style.border = `2px solid ${colors[point.trueLabel]}`;
+                
+                this.canvas.appendChild(element);
+                point.element = element;
+            }
+            
+            calculateAllMetrics() {
+                // Calculate internal metrics
+                const silhouette = this.calculateSilhouetteScore();
+                const db = this.calculateDaviesBouldinIndex();
+                const ch = this.calculateCalinskiHarabaszIndex();
+                const inertia = this.calculateInertia();
+                
+                // Calculate external metrics (require true labels)
+                const ari = this.calculateAdjustedRandIndex();
+                const vmeasure = this.calculateVMeasure();
+                
+                // Update display
+                document.getElementById('silhouetteResult').textContent = silhouette.toFixed(3);
+                document.getElementById('dbResult').textContent = db.toFixed(3);
+                document.getElementById('chResult').textContent = ch.toFixed(1);
+                document.getElementById('inertiaResult').textContent = inertia.toFixed(1);
+                document.getElementById('ariResult').textContent = ari.toFixed(3);
+                document.getElementById('vmeasureResult').textContent = vmeasure.toFixed(3);
+            }
+            
+            calculateSilhouetteScore() {
+                let totalSilhouette = 0;
+                
+                this.points.forEach((point, i) => {
+                    const clusterPoints = this.points.filter((p, j) => j !== i && p.predictedLabel === point.predictedLabel);
+                    const otherPoints = this.points.filter((p, j) => j !== i && p.predictedLabel !== point.predictedLabel);
+                    
+                    if (clusterPoints.length === 0) return 0;
+                    
+                    // Average distance to points in same cluster
+                    const a = clusterPoints.reduce((sum, p) => sum + this.euclideanDistance(point, p), 0) / clusterPoints.length;
+                    
+                    // Average distance to points in nearest other cluster
+                    const b = otherPoints.length > 0 ? 
+                        otherPoints.reduce((sum, p) => sum + this.euclideanDistance(point, p), 0) / otherPoints.length : 0;
+                    
+                    const silhouette = b === 0 ? 0 : (b - a) / Math.max(a, b);
+                    totalSilhouette += silhouette;
+                });
+                
+                return totalSilhouette / this.points.length;
+            }
+            
+            calculateDaviesBouldinIndex() {
+                const clusters = this.groupByPredictedLabel();
+                const centroids = this.calculateCentroids(clusters);
+                
+                let totalDB = 0;
+                clusters.forEach((cluster, i) => {
+                    if (cluster.length === 0) return;
+                    
+                    const sigma_i = this.calculateWithinClusterDispersion(cluster, centroids[i]);
+                    let maxRatio = 0;
+                    
+                    clusters.forEach((otherCluster, j) => {
+                        if (i !== j && otherCluster.length > 0) {
+                            const sigma_j = this.calculateWithinClusterDispersion(otherCluster, centroids[j]);
+                            const distance_ij = this.euclideanDistance(centroids[i], centroids[j]);
+                            
+                            if (distance_ij > 0) {
+                                const ratio = (sigma_i + sigma_j) / distance_ij;
+                                maxRatio = Math.max(maxRatio, ratio);
+                            }
+                        }
+                    });
+                    
+                    totalDB += maxRatio;
+                });
+                
+                return totalDB / clusters.filter(c => c.length > 0).length;
+            }
+            
+            calculateCalinskiHarabaszIndex() {
+                const clusters = this.groupByPredictedLabel();
+                const centroids = this.calculateCentroids(clusters);
+                const overallCentroid = this.calculateOverallCentroid();
+                
+                let ssb = 0; // Between-cluster sum of squares
+                let ssw = 0; // Within-cluster sum of squares
+                
+                clusters.forEach((cluster, i) => {
+                    if (cluster.length === 0) return;
+                    
+                    // Between-cluster dispersion
+                    const distance = this.euclideanDistance(centroids[i], overallCentroid);
+                    ssb += cluster.length * distance * distance;
+                    
+                    // Within-cluster dispersion
+                    cluster.forEach(point => {
+                        const distance = this.euclideanDistance(point, centroids[i]);
+                        ssw += distance * distance;
+                    });
+                });
+                
+                const k = clusters.filter(c => c.length > 0).length;
+                const n = this.points.length;
+                
+                if (k <= 1 || ssw === 0) return 0;
+                
+                return (ssb / (k - 1)) / (ssw / (n - k));
+            }
+            
+            calculateInertia() {
+                const clusters = this.groupByPredictedLabel();
+                const centroids = this.calculateCentroids(clusters);
+                
+                let inertia = 0;
+                clusters.forEach((cluster, i) => {
+                    if (cluster.length === 0) return;
+                    
+                    cluster.forEach(point => {
+                        const distance = this.euclideanDistance(point, centroids[i]);
+                        inertia += distance * distance;
+                    });
+                });
+                
+                return inertia;
+            }
+            
+            calculateAdjustedRandIndex() {
+                const n = this.points.length;
+                const contingencyTable = this.buildContingencyTable();
+                
+                // Calculate Rand Index components
+                let tp = 0, fp = 0, fn = 0, tn = 0;
+                
+                for (let i = 0; i < n; i++) {
+                    for (let j = i + 1; j < n; j++) {
+                        const sameTrue = this.points[i].trueLabel === this.points[j].trueLabel;
+                        const samePred = this.points[i].predictedLabel === this.points[j].predictedLabel;
+                        
+                        if (sameTrue && samePred) tp++;
+                        else if (!sameTrue && samePred) fp++;
+                        else if (sameTrue && !samePred) fn++;
+                        else tn++;
+                    }
+                }
+                
+                const ri = (tp + tn) / (tp + fp + fn + tn);
+                
+                // Calculate expected RI (simplified approximation)
+                const expectedRI = 0.5; // Approximate for random clustering
+                
+                return (ri - expectedRI) / (1 - expectedRI);
+            }
+            
+            calculateVMeasure() {
+                const contingencyTable = this.buildContingencyTable();
+                
+                // Calculate homogeneity and completeness (simplified)
+                let homogeneity = 0, completeness = 0;
+                
+                // Simplified V-measure calculation
+                const trueLabels = this.points.map(p => p.trueLabel);
+                const predLabels = this.points.map(p => p.predictedLabel);
+                
+                const trueEntropy = this.calculateEntropy(trueLabels);
+                const predEntropy = this.calculateEntropy(predLabels);
+                const mutualInfo = this.calculateMutualInformation(trueLabels, predLabels);
+                
+                homogeneity = trueEntropy === 0 ? 1 : mutualInfo / trueEntropy;
+                completeness = predEntropy === 0 ? 1 : mutualInfo / predEntropy;
+                
+                return homogeneity + completeness === 0 ? 0 : 
+                       2 * (homogeneity * completeness) / (homogeneity + completeness);
+            }
+            
+            // Helper methods
+            euclideanDistance(p1, p2) {
+                return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
+            }
+            
+            groupByPredictedLabel() {
+                const clusters = [[], [], []];
+                this.points.forEach(point => {
+                    clusters[point.predictedLabel].push(point);
+                });
+                return clusters;
+            }
+            
+            calculateCentroids(clusters) {
+                return clusters.map(cluster => {
+                    if (cluster.length === 0) return { x: 0, y: 0 };
+                    return {
+                        x: cluster.reduce((sum, p) => sum + p.x, 0) / cluster.length,
+                        y: cluster.reduce((sum, p) => sum + p.y, 0) / cluster.length
+                    };
+                });
+            }
+            
+            calculateOverallCentroid() {
+                return {
+                    x: this.points.reduce((sum, p) => sum + p.x, 0) / this.points.length,
+                    y: this.points.reduce((sum, p) => sum + p.y, 0) / this.points.length
+                };
+            }
+            
+            calculateWithinClusterDispersion(cluster, centroid) {
+                if (cluster.length === 0) return 0;
+                return cluster.reduce((sum, point) => 
+                    sum + this.euclideanDistance(point, centroid), 0) / cluster.length;
+            }
+            
+            buildContingencyTable() {
+                const table = Array(3).fill().map(() => Array(3).fill(0));
+                this.points.forEach(point => {
+                    table[point.trueLabel][point.predictedLabel]++;
+                });
+                return table;
+            }
+            
+            calculateEntropy(labels) {
+                const counts = {};
+                labels.forEach(label => counts[label] = (counts[label] || 0) + 1);
+                
+                const n = labels.length;
+                return -Object.values(counts).reduce((entropy, count) => {
+                    const p = count / n;
+                    return entropy + (p > 0 ? p * Math.log2(p) : 0);
+                }, 0);
+            }
+            
+            calculateMutualInformation(labels1, labels2) {
+                const n = labels1.length;
+                const contingency = {};
+                
+                // Build contingency table
+                for (let i = 0; i < n; i++) {
+                    const key = `${labels1[i]},${labels2[i]}`;
+                    contingency[key] = (contingency[key] || 0) + 1;
+                }
+                
+                // Calculate marginal distributions
+                const marginal1 = {}, marginal2 = {};
+                labels1.forEach(label => marginal1[label] = (marginal1[label] || 0) + 1);
+                labels2.forEach(label => marginal2[label] = (marginal2[label] || 0) + 1);
+                
+                // Calculate mutual information
+                let mi = 0;
+                Object.entries(contingency).forEach(([key, count]) => {
+                    const [l1, l2] = key.split(',');
+                    const pxy = count / n;
+                    const px = marginal1[l1] / n;
+                    const py = marginal2[l2] / n;
+                    
+                    if (pxy > 0 && px > 0 && py > 0) {
+                        mi += pxy * Math.log2(pxy / (px * py));
+                    }
+                });
+                
+                return mi;
+            }
+        }
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive metric cards
+        document.querySelectorAll('.metric-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const metricName = this.querySelector('.metric-name').textContent;
+                
+                const details = {
+                    'Silhouette Score': 'Measures how well-separated clusters are. For each point: a = average distance to points in same cluster, b = average distance to nearest other cluster. Score = (b-a)/max(a,b). Values near 1 indicate well-separated clusters, near 0 indicate overlapping clusters, negative values suggest misclassification.',
+                    'Adjusted Rand Index': 'Measures similarity between true and predicted clustering, adjusted for chance. ARI = (RI - Expected_RI) / (max_RI - Expected_RI). Perfect clustering gives ARI = 1, random clustering gives ARI ≈ 0, worse than random gives negative values.',
+                    'Davies-Bouldin Index': 'Lower values indicate better clustering. For each cluster, finds the other cluster that maximizes (σᵢ + σⱼ)/d(cᵢ,cⱼ) where σ is within-cluster dispersion and d is distance between centroids. Averages these maximum values.',
+                    'Calinski-Harabasz Index': 'Higher values indicate better clustering. Ratio of between-cluster variance to within-cluster variance. CH = (SSB/(k-1)) / (SSW/(n-k)). Higher values mean more compact clusters that are well-separated.',
+                    'Normalized Mutual Information': 'Measures mutual dependence between true and predicted clustering. NMI = 2*I(U;V) / (H(U)+H(V)) where I is mutual information and H is entropy. Values range from 0 (independent) to 1 (perfect dependence).',
+                    'V-measure': 'Harmonic mean of homogeneity and completeness. Homogeneity: each cluster contains only members of single class. Completeness: all members of class assigned to same cluster. V = 2*h*c/(h+c) balances both criteria.'
+                };
+                
+                modal.show(metricName + ' - Details', `
+                    <div class="modal-highlight">
+                        ${details[metricName]}
+                    </div>
+                `);
+            });
+        });
+
+        // Interactive guide table
+        document.querySelectorAll('.guide-table tbody tr').forEach(row => {
+            row.addEventListener('click', function() {
+                const metric = this.cells[0].textContent;
+                const bestFor = this.cells[1].textContent;
+                const advantages = this.cells[2].textContent;
+                const limitations = this.cells[3].textContent;
+                
+                modal.show(metric + ' - Usage Guide', `
+                    <div class="modal-highlight">
+                        <p><strong>Best Use Cases:</strong> ${bestFor}</p>
+                        <p><strong>Key Advantages:</strong> ${advantages}</p>
+                        <p><strong>Main Limitations:</strong> ${limitations}</p>
+                        <p><strong>Recommendation:</strong> Use multiple metrics together for comprehensive evaluation. No single metric captures all aspects of clustering quality.</p>
+                    </div>
+                `);
+            });
+        });
+
+        // Initialize
+        const demo = new EvaluationDemo();
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week6_Slide116.html';
+            } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                if (!modal.overlay.classList.contains('active')) {
+                    window.location.href = 'Week6_Slide118.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

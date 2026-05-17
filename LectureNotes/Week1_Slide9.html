@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Feature Engineering Basics</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .definition-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            animation: slideInFromTop 1s ease-out 0.2s both;
+        }
+
+        .definition-text {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            text-align: center;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .techniques-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .technique-category {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.08);
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            animation: slideInFromLeft 1s ease-out;
+            animation-fill-mode: both;
+        }
+
+        .technique-category:nth-child(even) {
+            animation-name: slideInFromRight;
+        }
+
+        .technique-category:nth-child(1) { animation-delay: 0.3s; }
+        .technique-category:nth-child(2) { animation-delay: 0.4s; }
+        .technique-category:nth-child(3) { animation-delay: 0.5s; }
+        .technique-category:nth-child(4) { animation-delay: 0.6s; }
+
+        .category-title {
+            font-size: 1.6em;
+            color: #0d9488;
+            margin-bottom: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .category-icon {
+            font-size: 1.2em;
+        }
+
+        .technique-list {
+            list-style: none;
+        }
+
+        .technique-item {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 15px;
+            margin: 12px 0;
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .technique-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .technique-name {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 5px;
+        }
+
+        .technique-desc {
+            font-size: 0.9em;
+            color: #475569;
+            line-height: 1.4;
+        }
+
+        .examples-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            animation: slideInFromBottom 1s ease-out 0.7s both;
+            text-align: center;
+        }
+
+        .examples-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .example-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-top: 25px;
+        }
+
+        .example-card {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            padding: 25px;
+            border-radius: 15px;
+            border: 2px solid #14b8a6;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .example-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .example-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+            color: #0d9488;
+        }
+
+        .example-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #0d9488;
+        }
+
+        .example-desc {
+            font-size: 0.9em;
+            color: #475569;
+            line-height: 1.4;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .techniques-grid { grid-template-columns: 1fr; }
+            .example-cards { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    
+    <div class="course-info">CS5710 - Week 1</div>
+    <div class="slide-number">Slide 9 of 20</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Feature Engineering Basics</h1>
+        
+        <div class="definition-section">
+            <div class="definition-text">
+                <strong>Feature Engineering</strong> is the process of creating, transforming, and selecting the most relevant features from raw data to improve machine learning model performance. It's often called the "art" of machine learning.
+            </div>
+        </div>
+
+        <div class="techniques-grid">
+            <div class="technique-category">
+                <h3 class="category-title">
+                    <span class="category-icon">🔄</span>
+                    Feature Transformation
+                </h3>
+                <ul class="technique-list">
+                    <li class="technique-item" data-technique="scaling">
+                        <div class="technique-name">Scaling & Normalization</div>
+                        <div class="technique-desc">Standardize ranges (StandardScaler, MinMaxScaler)</div>
+                    </li>
+                    <li class="technique-item" data-technique="encoding">
+                        <div class="technique-name">Categorical Encoding</div>
+                        <div class="technique-desc">Convert categories to numbers (One-hot, Label encoding)</div>
+                    </li>
+                    <li class="technique-item" data-technique="text">
+                        <div class="technique-name">Text Processing</div>
+                        <div class="technique-desc">TF-IDF, word embeddings, n-grams</div>
+                    </li>
+                    <li class="technique-item" data-technique="datetime">
+                        <div class="technique-name">Date/Time Features</div>
+                        <div class="technique-desc">Extract day, month, season, time since</div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="technique-category">
+                <h3 class="category-title">
+                    <span class="category-icon">✨</span>
+                    Feature Creation
+                </h3>
+                <ul class="technique-list">
+                    <li class="technique-item" data-technique="polynomial">
+                        <div class="technique-name">Polynomial Features</div>
+                        <div class="technique-desc">x², x³, interaction terms (x₁ × x₂)</div>
+                    </li>
+                    <li class="technique-item" data-technique="binning">
+                        <div class="technique-name">Binning</div>
+                        <div class="technique-desc">Convert continuous to categorical ranges</div>
+                    </li>
+                    <li class="technique-item" data-technique="aggregation">
+                        <div class="technique-name">Aggregation</div>
+                        <div class="technique-desc">Group statistics (mean, sum, count)</div>
+                    </li>
+                    <li class="technique-item" data-technique="domain">
+                        <div class="technique-name">Domain-Specific</div>
+                        <div class="technique-desc">Industry knowledge-based features</div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="technique-category">
+                <h3 class="category-title">
+                    <span class="category-icon">🎯</span>
+                    Feature Selection
+                </h3>
+                <ul class="technique-list">
+                    <li class="technique-item" data-technique="correlation">
+                        <div class="technique-name">Correlation Analysis</div>
+                        <div class="technique-desc">Remove highly correlated features</div>
+                    </li>
+                    <li class="technique-item" data-technique="importance">
+                        <div class="technique-name">Feature Importance</div>
+                        <div class="technique-desc">Tree-based importance scores</div>
+                    </li>
+                    <li class="technique-item" data-technique="statistical">
+                        <div class="technique-name">Statistical Tests</div>
+                        <div class="technique-desc">Chi-square, ANOVA, mutual information</div>
+                    </li>
+                    <li class="technique-item" data-technique="recursive">
+                        <div class="technique-name">Recursive Elimination</div>
+                        <div class="technique-desc">Iteratively remove least important features</div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="technique-category">
+                <h3 class="category-title">
+                    <span class="category-icon">🧹</span>
+                    Feature Cleaning
+                </h3>
+                <ul class="technique-list">
+                    <li class="technique-item" data-technique="missing">
+                        <div class="technique-name">Missing Values</div>
+                        <div class="technique-desc">Imputation, forward fill, interpolation</div>
+                    </li>
+                    <li class="technique-item" data-technique="outliers">
+                        <div class="technique-name">Outlier Handling</div>
+                        <div class="technique-desc">Cap, remove, or transform extreme values</div>
+                    </li>
+                    <li class="technique-item" data-technique="noise">
+                        <div class="technique-name">Noise Reduction</div>
+                        <div class="technique-desc">Smoothing, filtering, denoising</div>
+                    </li>
+                    <li class="technique-item" data-technique="consistency">
+                        <div class="technique-name">Data Consistency</div>
+                        <div class="technique-desc">Standardize formats and units</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="examples-section">
+            <h3 class="examples-title">Real-World Feature Engineering Examples</h3>
+            
+            <div class="example-cards">
+                <div class="example-card" data-example="ecommerce">
+                    <div class="example-icon">🛒</div>
+                    <div class="example-title">E-Commerce</div>
+                    <div class="example-desc">Customer lifetime value, purchase frequency, seasonal buying patterns</div>
+                </div>
+                
+                <div class="example-card" data-example="finance">
+                    <div class="example-icon">💰</div>
+                    <div class="example-title">Finance</div>
+                    <div class="example-desc">Moving averages, volatility, technical indicators, credit risk ratios</div>
+                </div>
+                
+                <div class="example-card" data-example="healthcare">
+                    <div class="example-icon">🏥</div>
+                    <div class="example-title">Healthcare</div>
+                    <div class="example-desc">BMI calculation, age groups, symptom duration, medical history encoding</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week1_Slide8.html" class="nav-btn">← Previous</a>
+        <a href="Week1_Slide10.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Technique details
+        const techniqueDetails = {
+            'scaling': {
+                title: '🔄 Scaling & Normalization',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Why Scale Features?</strong><br>
+                        Many ML algorithms are sensitive to feature scales. Distance-based algorithms especially need scaled features.
+                    </div>
+                    <p><strong>Common Scaling Methods:</strong></p>
+                    <ul>
+                        <li><strong>StandardScaler:</strong> Zero mean, unit variance (z-score normalization)</li>
+                        <li><strong>MinMaxScaler:</strong> Scale to range [0,1]</li>
+                        <li><strong>RobustScaler:</strong> Uses median, less sensitive to outliers</li>
+                        <li><strong>PowerTransformer:</strong> Make data more Gaussian-like</li>
+                    </ul>
+                    <div class="modal-code">
+                        from sklearn.preprocessing import StandardScaler, MinMaxScaler<br><br>
+                        # Standard scaling<br>
+                        scaler = StandardScaler()<br>
+                        X_scaled = scaler.fit_transform(X_train)<br><br>
+                        # Min-Max scaling<br>
+                        minmax = MinMaxScaler()<br>
+                        X_normalized = minmax.fit_transform(X_train)
+                    </div>
+                    <p><strong>When to Use:</strong> Neural networks, SVM, k-NN, PCA. Tree-based methods don't usually need scaling.</p>
+                `
+            },
+            'encoding': {
+                title: '🔄 Categorical Encoding',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Converting Categories to Numbers</strong><br>
+                        ML algorithms work with numbers, not text categories.
+                    </div>
+                    <p><strong>Encoding Methods:</strong></p>
+                    <ul>
+                        <li><strong>One-Hot Encoding:</strong> Create binary columns for each category</li>
+                        <li><strong>Label Encoding:</strong> Assign integers to categories</li>
+                        <li><strong>Ordinal Encoding:</strong> For ordered categories (small, medium, large)</li>
+                        <li><strong>Target Encoding:</strong> Encode based on target variable statistics</li>
+                    </ul>
+                    <div class="modal-code">
+                        import pandas as pd<br>
+                        from sklearn.preprocessing import OneHotEncoder<br><br>
+                        # One-hot encoding<br>
+                        df_encoded = pd.get_dummies(df, columns=['category'])<br><br>
+                        # Label encoding<br>
+                        from sklearn.preprocessing import LabelEncoder<br>
+                        le = LabelEncoder()<br>
+                        df['category_encoded'] = le.fit_transform(df['category'])
+                    </div>
+                    <p><strong>Pitfalls:</strong> Label encoding can imply order where none exists. One-hot encoding can create high dimensionality.</p>
+                `
+            },
+            'polynomial': {
+                title: '✨ Polynomial Features',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Creating Non-Linear Relationships</strong><br>
+                        Linear models can capture non-linear patterns with polynomial features.
+                    </div>
+                    <p><strong>Types of Polynomial Features:</strong></p>
+                    <ul>
+                        <li><strong>Power Features:</strong> x², x³, x⁴ (higher degree terms)</li>
+                        <li><strong>Interaction Terms:</strong> x₁ × x₂ (feature combinations)</li>
+                        <li><strong>Cross Products:</strong> Multiple feature interactions</li>
+                    </ul>
+                    <div class="modal-code">
+                        from sklearn.preprocessing import PolynomialFeatures<br><br>
+                        # Create polynomial features<br>
+                        poly = PolynomialFeatures(degree=2, include_bias=False)<br>
+                        X_poly = poly.fit_transform(X)<br><br>
+                        # Original: [x1, x2]<br>
+                        # Polynomial: [x1, x2, x1², x1*x2, x2²]
+                    </div>
+                    <p><strong>Example:</strong> House price prediction - size² captures that larger houses are disproportionately more expensive.</p>
+                    <p><strong>Warning:</strong> Can quickly create huge feature spaces. Use regularization to prevent overfitting.</p>
+                `
+            },
+            'binning': {
+                title: '✨ Binning',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Converting Continuous to Categorical</strong><br>
+                        Sometimes discrete ranges work better than continuous values.
+                    </div>
+                    <p><strong>Binning Strategies:</strong></p>
+                    <ul>
+                        <li><strong>Equal Width:</strong> Same range size for all bins</li>
+                        <li><strong>Equal Frequency:</strong> Same number of samples per bin</li>
+                        <li><strong>Custom Bins:</strong> Domain knowledge-based boundaries</li>
+                        <li><strong>Quantile-based:</strong> Based on data percentiles</li>
+                    </ul>
+                    <div class="modal-code">
+                        import pandas as pd<br><br>
+                        # Age binning example<br>
+                        bins = [0, 18, 35, 50, 65, 100]<br>
+                        labels = ['Child', 'Young Adult', 'Adult', 'Middle Age', 'Senior']<br>
+                        df['age_group'] = pd.cut(df['age'], bins=bins, labels=labels)<br><br>
+                        # Quantile-based binning<br>
+                        df['income_quartile'] = pd.qcut(df['income'], q=4, labels=['Low', 'Medium-Low', 'Medium-High', 'High'])
+                    </div>
+                    <p><strong>Benefits:</strong> Reduces noise, handles outliers, captures non-linear relationships, more interpretable.</p>
+                `
+            },
+            'correlation': {
+                title: '🎯 Correlation Analysis',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Removing Redundant Features</strong><br>
+                        Highly correlated features often provide the same information.
+                    </div>
+                    <p><strong>Correlation Issues:</strong></p>
+                    <ul>
+                        <li><strong>Multicollinearity:</strong> Makes model coefficients unstable</li>
+                        <li><strong>Redundancy:</strong> Same information, more complexity</li>
+                        <li><strong>Overfitting:</strong> More features than necessary</li>
+                    </ul>
+                    <div class="modal-code">
+                        import pandas as pd<br>
+                        import seaborn as sns<br><br>
+                        # Calculate correlation matrix<br>
+                        corr_matrix = df.corr()<br><br>
+                        # Find highly correlated pairs<br>
+                        high_corr_pairs = []<br>
+                        for i in range(len(corr_matrix.columns)):<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;for j in range(i+1, len(corr_matrix.columns)):<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if abs(corr_matrix.iloc[i,j]) > 0.8:<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;high_corr_pairs.append((corr_matrix.columns[i], corr_matrix.columns[j]))
+                    </div>
+                    <p><strong>Threshold Rules:</strong> |r| > 0.7 (moderate), |r| > 0.8 (high), |r| > 0.9 (very high correlation)</p>
+                `
+            },
+            'missing': {
+                title: '🧹 Missing Values',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Handling Incomplete Data</strong><br>
+                        Real-world data is often incomplete. How you handle missing values matters.
+                    </div>
+                    <p><strong>Strategies:</strong></p>
+                    <ul>
+                        <li><strong>Remove:</strong> Drop rows/columns with missing values</li>
+                        <li><strong>Simple Imputation:</strong> Mean, median, mode, constant value</li>
+                        <li><strong>Advanced Imputation:</strong> KNN, iterative, model-based</li>
+                        <li><strong>Missing Indicator:</strong> Create binary flag for missing values</li>
+                    </ul>
+                    <div class="modal-code">
+                        from sklearn.impute import SimpleImputer, KNNImputer<br><br>
+                        # Simple imputation<br>
+                        imputer = SimpleImputer(strategy='median')<br>
+                        X_imputed = imputer.fit_transform(X)<br><br>
+                        # KNN imputation<br>
+                        knn_imputer = KNNImputer(n_neighbors=5)<br>
+                        X_knn_imputed = knn_imputer.fit_transform(X)<br><br>
+                        # Missing indicator<br>
+                        df['age_missing'] = df['age'].isnull().astype(int)
+                    </div>
+                    <p><strong>Decision Guide:</strong> < 5% missing: any method. 5-15%: imputation. > 30%: consider dropping feature.</p>
+                `
+            }
+        };
+
+        // Example details
+        const exampleDetails = {
+            'ecommerce': {
+                title: '🛒 E-Commerce Feature Engineering',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Customer Behavior Features</strong><br>
+                        Transform transaction data into predictive features.
+                    </div>
+                    <p><strong>Engineered Features:</strong></p>
+                    <ul>
+                        <li><strong>RFM Analysis:</strong> Recency, Frequency, Monetary value</li>
+                        <li><strong>Seasonal Patterns:</strong> Holiday shopping, back-to-school</li>
+                        <li><strong>Purchase Sequences:</strong> Product affinity, basket analysis</li>
+                        <li><strong>Customer Lifetime Value:</strong> Predicted total spend</li>
+                    </ul>
+                    <div class="modal-code">
+                        # Customer behavior features<br>
+                        df['days_since_last_purchase'] = (today - df['last_purchase_date']).dt.days<br>
+                        df['purchase_frequency'] = df.groupby('customer_id')['order_id'].transform('count')<br>
+                        df['avg_order_value'] = df.groupby('customer_id')['total_amount'].transform('mean')<br>
+                        df['is_weekend_shopper'] = df.groupby('customer_id')['weekend_purchases'].transform('mean') > 0.5
+                    </div>
+                    <p><strong>Business Impact:</strong> Personalized recommendations, churn prediction, inventory optimization.</p>
+                `
+            },
+            'finance': {
+                title: '💰 Financial Feature Engineering',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Market and Risk Features</strong><br>
+                        Extract signal from noisy financial time series data.
+                    </div>
+                    <p><strong>Technical Indicators:</strong></p>
+                    <ul>
+                        <li><strong>Moving Averages:</strong> SMA, EMA, MACD</li>
+                        <li><strong>Volatility:</strong> Standard deviation, Bollinger Bands</li>
+                        <li><strong>Momentum:</strong> RSI, Stochastic Oscillator</li>
+                        <li><strong>Risk Ratios:</strong> Sharpe ratio, debt-to-equity</li>
+                    </ul>
+                    <div class="modal-code">
+                        # Financial indicators<br>
+                        df['sma_20'] = df['price'].rolling(window=20).mean()<br>
+                        df['volatility'] = df['returns'].rolling(window=30).std()<br>
+                        df['rsi'] = calculate_rsi(df['price'], window=14)<br>
+                        df['debt_to_equity'] = df['total_debt'] / df['shareholders_equity']<br>
+                        df['price_to_earnings'] = df['stock_price'] / df['earnings_per_share']
+                    </div>
+                    <p><strong>Applications:</strong> Algorithmic trading, credit scoring, fraud detection, portfolio optimization.</p>
+                `
+            },
+            'healthcare': {
+                title: '🏥 Healthcare Feature Engineering',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Medical Data Features</strong><br>
+                        Transform patient data into clinically meaningful features.
+                    </div>
+                    <p><strong>Health Indicators:</strong></p>
+                    <ul>
+                        <li><strong>Vital Combinations:</strong> BMI, blood pressure categories</li>
+                        <li><strong>Risk Scores:</strong> Framingham risk, APACHE scores</li>
+                        <li><strong>Temporal Features:</strong> Disease progression, treatment duration</li>
+                        <li><strong>Medication Features:</strong> Drug interactions, dosage patterns</li>
+                    </ul>
+                    <div class="modal-code">
+                        # Healthcare features<br>
+                        df['bmi'] = df['weight_kg'] / (df['height_m'] ** 2)<br>
+                        df['bmi_category'] = pd.cut(df['bmi'], <br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;bins=[0, 18.5, 24.9, 29.9, float('inf')],<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;labels=['Underweight', 'Normal', 'Overweight', 'Obese'])<br>
+                        df['hypertension'] = ((df['systolic'] > 140) | (df['diastolic'] > 90)).astype(int)<br>
+                        df['days_in_treatment'] = (df['discharge_date'] - df['admission_date']).dt.days
+                    </div>
+                    <p><strong>Ethical Note:</strong> Always consider privacy, bias, and clinical validation when working with health data.</p>
+                `
+            }
+        };
+
+        // Interactive elements
+        document.querySelectorAll('.technique-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const technique = this.dataset.technique;
+                const details = techniqueDetails[technique];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        document.querySelectorAll('.example-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const example = this.dataset.example;
+                const details = exampleDetails[example];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (!modal.overlay.classList.contains('active')) {
+                if (e.key === 'ArrowLeft') {
+                    window.location.href = 'Week1_Slide8.html';
+                } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                    window.location.href = 'Week1_Slide10.html';
+                }
+            }
+        });
+
+    </script>
+</body>
+</html>

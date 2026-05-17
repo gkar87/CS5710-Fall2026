@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Autoencoders for Dimensionality Reduction</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .concept-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .architecture-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .concept-text {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 25px;
+        }
+
+        .autoencoder-diagram {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            text-align: center;
+            border: 2px solid #0d9488;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .autoencoder-diagram:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.2);
+        }
+
+        .architecture-flow {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+            font-weight: 600;
+            color: #0d9488;
+        }
+
+        .flow-step {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 12px;
+            padding: 15px 20px;
+            border: 2px solid #14b8a6;
+            text-align: center;
+            min-width: 100px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .flow-step:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(13, 148, 136, 0.15);
+        }
+
+        .flow-arrow {
+            font-size: 1.5em;
+            color: #0d9488;
+        }
+
+        .applications-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .applications-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .application-card {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            border: 2px solid #14b8a6;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .application-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.2);
+        }
+
+        .app-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+
+        .app-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #0d9488;
+        }
+
+        .app-desc {
+            font-size: 0.9em;
+            color: #475569;
+            line-height: 1.4;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .applications-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 7</div>
+    <div class="slide-number">Slide 134 of 140</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Autoencoders for Dimensionality Reduction</h1>
+        
+        <div class="content-layout">
+            <div class="concept-section">
+                <h2 class="section-title">What are Autoencoders?</h2>
+                
+                <div class="concept-text">
+                    <strong>Autoencoders</strong> are neural networks designed to learn efficient representations of data by compressing input to a lower-dimensional space and then reconstructing it.
+                </div>
+                
+                <div class="autoencoder-diagram">
+                    <div style="font-size: 1.2em; font-weight: 600; margin-bottom: 15px; color: #0d9488;">
+                        🧠 Neural Network Architecture
+                    </div>
+                    <div class="architecture-flow">
+                        <div class="flow-step">Input<br/>784 dims</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-step">Hidden<br/>32 dims</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-step">Output<br/>784 dims</div>
+                    </div>
+                    <div style="font-size: 0.9em; color: #475569; margin-top: 10px;">
+                        <em>Click to learn more about the architecture</em>
+                    </div>
+                </div>
+            </div>
+
+            <div class="architecture-section">
+                <h2 class="section-title">Key Components</h2>
+                
+                <div style="margin: 20px 0;">
+                    <div class="flow-step" style="width: 100%; margin: 10px 0;">
+                        <strong>🔽 Encoder</strong><br/>
+                        <small>Compresses input to latent space</small>
+                    </div>
+                    
+                    <div class="flow-step" style="width: 100%; margin: 10px 0;">
+                        <strong>💫 Latent Space</strong><br/>
+                        <small>Lower-dimensional representation</small>
+                    </div>
+                    
+                    <div class="flow-step" style="width: 100%; margin: 10px 0;">
+                        <strong>🔼 Decoder</strong><br/>
+                        <small>Reconstructs from latent space</small>
+                    </div>
+                </div>
+                
+                <div class="concept-text">
+                    The <strong>bottleneck</strong> layer forces the network to learn the most important features for reconstruction, naturally performing dimensionality reduction.
+                </div>
+            </div>
+        </div>
+
+        <div class="applications-section">
+            <h2 class="section-title" style="text-align: center; margin-bottom: 30px;">Applications & Use Cases</h2>
+            
+            <div class="applications-grid">
+                <div class="application-card">
+                    <div class="app-icon">🖼️</div>
+                    <div class="app-title">Image Compression</div>
+                    <div class="app-desc">Compress images while preserving important visual features</div>
+                </div>
+                
+                <div class="application-card">
+                    <div class="app-icon">🔍</div>
+                    <div class="app-title">Anomaly Detection</div>
+                    <div class="app-desc">Identify outliers based on reconstruction error</div>
+                </div>
+                
+                <div class="application-card">
+                    <div class="app-icon">📊</div>
+                    <div class="app-title">Data Visualization</div>
+                    <div class="app-desc">Project high-dimensional data to 2D/3D for visualization</div>
+                </div>
+                
+                <div class="application-card">
+                    <div class="app-icon">🧬</div>
+                    <div class="app-title">Feature Learning</div>
+                    <div class="app-desc">Learn meaningful representations for downstream tasks</div>
+                </div>
+                
+                <div class="application-card">
+                    <div class="app-icon">🎨</div>
+                    <div class="app-title">Denoising</div>
+                    <div class="app-desc">Remove noise while preserving signal quality</div>
+                </div>
+                
+                <div class="application-card">
+                    <div class="app-icon">🔄</div>
+                    <div class="app-title">Data Imputation</div>
+                    <div class="app-desc">Fill missing values in datasets</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week7_Slide133.html" class="nav-btn">← Previous</a>
+        <a href="Week7_Slide135.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 30; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive autoencoder diagram
+        document.querySelector('.autoencoder-diagram').addEventListener('click', function() {
+            modal.show('Autoencoder Architecture Deep Dive', `
+                <div class="modal-highlight">
+                    <strong>Neural Network Design for Dimensionality Reduction</strong>
+                </div>
+                
+                <p><strong>🏗️ Architecture Components:</strong></p>
+                <div class="modal-code">
+<strong>Input Layer:</strong> Original data (e.g., 28x28 = 784 pixels)
+<strong>Encoder:</strong> 784 → 256 → 128 → 64 → 32 (compression)
+<strong>Latent Space:</strong> 32 dimensions (bottleneck)
+<strong>Decoder:</strong> 32 → 64 → 128 → 256 → 784 (reconstruction)
+<strong>Output Layer:</strong> Reconstructed data (same size as input)
+                </div>
+                
+                <p><strong>🎯 Training Process:</strong></p>
+                <p>1. <strong>Forward Pass:</strong> Input → Encoder → Latent → Decoder → Output</p>
+                <p>2. <strong>Loss Calculation:</strong> MSE between input and reconstructed output</p>
+                <p>3. <strong>Backpropagation:</strong> Update weights to minimize reconstruction error</p>
+                <p>4. <strong>Feature Learning:</strong> Network learns to preserve most important information</p>
+                
+                <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                    <strong>💡 Key Insight:</strong><br>
+                    The bottleneck forces the network to learn a compressed representation that captures the essence of the data. The 32-dimensional latent space becomes your new feature space!
+                </div>
+            `);
+        });
+
+        // Interactive component sections
+        document.querySelectorAll('.flow-step').forEach(step => {
+            step.addEventListener('click', function() {
+                const title = this.querySelector('strong').textContent;
+                const stepDetails = {
+                    '🔽 Encoder': {
+                        description: 'The encoder network progressively reduces dimensionality while learning meaningful representations.',
+                        example: 'MNIST digits: 784 → 256 → 128 → 64 → 32',
+                        activation: 'Typically uses ReLU activation functions',
+                        purpose: 'Compresses input data to capture essential features'
+                    },
+                    '💫 Latent Space': {
+                        description: 'The compressed representation where all essential information is preserved in fewer dimensions.',
+                        example: 'Original 784D image → 32D latent vector',
+                        properties: 'Continuous, dense representation of data',
+                        purpose: 'Efficient storage and meaningful feature space'
+                    },
+                    '🔼 Decoder': {
+                        description: 'The decoder network reconstructs the original data from the latent representation.',
+                        example: '32D latent → 64 → 128 → 256 → 784D output',
+                        activation: 'Often uses sigmoid/tanh for final layer',
+                        purpose: 'Reconstructs data to validate compression quality'
+                    }
+                };
+                
+                const details = stepDetails[title];
+                if (details) {
+                    modal.show(title, `
+                        <div class="modal-highlight">
+                            <strong>${details.description}</strong>
+                        </div>
+                        
+                        <p><strong>📊 Example:</strong> ${details.example}</p>
+                        <p><strong>⚙️ Technical Detail:</strong> ${details.activation}</p>
+                        <p><strong>🎯 Purpose:</strong> ${details.purpose}</p>
+                        
+                        <div class="modal-code">
+# PyTorch Example
+import torch.nn as nn
+
+class Autoencoder(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.encoder = nn.Sequential(
+            nn.Linear(784, 256), nn.ReLU(),
+            nn.Linear(256, 128), nn.ReLU(),
+            nn.Linear(128, 32)  # Latent space
+        )
+        self.decoder = nn.Sequential(
+            nn.Linear(32, 128), nn.ReLU(),
+            nn.Linear(128, 256), nn.ReLU(),
+            nn.Linear(256, 784), nn.Sigmoid()
+        )
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Interactive application cards
+        document.querySelectorAll('.application-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('.app-title').textContent;
+                
+                const appDetails = {
+                    'Image Compression': {
+                        technique: 'Variational Autoencoders (VAEs) or standard autoencoders',
+                        advantage: '50-90% size reduction while preserving visual quality',
+                        example: 'JPEG replacement: Better compression at same quality',
+                        realworld: 'Used by streaming services for efficient video storage'
+                    },
+                    'Anomaly Detection': {
+                        technique: 'Train on normal data, detect high reconstruction error',
+                        advantage: 'Unsupervised detection without labeled anomalies',
+                        example: 'Credit card fraud: Normal transactions vs unusual patterns',
+                        realworld: 'Industrial IoT sensors for predictive maintenance'
+                    },
+                    'Data Visualization': {
+                        technique: '2D/3D latent space projection with t-SNE or UMAP',
+                        advantage: 'Preserves local and global structure better than PCA',
+                        example: 'Gene expression data: 20,000 genes → 2D plot',
+                        realworld: 'Drug discovery and biological research'
+                    },
+                    'Feature Learning': {
+                        technique: 'Pre-train encoder, use latent features for classification',
+                        advantage: 'Learn task-relevant features without supervision',
+                        example: 'Image features for object recognition',
+                        realworld: 'Transfer learning in computer vision'
+                    },
+                    'Denoising': {
+                        technique: 'Train with noisy input, clean target output',
+                        advantage: 'Learns to separate signal from noise patterns',
+                        example: 'Audio enhancement, image restoration',
+                        realworld: 'Medical imaging: CT scan noise reduction'
+                    },
+                    'Data Imputation': {
+                        technique: 'Mask features during training, reconstruct missing values',
+                        advantage: 'Learns complex feature relationships',
+                        example: 'Fill missing sensor readings in IoT networks',
+                        realworld: 'Electronic health records with missing patient data'
+                    }
+                };
+                
+                const details = appDetails[title];
+                modal.show(`Application: ${title}`, `
+                    <div class="modal-highlight">
+                        <strong>How ${title} Works with Autoencoders</strong>
+                    </div>
+                    
+                    <p><strong>🛠️ Technique:</strong> ${details.technique}</p>
+                    <p><strong>✅ Advantage:</strong> ${details.advantage}</p>
+                    <p><strong>📝 Example:</strong> ${details.example}</p>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                        <strong>🌍 Real-World Usage:</strong><br>
+                        ${details.realworld}
+                    </div>
+                `);
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week7_Slide133.html';
+            } else if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week7_Slide135.html';
+            }
+        });
+    </script>
+</body>
+</html>

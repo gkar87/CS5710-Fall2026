@@ -1,0 +1,1482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Building ML Portfolio</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .portfolio-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .project-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: fadeInUp 1s ease-out;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px rgba(13, 148, 136, 0.15);
+        }
+
+        .project-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .project-icon {
+            font-size: 2.5em;
+            margin-right: 15px;
+        }
+
+        .project-title {
+            font-size: 1.5em;
+            color: #0d9488;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .project-level {
+            font-size: 0.9em;
+            color: #14b8a6;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .project-description {
+            color: #475569;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .project-skills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .skill-tag {
+            background: linear-gradient(135deg, #ccfbf1, #99f6e4);
+            color: #0d9488;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+
+        .project-impact {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 10px;
+            padding: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .impact-label {
+            font-weight: 600;
+            color: #0d9488;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .impact-text {
+            color: #475569;
+            font-size: 0.9em;
+        }
+
+        .portfolio-tips {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.5s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .tips-title {
+            font-size: 2em;
+            color: #0d9488;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .tips-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+        }
+
+        .tip-card {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .tip-card:hover {
+            transform: scale(1.05);
+            border-color: #0d9488;
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.2);
+        }
+
+        .tip-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+
+        .tip-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 10px;
+        }
+
+        .tip-desc {
+            font-size: 0.9em;
+            color: #475569;
+            line-height: 1.4;
+        }
+
+        /* Navigation */
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        /* Course Info */
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 25px;
+            border-radius: 15px;
+            font-weight: 600;
+            color: #0d9488;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            z-index: 100;
+            font-size: 1.1em;
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 25px;
+            border-radius: 15px;
+            font-weight: 600;
+            color: #0d9488;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            z-index: 100;
+            font-size: 1.1em;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 900px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 2em;
+            color: #0d9488;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 2.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            line-height: 1;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .modal-close:hover {
+            color: #0d9488;
+            background: rgba(13, 148, 136, 0.1);
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            color: #1e293b;
+            line-height: 1.8;
+            font-size: 1.1em;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-left: 4px solid #0d9488;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            font-weight: 500;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #99f6e4;
+            padding: 20px;
+            border-radius: 12px;
+            font-family: 'Courier New', monospace;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+
+        /* Animations */
+        @keyframes slideInFromTop {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInFromBottom {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Floating Elements */
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 14</div>
+    <div class="slide-number">Slide 274 of 280</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Building ML Portfolio</h1>
+        
+        <div class="portfolio-grid">
+            <div class="project-card" data-project="supervised">
+                <div class="project-header">
+                    <span class="project-icon">📊</span>
+                    <div>
+                        <div class="project-title">Supervised Learning Project</div>
+                        <div class="project-level">Foundation Project</div>
+                    </div>
+                </div>
+                <div class="project-description">
+                    Build an end-to-end supervised learning system with feature engineering, model selection, and evaluation.
+                </div>
+                <div class="project-skills">
+                    <span class="skill-tag">Python</span>
+                    <span class="skill-tag">Scikit-learn</span>
+                    <span class="skill-tag">Pandas</span>
+                    <span class="skill-tag">Visualization</span>
+                </div>
+                <div class="project-impact">
+                    <div class="impact-label">Portfolio Impact:</div>
+                    <div class="impact-text">Demonstrates ML fundamentals and data analysis skills</div>
+                </div>
+            </div>
+
+            <div class="project-card" data-project="deeplearning">
+                <div class="project-header">
+                    <span class="project-icon">🧠</span>
+                    <div>
+                        <div class="project-title">Deep Learning Project</div>
+                        <div class="project-level">Advanced Project</div>
+                    </div>
+                </div>
+                <div class="project-description">
+                    Create a neural network solution for computer vision or NLP with modern frameworks.
+                </div>
+                <div class="project-skills">
+                    <span class="skill-tag">TensorFlow</span>
+                    <span class="skill-tag">PyTorch</span>
+                    <span class="skill-tag">CNN/RNN</span>
+                    <span class="skill-tag">GPU</span>
+                </div>
+                <div class="project-impact">
+                    <div class="impact-label">Portfolio Impact:</div>
+                    <div class="impact-text">Shows ability to work with cutting-edge deep learning</div>
+                </div>
+            </div>
+
+            <div class="project-card" data-project="deployment">
+                <div class="project-header">
+                    <span class="project-icon">🚀</span>
+                    <div>
+                        <div class="project-title">ML Deployment Project</div>
+                        <div class="project-level">Production Project</div>
+                    </div>
+                </div>
+                <div class="project-description">
+                    Deploy a machine learning model as a web service with monitoring and scaling capabilities.
+                </div>
+                <div class="project-skills">
+                    <span class="skill-tag">Flask/FastAPI</span>
+                    <span class="skill-tag">Docker</span>
+                    <span class="skill-tag">AWS/GCP</span>
+                    <span class="skill-tag">MLOps</span>
+                </div>
+                <div class="project-impact">
+                    <div class="impact-label">Portfolio Impact:</div>
+                    <div class="impact-text">Proves you can deliver production-ready ML systems</div>
+                </div>
+            </div>
+
+            <div class="project-card" data-project="endtoend">
+                <div class="project-header">
+                    <span class="project-icon">🎯</span>
+                    <div>
+                        <div class="project-title">End-to-End Solution</div>
+                        <div class="project-level">Capstone Project</div>
+                    </div>
+                </div>
+                <div class="project-description">
+                    Complete ML solution addressing a real business problem with full pipeline from data to deployment.
+                </div>
+                <div class="project-skills">
+                    <span class="skill-tag">Full Stack</span>
+                    <span class="skill-tag">Database</span>
+                    <span class="skill-tag">API Design</span>
+                    <span class="skill-tag">Frontend</span>
+                </div>
+                <div class="project-impact">
+                    <div class="impact-label">Portfolio Impact:</div>
+                    <div class="impact-text">Demonstrates complete product development capabilities</div>
+                </div>
+            </div>
+
+            <div class="portfolio-tips">
+                <h2 class="tips-title">🌟 Portfolio Success Tips</h2>
+                
+                <div class="tips-grid">
+                    <div class="tip-card" data-tip="github">
+                        <div class="tip-icon">💻</div>
+                        <div class="tip-title">GitHub Excellence</div>
+                        <div class="tip-desc">Clean repos, clear README files, and professional commit history</div>
+                    </div>
+
+                    <div class="tip-card" data-tip="documentation">
+                        <div class="tip-icon">📖</div>
+                        <div class="tip-title">Documentation</div>
+                        <div class="tip-desc">Explain your process, decisions, and results clearly</div>
+                    </div>
+
+                    <div class="tip-card" data-tip="livedemos">
+                        <div class="tip-icon">🌐</div>
+                        <div class="tip-title">Live Demos</div>
+                        <div class="tip-desc">Deploy interactive demos that recruiters can actually use</div>
+                    </div>
+
+                    <div class="tip-card" data-tip="business">
+                        <div class="tip-icon">📈</div>
+                        <div class="tip-title">Business Impact</div>
+                        <div class="tip-desc">Frame projects in terms of business value and metrics</div>
+                    </div>
+
+                    <div class="tip-card" data-tip="storytelling">
+                        <div class="tip-icon">📝</div>
+                        <div class="tip-title">Tell a Story</div>
+                        <div class="tip-desc">Walk through your problem-solving process step by step</div>
+                    </div>
+
+                    <div class="tip-card" data-tip="variety">
+                        <div class="tip-icon">🎨</div>
+                        <div class="tip-title">Show Variety</div>
+                        <div class="tip-desc">Different domains, techniques, and complexity levels</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week14_Slide273.html" class="nav-btn">← Previous</a>
+        <a href="Week14_Slide275.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM Content Loaded - Starting modal system initialization');
+            
+            // Modal System
+            class ModalSystem {
+            constructor() {
+                console.log('Initializing ModalSystem...');
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                console.log('Modal elements found:', {
+                    overlay: !!this.overlay,
+                    title: !!this.title,
+                    content: !!this.content,
+                    closeBtn: !!this.closeBtn
+                });
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                console.log('Modal.show() called with:', { title, contentLength: content?.length });
+                try {
+                    this.title.textContent = title;
+                    this.content.innerHTML = content;
+                    this.overlay.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                    console.log('Modal displayed successfully');
+                } catch (error) {
+                    console.error('Error showing modal:', error);
+                }
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+        console.log('Modal system created successfully');
+
+        // Project details (simplified for testing)
+        const projectDetails = {
+            'supervised': {
+                title: '📊 Supervised Learning Portfolio Project',
+                content: '<p>This is a test modal for supervised learning projects. It demonstrates data analysis and ML fundamentals.</p>'
+            },
+            'deeplearning': {
+                title: '🧠 Deep Learning Portfolio Project',
+                content: '<p>Test modal for deep learning projects - neural networks, computer vision, and NLP.</p>'
+            },
+            'deployment': {
+                title: '🚀 ML Deployment Project', 
+                content: '<p>Test modal for deployment projects - production ML systems and APIs.</p>'
+            },
+            'endtoend': {
+                title: '🎯 End-to-End Solution',
+                content: '<p>Test modal for complete ML solutions from data to deployment.</p>'
+            }
+        };
+
+        // Tip details (simplified for testing)
+        const tipDetails = {
+            'github': {
+                title: '💻 GitHub Excellence',
+                content: '<p>Test modal for GitHub portfolio tips and best practices.</p>'
+            },
+            'documentation': {
+                title: '📖 Documentation',
+                content: '<p>Test modal for documentation best practices.</p>'
+            },
+            'livedemos': {
+                title: '🌐 Live Demos',
+                content: '<p>Test modal for creating interactive demos.</p>'
+            },
+            'business': {
+                title: '📈 Business Impact',
+                content: '<p>Test modal for demonstrating business value.</p>'
+            },
+            'storytelling': {
+                title: '📝 Storytelling',
+                content: '<p>Test modal for technical storytelling.</p>'
+            },
+            'variety': {
+                title: '🎨 Show Variety',
+                content: '<p>Test modal for showcasing technical diversity.</p>'
+            }
+        };
+
+        console.log('Modal definitions loaded:', {
+                    
+                    <h4>🎯 Project Categories</h4>
+                    <p><strong>Computer Vision:</strong></p>
+                    <p>• Image classification on custom dataset (medical, satellite, etc.)</p>
+                    <p>• Object detection for real-world applications</p>
+                    <p>• Image generation using GANs or Diffusion models</p>
+                    <p>• Style transfer or image-to-image translation</p>
+                    
+                    <p><strong>Natural Language Processing:</strong></p>
+                    <p>• Sentiment analysis with transformer models</p>
+                    <p>• Text generation or summarization</p>
+                    <p>• Named entity recognition for domain-specific text</p>
+                    <p>• Question answering system</p>
+                    
+                    <p><strong>Time Series & Sequential Data:</strong></p>
+                    <p>• Stock price prediction with LSTM/GRU</p>
+                    <p>• Music generation using RNNs</p>
+                    <p>• Anomaly detection in sensor data</p>
+                    <p>• Speech recognition or synthesis</p>
+                    
+                    <h4>🛠️ Technical Implementation</h4>
+                    <div class="modal-code">
+# Deep Learning Project Structure:
+project/
+├── data/
+│   ├── raw/             # Original datasets
+│   ├── processed/       # Preprocessed data
+│   └── augmented/       # Data augmentation results
+├── models/
+│   ├── architectures/   # Model definitions
+│   ├── pretrained/      # Pre-trained weights
+│   └── checkpoints/     # Training checkpoints
+├── training/
+│   ├── train.py        # Training script
+│   ├── config.yaml     # Hyperparameters
+│   └── utils.py        # Training utilities
+├── evaluation/
+│   ├── metrics.py      # Custom metrics
+│   └── visualization.py# Results visualization
+├── deployment/
+│   ├── inference.py    # Inference pipeline
+│   └── api.py         # Serving API
+└── notebooks/
+    ├── experiments/    # Model experiments
+    └── analysis/       # Results analysis
+                    </div>
+                    
+                    <h4>📊 Key Technical Elements</h4>
+                    <p><strong>Architecture Innovation:</strong> Compare different architectures (ResNet vs EfficientNet vs Vision Transformers)</p>
+                    <p><strong>Transfer Learning:</strong> Fine-tune pre-trained models for your domain</p>
+                    <p><strong>Data Augmentation:</strong> Advanced techniques to improve generalization</p>
+                    <p><strong>Hyperparameter Tuning:</strong> Systematic optimization using tools like Optuna</p>
+                    <p><strong>Model Interpretation:</strong> Visualize what your model learned (attention maps, activation maps)</p>
+                    
+                    <h4>🚀 Advanced Features</h4>
+                    <p>• Multi-GPU training with distributed computing</p>
+                    <p>• Mixed precision training for efficiency</p>
+                    <p>• Custom loss functions for domain-specific problems</p>
+                    <p>• Model ensembling and uncertainty quantification</p>
+                    <p>• Real-time inference optimization (TensorRT, ONNX)</p>
+                    
+                    <h4>📈 Results to Showcase</h4>
+                    <p><strong>Performance Metrics:</strong> Accuracy, F1-score, AUC with confidence intervals</p>
+                    <p><strong>Training Curves:</strong> Loss and metrics over epochs</p>
+                    <p><strong>Ablation Studies:</strong> Impact of different components</p>
+                    <p><strong>Error Analysis:</strong> What cases does your model struggle with?</p>
+                    <p><strong>Benchmark Comparison:</strong> How does your model compare to state-of-the-art?</p>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                        <strong>🌟 Pro Tip:</strong> Include interactive demos (Gradio/Streamlit) where recruiters can test your model with their own inputs - this makes your project memorable!
+                    </div>
+                `
+            },
+            'endtoend': {
+                title: '🎯 End-to-End ML Solution',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Capstone Project:</strong> This project demonstrates your ability to deliver complete, production-ready ML solutions that solve real business problems.
+                    </div>
+                    
+                    <h4>🏗️ Full-Stack Architecture</h4>
+                    <div class="modal-code">
+# Complete ML Solution Stack:
+├── Frontend (React/Vue/Streamlit)
+│   ├── User interface
+│   ├── Data visualization dashboard
+│   └── Real-time prediction display
+├── Backend API (FastAPI/Flask/Django)
+│   ├── Authentication & authorization
+│   ├── Business logic
+│   └── Database operations
+├── ML Pipeline
+│   ├── Data ingestion & validation
+│   ├── Feature engineering
+│   ├── Model training & evaluation
+│   └── Model serving
+├── Database (PostgreSQL/MongoDB)
+│   ├── User data
+│   ├── Training data
+│   └── Prediction logs
+├── Infrastructure
+│   ├── Docker containerization
+│   ├── Cloud deployment (AWS/GCP/Azure)
+│   └── CI/CD pipeline
+└── Monitoring
+    ├── Application monitoring
+    ├── Model performance tracking
+    └── Data drift detection
+                    </div>
+                    
+                    <h4>🎯 Project Examples</h4>
+                    <p><strong>E-commerce Recommendation System:</strong></p>
+                    <p>• User behavior tracking and analysis</p>
+                    <p>• Real-time personalized recommendations</p>
+                    <p>• A/B testing framework for recommendation strategies</p>
+                    <p>• Business dashboard showing conversion impact</p>
+                    
+                    <p><strong>Financial Risk Assessment Platform:</strong></p>
+                    <p>• Automated loan application processing</p>
+                    <p>• Real-time fraud detection</p>
+                    <p>• Regulatory compliance reporting</p>
+                    <p>• Risk monitoring dashboard</p>
+                    
+                    <p><strong>Healthcare Diagnostic Assistant:</strong></p>
+                    <p>• Medical image analysis</p>
+                    <p>• Patient data integration</p>
+                    <p>• Clinician decision support interface</p>
+                    <p>• Audit trail and explanation system</p>
+                    
+                    <h4>📊 Business Integration</h4>
+                    <p><strong>User Experience:</strong> Intuitive interface that non-technical users can navigate</p>
+                    <p><strong>Business Metrics:</strong> Track ROI, user engagement, and conversion rates</p>
+                    <p><strong>Scalability Planning:</strong> Architecture that can handle 10x growth</p>
+                    <p><strong>Cost Optimization:</strong> Efficient resource usage and cost monitoring</p>
+                    
+                    <h4>🔧 Technical Excellence</h4>
+                    <p><strong>Code Quality:</strong> Clean, documented, tested code following best practices</p>
+                    <p><strong>Data Pipeline:</strong> Robust ETL processes with error handling</p>
+                    <p><strong>Model Ops:</strong> Automated retraining, versioning, and rollback</p>
+                    <p><strong>Security:</strong> Data encryption, authentication, and compliance</p>
+                    <p><strong>Performance:</strong> Sub-second response times and high availability</p>
+                    
+                    <h4>📈 Success Metrics</h4>
+                    <p>• <strong>Technical:</strong> 99.9% uptime, <100ms latency, automated testing coverage >90%</p>
+                    <p>• <strong>Business:</strong> Measurable impact on key business metrics</p>
+                    <p>• <strong>User:</strong> High user satisfaction and adoption rates</p>
+                    <p>• <strong>Operational:</strong> Successful deployment and maintenance</p>
+                    
+                    <h4>📝 Documentation Requirements</h4>
+                    <p>• System architecture diagrams</p>
+                    <p>• API documentation with examples</p>
+                    <p>• Deployment and scaling guides</p>
+                    <p>• Business case and ROI analysis</p>
+                    <p>• Post-mortem and lessons learned</p>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                        <strong>🚀 Career Impact:</strong> This project positions you as a senior candidate who can own entire product initiatives - essential for senior IC or management track roles.
+                    </div>
+                `
+            },
+            'deployment': {
+                title: '🚀 ML Deployment Portfolio Project',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Production Focus:</strong> This project demonstrates your ability to take ML models from research to production-ready systems.
+                    </div>
+                    
+                    <h4>🛠️ Deployment Options</h4>
+                    <p><strong>Web API Deployment:</strong></p>
+                    <p>• FastAPI + Docker + AWS ECS</p>
+                    <p>• Flask + Docker + Google Cloud Run</p>
+                    <p>• Django + PostgreSQL + Heroku</p>
+                    
+                    <p><strong>Serverless Deployment:</strong></p>
+                    <p>• AWS Lambda + API Gateway</p>
+                    <p>• Google Cloud Functions</p>
+                    <p>• Azure Functions</p>
+                    
+                    <p><strong>ML Platform Deployment:</strong></p>
+                    <p>• AWS SageMaker endpoints</p>
+                    <p>• Google Vertex AI</p>
+                    <p>• Azure ML Studio</p>
+                    
+                    <h4>🏗️ Architecture Components</h4>
+                    <div class="modal-code">
+# Modern ML API Structure
+app/
+├── api/
+│   ├── __init__.py
+│   ├── main.py          # FastAPI application
+│   ├── models.py        # Pydantic models
+│   └── routes/
+│       ├── predict.py   # Prediction endpoints
+│       └── health.py    # Health checks
+├── core/
+│   ├── config.py        # Configuration
+│   ├── logging.py       # Logging setup
+│   └── security.py      # Authentication
+├── ml/
+│   ├── model.py         # Model loading/inference
+│   ├── preprocessing.py # Data preprocessing
+│   └── postprocessing.py# Result formatting
+├── tests/
+│   ├── test_api.py      # API tests
+│   └── test_ml.py       # ML logic tests
+├── Dockerfile
+├── docker-compose.yml
+├── requirements.txt
+└── .github/workflows/   # CI/CD pipeline
+    └── deploy.yml
+                    </div>
+                    
+                    <h4>📊 Monitoring & Observability</h4>
+                    <p><strong>Technical Metrics:</strong></p>
+                    <p>• Response time and throughput</p>
+                    <p>• Error rates and availability</p>
+                    <p>• Resource usage (CPU, memory)</p>
+                    
+                    <p><strong>ML Metrics:</strong></p>
+                    <p>• Prediction accuracy over time</p>
+                    <p>• Data drift detection</p>
+                    <p>• Feature importance changes</p>
+                    
+                    <h4>🎯 Project Ideas</h4>
+                    <p><strong>Computer Vision API:</strong> Image classification with confidence scores</p>
+                    <p><strong>NLP Service:</strong> Sentiment analysis or text classification</p>
+                    <p><strong>Recommendation Engine:</strong> Real-time product recommendations</p>
+                    <p><strong>Fraud Detection API:</strong> Real-time transaction scoring</p>
+                    
+                    <h4>🔧 Implementation Checklist</h4>
+                    <p>✅ Model serialization and versioning</p>
+                    <p>✅ Input validation and error handling</p>
+                    <p>✅ Automated testing (unit + integration)</p>
+                    <p>✅ Docker containerization</p>
+                    <p>✅ CI/CD pipeline setup</p>
+                    <p>✅ Monitoring and logging</p>
+                    <p>✅ Documentation and API specs</p>
+                    <p>✅ Load testing results</p>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                        <strong>💼 Career Impact:</strong> This project is gold for ML Engineer roles - it shows you understand production concerns, scalability, and DevOps practices.
+                    </div>
+                `
+            }
+        };
+
+        // Tip details
+        const tipDetails = {
+            'github': {
+                title: '💻 GitHub Portfolio Excellence',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Your GitHub is Your Resume:</strong> For ML roles, your GitHub profile is often more important than your traditional resume.
+                    </div>
+                    
+                    <h4>🌟 Repository Best Practices</h4>
+                    <div class="modal-code">
+# Perfect ML Repository Structure:
+project-name/
+├── README.md              # Compelling project description
+├── requirements.txt       # Dependencies with versions
+├── .gitignore            # Exclude data files, models, etc.
+├── LICENSE               # Choose appropriate license
+├── data/
+│   ├── README.md         # Data source and description
+│   └── sample/           # Small sample for demos
+├── notebooks/
+│   ├── exploratory/      # EDA and experiments
+│   └── final/           # Clean, final analysis
+├── src/                  # Production-ready code
+├── tests/               # Unit tests
+├── docs/                # Additional documentation
+└── results/
+    ├── figures/         # Publication-ready plots
+    └── models/          # Saved model artifacts
+                    </div>
+                    
+                    <h4>📝 README Sections</h4>
+                    <p><strong>1. Project Overview:</strong> What problem does this solve?</p>
+                    <p><strong>2. Business Impact:</strong> Why does this matter?</p>
+                    <p><strong>3. Data Description:</strong> What data did you use?</p>
+                    <p><strong>4. Methodology:</strong> What approach did you take?</p>
+                    <p><strong>5. Results:</strong> What did you achieve?</p>
+                    <p><strong>6. Installation & Usage:</strong> How to run your code</p>
+                    <p><strong>7. Next Steps:</strong> What would you do with more time?</p>
+                    
+                    <h4>⚡ Pro GitHub Tips</h4>
+                    <p>• Pin your 6 best repositories</p>
+                    <p>• Use descriptive commit messages</p>
+                    <p>• Add GitHub Actions for CI/CD</p>
+                    <p>• Include badges for build status, coverage</p>
+                    <p>• Write code comments for complex logic</p>
+                    <p>• Keep code clean and PEP8 compliant</p>
+                    
+                    <h4>🚫 Common Mistakes to Avoid</h4>
+                    <p>• Uploading large dataset files (use Git LFS or external links)</p>
+                    <p>• Committing Jupyter notebooks with outputs (clear before commit)</p>
+                    <p>• No README or poor README quality</p>
+                    <p>• Inconsistent code style</p>
+                    <p>• No error handling or input validation</p>
+                    <p>• Hardcoded paths and credentials</p>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                        <strong>💡 Secret Sauce:</strong> Recruiters spend 30-60 seconds scanning your GitHub. Make sure your best work is immediately visible and well-documented!
+                    </div>
+                `
+            },
+            'documentation': {
+                title: '📖 Excellence in Documentation',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Communication is Key:</strong> Great documentation transforms your project from a code repository into a compelling story that hiring managers want to read.
+                    </div>
+                    
+                    <h4>📋 Essential Documentation Components</h4>
+                    <p><strong>Project README:</strong></p>
+                    <p>• Clear problem statement and motivation</p>
+                    <p>• Executive summary of approach and results</p>
+                    <p>• Quick start guide with installation instructions</p>
+                    <p>• Visual examples (screenshots, plots, demos)</p>
+                    
+                    <p><strong>Technical Documentation:</strong></p>
+                    <p>• Data dictionary and preprocessing steps</p>
+                    <p>• Model architecture and hyperparameter choices</p>
+                    <p>• Evaluation methodology and metrics explanation</p>
+                    <p>• Known limitations and future improvements</p>
+                    
+                    <p><strong>Code Documentation:</strong></p>
+                    <p>• Inline comments explaining complex logic</p>
+                    <p>• Docstrings for all functions and classes</p>
+                    <p>• Type hints for better code readability</p>
+                    <p>• Clear variable and function names</p>
+                    
+                    <h4>📊 Visual Storytelling</h4>
+                    <div class="modal-code">
+# Documentation Structure for ML Projects:
+docs/
+├── README.md              # Project overview
+├── METHODOLOGY.md         # Detailed approach
+├── RESULTS.md            # Findings and analysis
+├── API_REFERENCE.md      # Code documentation
+├── DEPLOYMENT.md         # How to run/deploy
+├── images/
+│   ├── architecture.png  # System diagrams
+│   ├── results/         # Charts and plots
+│   └── screenshots/     # Demo interface
+└── notebooks/
+    ├── data_exploration.ipynb
+    ├── model_evaluation.ipynb
+    └── results_analysis.ipynb
+                    </div>
+                    
+                    <h4>🎯 Writing for Different Audiences</h4>
+                    <p><strong>Executive Summary (30 seconds):</strong> Business problem, solution, impact</p>
+                    <p><strong>Technical Overview (5 minutes):</strong> Architecture, methodology, key results</p>
+                    <p><strong>Implementation Details (30 minutes):</strong> Code walkthrough, edge cases, troubleshooting</p>
+                    <p><strong>Reproducible Research (hours):</strong> Complete instructions to recreate results</p>
+                    
+                    <h4>💡 Documentation Best Practices</h4>
+                    <p>• Use clear, jargon-free language</p>
+                    <p>• Include concrete examples and use cases</p>
+                    <p>• Provide context for technical decisions</p>
+                    <p>• Document failures and lessons learned</p>
+                    <p>• Keep documentation up-to-date with code changes</p>
+                    
+                    <h4>🔧 Tools for Great Documentation</h4>
+                    <p><strong>Writing:</strong> Markdown, Notion, GitBook</p>
+                    <p><strong>Diagrams:</strong> Draw.io, Mermaid, Lucidchart</p>
+                    <p><strong>API Docs:</strong> Swagger/OpenAPI, Sphinx</p>
+                    <p><strong>Notebooks:</strong> Jupyter with clear markdown cells</p>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                        <strong>📚 Pro Tip:</strong> Write documentation as you code, not after. Future you (and hiring managers) will thank you for clear explanations of your thought process!
+                    </div>
+                `
+            },
+            'livedemos': {
+                title: '🌐 Creating Live Demos That Wow',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Show, Don't Tell:</strong> Interactive demos let hiring managers experience your work firsthand, making your projects memorable and impactful.
+                    </div>
+                    
+                    <h4>🎯 Demo Platform Options</h4>
+                    <p><strong>Quick & Easy:</strong></p>
+                    <p>• Streamlit - Python-native web apps</p>
+                    <p>• Gradio - ML model interfaces</p>
+                    <p>• Jupyter Widgets - Interactive notebooks</p>
+                    <p>• Google Colab - Shareable notebooks</p>
+                    
+                    <p><strong>Professional & Custom:</strong></p>
+                    <p>• React/Vue.js frontend + Flask/FastAPI backend</p>
+                    <p>• Next.js full-stack applications</p>
+                    <p>• Custom web applications with databases</p>
+                    
+                    <p><strong>Deployment Platforms:</strong></p>
+                    <p>• Streamlit Cloud (free, easy)</p>
+                    <p>• Heroku (simple deployment)</p>
+                    <p>• Vercel/Netlify (frontend hosting)</p>
+                    <p>• AWS/GCP (production-grade)</p>
+                    
+                    <h4>🛠️ Demo Implementation Example</h4>
+                    <div class="modal-code">
+# Streamlit Demo Structure:
+import streamlit as st
+import pandas as pd
+import joblib
+
+# Load pre-trained model
+@st.cache_resource
+def load_model():
+    return joblib.load('model.pkl')
+
+def main():
+    st.title("🏠 House Price Predictor")
+    st.write("Enter property details to get price prediction")
+    
+    # Input widgets
+    bedrooms = st.slider("Bedrooms", 1, 5, 3)
+    sqft = st.number_input("Square Feet", 500, 5000, 1500)
+    location = st.selectbox("Location", ["Downtown", "Suburbs", "Rural"])
+    
+    if st.button("Predict Price"):
+        # Make prediction
+        features = [[bedrooms, sqft, location_encoded]]
+        prediction = model.predict(features)[0]
+        confidence = model.predict_proba(features)[0].max()
+        
+        # Display results
+        st.success(f"💰 Predicted Price: ${prediction:,.0f}")
+        st.info(f"🎯 Confidence: {confidence:.1%}")
+        
+        # Show explanation
+        with st.expander("How this prediction was made"):
+            st.write("Model explanation and feature importance")
+
+if __name__ == "__main__":
+    main()
+                    </div>
+                    
+                    <h4>🌟 Demo Best Practices</h4>
+                    <p><strong>User Experience:</strong></p>
+                    <p>• Clear instructions and examples</p>
+                    <p>• Reasonable default values</p>
+                    <p>• Input validation and error handling</p>
+                    <p>• Responsive design for mobile devices</p>
+                    
+                    <p><strong>Technical Implementation:</strong></p>
+                    <p>• Fast loading times (<3 seconds)</p>
+                    <p>• Cached model loading</p>
+                    <p>• Proper error messages</p>
+                    <p>• Security considerations (input sanitization)</p>
+                    
+                    <h4>💡 Making Demos Memorable</h4>
+                    <p>• Use real-world examples and sample data</p>
+                    <p>• Include model explanations (SHAP, LIME)</p>
+                    <p>• Show confidence scores and uncertainty</p>
+                    <p>• Add visualizations of results</p>
+                    <p>• Include "About" section explaining the approach</p>
+                    
+                    <h4>📊 Demo Ideas by Domain</h4>
+                    <p><strong>Computer Vision:</strong> Upload image → get classification with confidence</p>
+                    <p><strong>NLP:</strong> Text input → sentiment analysis with highlighted words</p>
+                    <p><strong>Time Series:</strong> Interactive forecasting with adjustable parameters</p>
+                    <p><strong>Recommendation:</strong> User preferences → personalized recommendations</p>
+                    
+                    <h4>⚡ Quick Deployment Tips</h4>
+                    <p>• Keep model files small (use model compression)</p>
+                    <p>• Include requirements.txt with exact versions</p>
+                    <p>• Test on multiple browsers and devices</p>
+                    <p>• Add Google Analytics to track usage</p>
+                    <p>• Monitor for crashes and errors</p>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                        <strong>🎯 Impact:</strong> A working demo is worth 1000 lines of code in your README. It proves your model works and shows you care about user experience!
+                    </div>
+                `
+            },
+            'storytelling': {
+                title: '📝 Mastering Technical Storytelling',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>The Art of Explanation:</strong> Great storytelling transforms technical work into compelling narratives that both technical and non-technical audiences can appreciate.
+                    </div>
+                    
+                    <h4>📖 The Classic ML Story Arc</h4>
+                    <p><strong>1. The Problem (Hook):</strong></p>
+                    <p>• What real-world challenge were you addressing?</p>
+                    <p>• Why does this problem matter to businesses or society?</p>
+                    <p>• What would happen if this problem remained unsolved?</p>
+                    
+                    <p><strong>2. The Journey (Development):</strong></p>
+                    <p>• What approaches did you try first?</p>
+                    <p>• What obstacles did you encounter?</p>
+                    <p>• How did you iterate and improve your solution?</p>
+                    
+                    <p><strong>3. The Resolution (Climax):</strong></p>
+                    <p>• What breakthrough led to your final solution?</p>
+                    <p>• How did you validate your approach?</p>
+                    <p>• What were the measurable outcomes?</p>
+                    
+                    <p><strong>4. The Impact (Conclusion):</strong></p>
+                    <p>• What business value did you create?</p>
+                    <p>• What would you do differently next time?</p>
+                    <p>• What are the broader implications?</p>
+                    
+                    <h4>🎯 Storytelling Framework</h4>
+                    <div class="modal-code">
+# Technical Storytelling Template:
+
+## The Challenge
+"E-commerce company was losing $2M annually due to cart abandonment. 
+Traditional rule-based approaches achieved only 15% precision in 
+identifying at-risk customers."
+
+## The Approach  
+"I developed a gradient boosting model using customer behavior features:
+- Session duration and page views
+- Historical purchase patterns  
+- Real-time interaction signals
+- Demographic and seasonal factors"
+
+## The Breakthrough
+"Key insight: Combining real-time clickstream data with historical 
+patterns increased precision to 67% while maintaining 82% recall."
+
+## The Impact
+"Deployed model reduced cart abandonment by 23%, generating 
+$460K additional revenue in first quarter."
+                    </div>
+                    
+                    <h4>🗣️ Writing for Different Audiences</h4>
+                    <p><strong>For Executives (30 seconds):</strong></p>
+                    <p>• Focus on business problem and financial impact</p>
+                    <p>• Use analogies and avoid technical jargon</p>
+                    <p>• Highlight ROI and strategic value</p>
+                    
+                    <p><strong>For Technical Teams (5 minutes):</strong></p>
+                    <p>• Explain methodology and technical decisions</p>
+                    <p>• Include key metrics and evaluation approach</p>
+                    <p>• Discuss challenges and lessons learned</p>
+                    
+                    <p><strong>For ML Engineers (detailed):</strong></p>
+                    <p>• Deep dive into architecture and implementation</p>
+                    <p>• Share code examples and technical details</p>
+                    <p>• Discuss performance optimization and scaling</p>
+                    
+                    <h4>💡 Advanced Storytelling Techniques</h4>
+                    <p><strong>Use Concrete Examples:</strong> "Instead of generic accuracy metrics, show specific examples of correct/incorrect predictions"</p>
+                    <p><strong>Show Your Process:</strong> "Include failed experiments and dead ends - they show real problem-solving skills"</p>
+                    <p><strong>Visual Narratives:</strong> "Use plots and diagrams to support your story arc"</p>
+                    <p><strong>Quantify Everything:</strong> "Replace 'improved performance' with 'reduced error rate by 34%'"</p>
+                    
+                    <h4>🎨 Visual Storytelling Elements</h4>
+                    <p>• Before/after comparison charts</p>
+                    <p>• Model performance over training iterations</p>
+                    <p>• Feature importance visualizations</p>
+                    <p>• Architecture diagrams</p>
+                    <p>• Error analysis and edge cases</p>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                        <strong>📚 Remember:</strong> Your portfolio tells the story of your problem-solving journey. Make it engaging, honest, and focused on the value you created!
+                    </div>
+                `
+            },
+            'variety': {
+                title: '🎨 Showcasing Technical Variety',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Breadth & Depth:</strong> A diverse portfolio demonstrates your adaptability and shows you can tackle different types of ML challenges across domains.
+                    </div>
+                    
+                    <h4>🔧 Technical Diversity Dimensions</h4>
+                    <p><strong>ML Techniques:</strong></p>
+                    <p>• Classical ML (Random Forest, SVM, Linear Models)</p>
+                    <p>• Deep Learning (CNNs, RNNs, Transformers)</p>
+                    <p>• Unsupervised Learning (Clustering, Dimensionality Reduction)</p>
+                    <p>• Reinforcement Learning (if applicable to your goals)</p>
+                    
+                    <p><strong>Data Types:</strong></p>
+                    <p>• Structured/Tabular data (customer, financial, sales)</p>
+                    <p>• Computer Vision (images, video)</p>
+                    <p>• Natural Language Processing (text, documents)</p>
+                    <p>• Time Series (sensor data, stock prices)</p>
+                    <p>• Graph Data (social networks, knowledge graphs)</p>
+                    
+                    <p><strong>Problem Types:</strong></p>
+                    <p>• Classification (binary and multiclass)</p>
+                    <p>• Regression (continuous prediction)</p>
+                    <p>• Ranking and recommendation</p>
+                    <p>• Anomaly detection</p>
+                    <p>• Clustering and segmentation</p>
+                    
+                    <h4>🏭 Domain Variety</h4>
+                    <div class="modal-code">
+# Portfolio Domain Mix Examples:
+
+1. Healthcare: Medical image classification
+   → Shows impact-driven work, regulated domain
+
+2. Finance: Fraud detection system  
+   → Demonstrates real-time, high-stakes ML
+
+3. E-commerce: Recommendation engine
+   → Shows understanding of business metrics
+
+4. Technology: NLP sentiment analysis
+   → Displays modern ML techniques
+
+5. Manufacturing: Predictive maintenance
+   → Shows IoT/sensor data expertise
+                    </div>
+                    
+                    <h4>⚙️ Technical Stack Diversity</h4>
+                    <p><strong>Programming Languages:</strong></p>
+                    <p>• Python (primary) with pandas, scikit-learn, PyTorch</p>
+                    <p>• R (for statistical analysis)</p>
+                    <p>• SQL (for data manipulation)</p>
+                    <p>• JavaScript (for web interfaces)</p>
+                    
+                    <p><strong>Deployment Platforms:</strong></p>
+                    <p>• Cloud platforms (AWS, GCP, Azure)</p>
+                    <p>• Container orchestration (Docker, Kubernetes)</p>
+                    <p>• Web frameworks (Flask, FastAPI, Streamlit)</p>
+                    <p>• Mobile deployment (TensorFlow Lite, Core ML)</p>
+                    
+                    <h4>📊 Complexity Progression</h4>
+                    <p><strong>Beginner Projects:</strong> Clean datasets, standard metrics, well-defined problems</p>
+                    <p><strong>Intermediate Projects:</strong> Real-world messy data, custom metrics, domain expertise</p>
+                    <p><strong>Advanced Projects:</strong> Novel approaches, production systems, business impact</p>
+                    <p><strong>Expert Projects:</strong> Research contributions, system architecture, team leadership</p>
+                    
+                    <h4>🎯 Strategic Portfolio Planning</h4>
+                    <p><strong>Core Foundation (2-3 projects):</strong></p>
+                    <p>• Supervised learning with tabular data</p>
+                    <p>• Deep learning (CV or NLP)</p>
+                    <p>• End-to-end deployment project</p>
+                    
+                    <p><strong>Specialization Showcase (2-3 projects):</strong></p>
+                    <p>• Domain-specific expertise</p>
+                    <p>• Advanced techniques in your focus area</p>
+                    <p>• Novel contributions or optimizations</p>
+                    
+                    <p><strong>Breadth Demonstrations (1-2 projects):</strong></p>
+                    <p>• Different data modalities</p>
+                    <p>• Unusual problem formulations</p>
+                    <p>• Cross-domain applications</p>
+                    
+                    <h4>⚡ Quality Over Quantity</h4>
+                    <p>• 5-7 high-quality projects > 20 shallow ones</p>
+                    <p>• Each project should tell a complete story</p>
+                    <p>• Focus on projects you can discuss in detail</p>
+                    <p>• Include at least one project you're genuinely excited about</p>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                        <strong>🎯 Pro Strategy:</strong> Tailor your variety to your target role. Data Scientists need more analytical projects, ML Engineers need more deployment projects, but both benefit from showing versatility!
+                    </div>
+                `
+            },
+            'business': {
+                title: '📈 Demonstrating Business Impact',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Beyond Technical Skills:</strong> The ability to connect ML work to business value is what separates great candidates from good ones.
+                    </div>
+                    
+                    <h4>💰 Quantifying Business Impact</h4>
+                    <p><strong>Revenue Impact:</strong></p>
+                    <p>• "Increased click-through rate by 15%, generating $50K additional monthly revenue"</p>
+                    <p>• "Reduced customer churn by 8%, saving $200K annually"</p>
+                    <p>• "Improved recommendation accuracy leading to 12% increase in sales"</p>
+                    
+                    <p><strong>Cost Savings:</strong></p>
+                    <p>• "Automated fraud detection reduced manual review costs by $80K/year"</p>
+                    <p>• "Optimized inventory levels, reducing holding costs by 20%"</p>
+                    <p>• "Predictive maintenance saved $150K in equipment downtime"</p>
+                    
+                    <p><strong>Efficiency Gains:</strong></p>
+                    <p>• "Reduced processing time from 4 hours to 15 minutes (94% improvement)"</p>
+                    <p>• "Automated data entry, freeing up 10 hours/week of analyst time"</p>
+                    
+                    <h4>🎯 Framework for Impact Statements</h4>
+                    <div class="modal-code">
+# Business Impact Formula:
+"[Action] that [improved/reduced] [metric] by [X%/amount], 
+resulting in [business outcome]"
+
+# Examples:
+"Built recommendation engine that increased user engagement 
+by 25%, resulting in $2M additional annual revenue"
+
+"Developed fraud detection model that reduced false positives 
+by 40%, saving customer service team 20 hours/week"
+
+"Created demand forecasting system that improved inventory 
+accuracy by 30%, reducing stockouts by $500K annually"
+                    </div>
+                    
+                    <h4>📊 Present Results Effectively</h4>
+                    <p><strong>Before/After Comparisons:</strong> Show clear improvement metrics</p>
+                    <p><strong>A/B Test Results:</strong> Demonstrate statistical significance</p>
+                    <p><strong>ROI Calculations:</strong> Cost of implementation vs. benefits</p>
+                    <p><strong>Time Series Plots:</strong> Show sustained improvements over time</p>
+                    
+                    <h4>🗣️ Storytelling for Impact</h4>
+                    <p><strong>Problem:</strong> What business challenge were you solving?</p>
+                    <p><strong>Approach:</strong> How did you tackle it technically?</p>
+                    <p><strong>Results:</strong> What measurable impact did you achieve?</p>
+                    <p><strong>Lessons:</strong> What would you do differently next time?</p>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                        <strong>🎯 Remember:</strong> Hiring managers care more about business impact than technical sophistication. Always lead with the "so what?" of your work.
+                    </div>
+                `
+            }
+        };
+
+        console.log('Modal definitions loaded:', {
+            projectTypes: Object.keys(projectDetails),
+            tipTypes: Object.keys(tipDetails),
+            totalModals: Object.keys(projectDetails).length + Object.keys(tipDetails).length
+        });
+
+        // Attach click handlers
+        const projectCards = document.querySelectorAll('.project-card');
+        const tipCards = document.querySelectorAll('.tip-card');
+        
+        console.log('Found elements:', {
+            projectCards: projectCards.length,
+            tipCards: tipCards.length
+        });
+        
+        projectCards.forEach((card, index) => {
+            const projectType = card.dataset.project;
+            console.log(`Attaching handler to project card ${index}: ${projectType}`);
+            
+            card.addEventListener('click', function() {
+                console.log('Project card clicked:', projectType);
+                const details = projectDetails[projectType];
+                console.log('Details found:', !!details);
+                
+                if (details) {
+                    console.log('Showing modal:', details.title);
+                    modal.show(details.title, details.content);
+                } else {
+                    console.error('No details found for:', projectType);
+                }
+            });
+        });
+
+        tipCards.forEach((card, index) => {
+            const tipType = card.dataset.tip;
+            console.log(`Attaching handler to tip card ${index}: ${tipType}`);
+            
+            card.addEventListener('click', function() {
+                console.log('Tip card clicked:', tipType);
+                const details = tipDetails[tipType];
+                console.log('Details found:', !!details);
+                
+                if (details) {
+                    console.log('Showing modal:', details.title);
+                    modal.show(details.title, details.content);
+                } else {
+                    console.error('No details found for:', tipType);
+                }
+            });
+        });
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 15; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 20 + 's';
+                element.style.animationDuration = (Math.random() * 10 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Initialize
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (!modal.overlay.classList.contains('active')) {
+                if (e.key === 'ArrowLeft') {
+                    window.location.href = 'Week14_Slide273.html';
+                } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                    window.location.href = 'Week14_Slide275.html';
+                }
+            }
+        });
+        
+        }); // End DOMContentLoaded
+    </script>
+</body>
+</html>

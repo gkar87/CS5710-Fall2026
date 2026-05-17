@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Real-World Regression Applications</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%); min-height: 100vh; display: flex; flex-direction: column; color: #134e4a; overflow-x: hidden; }
+        .slide-container { flex: 1; padding: 40px; max-width: 1400px; margin: 0 auto; position: relative; }
+        .slide-title { font-size: 3.2em; text-align: center; margin-bottom: 45px; color: #0d9488; text-shadow: 2px 2px 4px rgba(0,0,0,0.1); animation: slideInFromTop 1.2s ease-out; font-weight: 700; }
+        .intro-section { background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%); border-radius: 20px; padding: 35px; margin-bottom: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); animation: slideInFromTop 1s ease-out 0.3s both; border: 1px solid rgba(13, 148, 136, 0.1); text-align: center; }
+        .intro-text { font-size: 1.3em; line-height: 1.7; color: #1e293b; margin-bottom: 25px; }
+        .applications-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 35px; margin-bottom: 40px; }
+        .application-card { background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%); border-radius: 20px; padding: 35px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); border: 1px solid rgba(13, 148, 136, 0.1); transition: all 0.3s ease; cursor: pointer; position: relative; overflow: hidden; }
+        .application-card:hover { transform: translateY(-8px); box-shadow: 0 30px 60px rgba(0,0,0,0.15); }
+        .application-card:nth-child(1) { animation: slideInFromLeft 1s ease-out 0.4s both; }
+        .application-card:nth-child(2) { animation: slideInFromRight 1s ease-out 0.4s both; }
+        .application-card:nth-child(3) { animation: slideInFromLeft 1s ease-out 0.6s both; }
+        .application-card:nth-child(4) { animation: slideInFromRight 1s ease-out 0.6s both; }
+        .application-card:nth-child(5) { animation: slideInFromLeft 1s ease-out 0.8s both; }
+        .application-card:nth-child(6) { animation: slideInFromRight 1s ease-out 0.8s both; }
+        .app-icon { font-size: 3.5em; margin-bottom: 20px; text-align: center; }
+        .app-title { font-size: 1.6em; font-weight: 700; color: #0d9488; margin-bottom: 18px; text-align: center; }
+        .app-description { font-size: 1.05em; line-height: 1.6; color: #475569; margin-bottom: 20px; }
+        .app-techniques { background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%); padding: 18px; border-radius: 12px; border-left: 4px solid #0d9488; margin-bottom: 20px; }
+        .techniques-title { font-weight: 600; color: #047857; margin-bottom: 10px; font-size: 1.05em; }
+        .techniques-list { font-size: 0.95em; color: #065f46; line-height: 1.5; }
+        .app-impact { background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; border-left: 3px solid #14b8a6; }
+        .impact-text { font-size: 0.95em; color: #0d9488; font-weight: 500; }
+        .summary-section { grid-column: 1 / -1; background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%); border-radius: 20px; padding: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); animation: slideInFromBottom 1s ease-out 1s both; border: 1px solid rgba(13, 148, 136, 0.1); }
+        .section-title { font-size: 1.8em; color: #0d9488; margin-bottom: 25px; font-weight: 600; text-align: center; }
+        .key-takeaways { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; margin-top: 30px; }
+        .takeaway-card { background: linear-gradient(135deg, #f0fdfa, #ccfbf1); border: 2px solid #14b8a6; border-radius: 15px; padding: 25px; text-align: center; transition: all 0.3s ease; }
+        .takeaway-card:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(20, 184, 166, 0.2); }
+        .takeaway-icon { font-size: 2.5em; margin-bottom: 15px; }
+        .takeaway-title { font-size: 1.2em; font-weight: 600; color: #0d9488; margin-bottom: 10px; }
+        .takeaway-desc { font-size: 0.95em; color: #475569; line-height: 1.5; }
+        .floating-elements { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; z-index: -1; }
+        .floating-element { position: absolute; width: 5px; height: 5px; background: linear-gradient(135deg, #0d9488, #14b8a6); border-radius: 50%; opacity: 0.5; animation: mlFloat 18s linear infinite; }
+        .navigation { position: fixed; bottom: 30px; right: 30px; display: flex; gap: 15px; }
+        .nav-btn { padding: 15px 25px; background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9)); border: 2px solid rgba(13, 148, 136, 0.2); border-radius: 30px; color: #134e4a; text-decoration: none; transition: all 0.3s ease; backdrop-filter: blur(20px); font-weight: 600; }
+        .nav-btn:hover { background: linear-gradient(135deg, #0d9488, #14b8a6); color: white; transform: translateY(-3px); box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4); }
+        .slide-number, .course-info { position: fixed; top: 30px; background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9)); padding: 12px 20px; border-radius: 25px; backdrop-filter: blur(20px); border: 1px solid rgba(13, 148, 136, 0.2); color: #134e4a; font-weight: 600; }
+        .slide-number { right: 30px; } .course-info { left: 30px; }
+        @keyframes slideInFromTop { from { transform: translateY(-80px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes slideInFromLeft { from { transform: translateX(-60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideInFromRight { from { transform: translateX(60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideInFromBottom { from { transform: translateY(60px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes mlFloat { 0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; } 10% { opacity: 0.5; } 90% { opacity: 0.5; } 100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; } }
+        @media (max-width: 768px) { .applications-grid { grid-template-columns: 1fr; } .slide-title { font-size: 2.5em; } .key-takeaways { grid-template-columns: 1fr; } }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.6em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.05em;
+            line-height: 1.7;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-section {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+
+        .modal-techniques {
+            background: rgba(13, 148, 136, 0.05);
+            padding: 18px;
+            border-radius: 12px;
+            margin: 15px 0;
+            border-left: 4px solid #0d9488;
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    <div class="course-info">CS5710 - Week 2</div>
+    <div class="slide-number">Slide 39 of 40</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Real-World Regression Applications</h1>
+        
+        <div class="intro-section">
+            <div class="intro-text">
+                <strong>Linear regression is one of the most widely used algorithms in industry.</strong><br>
+                From predicting stock prices to optimizing supply chains, regression powers countless business decisions.
+            </div>
+        </div>
+        
+        <div class="applications-grid">
+            <div class="application-card">
+                <div class="app-icon">🏠</div>
+                <h3 class="app-title">Real Estate Pricing</h3>
+                <div class="app-description">
+                    Zillow uses regression models to estimate property values based on location, size, features, and market trends.
+                </div>
+                <div class="app-techniques">
+                    <div class="techniques-title">🔧 ML Techniques Used:</div>
+                    <div class="techniques-list">
+                        • Multiple linear regression with 100+ features<br>
+                        • Ridge regression for regularization<br>
+                        • Feature engineering (location scores, amenity counts)<br>
+                        • Time series components for market trends
+                    </div>
+                </div>
+                <div class="app-impact">
+                    <div class="impact-text">📊 Impact: $2.8T+ real estate market relies on automated valuations</div>
+                </div>
+            </div>
+
+            <div class="application-card">
+                <div class="app-icon">💹</div>
+                <h3 class="app-title">Financial Forecasting</h3>
+                <div class="app-description">
+                    Investment firms use regression to predict stock returns, risk assessment, and portfolio optimization.
+                </div>
+                <div class="app-techniques">
+                    <div class="techniques-title">🔧 ML Techniques Used:</div>
+                    <div class="techniques-list">
+                        • LASSO for factor selection in high-dimensional data<br>
+                        • Elastic Net for balanced feature selection<br>
+                        • Time-lagged features and rolling windows<br>
+                        • Regularization to prevent overfitting to noise
+                    </div>
+                </div>
+                <div class="app-impact">
+                    <div class="impact-text">📊 Impact: Manages trillions in assets through quantitative models</div>
+                </div>
+            </div>
+
+            <div class="application-card">
+                <div class="app-icon">📊</div>
+                <h3 class="app-title">Sales & Demand Forecasting</h3>
+                <div class="app-description">
+                    Amazon and other retailers predict product demand to optimize inventory, pricing, and supply chain operations.
+                </div>
+                <div class="app-techniques">
+                    <div class="techniques-title">🔧 ML Techniques Used:</div>
+                    <div class="techniques-list">
+                        • Polynomial regression for seasonal patterns<br>
+                        • Ridge regression for stability across products<br>
+                        • Feature engineering (price elasticity, promotions)<br>
+                        • Multi-level models for product hierarchies
+                    </div>
+                </div>
+                <div class="app-impact">
+                    <div class="impact-text">📊 Impact: Reduces waste by 15-20% and improves customer satisfaction</div>
+                </div>
+            </div>
+
+            <div class="application-card">
+                <div class="app-icon">⚕️</div>
+                <h3 class="app-title">Healthcare Analytics</h3>
+                <div class="app-description">
+                    Hospitals predict patient outcomes, treatment effectiveness, and resource allocation using regression models.
+                </div>
+                <div class="app-techniques">
+                    <div class="techniques-title">🔧 ML Techniques Used:</div>
+                    <div class="techniques-list">
+                        • Multiple regression for risk scoring<br>
+                        • LASSO for biomarker selection in genomics<br>
+                        • Regularization for high-dimensional patient data<br>
+                        • Interpretable models for clinical decision support
+                    </div>
+                </div>
+                <div class="app-impact">
+                    <div class="impact-text">📊 Impact: Improves patient outcomes and reduces healthcare costs</div>
+                </div>
+            </div>
+
+            <div class="application-card">
+                <div class="app-icon">🎭</div>
+                <h3 class="app-title">Marketing & Advertising</h3>
+                <div class="app-description">
+                    Google Ads uses regression to predict click-through rates, conversion probabilities, and optimize ad spending.
+                </div>
+                <div class="app-techniques">
+                    <div class="techniques-title">🔧 ML Techniques Used:</div>
+                    <div class="techniques-list">
+                        • Logistic regression for binary outcomes (click/no-click)<br>
+                        • Feature engineering from user behavior data<br>
+                        • Real-time model updates with streaming data<br>
+                        • A/B testing for model validation
+                    </div>
+                </div>
+                <div class="app-impact">
+                    <div class="impact-text">📊 Impact: $200B+ digital advertising market optimization</div>
+                </div>
+            </div>
+
+            <div class="application-card">
+                <div class="app-icon">🌍</div>
+                <h3 class="app-title">Climate & Energy</h3>
+                <div class="app-description">
+                    Energy companies predict electricity demand, renewable energy output, and carbon emissions using regression.
+                </div>
+                <div class="app-techniques">
+                    <div class="techniques-title">🔧 ML Techniques Used:</div>
+                    <div class="techniques-list">
+                        • Time series regression with weather data<br>
+                        • Polynomial features for non-linear relationships<br>
+                        • Ridge regression for stable long-term forecasts<br>
+                        • Multi-variate models combining multiple sensors
+                    </div>
+                </div>
+                <div class="app-impact">
+                    <div class="impact-text">📊 Impact: Optimizes renewable energy and reduces carbon footprint</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="summary-section">
+            <h2 class="section-title">🎆 Week 2 Summary: Linear Regression & Gradient Descent</h2>
+            
+            <div class="key-takeaways">
+                <div class="takeaway-card">
+                    <div class="takeaway-icon">📚</div>
+                    <div class="takeaway-title">Core Concepts Mastered</div>
+                    <div class="takeaway-desc">
+                        Linear regression, gradient descent, polynomial features, regularization (L1/L2), and evaluation metrics
+                    </div>
+                </div>
+                
+                <div class="takeaway-card">
+                    <div class="takeaway-icon">🔧</div>
+                    <div class="takeaway-title">Practical Techniques</div>
+                    <div class="takeaway-desc">
+                        Normal equation vs iterative optimization, Ridge vs Lasso vs Elastic Net, feature engineering strategies
+                    </div>
+                </div>
+                
+                <div class="takeaway-card">
+                    <div class="takeaway-icon">🌍</div>
+                    <div class="takeaway-title">Real-World Impact</div>
+                    <div class="takeaway-desc">
+                        Regression powers trillion-dollar industries from real estate to finance, healthcare to renewable energy
+                    </div>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 40px; padding: 30px; background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%); border-radius: 20px; border-left: 4px solid #0d9488;">
+                <h3 style="color: #0d9488; margin-bottom: 20px; font-size: 1.5em;">🚀 Coming Up Next: Classification Algorithms</h3>
+                <p style="font-size: 1.1em; line-height: 1.6; color: #1e293b;">
+                    <strong>Week 3 Preview:</strong> We'll explore logistic regression, k-NN, Naive Bayes, and decision boundaries. 
+                    You'll learn how to predict categories instead of continuous values, opening up a whole new world of ML applications like spam detection, medical diagnosis, and image classification!
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week2_Slide38.html" class="nav-btn">← Previous</a>
+        <a href="Week2_Slide40.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive application cards with modal
+        document.querySelectorAll('.application-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('.app-title').textContent.trim();
+                const description = this.querySelector('.app-description').textContent.trim();
+                const techniques = this.querySelector('.techniques-list').innerHTML;
+                const impact = this.querySelector('.impact-text').textContent.trim();
+                
+                const applicationDetails = {
+                    'Real Estate Pricing': {
+                        industry: 'Property Technology (PropTech)',
+                        companies: 'Zillow, Redfin, Compass, OpenDoor',
+                        datasets: 'Property features (size, bedrooms, bathrooms), location coordinates, school districts, crime rates, market trends, comparable sales',
+                        challenges: 'Highly localized markets, seasonal variations, economic factors, unique property features',
+                        models: 'Ensemble of Ridge regression, Random Forests, Gradient Boosting, with automated feature engineering for location-based variables'
+                    },
+                    'Financial Forecasting': {
+                        industry: 'Quantitative Finance & Investment Management',
+                        companies: 'BlackRock, Goldman Sachs, Two Sigma, Renaissance Technologies',
+                        datasets: 'Market prices, trading volumes, economic indicators, earnings data, news sentiment, alternative data (satellite imagery, social media)',
+                        challenges: 'Market volatility, regime changes, non-stationarity, noise vs signal, regulatory changes',
+                        models: 'LASSO for factor selection, time series models, risk parity optimization, with extensive regularization to prevent overfitting to noise'
+                    },
+                    'Sales & Demand Forecasting': {
+                        industry: 'E-commerce & Retail',
+                        companies: 'Amazon, Walmart, Target, Alibaba',
+                        datasets: 'Historical sales, pricing, promotions, seasonality, weather, demographics, competitor data, search trends',
+                        challenges: 'Product lifecycle management, new product introduction, supply chain disruptions, changing consumer behavior',
+                        models: 'Hierarchical models with Ridge regression, handling millions of products across multiple locations and time horizons'
+                    },
+                    'Healthcare Analytics': {
+                        industry: 'Healthcare & Medical Research',
+                        companies: 'Epic Systems, Cerner, IBM Watson Health, Google Health',
+                        datasets: 'Electronic health records, lab results, imaging data, genomics, demographics, treatment outcomes, clinical notes',
+                        challenges: 'Patient privacy, data quality, missing data, treatment complexity, regulatory compliance (HIPAA)',
+                        models: 'Interpretable models using LASSO for biomarker selection, with careful validation and bias detection for clinical decision support'
+                    },
+                    'Marketing & Advertising': {
+                        industry: 'Digital Advertising Technology (AdTech)',
+                        companies: 'Google Ads, Facebook Ads, Amazon DSP, Trade Desk',
+                        datasets: 'User behavior, demographics, browsing history, ad performance, conversion data, real-time bidding data',
+                        challenges: 'Real-time decision making, privacy regulations, ad fraud, attribution modeling, cross-device tracking',
+                        models: 'Logistic regression for CTR prediction, with online learning and A/B testing frameworks for continuous model improvement'
+                    },
+                    'Climate & Energy': {
+                        industry: 'Renewable Energy & Smart Grid',
+                        companies: 'Tesla Energy, NextEra Energy, Siemens, General Electric',
+                        datasets: 'Weather data, energy consumption patterns, grid sensor data, renewable generation, pricing, demand response',
+                        challenges: 'Weather unpredictability, grid stability, energy storage optimization, regulatory changes, integration of renewable sources',
+                        models: 'Time series regression with weather covariates, Ridge regression for load forecasting, optimization models for grid management'
+                    }
+                };
+                
+                const info = applicationDetails[title];
+                if (info) {
+                    modal.show(title, `
+                        <div class="modal-highlight">
+                            <strong>${description}</strong>
+                        </div>
+                        
+                        <div class="modal-section">
+                            <strong>🏢 Industry:</strong> ${info.industry}
+                        </div>
+                        
+                        <p><strong>🏢 Key Companies:</strong><br>${info.companies}</p>
+                        
+                        <div class="modal-techniques">
+                            <strong>🔧 ML Techniques Used:</strong><br>
+                            ${techniques}
+                        </div>
+                        
+                        <p><strong>📋 Data Sources:</strong><br>${info.datasets}</p>
+                        
+                        <p><strong>⚠️ Technical Challenges:</strong><br>${info.challenges}</p>
+                        
+                        <div class="modal-section">
+                            <strong>🤖 Model Architecture:</strong><br>
+                            ${info.models}
+                        </div>
+                        
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                            <strong>📊 ${impact.split(':')[0]}:</strong><br>
+                            ${impact.split(':')[1]}
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week2_Slide38.html';
+            } else if ((e.key === 'ArrowRight' || e.key === ' ') && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week2_Slide40.html';
+            }
+        });
+    </script>
+</body>
+</html>

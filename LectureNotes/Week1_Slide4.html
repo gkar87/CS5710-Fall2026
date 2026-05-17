@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Types of Machine Learning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .types-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .type-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.08);
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            animation: fadeInScale 0.8s ease-out;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .type-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 45px rgba(13, 148, 136, 0.2);
+        }
+
+        .type-card:nth-child(1) { animation-delay: 0.1s; }
+        .type-card:nth-child(2) { animation-delay: 0.2s; }
+        .type-card:nth-child(3) { animation-delay: 0.3s; }
+        .type-card:nth-child(4) { animation-delay: 0.4s; }
+
+        .type-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .type-icon {
+            font-size: 2.5em;
+        }
+
+        .type-title {
+            font-size: 1.6em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .type-description {
+            font-size: 1.05em;
+            line-height: 1.6;
+            color: #334155;
+            margin-bottom: 20px;
+        }
+
+        .type-examples {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            padding: 20px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .example-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 10px;
+        }
+
+        .example-list {
+            list-style: none;
+        }
+
+        .example-list li {
+            padding: 8px 0;
+            color: #1e293b;
+            position: relative;
+            padding-left: 20px;
+        }
+
+        .example-list li:before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: #0d9488;
+            font-weight: bold;
+        }
+
+        .comparison-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            animation: slideInFromBottom 1s ease-out 0.5s both;
+        }
+
+        .comparison-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .comparison-table {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 2px;
+            background: rgba(13, 148, 136, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .table-cell {
+            background: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 0.95em;
+        }
+
+        .table-header {
+            background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+            color: white;
+            font-weight: 600;
+        }
+
+        .table-aspect {
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
+            font-weight: 600;
+            color: #0d9488;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .types-grid { grid-template-columns: 1fr; }
+            .comparison-table { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    
+    <div class="course-info">CS5710 - Week 1</div>
+    <div class="slide-number">Slide 4 of 20</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Types of Machine Learning</h1>
+        
+        <div class="types-grid">
+            <div class="type-card" data-type="supervised">
+                <div class="type-header">
+                    <span class="type-icon">🎯</span>
+                    <h2 class="type-title">Supervised Learning</h2>
+                </div>
+                <div class="type-description">
+                    Learning from labeled examples where we know the correct answers during training.
+                </div>
+                <div class="type-examples">
+                    <div class="example-title">Common Applications:</div>
+                    <ul class="example-list">
+                        <li>Email spam detection</li>
+                        <li>House price prediction</li>
+                        <li>Medical diagnosis</li>
+                        <li>Credit risk assessment</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="type-card" data-type="unsupervised">
+                <div class="type-header">
+                    <span class="type-icon">🔍</span>
+                    <h2 class="type-title">Unsupervised Learning</h2>
+                </div>
+                <div class="type-description">
+                    Finding hidden patterns in data without labeled examples or correct answers.
+                </div>
+                <div class="type-examples">
+                    <div class="example-title">Common Applications:</div>
+                    <ul class="example-list">
+                        <li>Customer segmentation</li>
+                        <li>Anomaly detection</li>
+                        <li>Topic modeling</li>
+                        <li>Data compression</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="type-card" data-type="reinforcement">
+                <div class="type-header">
+                    <span class="type-icon">🎮</span>
+                    <h2 class="type-title">Reinforcement Learning</h2>
+                </div>
+                <div class="type-description">
+                    Learning through interaction with environment using rewards and penalties.
+                </div>
+                <div class="type-examples">
+                    <div class="example-title">Common Applications:</div>
+                    <ul class="example-list">
+                        <li>Game playing (Chess, Go)</li>
+                        <li>Robotics control</li>
+                        <li>Autonomous driving</li>
+                        <li>Resource management</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="type-card" data-type="semi-supervised">
+                <div class="type-header">
+                    <span class="type-icon">🔄</span>
+                    <h2 class="type-title">Semi-Supervised Learning</h2>
+                </div>
+                <div class="type-description">
+                    Combining small amounts of labeled data with large amounts of unlabeled data.
+                </div>
+                <div class="type-examples">
+                    <div class="example-title">Common Applications:</div>
+                    <ul class="example-list">
+                        <li>Web content classification</li>
+                        <li>Speech recognition</li>
+                        <li>Medical image analysis</li>
+                        <li>Language translation</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="comparison-section">
+            <h3 class="comparison-title">Quick Comparison</h3>
+            <div class="comparison-table">
+                <div class="table-cell table-header">Type</div>
+                <div class="table-cell table-header">Input Data</div>
+                <div class="table-cell table-header">Goal</div>
+                <div class="table-cell table-header">Feedback</div>
+                <div class="table-cell table-header">Example Algorithm</div>
+                
+                <div class="table-cell table-aspect">Supervised</div>
+                <div class="table-cell">Labeled data</div>
+                <div class="table-cell">Predict labels</div>
+                <div class="table-cell">Direct (correct answers)</div>
+                <div class="table-cell">Neural Networks</div>
+                
+                <div class="table-cell table-aspect">Unsupervised</div>
+                <div class="table-cell">Unlabeled data</div>
+                <div class="table-cell">Find structure</div>
+                <div class="table-cell">None</div>
+                <div class="table-cell">K-Means</div>
+                
+                <div class="table-cell table-aspect">Reinforcement</div>
+                <div class="table-cell">State/Actions</div>
+                <div class="table-cell">Maximize reward</div>
+                <div class="table-cell">Reward signal</div>
+                <div class="table-cell">Q-Learning</div>
+                
+                <div class="table-cell table-aspect">Semi-Supervised</div>
+                <div class="table-cell">Mixed data</div>
+                <div class="table-cell">Leverage both</div>
+                <div class="table-cell">Partial labels</div>
+                <div class="table-cell">Self-training</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week1_Slide3.html" class="nav-btn">← Previous</a>
+        <a href="Week1_Slide5.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                const size = Math.random() * 10 + 3;
+                element.style.width = size + 'px';
+                element.style.height = size + 'px';
+                container.appendChild(element);
+            }
+        }
+
+        // ML Type Details for Modal
+        const typeDetails = {
+            'supervised': {
+                title: 'Supervised Learning Deep Dive',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>The Teacher-Student Paradigm</strong><br>
+                        Like a teacher showing correct answers, supervised learning uses labeled training data.
+                    </div>
+                    
+                    <h4 style="color: #0d9488; margin: 20px 0;">Two Main Categories:</h4>
+                    
+                    <p><strong>1. Classification:</strong> Predicting discrete categories</p>
+                    <ul style="margin: 10px 0 20px 20px;">
+                        <li>• Binary: Spam vs Not Spam</li>
+                        <li>• Multi-class: Dog vs Cat vs Bird</li>
+                        <li>• Multi-label: Tags for articles</li>
+                    </ul>
+                    
+                    <p><strong>2. Regression:</strong> Predicting continuous values</p>
+                    <ul style="margin: 10px 0 20px 20px;">
+                        <li>• House prices ($100K - $1M)</li>
+                        <li>• Temperature forecasting</li>
+                        <li>• Stock prices</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Example: Training a classifier
+X_train = [features]  # Input features
+y_train = [labels]    # Known outputs
+model.fit(X_train, y_train)
+predictions = model.predict(X_test)
+                    </div>
+                    
+                    <p><strong>Key Algorithms:</strong> Linear Regression, Logistic Regression, Decision Trees, Neural Networks, SVM</p>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                        <strong>💡 When to Use:</strong><br>
+                        When you have historical data with known outcomes and want to predict future outcomes.
+                    </div>
+                `
+            },
+            'unsupervised': {
+                title: 'Unsupervised Learning Deep Dive',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>The Explorer Paradigm</strong><br>
+                        Like an explorer finding hidden treasures, unsupervised learning discovers patterns without guidance.
+                    </div>
+                    
+                    <h4 style="color: #0d9488; margin: 20px 0;">Main Techniques:</h4>
+                    
+                    <p><strong>1. Clustering:</strong> Group similar items</p>
+                    <ul style="margin: 10px 0 20px 20px;">
+                        <li>• Customer segmentation</li>
+                        <li>• Document organization</li>
+                        <li>• Image compression</li>
+                    </ul>
+                    
+                    <p><strong>2. Dimensionality Reduction:</strong> Simplify complex data</p>
+                    <ul style="margin: 10px 0 20px 20px;">
+                        <li>• PCA for visualization</li>
+                        <li>• Feature extraction</li>
+                        <li>• Noise reduction</li>
+                    </ul>
+                    
+                    <p><strong>3. Anomaly Detection:</strong> Find outliers</p>
+                    <ul style="margin: 10px 0 20px 20px;">
+                        <li>• Fraud detection</li>
+                        <li>• System monitoring</li>
+                        <li>• Quality control</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Example: Clustering customers
+X = customer_data  # No labels needed!
+kmeans = KMeans(n_clusters=5)
+clusters = kmeans.fit_predict(X)
+                    </div>
+                    
+                    <p><strong>Key Algorithms:</strong> K-Means, DBSCAN, Hierarchical Clustering, PCA, Autoencoders</p>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                        <strong>💡 When to Use:</strong><br>
+                        When you want to explore data structure, find patterns, or when labels are expensive/unavailable.
+                    </div>
+                `
+            },
+            'reinforcement': {
+                title: 'Reinforcement Learning Deep Dive',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>The Trial-and-Error Paradigm</strong><br>
+                        Like training a pet with treats, RL learns optimal behavior through rewards and penalties.
+                    </div>
+                    
+                    <h4 style="color: #0d9488; margin: 20px 0;">Core Components:</h4>
+                    
+                    <p><strong>1. Agent:</strong> The learner/decision maker</p>
+                    <p><strong>2. Environment:</strong> What the agent interacts with</p>
+                    <p><strong>3. State:</strong> Current situation</p>
+                    <p><strong>4. Action:</strong> What the agent can do</p>
+                    <p><strong>5. Reward:</strong> Feedback signal</p>
+                    
+                    <div class="modal-code">
+# RL Loop
+state = env.reset()
+while not done:
+    action = agent.choose_action(state)
+    next_state, reward, done = env.step(action)
+    agent.learn(state, action, reward, next_state)
+    state = next_state
+                    </div>
+                    
+                    <h4 style="color: #0d9488; margin: 20px 0;">Famous Examples:</h4>
+                    <ul style="margin-left: 20px;">
+                        <li>• AlphaGo: Defeated world Go champion</li>
+                        <li>• OpenAI Five: Mastered Dota 2</li>
+                        <li>• Tesla Autopilot: Learning to drive</li>
+                    </ul>
+                    
+                    <p><strong>Key Algorithms:</strong> Q-Learning, Deep Q-Networks (DQN), Policy Gradient, Actor-Critic</p>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                        <strong>💡 When to Use:</strong><br>
+                        When you need to make sequential decisions, optimize long-term rewards, or control systems.
+                    </div>
+                `
+            },
+            'semi-supervised': {
+                title: 'Semi-Supervised Learning Deep Dive',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>The Hybrid Paradigm</strong><br>
+                        Combines the best of both worlds - uses limited labeled data with abundant unlabeled data.
+                    </div>
+                    
+                    <h4 style="color: #0d9488; margin: 20px 0;">Why It's Powerful:</h4>
+                    
+                    <p><strong>The Label Problem:</strong></p>
+                    <ul style="margin: 10px 0 20px 20px;">
+                        <li>• Labeling is expensive (medical images need experts)</li>
+                        <li>• Labeling is time-consuming (millions of images)</li>
+                        <li>• Unlabeled data is abundant and cheap</li>
+                    </ul>
+                    
+                    <h4 style="color: #0d9488; margin: 20px 0;">Common Techniques:</h4>
+                    
+                    <p><strong>1. Self-Training:</strong> Model labels its own data</p>
+                    <p><strong>2. Co-Training:</strong> Multiple models teach each other</p>
+                    <p><strong>3. Graph-Based:</strong> Propagate labels through data</p>
+                    
+                    <div class="modal-code">
+# Example: Semi-supervised learning
+labeled_X, labeled_y = small_labeled_dataset
+unlabeled_X = large_unlabeled_dataset
+
+# Train on labeled data
+model.fit(labeled_X, labeled_y)
+
+# Predict on unlabeled data
+pseudo_labels = model.predict(unlabeled_X)
+
+# Retrain with combined data
+combined_X = concat([labeled_X, unlabeled_X])
+combined_y = concat([labeled_y, pseudo_labels])
+model.fit(combined_X, combined_y)
+                    </div>
+                    
+                    <p><strong>Real-World Example:</strong> Google uses semi-supervised learning for YouTube video classification - only a fraction of videos are manually labeled!</p>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                        <strong>💡 When to Use:</strong><br>
+                        When you have limited labeled data but lots of unlabeled data (very common in practice!).
+                    </div>
+                `
+            }
+        };
+
+        // Make type cards clickable
+        document.querySelectorAll('.type-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const type = this.dataset.type;
+                const details = typeDetails[type];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week1_Slide3.html';
+            } else if ((e.key === 'ArrowRight' || e.key === ' ') && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week1_Slide5.html';
+            }
+        });
+
+        // Add interactive hover effect to table cells
+        document.querySelectorAll('.table-cell:not(.table-header):not(.table-aspect)').forEach(cell => {
+            cell.style.cursor = 'pointer';
+            cell.style.transition = 'all 0.3s ease';
+            
+            cell.addEventListener('mouseenter', function() {
+                this.style.background = 'linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%)';
+                this.style.transform = 'scale(1.05)';
+            });
+            
+            cell.addEventListener('mouseleave', function() {
+                this.style.background = 'white';
+                this.style.transform = 'scale(1)';
+            });
+        });
+
+    </script>
+</body>
+</html>

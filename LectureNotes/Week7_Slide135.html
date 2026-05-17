@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Feature Selection vs Feature Extraction</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .comparison-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .feature-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .selection-section {
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+        }
+
+        .extraction-section {
+            animation: slideInFromRight 1s ease-out 0.3s both;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .section-icon {
+            font-size: 4em;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .section-title {
+            font-size: 2em;
+            color: #0d9488;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .section-subtitle {
+            font-size: 1.1em;
+            color: #475569;
+            font-style: italic;
+        }
+
+        .feature-description {
+            font-size: 1.1em;
+            line-height: 1.7;
+            color: #1e293b;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .feature-points {
+            list-style: none;
+            margin: 20px 0;
+        }
+
+        .feature-point {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .feature-point:hover {
+            transform: translateX(5px);
+            box-shadow: 0 8px 20px rgba(13, 148, 136, 0.15);
+        }
+
+        .point-title {
+            font-weight: 600;
+            color: #0d9488;
+            font-size: 1.1em;
+            margin-bottom: 8px;
+        }
+
+        .point-desc {
+            color: #475569;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .vs-divider {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            font-weight: bold;
+            box-shadow: 0 10px 30px rgba(13, 148, 136, 0.3);
+            z-index: 10;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.1); }
+        }
+
+        .decision-matrix {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .matrix-title {
+            font-size: 2em;
+            color: #0d9488;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 20px;
+            text-align: left;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .comparison-table th {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            color: #0d9488;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .comparison-table tr:hover {
+            background: rgba(240, 253, 250, 0.5);
+        }
+
+        .table-row {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .table-row:hover {
+            background: linear-gradient(135deg, rgba(240, 253, 250, 0.3), rgba(204, 251, 241, 0.3));
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @media (max-width: 768px) {
+            .comparison-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .vs-divider { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 7</div>
+    <div class="slide-number">Slide 135 of 140</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Feature Selection vs Feature Extraction</h1>
+        
+        <div class="comparison-layout">
+            <div class="feature-section selection-section">
+                <div class="section-header">
+                    <span class="section-icon">🎯</span>
+                    <h2 class="section-title">Feature Selection</h2>
+                    <div class="section-subtitle">"Choose the best existing features"</div>
+                </div>
+                
+                <div class="feature-description">
+                    <strong>Feature Selection</strong> identifies and keeps the most relevant original features while discarding irrelevant or redundant ones.
+                </div>
+                
+                <ul class="feature-points">
+                    <li class="feature-point">
+                        <div class="point-title">🔍 Subset Selection</div>
+                        <div class="point-desc">Chooses optimal subset from original features</div>
+                    </li>
+                    <li class="feature-point">
+                        <div class="point-title">📊 Interpretable</div>
+                        <div class="point-desc">Features retain their original meaning</div>
+                    </li>
+                    <li class="feature-point">
+                        <div class="point-title">⚡ Fast Training</div>
+                        <div class="point-desc">No transformation needed, direct use</div>
+                    </li>
+                    <li class="feature-point">
+                        <div class="point-title">🎮 Domain Knowledge</div>
+                        <div class="point-desc">Experts can understand selected features</div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="feature-section extraction-section">
+                <div class="section-header">
+                    <span class="section-icon">🔄</span>
+                    <h2 class="section-title">Feature Extraction</h2>
+                    <div class="section-subtitle">"Create new meaningful features"</div>
+                </div>
+                
+                <div class="feature-description">
+                    <strong>Feature Extraction</strong> transforms original features into a new feature space, creating entirely new features that capture data patterns.
+                </div>
+                
+                <ul class="feature-points">
+                    <li class="feature-point">
+                        <div class="point-title">🧮 Transformation</div>
+                        <div class="point-desc">Creates new features through mathematical transformation</div>
+                    </li>
+                    <li class="feature-point">
+                        <div class="point-title">📈 Information Dense</div>
+                        <div class="point-desc">New features often more informative</div>
+                    </li>
+                    <li class="feature-point">
+                        <div class="point-title">🤖 Automated</div>
+                        <div class="point-desc">Algorithm discovers optimal transformations</div>
+                    </li>
+                    <li class="feature-point">
+                        <div class="point-title">🌐 Complex Patterns</div>
+                        <div class="point-desc">Captures non-linear relationships</div>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="vs-divider">VS</div>
+        </div>
+
+        <div class="decision-matrix">
+            <h2 class="matrix-title">When to Use Each Approach?</h2>
+            
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Criteria</th>
+                        <th>Feature Selection</th>
+                        <th>Feature Extraction</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="table-row">
+                        <td><strong>🎯 Interpretability</strong></td>
+                        <td>High - Original features maintained</td>
+                        <td>Low - New abstract features</td>
+                    </tr>
+                    <tr class="table-row">
+                        <td><strong>⚡ Speed</strong></td>
+                        <td>Fast - No transformation</td>
+                        <td>Slower - Requires computation</td>
+                    </tr>
+                    <tr class="table-row">
+                        <td><strong>📊 Information Loss</strong></td>
+                        <td>Higher - Discards features entirely</td>
+                        <td>Lower - Transforms all information</td>
+                    </tr>
+                    <tr class="table-row">
+                        <td><strong>🧠 Complexity</strong></td>
+                        <td>Simple to implement</td>
+                        <td>More complex algorithms</td>
+                    </tr>
+                    <tr class="table-row">
+                        <td><strong>🎨 Use Cases</strong></td>
+                        <td>Medical diagnosis, Financial analysis</td>
+                        <td>Image processing, NLP, Genomics</td>
+                    </tr>
+                    <tr class="table-row">
+                        <td><strong>📈 Performance</strong></td>
+                        <td>Good for linear relationships</td>
+                        <td>Better for complex patterns</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week7_Slide134.html" class="nav-btn">← Previous</a>
+        <a href="Week7_Slide136.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 30; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive feature points
+        document.querySelectorAll('.feature-point').forEach(point => {
+            point.addEventListener('click', function() {
+                const title = this.querySelector('.point-title').textContent;
+                const isSelection = this.closest('.selection-section') !== null;
+                
+                const pointDetails = {
+                    // Feature Selection Details
+                    '🔍 Subset Selection': {
+                        method: 'Feature Selection',
+                        detail: 'Evaluates each feature individually or in combinations to find the optimal subset.',
+                        example: 'From 1000 gene features, select top 50 most predictive for cancer diagnosis',
+                        techniques: 'Filter methods (correlation), Wrapper methods (RFE), Embedded methods (LASSO)',
+                        advantage: 'Maintains biological interpretability of selected genes'
+                    },
+                    '📊 Interpretable': {
+                        method: 'Feature Selection',
+                        detail: 'Selected features keep their original names and meanings, making results explainable.',
+                        example: 'Blood pressure, cholesterol level, age remain understandable to doctors',
+                        techniques: 'Statistical tests, domain expertise validation',
+                        advantage: 'Regulatory compliance, medical interpretability, business insights'
+                    },
+                    '⚡ Fast Training': {
+                        method: 'Feature Selection',
+                        detail: 'No computational overhead for feature transformation during training or prediction.',
+                        example: 'Direct use of selected features in real-time fraud detection',
+                        techniques: 'Pre-computed feature rankings, one-time selection process',
+                        advantage: 'Minimal latency in production systems'
+                    },
+                    '🎮 Domain Knowledge': {
+                        method: 'Feature Selection',
+                        detail: 'Experts can validate and understand why certain features were chosen.',
+                        example: 'Financial experts can verify that debt-to-income ratio was selected for loan approval',
+                        techniques: 'Expert review, domain-specific feature rankings',
+                        advantage: 'Trust and acceptance from domain experts'
+                    },
+                    
+                    // Feature Extraction Details
+                    '🧮 Transformation': {
+                        method: 'Feature Extraction',
+                        detail: 'Applies mathematical transformations to create entirely new feature representations.',
+                        example: 'PCA transforms 100 correlated features into 20 principal components',
+                        techniques: 'Linear transformations (PCA), Non-linear (autoencoders, kernel PCA)',
+                        advantage: 'Reduces redundancy while preserving information'
+                    },
+                    '📈 Information Dense': {
+                        method: 'Feature Extraction',
+                        detail: 'New features often capture more information per dimension than original features.',
+                        example: 'First principal component captures 60% of total variance',
+                        techniques: 'Eigenvalue analysis, explained variance ratio',
+                        advantage: 'Better performance with fewer dimensions'
+                    },
+                    '🤖 Automated': {
+                        method: 'Feature Extraction',
+                        detail: 'Algorithms automatically discover optimal transformations without human intervention.',
+                        example: 'Autoencoder learns optimal image compression without manual feature engineering',
+                        techniques: 'Gradient descent optimization, unsupervised learning',
+                        advantage: 'Scales to high-dimensional data, finds hidden patterns'
+                    },
+                    '🌐 Complex Patterns': {
+                        method: 'Feature Extraction',
+                        detail: 'Can capture non-linear relationships and interactions between original features.',
+                        example: 't-SNE reveals cluster structure in high-dimensional gene expression data',
+                        techniques: 'Kernel methods, manifold learning, deep neural networks',
+                        advantage: 'Better representation of complex data structures'
+                    }
+                };
+                
+                const details = pointDetails[title];
+                if (details) {
+                    modal.show(`${details.method}: ${title}`, `
+                        <div class="modal-highlight">
+                            <strong>${details.detail}</strong>
+                        </div>
+                        
+                        <p><strong>📝 Example:</strong> ${details.example}</p>
+                        <p><strong>🛠️ Techniques:</strong> ${details.techniques}</p>
+                        
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                            <strong>✅ Key Advantage:</strong><br>
+                            ${details.advantage}
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Interactive comparison table rows
+        document.querySelectorAll('.table-row').forEach(row => {
+            row.addEventListener('click', function() {
+                const criteria = this.querySelector('td:first-child strong').textContent;
+                const selectionCell = this.querySelector('td:nth-child(2)').textContent;
+                const extractionCell = this.querySelector('td:nth-child(3)').textContent;
+                
+                const rowDetails = {
+                    '🎯 Interpretability': {
+                        explanation: 'How easily can humans understand and explain the features and results?',
+                        selection_detail: 'Original features like "age", "income" are immediately meaningful to stakeholders.',
+                        extraction_detail: 'Principal components or latent features are mathematical constructs that lack intuitive meaning.',
+                        realworld: 'Medical diagnosis requires interpretable features for regulatory approval and doctor trust.',
+                        code: `# Feature Selection - Interpretable
+selected_features = ['blood_pressure', 'cholesterol', 'age']
+prediction = model.predict(patient[selected_features])
+print(f"High risk due to: {selected_features}")
+
+# Feature Extraction - Abstract
+pca_features = pca.transform(patient_data)
+prediction = model.predict(pca_features)
+print(f"High risk based on PC1={pca_features[0]:.2f}")  # Hard to interpret`
+                    },
+                    '⚡ Speed': {
+                        explanation: 'Computational efficiency during training and inference.',
+                        selection_detail: 'No transformation overhead - directly use selected features.',
+                        extraction_detail: 'Must compute transformation (PCA projection, autoencoder forward pass) for each sample.',
+                        realworld: 'High-frequency trading systems need millisecond response times, favoring feature selection.',
+                        code: `# Feature Selection - Fast
+selected_data = data[:, selected_indices]  # O(1) indexing
+prediction = model.predict(selected_data)
+
+# Feature Extraction - Slower
+transformed_data = transformer.transform(data)  # O(n*m) computation  
+prediction = model.predict(transformed_data)`
+                    },
+                    '📊 Information Loss': {
+                        explanation: 'How much original information is preserved in the dimensionality reduction process?',
+                        selection_detail: 'Completely discards unselected features - potential information loss.',
+                        extraction_detail: 'Transforms all features - information is preserved but redistributed.',
+                        realworld: 'Image compression: JPEG (extraction) preserves more visual information than simply selecting pixel regions.',
+                        code: `# Feature Selection - Information Loss
+original_features = 1000
+selected_features = 50  # Lost: 950 features worth of information
+
+# Feature Extraction - Information Preservation  
+pca_components = 50  # Preserved: 95% of total variance across all 1000 features`
+                    },
+                    '🧠 Complexity': {
+                        explanation: 'Implementation difficulty and computational requirements.',
+                        selection_detail: 'Simple boolean indexing or ranking algorithms.',
+                        extraction_detail: 'Complex mathematical transformations, eigenvalue decomposition, neural networks.',
+                        realworld: 'Startups often begin with feature selection for rapid prototyping, then upgrade to extraction methods.',
+                        code: `# Feature Selection - Simple
+from sklearn.feature_selection import SelectKBest
+selector = SelectKBest(k=10)
+selected = selector.fit_transform(X, y)
+
+# Feature Extraction - Complex
+from sklearn.decomposition import PCA
+pca = PCA(n_components=10)
+transformed = pca.fit_transform(X)  # Eigenvalue decomposition`
+                    },
+                    '🎨 Use Cases': {
+                        explanation: 'Domain-specific applications where each approach excels.',
+                        selection_detail: 'Medical diagnosis, financial analysis, legal compliance - where interpretability is crucial.',
+                        extraction_detail: 'Image processing, NLP, genomics - where patterns are complex and abstract.',
+                        realworld: 'FDA drug approval requires interpretable biomarkers (selection) vs. radiologist AI uses CNN features (extraction).',
+                        code: `# Medical Diagnosis - Selection
+features = ['tumor_size', 'lymph_nodes', 'grade']  # Interpretable
+diagnosis = classify_cancer(patient[features])
+
+# Computer Vision - Extraction  
+cnn_features = cnn.extract_features(medical_image)  # Abstract but powerful
+diagnosis = classify_cancer(cnn_features)`
+                    },
+                    '📈 Performance': {
+                        explanation: 'Prediction accuracy and model performance characteristics.',
+                        selection_detail: 'Effective for linear relationships and when relevant features are known.',
+                        extraction_detail: 'Superior for complex, non-linear patterns and high-dimensional data.',
+                        realworld: 'Stock prediction: linear models with selected economic indicators vs. deep learning with extracted market patterns.',
+                        code: `# Feature Selection Performance
+# Good: Linear relationships, known relevant features
+selected_economic_indicators = ['GDP', 'inflation', 'unemployment']
+linear_model_accuracy = 0.75
+
+# Feature Extraction Performance  
+# Better: Complex patterns, unknown relationships
+autoencoder_features = extract_market_patterns(all_data)
+deep_model_accuracy = 0.89`
+                    }
+                };
+                
+                const details = rowDetails[criteria];
+                if (details) {
+                    modal.show(`Comparison: ${criteria}`, `
+                        <div class="modal-highlight">
+                            <strong>${details.explanation}</strong>
+                        </div>
+                        
+                        <p><strong>🎯 Feature Selection:</strong> ${details.selection_detail}</p>
+                        <p><strong>🔄 Feature Extraction:</strong> ${details.extraction_detail}</p>
+                        
+                        <div class="modal-code">${details.code}</div>
+                        
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                            <strong>🌍 Real-World Example:</strong><br>
+                            ${details.realworld}
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week7_Slide134.html';
+            } else if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week7_Slide136.html';
+            }
+        });
+    </script>
+</body>
+</html>

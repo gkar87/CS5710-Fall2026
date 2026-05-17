@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Interactive Gradient Descent Visualization</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.2em;
+            text-align: center;
+            margin-bottom: 40px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 30px;
+        }
+
+        .concept-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .algorithm-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.6em;
+            color: #0d9488;
+            margin-bottom: 20px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .definition-text {
+            font-size: 1.1em;
+            line-height: 1.7;
+            color: #1e293b;
+            margin-bottom: 25px;
+            padding: 20px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .algorithm-steps {
+            list-style: none;
+            margin-top: 15px;
+        }
+
+        .step-item {
+            padding: 15px;
+            margin: 12px 0;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .step-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(13, 148, 136, 0.15);
+        }
+
+        .step-number {
+            background: #0d9488;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.9em;
+            flex-shrink: 0;
+        }
+
+        .step-text {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .formula-box {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+            font-size: 1.1em;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        .interactive-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .demo-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+            align-items: center;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-label {
+            font-weight: 600;
+            color: #0d9488;
+            font-size: 0.95em;
+        }
+
+        .control-slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: #cbd5e1;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .control-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            cursor: pointer;
+        }
+
+        .control-value {
+            font-size: 1em;
+            font-weight: 600;
+            color: #0d9488;
+            text-align: center;
+            background: rgba(13, 148, 136, 0.1);
+            padding: 5px 10px;
+            border-radius: 8px;
+        }
+
+        .demo-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        .demo-btn {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+
+        .demo-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(13, 148, 136, 0.3);
+        }
+
+        .demo-btn:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .demo-btn.reset {
+            background: linear-gradient(135deg, #f59e0b, #f97316);
+        }
+
+        .visualization-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            height: 400px;
+        }
+
+        .plot-container {
+            background: #1e293b;
+            border-radius: 15px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .plot-title {
+            color: #5eead4;
+            font-size: 1em;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .stats-container {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border: 2px solid #14b8a6;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #0d9488;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #475569;
+            font-weight: 500;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .visualization-container { grid-template-columns: 1fr; height: auto; }
+            .demo-controls { grid-template-columns: 1fr; }
+            .stats-container { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <div class="course-info">CS5710 - Week 2</div>
+    <div class="slide-number">Slide 32 of 40</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Interactive Gradient Descent Visualization</h1>
+        
+        <div class="content-layout">
+            <div class="concept-section">
+                <h2 class="section-title">🎯 What is Gradient Descent?</h2>
+                
+                <div class="definition-text">
+                    <strong>Gradient Descent</strong> is an optimization algorithm that iteratively moves toward the minimum of a cost function by taking steps proportional to the negative gradient.
+                </div>
+                
+                <div style="font-size: 1em; line-height: 1.6; color: #1e293b; margin-top: 20px;">
+                    <strong>🏔️ Mountain Analogy:</strong><br>
+                    Imagine you're blindfolded on a mountain and want to reach the bottom. You feel the slope around you and take a step in the steepest downward direction. Repeat until you reach the valley!
+                </div>
+                
+                <div class="formula-box">
+                    θ = θ - α · ∇J(θ)
+                </div>
+                
+                <div style="font-size: 0.9em; color: #475569; text-align: center; margin-top: 10px;">
+                    θ = parameters, α = learning rate, ∇J = gradient
+                </div>
+            </div>
+
+            <div class="algorithm-section">
+                <h2 class="section-title">⚙️ Algorithm Steps</h2>
+                
+                <ul class="algorithm-steps">
+                    <li class="step-item">
+                        <div class="step-number">1</div>
+                        <div class="step-text">Initialize parameters θ randomly</div>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-number">2</div>
+                        <div class="step-text">Calculate cost J(θ) for current parameters</div>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-number">3</div>
+                        <div class="step-text">Compute gradient ∇J(θ) (partial derivatives)</div>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-number">4</div>
+                        <div class="step-text">Update: θ = θ - α · ∇J(θ)</div>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-number">5</div>
+                        <div class="step-text">Repeat until convergence (gradient ≈ 0)</div>
+                    </li>
+                </ul>
+                
+                <div style="margin-top: 25px; padding: 20px; background: rgba(13, 148, 136, 0.1); border-radius: 15px; border-left: 4px solid #0d9488;">
+                    <strong>🎛️ Key Parameter:</strong><br>
+                    <strong>Learning Rate (α)</strong><br>
+                    • Too small → slow convergence<br>
+                    • Too large → overshoot minimum<br>
+                    • Just right → efficient optimization
+                </div>
+            </div>
+        </div>
+
+        <div class="interactive-section">
+            <h3 style="font-size: 1.8em; color: #0d9488; text-align: center; margin-bottom: 30px; font-weight: 600;">
+                🎮 Interactive Gradient Descent Demo
+            </h3>
+            
+            <div class="demo-controls">
+                <div class="control-group">
+                    <label class="control-label">Learning Rate (α)</label>
+                    <input type="range" min="0.01" max="0.5" step="0.01" value="0.1" class="control-slider" id="learningRateSlider">
+                    <div class="control-value" id="learningRateValue">0.10</div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">Starting Point (θ₀)</label>
+                    <input type="range" min="-2" max="2" step="0.1" value="1.5" class="control-slider" id="startPointSlider">
+                    <div class="control-value" id="startPointValue">1.50</div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">Animation Speed</label>
+                    <input type="range" min="1" max="10" step="1" value="5" class="control-slider" id="speedSlider">
+                    <div class="control-value" id="speedValue">5</div>
+                </div>
+            </div>
+            
+            <div class="demo-buttons">
+                <button class="demo-btn" id="startBtn">🚀 Start Descent</button>
+                <button class="demo-btn" id="pauseBtn" disabled>⏸️ Pause</button>
+                <button class="demo-btn" id="stepBtn">👣 Single Step</button>
+                <button class="demo-btn reset" id="resetBtn">🔄 Reset</button>
+            </div>
+            
+            <div class="visualization-container">
+                <div class="plot-container">
+                    <div class="plot-title">Cost Function J(θ)</div>
+                    <canvas id="costFunctionPlot" style="width: 100%; height: calc(100% - 40px);"></canvas>
+                </div>
+                
+                <div class="plot-container">
+                    <div class="plot-title">Convergence History</div>
+                    <canvas id="convergencePlot" style="width: 100%; height: calc(100% - 40px);"></canvas>
+                </div>
+            </div>
+            
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-value" id="currentTheta">1.50</div>
+                    <div class="stat-label">Current θ</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="currentCost">2.25</div>
+                    <div class="stat-label">Current Cost J(θ)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="currentGradient">3.00</div>
+                    <div class="stat-label">Current Gradient</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="iterationCount">0</div>
+                    <div class="stat-label">Iterations</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week2_Slide31.html" class="nav-btn">← Previous</a>
+        <a href="Week2_Slide33.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Gradient Descent Visualization Class
+        class GradientDescentDemo {
+            constructor() {
+                this.theta = 1.5;
+                this.learningRate = 0.1;
+                this.history = [];
+                this.iteration = 0;
+                this.isRunning = false;
+                this.animationSpeed = 5;
+                this.intervalId = null;
+                
+                this.initializeElements();
+                this.initializeCanvases();
+                this.setupEventListeners();
+                this.updateDisplay();
+            }
+            
+            initializeElements() {
+                this.startBtn = document.getElementById('startBtn');
+                this.pauseBtn = document.getElementById('pauseBtn');
+                this.stepBtn = document.getElementById('stepBtn');
+                this.resetBtn = document.getElementById('resetBtn');
+                
+                this.learningRateSlider = document.getElementById('learningRateSlider');
+                this.startPointSlider = document.getElementById('startPointSlider');
+                this.speedSlider = document.getElementById('speedSlider');
+                
+                this.learningRateValue = document.getElementById('learningRateValue');
+                this.startPointValue = document.getElementById('startPointValue');
+                this.speedValue = document.getElementById('speedValue');
+                
+                this.currentTheta = document.getElementById('currentTheta');
+                this.currentCost = document.getElementById('currentCost');
+                this.currentGradient = document.getElementById('currentGradient');
+                this.iterationCount = document.getElementById('iterationCount');
+            }
+            
+            initializeCanvases() {
+                this.costCanvas = document.getElementById('costFunctionPlot');
+                this.convergenceCanvas = document.getElementById('convergencePlot');
+                this.costCtx = this.costCanvas.getContext('2d');
+                this.convergenceCtx = this.convergenceCanvas.getContext('2d');
+                
+                // Set canvas sizes
+                this.resizeCanvases();
+                window.addEventListener('resize', () => this.resizeCanvases());
+            }
+            
+            resizeCanvases() {
+                [this.costCanvas, this.convergenceCanvas].forEach(canvas => {
+                    const rect = canvas.getBoundingClientRect();
+                    canvas.width = rect.width;
+                    canvas.height = rect.height;
+                });
+                this.drawCostFunction();
+                this.drawConvergenceHistory();
+            }
+            
+            setupEventListeners() {
+                this.startBtn.addEventListener('click', () => this.startDescent());
+                this.pauseBtn.addEventListener('click', () => this.pauseDescent());
+                this.stepBtn.addEventListener('click', () => this.singleStep());
+                this.resetBtn.addEventListener('click', () => this.reset());
+                
+                this.learningRateSlider.addEventListener('input', (e) => {
+                    this.learningRate = parseFloat(e.target.value);
+                    this.learningRateValue.textContent = this.learningRate.toFixed(2);
+                });
+                
+                this.startPointSlider.addEventListener('input', (e) => {
+                    if (!this.isRunning) {
+                        this.theta = parseFloat(e.target.value);
+                        this.startPointValue.textContent = this.theta.toFixed(2);
+                        this.updateDisplay();
+                        this.drawCostFunction();
+                    }
+                });
+                
+                this.speedSlider.addEventListener('input', (e) => {
+                    this.animationSpeed = parseInt(e.target.value);
+                    this.speedValue.textContent = this.animationSpeed;
+                    if (this.isRunning) {
+                        this.pauseDescent();
+                        this.startDescent();
+                    }
+                });
+            }
+            
+            // Simple quadratic cost function: J(θ) = (θ - 0.2)² + 0.1
+            costFunction(theta) {
+                return Math.pow(theta - 0.2, 2) + 0.1;
+            }
+            
+            // Gradient of cost function: ∇J(θ) = 2(θ - 0.2)
+            gradient(theta) {
+                return 2 * (theta - 0.2);
+            }
+            
+            singleStep() {
+                if (Math.abs(this.gradient(this.theta)) < 0.001) {
+                    alert('Convergence reached! Gradient ≈ 0');
+                    return;
+                }
+                
+                const oldTheta = this.theta;
+                const grad = this.gradient(this.theta);
+                
+                this.theta = this.theta - this.learningRate * grad;
+                this.iteration++;
+                
+                this.history.push({
+                    iteration: this.iteration,
+                    theta: this.theta,
+                    cost: this.costFunction(this.theta),
+                    gradient: grad
+                });
+                
+                this.updateDisplay();
+                this.drawCostFunction();
+                this.drawConvergenceHistory();
+            }
+            
+            startDescent() {
+                this.isRunning = true;
+                this.startBtn.disabled = true;
+                this.pauseBtn.disabled = false;
+                this.stepBtn.disabled = true;
+                
+                const delay = Math.max(50, 1000 / this.animationSpeed);
+                this.intervalId = setInterval(() => {
+                    this.singleStep();
+                    if (Math.abs(this.gradient(this.theta)) < 0.001) {
+                        this.pauseDescent();
+                        alert('🎉 Convergence reached! The algorithm found the minimum.');
+                    }
+                }, delay);
+            }
+            
+            pauseDescent() {
+                this.isRunning = false;
+                this.startBtn.disabled = false;
+                this.pauseBtn.disabled = true;
+                this.stepBtn.disabled = false;
+                
+                if (this.intervalId) {
+                    clearInterval(this.intervalId);
+                    this.intervalId = null;
+                }
+            }
+            
+            reset() {
+                this.pauseDescent();
+                this.theta = parseFloat(this.startPointSlider.value);
+                this.iteration = 0;
+                this.history = [];
+                
+                this.updateDisplay();
+                this.drawCostFunction();
+                this.drawConvergenceHistory();
+            }
+            
+            updateDisplay() {
+                this.currentTheta.textContent = this.theta.toFixed(3);
+                this.currentCost.textContent = this.costFunction(this.theta).toFixed(3);
+                this.currentGradient.textContent = this.gradient(this.theta).toFixed(3);
+                this.iterationCount.textContent = this.iteration;
+            }
+            
+            drawCostFunction() {
+                const ctx = this.costCtx;
+                const canvas = this.costCanvas;
+                
+                // Clear canvas
+                ctx.fillStyle = '#1e293b';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                const padding = 40;
+                const plotWidth = canvas.width - 2 * padding;
+                const plotHeight = canvas.height - 2 * padding;
+                
+                // Define theta range
+                const thetaMin = -3;
+                const thetaMax = 3;
+                const thetaRange = thetaMax - thetaMin;
+                
+                // Calculate cost range
+                const costs = [];
+                for (let i = 0; i <= 100; i++) {
+                    const theta = thetaMin + (i / 100) * thetaRange;
+                    costs.push(this.costFunction(theta));
+                }
+                const costMin = Math.min(...costs);
+                const costMax = Math.max(...costs);
+                const costRange = costMax - costMin;
+                
+                // Scale functions
+                const scaleX = (theta) => padding + ((theta - thetaMin) / thetaRange) * plotWidth;
+                const scaleY = (cost) => canvas.height - padding - ((cost - costMin) / costRange) * plotHeight;
+                
+                // Draw axes
+                ctx.strokeStyle = '#5eead4';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(padding, canvas.height - padding);
+                ctx.lineTo(canvas.width - padding, canvas.height - padding);
+                ctx.moveTo(padding, canvas.height - padding);
+                ctx.lineTo(padding, padding);
+                ctx.stroke();
+                
+                // Draw cost function curve
+                ctx.strokeStyle = '#3b82f6';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                
+                for (let i = 0; i <= 200; i++) {
+                    const theta = thetaMin + (i / 200) * thetaRange;
+                    const cost = this.costFunction(theta);
+                    const x = scaleX(theta);
+                    const y = scaleY(cost);
+                    
+                    if (i === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+                ctx.stroke();
+                
+                // Draw current position
+                const currentX = scaleX(this.theta);
+                const currentY = scaleY(this.costFunction(this.theta));
+                
+                ctx.fillStyle = '#ef4444';
+                ctx.beginPath();
+                ctx.arc(currentX, currentY, 8, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                // Draw gradient arrow if significant
+                const grad = this.gradient(this.theta);
+                if (Math.abs(grad) > 0.01) {
+                    const arrowLength = 30;
+                    const arrowX = currentX - Math.sign(grad) * arrowLength;
+                    
+                    ctx.strokeStyle = '#f59e0b';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(currentX, currentY);
+                    ctx.lineTo(arrowX, currentY);
+                    
+                    // Arrow head
+                    const headSize = 8;
+                    ctx.lineTo(arrowX + Math.sign(grad) * headSize, currentY - headSize/2);
+                    ctx.moveTo(arrowX, currentY);
+                    ctx.lineTo(arrowX + Math.sign(grad) * headSize, currentY + headSize/2);
+                    ctx.stroke();
+                }
+                
+                // Labels
+                ctx.fillStyle = '#5eead4';
+                ctx.font = '12px Arial';
+                ctx.fillText('θ', canvas.width - 25, canvas.height - 15);
+                ctx.fillText('J(θ)', 15, 25);
+                ctx.fillText(`θ = ${this.theta.toFixed(2)}`, currentX - 25, currentY - 15);
+            }
+            
+            drawConvergenceHistory() {
+                const ctx = this.convergenceCtx;
+                const canvas = this.convergenceCanvas;
+                
+                // Clear canvas
+                ctx.fillStyle = '#1e293b';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                if (this.history.length < 2) return;
+                
+                const padding = 40;
+                const plotWidth = canvas.width - 2 * padding;
+                const plotHeight = canvas.height - 2 * padding;
+                
+                // Find ranges
+                const iterations = this.history.map(h => h.iteration);
+                const costs = this.history.map(h => h.cost);
+                
+                const iterMin = Math.min(...iterations);
+                const iterMax = Math.max(...iterations);
+                const costMin = Math.min(...costs);
+                const costMax = Math.max(...costs);
+                
+                const iterRange = iterMax - iterMin || 1;
+                const costRange = costMax - costMin || 1;
+                
+                // Scale functions
+                const scaleX = (iter) => padding + ((iter - iterMin) / iterRange) * plotWidth;
+                const scaleY = (cost) => canvas.height - padding - ((cost - costMin) / costRange) * plotHeight;
+                
+                // Draw axes
+                ctx.strokeStyle = '#5eead4';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(padding, canvas.height - padding);
+                ctx.lineTo(canvas.width - padding, canvas.height - padding);
+                ctx.moveTo(padding, canvas.height - padding);
+                ctx.lineTo(padding, padding);
+                ctx.stroke();
+                
+                // Draw convergence line
+                ctx.strokeStyle = '#10b981';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                
+                this.history.forEach((point, index) => {
+                    const x = scaleX(point.iteration);
+                    const y = scaleY(point.cost);
+                    
+                    if (index === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                });
+                ctx.stroke();
+                
+                // Draw points
+                ctx.fillStyle = '#10b981';
+                this.history.forEach(point => {
+                    const x = scaleX(point.iteration);
+                    const y = scaleY(point.cost);
+                    ctx.beginPath();
+                    ctx.arc(x, y, 3, 0, 2 * Math.PI);
+                    ctx.fill();
+                });
+                
+                // Labels
+                ctx.fillStyle = '#5eead4';
+                ctx.font = '12px Arial';
+                ctx.fillText('Iteration', canvas.width / 2 - 25, canvas.height - 15);
+                ctx.save();
+                ctx.translate(15, canvas.height / 2);
+                ctx.rotate(-Math.PI / 2);
+                ctx.fillText('Cost J(θ)', -25, 0);
+                ctx.restore();
+            }
+        }
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Initialize demo when page loads
+        let gradientDescentDemo;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            createFloatingElements();
+            gradientDescentDemo = new GradientDescentDemo();
+        });
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week2_Slide31.html';
+            } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                if (!gradientDescentDemo?.isRunning) {
+                    window.location.href = 'Week2_Slide33.html';
+                }
+            }
+        });
+
+    </script>
+</body>
+</html>

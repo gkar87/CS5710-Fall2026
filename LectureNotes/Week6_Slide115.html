@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Gaussian Mixture Models (GMM)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .concept-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .mathematics-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .definition-text {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 25px;
+            padding: 20px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .key-concepts {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .concept-item {
+            padding: 15px;
+            margin: 12px 0;
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border-left: 3px solid #14b8a6;
+        }
+
+        .concept-item:hover {
+            transform: translateX(8px);
+            box-shadow: 0 8px 20px rgba(13, 148, 136, 0.15);
+        }
+
+        .concept-icon {
+            display: inline-block;
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+
+        .concept-text {
+            font-size: 0.95em;
+            color: #475569;
+        }
+
+        .math-formula {
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid rgba(13, 148, 136, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+            font-size: 1.1em;
+            color: #134e4a;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .math-formula:hover {
+            background: rgba(13, 148, 136, 0.1);
+            transform: scale(1.02);
+        }
+
+        .visualization-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            margin-bottom: 40px;
+        }
+
+        .gmm-controls {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .control-label {
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #0d9488;
+        }
+
+        .control-slider {
+            width: 150px;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(13, 148, 136, 0.2);
+            outline: none;
+            appearance: none;
+        }
+
+        .control-slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            cursor: pointer;
+        }
+
+        .control-value {
+            font-size: 0.9em;
+            font-weight: bold;
+            color: #134e4a;
+            background: rgba(13, 148, 136, 0.1);
+            padding: 4px 12px;
+            border-radius: 15px;
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(13, 148, 136, 0.3);
+        }
+
+        .gmm-canvas {
+            width: 100%;
+            height: 450px;
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 15px;
+            border: 2px solid #14b8a6;
+            position: relative;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .gmm-point {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.5s ease;
+        }
+
+        .gaussian-ellipse {
+            position: absolute;
+            border: 2px solid;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.05);
+            pointer-events: none;
+            transition: all 0.5s ease;
+        }
+
+        .cluster-0 { background-color: #ef4444; }
+        .cluster-1 { background-color: #3b82f6; }
+        .cluster-2 { background-color: #10b981; }
+        .cluster-3 { background-color: #f59e0b; }
+        .cluster-4 { background-color: #8b5cf6; }
+
+        .ellipse-0 { border-color: #ef4444; }
+        .ellipse-1 { border-color: #3b82f6; }
+        .ellipse-2 { border-color: #10b981; }
+        .ellipse-3 { border-color: #f59e0b; }
+        .ellipse-4 { border-color: #8b5cf6; }
+
+        .gmm-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+            border-left: 3px solid #14b8a6;
+        }
+
+        .stat-value {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #0d9488;
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            color: #64748b;
+        }
+
+        .comparison-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.9s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .comparison-table th {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            font-weight: 600;
+        }
+
+        .comparison-table tr:hover {
+            background: rgba(153, 246, 228, 0.1);
+            cursor: pointer;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: float 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .gmm-stats { grid-template-columns: repeat(2, 1fr); }
+            .slide-title { font-size: 2.5em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    
+    <div class="course-info">CS5710 - Week 6</div>
+    <div class="slide-number">Slide 115 of 120</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Gaussian Mixture Models (GMM)</h1>
+        
+        <div class="content-layout">
+            <div class="concept-section">
+                <h2 class="section-title">🎯 Core Concept</h2>
+                
+                <div class="definition-text">
+                    <strong>Gaussian Mixture Model (GMM)</strong> is a probabilistic clustering algorithm that models data as a mixture of multiple Gaussian distributions. Each cluster is represented by a Gaussian distribution with its own parameters (mean, covariance, mixing coefficient).
+                </div>
+                
+                <ul class="key-concepts">
+                    <li class="concept-item">
+                        <span class="concept-icon">📊</span>
+                        <span class="concept-text">Probabilistic clustering approach</span>
+                    </li>
+                    <li class="concept-item">
+                        <span class="concept-icon">🎲</span>
+                        <span class="concept-text">Soft assignment of points to clusters</span>
+                    </li>
+                    <li class="concept-item">
+                        <span class="concept-icon">📈</span>
+                        <span class="concept-text">Models elliptical cluster shapes</span>
+                    </li>
+                    <li class="concept-item">
+                        <span class="concept-icon">🎯</span>
+                        <span class="concept-text">Estimates cluster parameters</span>
+                    </li>
+                    <li class="concept-item">
+                        <span class="concept-icon">🔧</span>
+                        <span class="concept-text">Uses Expectation-Maximization (EM)</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="mathematics-section">
+                <h2 class="section-title">📐 Mathematical Foundation</h2>
+                
+                <div class="math-formula">
+                    p(x) = Σ πₖ N(x | μₖ, Σₖ)
+                    <div style="font-size: 0.8em; margin-top: 5px; color: #64748b;">
+                        Mixture of K Gaussians
+                    </div>
+                </div>
+                
+                <div class="math-formula">
+                    πₖ ≥ 0, Σ πₖ = 1
+                    <div style="font-size: 0.8em; margin-top: 5px; color: #64748b;">
+                        Mixing coefficients
+                    </div>
+                </div>
+                
+                <div class="math-formula">
+                    N(x | μ, Σ) = (2π)⁻ᵈ/²|Σ|⁻¹/² exp(-½(x-μ)ᵀΣ⁻¹(x-μ))
+                    <div style="font-size: 0.8em; margin-top: 5px; color: #64748b;">
+                        Multivariate Gaussian
+                    </div>
+                </div>
+                
+                <div class="math-formula">
+                    γ(zₙₖ) = πₖN(xₙ|μₖ,Σₖ) / ΣⱼπⱼN(xₙ|μⱼ,Σⱼ)
+                    <div style="font-size: 0.8em; margin-top: 5px; color: #64748b;">
+                        Responsibility (posterior probability)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="visualization-section">
+            <h2 class="section-title">🎮 Interactive GMM Visualization</h2>
+            
+            <div class="gmm-controls">
+                <div class="control-group">
+                    <label class="control-label">Components (K)</label>
+                    <input type="range" class="control-slider" id="componentsSlider" min="1" max="4" value="3">
+                    <div class="control-value" id="componentsValue">3</div>
+                </div>
+                
+                <button class="control-btn" id="generateData">Generate Data</button>
+                <button class="control-btn" id="fitGMM">Fit GMM</button>
+                <button class="control-btn" id="stepEM">Step EM</button>
+                <button class="control-btn" id="resetGMM">Reset</button>
+            </div>
+            
+            <div class="gmm-canvas" id="gmmCanvas"></div>
+            
+            <div class="gmm-stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalPoints">0</div>
+                    <div class="stat-label">Data Points</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="components">3</div>
+                    <div class="stat-label">Components</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="likelihood">-</div>
+                    <div class="stat-label">Log-Likelihood</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="iterations">0</div>
+                    <div class="stat-label">EM Iterations</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="comparison-section">
+            <h2 class="section-title">⚖️ GMM vs Other Clustering Methods</h2>
+            
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Aspect</th>
+                        <th>GMM</th>
+                        <th>K-Means</th>
+                        <th>DBSCAN</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Assignment</strong></td>
+                        <td>Soft (probabilistic)</td>
+                        <td>Hard (binary)</td>
+                        <td>Hard (density-based)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cluster Shape</strong></td>
+                        <td>Elliptical (flexible)</td>
+                        <td>Spherical (circular)</td>
+                        <td>Arbitrary shape</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Parameter Selection</strong></td>
+                        <td>Number of components (K)</td>
+                        <td>Number of clusters (k)</td>
+                        <td>ε (epsilon), minPts</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Probabilistic Output</strong></td>
+                        <td>Yes (cluster probabilities)</td>
+                        <td>No (only assignments)</td>
+                        <td>No (binary: cluster or noise)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Handling Outliers</strong></td>
+                        <td>Moderate (soft assignment)</td>
+                        <td>Poor (outliers affect centroids)</td>
+                        <td>Excellent (explicit noise detection)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Computational Complexity</strong></td>
+                        <td>O(ndk) per iteration</td>
+                        <td>O(ndk) per iteration</td>
+                        <td>O(n²) worst case</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week6_Slide114.html" class="nav-btn">← Previous</a>
+        <a href="Week6_Slide116.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // GMM Visualization Demo
+        class GMMDemo {
+            constructor() {
+                this.canvas = document.getElementById('gmmCanvas');
+                this.componentsSlider = document.getElementById('componentsSlider');
+                this.componentsValue = document.getElementById('componentsValue');
+                
+                this.points = [];
+                this.components = [];
+                this.ellipses = [];
+                this.iteration = 0;
+                this.isConverged = false;
+                
+                this.setupEventListeners();
+                this.generateRandomData();
+            }
+            
+            setupEventListeners() {
+                this.componentsSlider.addEventListener('input', () => {
+                    this.componentsValue.textContent = this.componentsSlider.value;
+                    document.getElementById('components').textContent = this.componentsSlider.value;
+                });
+                
+                document.getElementById('generateData').addEventListener('click', () => this.generateRandomData());
+                document.getElementById('fitGMM').addEventListener('click', () => this.fitGMM());
+                document.getElementById('stepEM').addEventListener('click', () => this.stepEM());
+                document.getElementById('resetGMM').addEventListener('click', () => this.reset());
+            }
+            
+            generateRandomData() {
+                this.points = [];
+                this.canvas.innerHTML = '';
+                
+                // Generate clustered data
+                const trueComponents = [
+                    { center: [30, 35], covariance: [[400, 0], [0, 300]], weight: 0.4 },
+                    { center: [65, 25], covariance: [[250, 100], [100, 400]], weight: 0.35 },
+                    { center: [50, 70], covariance: [[300, -50], [-50, 200]], weight: 0.25 }
+                ];
+                
+                trueComponents.forEach((comp, compIndex) => {
+                    const numPoints = Math.floor(comp.weight * 150);
+                    for (let i = 0; i < numPoints; i++) {
+                        // Generate point from multivariate normal distribution (simplified)
+                        const point = this.sampleFromGaussian(comp.center, comp.covariance);
+                        if (point.x >= 5 && point.x <= 95 && point.y >= 5 && point.y <= 95) {
+                            const element = document.createElement('div');
+                            element.className = 'gmm-point';
+                            element.style.left = point.x + '%';
+                            element.style.top = point.y + '%';
+                            element.style.backgroundColor = '#64748b';
+                            this.canvas.appendChild(element);
+                            
+                            point.element = element;
+                            point.trueComponent = compIndex;
+                            point.responsibilities = [];
+                            this.points.push(point);
+                        }
+                    }
+                });
+                
+                document.getElementById('totalPoints').textContent = this.points.length;
+                this.reset();
+            }
+            
+            sampleFromGaussian(mean, covariance) {
+                // Simplified 2D gaussian sampling using Box-Muller transform
+                const u1 = Math.random();
+                const u2 = Math.random();
+                const z0 = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+                const z1 = Math.sqrt(-2 * Math.log(u1)) * Math.sin(2 * Math.PI * u2);
+                
+                // Apply covariance transformation (simplified)
+                const scale = Math.sqrt(covariance[0][0] / 100);
+                return {
+                    x: mean[0] + z0 * scale * 0.5,
+                    y: mean[1] + z1 * scale * 0.5
+                };
+            }
+            
+            fitGMM() {
+                this.initializeComponents();
+                
+                const maxIterations = 50;
+                let prevLogLikelihood = -Infinity;
+                
+                for (let iter = 0; iter < maxIterations; iter++) {
+                    this.stepEM();
+                    
+                    const logLikelihood = this.calculateLogLikelihood();
+                    if (Math.abs(logLikelihood - prevLogLikelihood) < 0.01) {
+                        this.isConverged = true;
+                        break;
+                    }
+                    prevLogLikelihood = logLikelihood;
+                }
+                
+                this.updateVisualization();
+            }
+            
+            initializeComponents() {
+                const k = parseInt(this.componentsSlider.value);
+                this.components = [];
+                
+                // Initialize with random points from data
+                for (let i = 0; i < k; i++) {
+                    const randomPoint = this.points[Math.floor(Math.random() * this.points.length)];
+                    this.components.push({
+                        mean: [randomPoint.x, randomPoint.y],
+                        covariance: [[100, 0], [0, 100]], // Identity-like covariance
+                        weight: 1.0 / k
+                    });
+                }
+                
+                this.iteration = 0;
+                this.isConverged = false;
+            }
+            
+            stepEM() {
+                if (!this.components.length) {
+                    this.initializeComponents();
+                }
+                
+                // E-step: Calculate responsibilities
+                this.calculateResponsibilities();
+                
+                // M-step: Update parameters
+                this.updateParameters();
+                
+                this.iteration++;
+                document.getElementById('iterations').textContent = this.iteration;
+                
+                const logLikelihood = this.calculateLogLikelihood();
+                document.getElementById('likelihood').textContent = logLikelihood.toFixed(2);
+                
+                this.updateVisualization();
+            }
+            
+            calculateResponsibilities() {
+                this.points.forEach(point => {
+                    point.responsibilities = [];
+                    let totalProb = 0;
+                    
+                    // Calculate probability for each component
+                    this.components.forEach(comp => {
+                        const prob = comp.weight * this.gaussianProbability([point.x, point.y], comp.mean, comp.covariance);
+                        point.responsibilities.push(prob);
+                        totalProb += prob;
+                    });
+                    
+                    // Normalize responsibilities
+                    point.responsibilities = point.responsibilities.map(r => r / (totalProb + 1e-10));
+                });
+            }
+            
+            updateParameters() {
+                this.components.forEach((comp, k) => {
+                    let nk = 0;
+                    let newMean = [0, 0];
+                    
+                    // Calculate effective number of points and new mean
+                    this.points.forEach(point => {
+                        const responsibility = point.responsibilities[k];
+                        nk += responsibility;
+                        newMean[0] += responsibility * point.x;
+                        newMean[1] += responsibility * point.y;
+                    });
+                    
+                    if (nk > 1e-10) {
+                        newMean[0] /= nk;
+                        newMean[1] /= nk;
+                        
+                        // Update covariance (simplified to diagonal)
+                        let covXX = 0, covYY = 0;
+                        this.points.forEach(point => {
+                            const responsibility = point.responsibilities[k];
+                            covXX += responsibility * Math.pow(point.x - newMean[0], 2);
+                            covYY += responsibility * Math.pow(point.y - newMean[1], 2);
+                        });
+                        
+                        comp.mean = newMean;
+                        comp.covariance = [[Math.max(covXX / nk, 10), 0], [0, Math.max(covYY / nk, 10)]];
+                        comp.weight = nk / this.points.length;
+                    }
+                });
+            }
+            
+            gaussianProbability(x, mean, covariance) {
+                const dx = x[0] - mean[0];
+                const dy = x[1] - mean[1];
+                const det = covariance[0][0] * covariance[1][1] - covariance[0][1] * covariance[1][0];
+                const invCov00 = covariance[1][1] / det;
+                const invCov11 = covariance[0][0] / det;
+                
+                const exponent = -0.5 * (dx * dx * invCov00 + dy * dy * invCov11);
+                return Math.exp(exponent) / (2 * Math.PI * Math.sqrt(det));
+            }
+            
+            calculateLogLikelihood() {
+                let logLikelihood = 0;
+                this.points.forEach(point => {
+                    let pointProb = 0;
+                    this.components.forEach(comp => {
+                        pointProb += comp.weight * this.gaussianProbability([point.x, point.y], comp.mean, comp.covariance);
+                    });
+                    logLikelihood += Math.log(pointProb + 1e-10);
+                });
+                return logLikelihood;
+            }
+            
+            updateVisualization() {
+                // Update point colors based on most likely component
+                this.points.forEach(point => {
+                    let maxResponsibility = 0;
+                    let bestComponent = 0;
+                    
+                    point.responsibilities.forEach((resp, k) => {
+                        if (resp > maxResponsibility) {
+                            maxResponsibility = resp;
+                            bestComponent = k;
+                        }
+                    });
+                    
+                    point.element.className = `gmm-point cluster-${bestComponent}`;
+                });
+                
+                // Clear previous ellipses
+                this.ellipses.forEach(ellipse => ellipse.remove());
+                this.ellipses = [];
+                
+                // Draw component ellipses
+                this.components.forEach((comp, k) => {
+                    const ellipse = this.createEllipse(comp, k);
+                    this.canvas.appendChild(ellipse);
+                    this.ellipses.push(ellipse);
+                });
+            }
+            
+            createEllipse(component, index) {
+                const ellipse = document.createElement('div');
+                ellipse.className = `gaussian-ellipse ellipse-${index}`;
+                
+                // Simplified ellipse representation
+                const scaleX = Math.sqrt(component.covariance[0][0]);
+                const scaleY = Math.sqrt(component.covariance[1][1]);
+                
+                const width = Math.min(scaleX * 4, 200);
+                const height = Math.min(scaleY * 4, 200);
+                
+                ellipse.style.width = width + 'px';
+                ellipse.style.height = height + 'px';
+                ellipse.style.left = (component.mean[0] * this.canvas.offsetWidth / 100 - width / 2) + 'px';
+                ellipse.style.top = (component.mean[1] * this.canvas.offsetHeight / 100 - height / 2) + 'px';
+                
+                return ellipse;
+            }
+            
+            reset() {
+                this.components = [];
+                this.ellipses.forEach(ellipse => ellipse.remove());
+                this.ellipses = [];
+                this.iteration = 0;
+                this.isConverged = false;
+                
+                this.points.forEach(point => {
+                    point.element.style.backgroundColor = '#64748b';
+                    point.element.className = 'gmm-point';
+                    point.responsibilities = [];
+                });
+                
+                document.getElementById('iterations').textContent = '0';
+                document.getElementById('likelihood').textContent = '-';
+            }
+        }
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive concept items
+        document.querySelectorAll('.concept-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const text = this.querySelector('.concept-text').textContent;
+                
+                const details = {
+                    'Probabilistic clustering approach': {
+                        title: 'Probabilistic Nature of GMM',
+                        content: 'Unlike hard clustering methods, GMM assigns probabilities of membership to each cluster. This provides uncertainty quantification and allows for overlapping clusters.'
+                    },
+                    'Soft assignment of points to clusters': {
+                        title: 'Soft vs Hard Assignment',
+                        content: 'Each point has a probability of belonging to each cluster (responsibilities). This is more realistic than hard assignments, especially for boundary points.'
+                    },
+                    'Models elliptical cluster shapes': {
+                        title: 'Flexible Cluster Shapes',
+                        content: 'GMM can model clusters with different shapes and orientations through the covariance matrix. Each component can be a different ellipse.'
+                    },
+                    'Estimates cluster parameters': {
+                        title: 'Parameter Estimation',
+                        content: 'GMM estimates mean vectors, covariance matrices, and mixing coefficients for each component using maximum likelihood estimation.'
+                    },
+                    'Uses Expectation-Maximization (EM)': {
+                        title: 'EM Algorithm',
+                        content: 'GMM uses the EM algorithm to iteratively estimate parameters. E-step calculates responsibilities, M-step updates parameters.'
+                    }
+                };
+                
+                const detail = details[text];
+                if (detail) {
+                    modal.show(detail.title, `
+                        <div class="modal-highlight">
+                            ${detail.content}
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Interactive math formulas
+        document.querySelectorAll('.math-formula').forEach(formula => {
+            formula.addEventListener('click', function() {
+                const formulaText = this.childNodes[0].textContent.trim();
+                
+                const explanations = {
+                    'p(x) = Σ πₖ N(x | μₖ, Σₖ)': 'The mixture model combines K Gaussian distributions, each weighted by πₖ. This represents the overall probability density of the data.',
+                    'πₖ ≥ 0, Σ πₖ = 1': 'Mixing coefficients must be non-negative and sum to 1, representing the prior probability of each component.',
+                    'N(x | μ, Σ) = (2π)⁻ᵈ/²|Σ|⁻¹/² exp(-½(x-μ)ᵀΣ⁻¹(x-μ))': 'The multivariate Gaussian probability density function with mean μ and covariance Σ.',
+                    'γ(zₙₖ) = πₖN(xₙ|μₖ,Σₖ) / ΣⱼπⱼN(xₙ|μⱼ,Σⱼ)': 'The responsibility: posterior probability that point n belongs to component k, computed using Bayes\' theorem.'
+                };
+                
+                modal.show('Mathematical Formula Explanation', `
+                    <div class="modal-highlight">
+                        <p style="font-family: 'Courier New', monospace; text-align: center; font-size: 1.2em; margin-bottom: 20px;">
+                            ${formulaText}
+                        </p>
+                        <p>${explanations[formulaText]}</p>
+                    </div>
+                `);
+            });
+        });
+
+        // Interactive comparison table
+        document.querySelectorAll('.comparison-table tbody tr').forEach(row => {
+            row.addEventListener('click', function() {
+                const aspect = this.cells[0].textContent;
+                
+                const explanations = {
+                    'Assignment': 'GMM provides probability of membership for each cluster, allowing uncertainty quantification. K-means assigns each point to exactly one cluster. DBSCAN assigns points to clusters or marks them as noise.',
+                    'Cluster Shape': 'GMM can model elliptical clusters with different orientations through covariance matrices. K-means assumes spherical clusters. DBSCAN can handle any shape based on density.',
+                    'Parameter Selection': 'All methods require choosing the number of clusters/components. DBSCAN additionally needs density parameters.',
+                    'Probabilistic Output': 'Only GMM provides probabilistic cluster membership, useful for uncertainty estimation and decision making.',
+                    'Handling Outliers': 'DBSCAN explicitly identifies outliers as noise. GMM handles them through soft assignment. K-means is most sensitive to outliers.',
+                    'Computational Complexity': 'GMM and K-means have similar complexity per iteration. DBSCAN can be expensive for large datasets without spatial indexing.'
+                };
+                
+                modal.show(aspect + ' - Comparison Details', `
+                    <div class="modal-highlight">
+                        ${explanations[aspect]}
+                    </div>
+                `);
+            });
+        });
+
+        // Initialize
+        const demo = new GMMDemo();
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week6_Slide114.html';
+            } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                if (!modal.overlay.classList.contains('active')) {
+                    window.location.href = 'Week6_Slide116.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

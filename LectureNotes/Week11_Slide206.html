@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Policy Functions</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .policy-definition {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .policy-types {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .definition-box {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-left: 4px solid #0d9488;
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .definition-box:hover {
+            transform: translateX(5px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.2);
+        }
+
+        .formula {
+            font-size: 2em;
+            font-weight: bold;
+            text-align: center;
+            color: #0d9488;
+            margin: 20px 0;
+            font-family: 'Times New Roman', serif;
+            cursor: pointer;
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .formula:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.3);
+        }
+
+        .policy-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 15px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .policy-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.2);
+            border-color: #0d9488;
+        }
+
+        .policy-type-title {
+            font-size: 1.3em;
+            color: #0d9488;
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .policy-description {
+            color: #475569;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .policy-examples {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            margin: 40px 0;
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+        }
+
+        .examples-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .example-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .example-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.3);
+        }
+
+        .example-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+
+        .example-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 10px;
+        }
+
+        .example-desc {
+            font-size: 0.95em;
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.3s ease;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 2em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .modal-close:hover {
+            background: #f1f5f9;
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            color: #1e293b;
+            line-height: 1.8;
+        }
+
+        .modal-content p {
+            margin: 15px 0;
+            font-size: 1.05em;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-left: 4px solid #0d9488;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+
+        .modal-formula {
+            background: #f8fafc;
+            border: 2px solid #cbd5e1;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+            font-family: 'Times New Roman', serif;
+            font-size: 1.2em;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            color: #0d9488;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 1em;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.4);
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(240,253,250,0.95));
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            font-weight: 600;
+            color: #0d9488;
+            z-index: 100;
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(240,253,250,0.95));
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            font-weight: 600;
+            color: #0d9488;
+            z-index: 100;
+        }
+
+        .floating-elements {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .floating-element {
+            position: absolute;
+            font-size: 20px;
+            opacity: 0.1;
+            animation: mlFloat 20s infinite;
+            color: #0d9488;
+        }
+
+        .floating-element::before {
+            content: '🎯';
+        }
+
+        .floating-element:nth-child(3n)::before {
+            content: '⚡';
+        }
+
+        .floating-element:nth-child(3n+1)::before {
+            content: '🧠';
+        }
+
+        .floating-element:nth-child(3n+2)::before {
+            content: '🎮';
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.1; }
+            90% { opacity: 0.1; }
+            100% { transform: translateY(-100px) translateX(100px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .examples-grid { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 11</div>
+    <div class="slide-number">Slide 206 of 220</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Policy Functions</h1>
+        
+        <div class="content-layout">
+            <div class="policy-definition">
+                <h2 class="section-title">What is a Policy?</h2>
+                
+                <div class="definition-box">
+                    A <strong>policy</strong> is a strategy that defines the agent's behavior by specifying which action to take in each state.
+                </div>
+                
+                <div class="formula">π(a|s)</div>
+                
+                <div style="text-align: center; margin-top: 20px; font-size: 1.1em; color: #1e293b;">
+                    Probability of taking action <em>a</em> in state <em>s</em>
+                </div>
+            </div>
+
+            <div class="policy-types">
+                <h2 class="section-title">Types of Policies</h2>
+                
+                <div class="policy-card">
+                    <div class="policy-type-title">
+                        <span>🎯</span> Deterministic Policy
+                    </div>
+                    <div class="policy-description">
+                        Always selects the same action for a given state
+                    </div>
+                </div>
+                
+                <div class="policy-card">
+                    <div class="policy-type-title">
+                        <span>🎲</span> Stochastic Policy
+                    </div>
+                    <div class="policy-description">
+                        Selects actions probabilistically based on a distribution
+                    </div>
+                </div>
+                
+                <div class="policy-card">
+                    <div class="policy-type-title">
+                        <span>🧠</span> Parameterized Policy
+                    </div>
+                    <div class="policy-description">
+                        Uses parameters (like neural network weights) to define behavior
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="policy-examples">
+            <div style="font-size: 1.3em; font-weight: 600; color: #0d9488; text-align: center; margin-bottom: 20px;">
+                Policy Examples in Action
+            </div>
+            
+            <div class="examples-grid">
+                <div class="example-card">
+                    <div class="example-icon">♟️</div>
+                    <div class="example-title">Chess Strategy</div>
+                    <div class="example-desc">Map board positions to best moves</div>
+                </div>
+                
+                <div class="example-card">
+                    <div class="example-icon">🚗</div>
+                    <div class="example-title">Driving Policy</div>
+                    <div class="example-desc">Traffic situations → driving actions</div>
+                </div>
+                
+                <div class="example-card">
+                    <div class="example-icon">🤖</div>
+                    <div class="example-title">Robot Control</div>
+                    <div class="example-desc">Sensor readings → motor commands</div>
+                </div>
+                
+                <div class="example-card">
+                    <div class="example-icon">💰</div>
+                    <div class="example-title">Trading Strategy</div>
+                    <div class="example-desc">Market conditions → buy/sell decisions</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week11_Slide205.html" class="nav-btn">← Previous</a>
+        <a href="Week11_Slide207.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 20; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 20 + 's';
+                element.style.animationDuration = (Math.random() * 15 + 20) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive policy definition
+        document.querySelector('.definition-box').addEventListener('click', function() {
+            modal.show('Policy Definition', `
+                <div class="modal-highlight">
+                    <strong>The Core of Reinforcement Learning Decision Making</strong>
+                </div>
+                
+                <p>A policy is the agent's strategy for selecting actions. It's the "brain" that decides what to do in each situation.</p>
+                
+                <div class="modal-formula">
+                    π : S → A (deterministic)<br>
+                    π : S → P(A) (stochastic)
+                </div>
+                
+                <div class="modal-code">
+# Simple deterministic policy
+def policy(state):
+    if state == 'hungry':
+        return 'eat'
+    elif state == 'tired':
+        return 'sleep'
+    else:
+        return 'explore'
+
+# Stochastic policy with probabilities
+def stochastic_policy(state):
+    if state == 'uncertain':
+        return {
+            'action_A': 0.6,
+            'action_B': 0.3,
+            'action_C': 0.1
+        }
+    # Return action probabilities
+                </div>
+                
+                <p><strong>Key Properties of Policies:</strong></p>
+                <ul style="margin-left: 20px;">
+                    <li><strong>Stationary:</strong> Policy doesn't change over time</li>
+                    <li><strong>Non-stationary:</strong> Policy evolves during learning</li>
+                    <li><strong>Markovian:</strong> Decision depends only on current state</li>
+                    <li><strong>History-dependent:</strong> Uses past information</li>
+                </ul>
+                
+                <p><strong>Policy Evaluation:</strong> How good is a policy? We measure expected return when following that policy.</p>
+            `);
+        });
+
+        // Interactive formula
+        document.querySelector('.formula').addEventListener('click', function() {
+            modal.show('Policy Function Notation', `
+                <div class="modal-highlight">
+                    <strong>Understanding π(a|s)</strong>
+                </div>
+                
+                <div class="modal-formula">
+                    π(a|s) = P(A<sub>t</sub> = a | S<sub>t</sub> = s)
+                </div>
+                
+                <p>This notation means: "The probability that the agent takes action <em>a</em> when in state <em>s</em> at time <em>t</em>."</p>
+                
+                <div class="modal-code">
+# Example: Traffic light policy
+state = 'red_light'
+policy = {
+    'stop': 1.0,      # 100% probability
+    'go': 0.0,        # 0% probability
+    'slow_down': 0.0  # 0% probability
+}
+
+# Stochastic example: Exploration policy
+state = 'intersection'
+policy = {
+    'go_straight': 0.5,  # 50% probability
+    'turn_left': 0.3,    # 30% probability
+    'turn_right': 0.2    # 20% probability
+}
+
+# The probabilities must sum to 1.0
+assert sum(policy.values()) == 1.0
+                </div>
+                
+                <p><strong>Mathematical Properties:</strong></p>
+                <ul style="margin-left: 20px;">
+                    <li>∑<sub>a</sub> π(a|s) = 1 for all states s</li>
+                    <li>π(a|s) ≥ 0 for all actions a and states s</li>
+                    <li>π(a|s) ∈ [0,1] (valid probability)</li>
+                </ul>
+                
+                <p><strong>Special Cases:</strong></p>
+                <ul style="margin-left: 20px;">
+                    <li><strong>Deterministic:</strong> π(a|s) ∈ {0,1}</li>
+                    <li><strong>Uniform random:</strong> π(a|s) = 1/|A| for all a</li>
+                    <li><strong>Greedy:</strong> π(a*|s) = 1, π(a|s) = 0 for a ≠ a*</li>
+                </ul>
+            `);
+        });
+
+        // Interactive policy cards
+        document.querySelectorAll('.policy-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('.policy-type-title').textContent.trim();
+                
+                const policyDetails = {
+                    '🎯 Deterministic Policy': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>One State, One Action</strong>
+                            </div>
+                            
+                            <p>A deterministic policy always selects the same action for a given state. There's no randomness involved.</p>
+                            
+                            <div class="modal-formula">
+                                π(s) = a (single action)<br>
+                                π(a|s) = 1 for chosen action, 0 for others
+                            </div>
+                            
+                            <div class="modal-code">
+# Deterministic policy examples
+
+# Simple lookup table
+policy_table = {
+    'sunny': 'go_beach',
+    'rainy': 'stay_home',
+    'cloudy': 'go_shopping'
+}
+
+def deterministic_policy(state):
+    return policy_table[state]
+
+# Rule-based policy
+def traffic_policy(state):
+    if state.light == 'red':
+        return 'stop'
+    elif state.light == 'yellow':
+        return 'slow_down'
+    elif state.light == 'green':
+        return 'go'
+
+# Neural network policy (argmax)
+def nn_deterministic_policy(state):
+    q_values = neural_network(state)
+    return actions[np.argmax(q_values)]
+                            </div>
+                            
+                            <p><strong>Advantages:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Simple to implement and understand</li>
+                                <li>Predictable behavior</li>
+                                <li>Easy to debug and analyze</li>
+                                <li>Computationally efficient</li>
+                            </ul>
+                            
+                            <p><strong>Disadvantages:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>No exploration (can get stuck)</li>
+                                <li>May not be optimal in stochastic environments</li>
+                                <li>Vulnerable to adversarial scenarios</li>
+                                <li>Limited adaptability</li>
+                            </ul>
+                            
+                            <p><strong>When to Use:</strong> Well-understood environments, deployment phase, when predictability is crucial.</p>
+                        `
+                    },
+                    '🎲 Stochastic Policy': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Probabilistic Action Selection</strong>
+                            </div>
+                            
+                            <p>A stochastic policy selects actions according to a probability distribution. This enables exploration and handles uncertainty.</p>
+                            
+                            <div class="modal-formula">
+                                π(a|s) = P(action = a | state = s)<br>
+                                Sample: a ~ π(·|s)
+                            </div>
+                            
+                            <div class="modal-code">
+# Stochastic policy examples
+
+# Softmax policy
+def softmax_policy(state, q_values, temperature=1.0):
+    exp_q = np.exp(q_values / temperature)
+    probs = exp_q / np.sum(exp_q)
+    return np.random.choice(actions, p=probs)
+
+# Epsilon-greedy policy
+def epsilon_greedy_policy(state, q_values, epsilon=0.1):
+    if np.random.random() < epsilon:
+        return np.random.choice(actions)  # Explore
+    else:
+        return actions[np.argmax(q_values)]  # Exploit
+
+# Gaussian policy (continuous actions)
+def gaussian_policy(state):
+    mean, std = neural_network(state)
+    action = np.random.normal(mean, std)
+    return np.clip(action, action_min, action_max)
+
+# Custom probability distribution
+def custom_stochastic_policy(state):
+    if state == 'risky_situation':
+        return {
+            'safe_action': 0.8,
+            'neutral_action': 0.15,
+            'risky_action': 0.05
+        }
+                            </div>
+                            
+                            <p><strong>Advantages:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Natural exploration mechanism</li>
+                                <li>Handles uncertainty well</li>
+                                <li>Can escape local optima</li>
+                                <li>More robust to environment changes</li>
+                            </ul>
+                            
+                            <p><strong>Common Types:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>ε-greedy:</strong> Explore with probability ε</li>
+                                <li><strong>Softmax/Boltzmann:</strong> Temperature-based selection</li>
+                                <li><strong>Gaussian:</strong> For continuous action spaces</li>
+                                <li><strong>Beta:</strong> For bounded continuous actions</li>
+                            </ul>
+                            
+                            <p><strong>Parameters to Tune:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Exploration rate (ε)</li>
+                                <li>Temperature (τ)</li>
+                                <li>Variance/standard deviation</li>
+                                <li>Decay schedules for exploration</li>
+                            </ul>
+                        `
+                    },
+                    '🧠 Parameterized Policy': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Learning Through Parameters</strong>
+                            </div>
+                            
+                            <p>Parameterized policies use learnable parameters (like neural network weights) to represent the policy function.</p>
+                            
+                            <div class="modal-formula">
+                                π<sub>θ</sub>(a|s) = policy function with parameters θ<br>
+                                Update: θ ← θ + α∇<sub>θ</sub>J(θ)
+                            </div>
+                            
+                            <div class="modal-code">
+# Neural network policy
+import torch
+import torch.nn as nn
+
+class PolicyNetwork(nn.Module):
+    def __init__(self, state_dim, action_dim):
+        super().__init__()
+        self.network = nn.Sequential(
+            nn.Linear(state_dim, 128),
+            nn.ReLU(),
+            nn.Linear(128, 128),
+            nn.ReLU(),
+            nn.Linear(128, action_dim),
+            nn.Softmax(dim=-1)
+        )
+    
+    def forward(self, state):
+        return self.network(state)
+
+# Linear policy (simple)
+class LinearPolicy:
+    def __init__(self, state_dim, action_dim):
+        self.weights = np.random.randn(state_dim, action_dim)
+        self.bias = np.zeros(action_dim)
+    
+    def predict(self, state):
+        logits = np.dot(state, self.weights) + self.bias
+        return softmax(logits)
+
+# Policy gradient update
+def update_policy(policy, states, actions, rewards):
+    # Compute gradients
+    log_probs = policy.get_log_probs(states, actions)
+    loss = -torch.mean(log_probs * rewards)
+    
+    # Backpropagation
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+                            </div>
+                            
+                            <p><strong>Types of Parameterization:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Linear:</strong> θ = [W, b] (weights and biases)</li>
+                                <li><strong>Neural Networks:</strong> Deep learning models</li>
+                                <li><strong>Polynomial:</strong> Feature combinations</li>
+                                <li><strong>Fourier:</strong> Frequency-based features</li>
+                            </ul>
+                            
+                            <p><strong>Learning Methods:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Policy Gradient:</strong> Direct policy optimization</li>
+                                <li><strong>Actor-Critic:</strong> Combine value and policy learning</li>
+                                <li><strong>Natural Policy Gradient:</strong> Improved convergence</li>
+                                <li><strong>Trust Region:</strong> Stable updates (TRPO, PPO)</li>
+                            </ul>
+                            
+                            <p><strong>Benefits:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Handle continuous and high-dimensional spaces</li>
+                                <li>Generalization across similar states</li>
+                                <li>End-to-end learning</li>
+                                <li>Function approximation capabilities</li>
+                            </ul>
+                            
+                            <p><strong>Challenges:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Local optima</li>
+                                <li>Training instability</li>
+                                <li>Sample efficiency</li>
+                                <li>Hyperparameter sensitivity</li>
+                            </ul>
+                        `
+                    }
+                };
+                
+                const details = policyDetails[title];
+                if (details) {
+                    modal.show(title, details.content);
+                }
+            });
+        });
+
+        // Interactive example cards
+        document.querySelectorAll('.example-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('.example-title').textContent;
+                
+                const exampleDetails = {
+                    'Chess Strategy': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Chess as a Policy Problem</strong>
+                            </div>
+                            
+                            <p>In chess, a policy maps board positions (states) to moves (actions). Different chess engines use different policy approaches.</p>
+                            
+                            <div class="modal-code">
+# Chess policy example
+class ChessPolicy:
+    def __init__(self):
+                                self.opening_book = load_opening_database()
+        self.endgame_tablebase = load_endgame_db()
+        self.evaluation_network = load_neural_network()
+    
+    def select_move(self, board_state):
+        if self.in_opening_phase(board_state):
+            # Use opening book (deterministic)
+            return self.opening_book.get_move(board_state)
+        
+        elif self.in_endgame(board_state):
+            # Use tablebase (deterministic optimal)
+            return self.endgame_tablebase.get_move(board_state)
+        
+        else:
+            # Use neural network + search (stochastic)
+            move_probs = self.evaluation_network(board_state)
+            return self.sample_move(move_probs, temperature=0.1)
+
+# AlphaZero-style policy
+def alphazero_policy(board_state, mcts_tree):
+    # Combine neural network prior with MCTS statistics
+    visit_counts = mcts_tree.get_visit_counts(board_state)
+    total_visits = sum(visit_counts.values())
+    
+    move_probs = {}
+    for move, visits in visit_counts.items():
+        move_probs[move] = visits / total_visits
+    
+    return move_probs
+                            </div>
+                            
+                            <p><strong>Policy Evolution in Chess:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Classical engines:</strong> Hand-crafted evaluation + minimax</li>
+                                <li><strong>Deep Blue:</strong> Massive search with expert knowledge</li>
+                                <li><strong>Stockfish:</strong> Advanced search + evaluation</li>
+                                <li><strong>AlphaZero:</strong> Pure neural network + MCTS</li>
+                            </ul>
+                            
+                            <p><strong>Policy Characteristics:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>State space: ~10^43 possible positions</li>
+                                <li>Action space: ~35 legal moves per position</li>
+                                <li>Deterministic environment (no randomness)</li>
+                                <li>Perfect information (full board visible)</li>
+                            </ul>
+                        `
+                    },
+                    'Driving Policy': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Autonomous Vehicle Decision Making</strong>
+                            </div>
+                            
+                            <p>Driving policies must handle complex, safety-critical decisions in dynamic environments with other agents.</p>
+                            
+                            <div class="modal-code">
+# Driving policy example
+class DrivingPolicy:
+    def __init__(self):
+        self.safety_controller = SafetyController()
+        self.path_planner = PathPlanner()
+        self.behavior_network = BehaviorNetwork()
+    
+    def select_action(self, sensor_data):
+        # Process sensor inputs
+        state = self.process_sensors(sensor_data)
+        
+        # High-level behavior decision
+        behavior = self.behavior_network(state)
+        # behaviors: ['cruise', 'follow', 'merge', 'yield', 'stop']
+        
+        # Path planning based on behavior
+        planned_path = self.path_planner.plan(state, behavior)
+        
+        # Low-level control
+        steering, throttle, brake = self.path_to_control(planned_path)
+        
+        # Safety check
+        action = self.safety_controller.validate(
+            [steering, throttle, brake], state
+        )
+        
+        return action
+
+# Intersection policy (stochastic)
+def intersection_policy(traffic_state):
+    if traffic_state.light == 'green':
+        return {'go': 0.95, 'slow': 0.05, 'stop': 0.0}
+    elif traffic_state.light == 'yellow':
+        if traffic_state.distance_to_line < 30:
+            return {'go': 0.8, 'slow': 0.2, 'stop': 0.0}
+        else:
+            return {'go': 0.1, 'slow': 0.3, 'stop': 0.6}
+    else:  # red light
+        return {'go': 0.0, 'slow': 0.0, 'stop': 1.0}
+                            </div>
+                            
+                            <p><strong>Policy Hierarchy:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Mission level:</strong> Route planning (A to B)</li>
+                                <li><strong>Behavioral level:</strong> Lane changes, merging</li>
+                                <li><strong>Motion level:</strong> Path planning and tracking</li>
+                                <li><strong>Control level:</strong> Steering, acceleration, braking</li>
+                            </ul>
+                            
+                            <p><strong>Key Challenges:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Safety constraints (must avoid collisions)</li>
+                                <li>Multi-agent environment (other drivers)</li>
+                                <li>Uncertain human behavior</li>
+                                <li>Real-time decision making</li>
+                                <li>Weather and road conditions</li>
+                            </ul>
+                        `
+                    },
+                    'Robot Control': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Robotic Motor Control Policies</strong>
+                            </div>
+                            
+                            <p>Robot control policies translate sensor readings into motor commands for manipulation, locomotion, and navigation tasks.</p>
+                            
+                            <div class="modal-code">
+# Robot manipulation policy
+class ManipulationPolicy:
+    def __init__(self, robot_config):
+        self.robot = robot_config
+        self.controller = PIDController()
+        self.vision_system = VisionSystem()
+        self.force_sensor = ForceSensor()
+    
+    def grasp_object(self, sensor_data):
+        # Process visual information
+        object_pose = self.vision_system.detect_object(sensor_data.camera)
+        
+        # Plan approach trajectory
+        approach_pose = self.plan_approach(object_pose)
+        target_joints = self.inverse_kinematics(approach_pose)
+        
+        # Generate joint commands
+        current_joints = sensor_data.joint_positions
+        joint_velocities = self.controller.compute(
+            target_joints, current_joints
+        )
+        
+        # Force control for grasping
+        if self.near_object(current_joints, object_pose):
+            grip_force = self.compute_grip_force(
+                self.force_sensor.reading()
+            )
+            return joint_velocities + [grip_force]
+        
+        return joint_velocities
+
+# Locomotion policy for quadruped
+def quadruped_gait_policy(state, desired_velocity):
+    # State: [body_pose, joint_angles, foot_contacts]
+    # Action: [joint_torques]
+    
+    gait_phase = state.gait_timer % gait_period
+    
+    if gait_phase < 0.5:  # Stance phase
+        leg_actions = stance_controller(state, desired_velocity)
+    else:  # Swing phase
+        leg_actions = swing_controller(state, desired_velocity)
+    
+    # Add balance control
+    balance_torques = balance_controller(state.body_orientation)
+    
+    return leg_actions + balance_torques
+                            </div>
+                            
+                            <p><strong>Policy Types by Task:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Manipulation:</strong> Position/force control, grasping</li>
+                                <li><strong>Locomotion:</strong> Walking, running, climbing</li>
+                                <li><strong>Navigation:</strong> Path following, obstacle avoidance</li>
+                                <li><strong>Interaction:</strong> Human-robot collaboration</li>
+                            </ul>
+                            
+                            <p><strong>Control Challenges:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>High-dimensional continuous action spaces</li>
+                                <li>Real-time constraints (100-1000 Hz)</li>
+                                <li>Safety and damage prevention</li>
+                                <li>Sensor noise and delays</li>
+                                <li>Physical constraints and dynamics</li>
+                            </ul>
+                        `
+                    },
+                    'Trading Strategy': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Algorithmic Trading Policies</strong>
+                            </div>
+                            
+                            <p>Trading policies analyze market conditions and make buy/sell/hold decisions to maximize risk-adjusted returns.</p>
+                            
+                            <div class="modal-code">
+# Trading policy example
+class TradingPolicy:
+    def __init__(self, universe, risk_tolerance):
+        self.universe = universe  # Available assets
+        self.risk_tolerance = risk_tolerance
+        self.technical_indicators = TechnicalAnalysis()
+        self.risk_model = RiskModel()
+    
+    def select_action(self, market_state):
+        # Current portfolio and market data
+        positions = market_state.positions
+        prices = market_state.prices
+        volume = market_state.volume
+        
+        # Technical analysis
+        signals = self.technical_indicators.compute(prices)
+        
+        # Risk assessment
+        portfolio_risk = self.risk_model.compute_risk(positions)
+        
+        # Action for each asset
+        actions = {}
+        for asset in self.universe:
+            signal_strength = signals[asset]
+            current_weight = positions[asset] / total_value
+            
+            if signal_strength > 0.6 and portfolio_risk < threshold:
+                actions[asset] = 'buy'
+            elif signal_strength < -0.6 or portfolio_risk > threshold:
+                actions[asset] = 'sell'
+            else:
+                actions[asset] = 'hold'
+        
+        return actions
+
+# Portfolio allocation policy (continuous)
+def portfolio_policy(market_features):
+    # Input: technical indicators, fundamental data, macro factors
+    # Output: portfolio weights (sum to 1.0)
+    
+    risk_factors = extract_risk_factors(market_features)
+    expected_returns = predict_returns(market_features)
+    
+    # Mean-variance optimization with constraints
+    weights = optimize_portfolio(
+        expected_returns, 
+        risk_factors,
+        constraints={'leverage': 1.0, 'turnover': 0.1}
+    )
+    
+    return weights  # [w1, w2, ..., wn] where sum(w) = 1
+                            </div>
+                            
+                            <p><strong>Trading Policy Types:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Trend following:</strong> Momentum-based strategies</li>
+                                <li><strong>Mean reversion:</strong> Contrarian approaches</li>
+                                <li><strong>Market making:</strong> Provide liquidity, capture spread</li>
+                                <li><strong>Arbitrage:</strong> Exploit price differences</li>
+                                <li><strong>Factor investing:</strong> Value, quality, momentum factors</li>
+                            </ul>
+                            
+                            <p><strong>State Information:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Price and volume history</li>
+                                <li>Technical indicators (RSI, MACD, etc.)</li>
+                                <li>Fundamental data (earnings, ratios)</li>
+                                <li>Market sentiment and news</li>
+                                <li>Macroeconomic indicators</li>
+                            </ul>
+                            
+                            <p><strong>Risk Management:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Position sizing and diversification</li>
+                                <li>Stop-loss and take-profit rules</li>
+                                <li>Portfolio-level risk constraints</li>
+                                <li>Stress testing and scenario analysis</li>
+                            </ul>
+                        `
+                    }
+                };
+                
+                const details = exampleDetails[title];
+                if (details) {
+                    modal.show(`Policy Example: ${title}`, details.content);
+                }
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week11_Slide207.html';
+            } else if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week11_Slide205.html';
+            }
+        });
+    </script>
+</body>
+</html>

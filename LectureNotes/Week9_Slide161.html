@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Deep Learning Introduction</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px 25px;
+            border-radius: 25px;
+            font-weight: 600;
+            color: #0d9488;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            font-size: 1.1em;
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px 25px;
+            border-radius: 25px;
+            font-weight: 600;
+            color: #0d9488;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            font-size: 1.1em;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        @keyframes slideInFromTop {
+            0% { transform: translateY(-50px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .intro-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            padding: 35px;
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(13, 148, 136, 0.1);
+            border: 2px solid rgba(13, 148, 136, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .intro-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(13, 148, 136, 0.2);
+        }
+
+        .section-title {
+            font-size: 2.2em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .evolution-timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .timeline-item {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border-left: 4px solid #0d9488;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .timeline-item:hover {
+            transform: translateX(10px);
+            box-shadow: 0 8px 20px rgba(13, 148, 136, 0.2);
+        }
+
+        .timeline-year {
+            font-weight: 700;
+            color: #0d9488;
+            font-size: 1.2em;
+            margin-bottom: 8px;
+        }
+
+        .timeline-desc {
+            color: #1e293b;
+            font-size: 1.05em;
+            line-height: 1.6;
+        }
+
+        .deep-features {
+            list-style: none;
+        }
+
+        .feature-item {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .feature-item:hover {
+            border-color: #0d9488;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .feature-title {
+            font-weight: 600;
+            color: #0d9488;
+            font-size: 1.3em;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .feature-desc {
+            color: #1e293b;
+            font-size: 1.05em;
+            line-height: 1.5;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(13, 148, 136, 0.3);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(13, 148, 136, 0.4);
+        }
+
+        .floating-elements {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .floating-element {
+            position: absolute;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) rotate(0deg); }
+            100% { transform: translateY(-100px) rotate(360deg); }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .code-block {
+            background: #1e293b;
+            color: #14b8a6;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <div class="course-info">CS5710 - Week 9</div>
+    <div class="slide-number">Slide 161 of 180</div>
+
+    <div class="slide-container">
+        <h1 class="slide-title">🧠 Deep Learning Introduction</h1>
+        
+        <div class="content-layout">
+            <div class="intro-section">
+                <h2 class="section-title">🚀 What is Deep Learning?</h2>
+                
+                <ul class="deep-features">
+                    <li class="feature-item" data-modal="definition">
+                        <div class="feature-title">🎯 Definition</div>
+                        <div class="feature-desc">Deep learning is a subset of machine learning using multi-layered neural networks</div>
+                    </li>
+                    <li class="feature-item" data-modal="layers">
+                        <div class="feature-title">🏗️ Multiple Hidden Layers</div>
+                        <div class="feature-desc">Networks with 3+ hidden layers that learn hierarchical representations</div>
+                    </li>
+                    <li class="feature-item" data-modal="automatic">
+                        <div class="feature-title">⚡ Automatic Feature Learning</div>
+                        <div class="feature-desc">No manual feature engineering - networks learn features from raw data</div>
+                    </li>
+                    <li class="feature-item" data-modal="breakthrough">
+                        <div class="feature-title">🏆 Revolutionary Performance</div>
+                        <div class="feature-desc">State-of-the-art results in vision, NLP, speech, and more</div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="intro-section">
+                <h2 class="section-title">📈 Evolution Timeline</h2>
+                
+                <div class="evolution-timeline">
+                    <div class="timeline-item" data-modal="perceptron">
+                        <div class="timeline-year">1943</div>
+                        <div class="timeline-desc">McCulloch-Pitts: First artificial neuron</div>
+                    </div>
+                    <div class="timeline-item" data-modal="backprop">
+                        <div class="timeline-year">1986</div>
+                        <div class="timeline-desc">Backpropagation algorithm popularized</div>
+                    </div>
+                    <div class="timeline-item" data-modal="winter">
+                        <div class="timeline-year">1990s</div>
+                        <div class="timeline-desc">AI Winter: Limited computational power</div>
+                    </div>
+                    <div class="timeline-item" data-modal="renaissance">
+                        <div class="timeline-year">2006</div>
+                        <div class="timeline-desc">Deep learning renaissance begins</div>
+                    </div>
+                    <div class="timeline-item" data-modal="imagenet">
+                        <div class="timeline-year">2012</div>
+                        <div class="timeline-desc">AlexNet revolutionizes computer vision</div>
+                    </div>
+                    <div class="timeline-item" data-modal="modern">
+                        <div class="timeline-year">2020s</div>
+                        <div class="timeline-desc">Transformers dominate AI landscape</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week8_Slide160.html" class="nav-btn">← Previous</a>
+        <a href="Week9_Slide162.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            open(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Modal content definitions
+        const modalContents = {
+            definition: {
+                title: "Deep Learning Definition",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Deep Learning = Machine Learning + Deep Neural Networks</strong><br>
+                        A computational approach inspired by the human brain's neural structure.
+                    </div>
+                    <p><strong>Key Characteristics:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Deep Architecture:</strong> Multiple (3+) hidden layers</li>
+                        <li><strong>Representation Learning:</strong> Automatic feature discovery</li>
+                        <li><strong>End-to-End Learning:</strong> Raw input to final output</li>
+                        <li><strong>Scalability:</strong> Performance improves with more data</li>
+                    </ul>
+                    <div class="modal-highlight" style="background: rgba(99, 102, 241, 0.1); border-left-color: #6366f1;">
+                        <strong>Traditional ML vs Deep Learning:</strong><br>
+                        Traditional: Data → Feature Engineering → ML Algorithm → Output<br>
+                        Deep Learning: Data → Neural Network → Output
+                    </div>
+                `
+            },
+            layers: {
+                title: "The Power of Depth",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Why "Deep" Matters</strong><br>
+                        Each layer learns increasingly complex representations of the input data.
+                    </div>
+                    <p><strong>Hierarchical Feature Learning:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Layer 1:</strong> Edges, basic shapes (low-level features)</li>
+                        <li><strong>Layer 2-3:</strong> Textures, simple objects (mid-level)</li>
+                        <li><strong>Layer 4+:</strong> Complex objects, concepts (high-level)</li>
+                        <li><strong>Final Layer:</strong> Task-specific classifications/predictions</li>
+                    </ul>
+                    <div class="code-block">
+# Simple Deep Network Example
+import tensorflow as tf
+
+model = tf.keras.Sequential([
+    tf.keras.layers.Dense(128, activation='relu'),  # Layer 1
+    tf.keras.layers.Dense(64, activation='relu'),   # Layer 2  
+    tf.keras.layers.Dense(32, activation='relu'),   # Layer 3
+    tf.keras.layers.Dense(10, activation='softmax') # Output
+])
+                    </div>
+                `
+            },
+            automatic: {
+                title: "Automatic Feature Learning",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>The End of Feature Engineering</strong><br>
+                        Deep networks automatically discover relevant features from raw data.
+                    </div>
+                    <p><strong>Traditional Approach Problems:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>Manual feature engineering is time-consuming</li>
+                        <li>Domain expertise required for good features</li>
+                        <li>Features may not be optimal for the task</li>
+                        <li>Difficult to capture complex patterns</li>
+                    </ul>
+                    <p><strong>Deep Learning Advantages:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>Features learned directly from data</li>
+                        <li>Optimal for specific task and dataset</li>
+                        <li>Captures complex, non-linear relationships</li>
+                        <li>Scales with data availability</li>
+                    </ul>
+                `
+            },
+            breakthrough: {
+                title: "Revolutionary Performance",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Deep Learning Achievements</strong><br>
+                        Superhuman performance in multiple domains.
+                    </div>
+                    <p><strong>Computer Vision:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>ImageNet classification: 97.3% top-5 accuracy</li>
+                        <li>Object detection in real-time video</li>
+                        <li>Medical image diagnosis at expert level</li>
+                    </ul>
+                    <p><strong>Natural Language Processing:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>Language translation quality approaching human level</li>
+                        <li>Text generation (GPT models)</li>
+                        <li>Sentiment analysis, question answering</li>
+                    </ul>
+                    <p><strong>Game Playing & Decision Making:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>AlphaGo: Defeated world Go champion</li>
+                        <li>StarCraft II: Grandmaster level performance</li>
+                        <li>Autonomous driving systems</li>
+                    </ul>
+                `
+            },
+            perceptron: {
+                title: "1943: The Beginning",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>McCulloch-Pitts Neuron</strong><br>
+                        The first mathematical model of an artificial neuron.
+                    </div>
+                    <p><strong>Key Contributions:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>Binary threshold activation function</li>
+                        <li>Weighted sum of inputs</li>
+                        <li>Inspired by biological neurons</li>
+                        <li>Foundation for all neural networks</li>
+                    </ul>
+                    <div class="modal-highlight" style="background: rgba(16, 185, 129, 0.1); border-left-color: #10b981;">
+                        <strong>Historical Impact:</strong><br>
+                        This simple model laid the groundwork for 80+ years of neural network research.
+                    </div>
+                `
+            },
+            backprop: {
+                title: "1986: Learning Algorithm",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Backpropagation Revolution</strong><br>
+                        Rumelhart, Hinton, and Williams popularized the learning algorithm for deep networks.
+                    </div>
+                    <p><strong>Why It Matters:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>Enables training of multi-layer networks</li>
+                        <li>Efficient gradient computation using chain rule</li>
+                        <li>Made deep learning mathematically tractable</li>
+                        <li>Still the foundation of modern deep learning</li>
+                    </ul>
+                    <div class="code-block">
+# Backpropagation in action
+loss = compute_loss(predictions, targets)
+gradients = backpropagate(loss)  # Magic happens here!
+optimizer.apply_gradients(gradients)
+                    </div>
+                `
+            },
+            winter: {
+                title: "1990s: The AI Winter",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Challenges of the Era</strong><br>
+                        Limited computational resources and data hindered progress.
+                    </div>
+                    <p><strong>Major Limitations:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>Vanishing gradient problem in deep networks</li>
+                        <li>Limited computational power (no GPUs)</li>
+                        <li>Small datasets available</li>
+                        <li>Overfitting on limited data</li>
+                        <li>Lack of proper initialization techniques</li>
+                    </ul>
+                    <div class="modal-highlight" style="background: rgba(239, 68, 68, 0.1); border-left-color: #ef4444;">
+                        <strong>Lesson Learned:</strong><br>
+                        Sometimes breakthrough technologies need to wait for the right conditions (data + compute + algorithms).
+                    </div>
+                `
+            },
+            renaissance: {
+                title: "2006: Deep Learning Renaissance",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Geoffrey Hinton's Breakthrough</strong><br>
+                        Deep Belief Networks and layer-wise pre-training sparked the revival.
+                    </div>
+                    <p><strong>Key Innovations:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>Layer-wise unsupervised pre-training</li>
+                        <li>Better initialization strategies</li>
+                        <li>Increased computational power</li>
+                        <li>Larger datasets becoming available</li>
+                        <li>New activation functions (ReLU)</li>
+                    </ul>
+                    <div class="modal-highlight" style="background: rgba(139, 92, 246, 0.1); border-left-color: #8b5cf6;">
+                        <strong>Perfect Storm:</strong><br>
+                        Algorithmic improvements + Big Data + GPU computing = Deep Learning boom
+                    </div>
+                `
+            },
+            imagenet: {
+                title: "2012: AlexNet Breakthrough",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>ImageNet Competition Victory</strong><br>
+                        AlexNet achieved 15.3% error rate vs 26.2% for traditional methods.
+                    </div>
+                    <p><strong>AlexNet Innovations:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>Deep Convolutional Neural Network (8 layers)</li>
+                        <li>ReLU activation functions</li>
+                        <li>Dropout for regularization</li>
+                        <li>Data augmentation techniques</li>
+                        <li>GPU acceleration (CUDA)</li>
+                    </ul>
+                    <div class="modal-highlight" style="background: rgba(6, 182, 212, 0.1); border-left-color: #06b6d4;">
+                        <strong>Industry Impact:</strong><br>
+                        This victory convinced the world that deep learning was ready for real applications.
+                    </div>
+                `
+            },
+            modern: {
+                title: "2020s: The Transformer Era",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Attention Is All You Need</strong><br>
+                        Transformers have revolutionized not just NLP, but all of AI.
+                    </div>
+                    <p><strong>Recent Breakthroughs:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>GPT series:</strong> Large language models</li>
+                        <li><strong>BERT:</strong> Bidirectional understanding</li>
+                        <li><strong>Vision Transformers:</strong> Attention for images</li>
+                        <li><strong>DALL-E:</strong> Text-to-image generation</li>
+                        <li><strong>ChatGPT:</strong> Conversational AI</li>
+                    </ul>
+                    <div class="modal-highlight" style="background: rgba(168, 85, 247, 0.1); border-left-color: #a855f7;">
+                        <strong>What's Next?</strong><br>
+                        Multimodal AI, AGI research, and AI that understands the world like humans do.
+                    </div>
+                `
+            }
+        };
+
+        // Add click handlers to interactive elements
+        document.querySelectorAll('[data-modal]').forEach(item => {
+            item.addEventListener('click', () => {
+                const modalKey = item.dataset.modal;
+                const content = modalContents[modalKey];
+                if (content) {
+                    modal.open(content.title, content.content);
+                }
+            });
+        });
+
+        // Floating elements animation
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            const elementCount = 15;
+            
+            for (let i = 0; i < elementCount; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                
+                const size = Math.random() * 8 + 4;
+                const left = Math.random() * 100;
+                const delay = Math.random() * 20;
+                const duration = Math.random() * 10 + 15;
+                
+                element.style.width = size + 'px';
+                element.style.height = size + 'px';
+                element.style.left = left + '%';
+                element.style.animationDelay = delay + 's';
+                element.style.animationDuration = duration + 's';
+                
+                container.appendChild(element);
+            }
+        }
+
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (!e.target.closest('input, textarea')) {
+                if (e.key === 'ArrowLeft') {
+                    window.location.href = 'Week8_Slide160.html';
+                } else if (e.key === 'ArrowRight') {
+                    window.location.href = 'Week9_Slide162.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

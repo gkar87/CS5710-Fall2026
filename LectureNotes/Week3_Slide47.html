@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Gradient Descent for Logistic Regression</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .gradient-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .algorithm-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .definition-text {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .formula {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            margin: 20px 0;
+            text-align: center;
+            box-shadow: inset 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .gradient-steps {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .gradient-step {
+            padding: 15px;
+            margin: 10px 0;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .gradient-step:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .step-number {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 5px;
+        }
+
+        .step-desc {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .implementation-banner {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .implementation-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 25px;
+        }
+
+        .impl-card {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border: 2px solid #14b8a6;
+            border-radius: 15px;
+            padding: 30px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .impl-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .impl-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #0d9488;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .implementation-content { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 3</div>
+    <div class="slide-number">Slide 47 of 60</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Gradient Descent for Logistic Regression</h1>
+        
+        <div class="content-layout">
+            <div class="gradient-section">
+                <h2 class="section-title">📈 Gradient Derivation</h2>
+                
+                <div class="definition-text">
+                    <strong>Gradient descent</strong> minimizes the logistic regression cost function by iteratively updating parameters in the direction of steepest descent.
+                </div>
+
+                <div class="formula">
+                    Cost Function:
+                    <br>
+                    J(θ) = -1/m × Σ[y·log(σ(θᵀx)) + (1-y)·log(1-σ(θᵀx))]
+                    <br><br>
+                    Gradient:
+                    <br>
+                    ∂J/∂θⱼ = 1/m × Σ(σ(θᵀx) - y)·xⱼ
+                </div>
+                
+                <ul class="gradient-steps">
+                    <li class="gradient-step">
+                        <div class="step-number">Step 1: Derivative of Sigmoid</div>
+                        <div class="step-desc">σ'(z) = σ(z)(1-σ(z))</div>
+                    </li>
+                    <li class="gradient-step">
+                        <div class="step-number">Step 2: Chain Rule Application</div>
+                        <div class="step-desc">∂J/∂θⱼ = ∂J/∂σ × ∂σ/∂z × ∂z/∂θⱼ</div>
+                    </li>
+                    <li class="gradient-step">
+                        <div class="step-number">Step 3: Simplification</div>
+                        <div class="step-desc">Result: (prediction - actual) × feature</div>
+                    </li>
+                    <li class="gradient-step">
+                        <div class="step-number">Step 4: Vectorization</div>
+                        <div class="step-desc">∇J = 1/m × Xᵀ(σ(Xθ) - y)</div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="algorithm-section">
+                <h2 class="section-title">⚡ Update Algorithm</h2>
+                
+                <div style="font-size: 1.1em; line-height: 1.7; color: #1e293b; margin-bottom: 20px;">
+                    <strong>Gradient Descent Steps:</strong>
+                    <br><br>
+                    1. Initialize parameters θ randomly
+                    <br>
+                    2. Repeat until convergence:
+                    <br>
+                    &nbsp;&nbsp;&nbsp;• Compute predictions: h = σ(Xθ)
+                    <br>
+                    &nbsp;&nbsp;&nbsp;• Calculate gradient: ∇J = 1/m × Xᵀ(h - y)
+                    <br>
+                    &nbsp;&nbsp;&nbsp;• Update: θ := θ - α∇J
+                    <br>
+                    &nbsp;&nbsp;&nbsp;• Check convergence
+                </div>
+
+                <div class="formula">
+                    Update Rule:
+                    <br><br>
+                    θⱼ := θⱼ - α × 1/m × Σ(hθ(xᵢ) - yᵢ)xᵢⱼ
+                    <br><br>
+                    Vectorized:
+                    <br>
+                    θ := θ - α/m × Xᵀ(σ(Xθ) - y)
+                </div>
+
+                <div style="background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%); padding: 20px; border-radius: 15px; margin-top: 20px; border-left: 4px solid #0d9488;">
+                    <strong>Key Insight:</strong> The gradient has the same form as linear regression, but uses the sigmoid function for predictions!
+                </div>
+            </div>
+        </div>
+
+        <div class="implementation-banner">
+            <div style="text-align: center; font-size: 1.4em; color: #0d9488; line-height: 1.6; margin-bottom: 30px;">
+                <strong>Implementation Details</strong>
+            </div>
+            
+            <div class="implementation-content">
+                <div class="impl-card">
+                    <div class="impl-title">Python Implementation</div>
+                    <div class="formula">
+                        def gradient_descent(X, y, alpha, iterations):
+                        <br>&nbsp;&nbsp;m, n = X.shape
+                        <br>&nbsp;&nbsp;theta = np.zeros(n)
+                        <br>&nbsp;&nbsp;for i in range(iterations):
+                        <br>&nbsp;&nbsp;&nbsp;&nbsp;h = sigmoid(X @ theta)
+                        <br>&nbsp;&nbsp;&nbsp;&nbsp;gradient = X.T @ (h - y) / m
+                        <br>&nbsp;&nbsp;&nbsp;&nbsp;theta -= alpha * gradient
+                        <br>&nbsp;&nbsp;return theta
+                    </div>
+                    <div style="font-size: 0.9em; color: #475569; text-align: left; margin-top: 15px;">
+                        • Vectorized implementation
+                        <br>• Learning rate α controls step size
+                        <br>• Batch gradient descent
+                    </div>
+                </div>
+                
+                <div class="impl-card">
+                    <div class="impl-title">Convergence Tips</div>
+                    <div style="font-size: 1.0em; color: #1e293b; text-align: left; margin: 15px 0;">
+                        <strong>Learning Rate Selection:</strong>
+                        <br>• Too large: Divergence/oscillation
+                        <br>• Too small: Slow convergence
+                        <br>• Typical range: 0.01 to 1.0
+                        <br><br>
+                        <strong>Convergence Criteria:</strong>
+                        <br>• Cost change < threshold
+                        <br>• Gradient norm < threshold
+                        <br>• Maximum iterations reached
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week3_Slide46.html" class="nav-btn">← Previous</a>
+        <a href="Week3_Slide48.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive gradient steps with modal
+        document.querySelectorAll('.gradient-step').forEach(step => {
+            step.addEventListener('click', function() {
+                const title = this.querySelector('.step-number').textContent;
+                const desc = this.querySelector('.step-desc').textContent;
+                
+                const details = {
+                    'Step 1: Derivative of Sigmoid': {
+                        detail: 'The derivative of the sigmoid function has a beautiful, simple form that makes computation efficient.',
+                        math: 'If σ(z) = 1/(1+e^(-z)), then:<br>σ\'(z) = σ(z) × (1-σ(z))<br><br>This means we can compute the derivative using only the sigmoid value itself!',
+                        example: 'If σ(z) = 0.7, then σ\'(z) = 0.7 × (1-0.7) = 0.7 × 0.3 = 0.21',
+                        code: `def sigmoid_derivative(z):
+    s = sigmoid(z)
+    return s * (1 - s)
+
+# Or if you already have sigmoid values:
+def sigmoid_derivative_from_sigmoid(sigmoid_vals):
+    return sigmoid_vals * (1 - sigmoid_vals)`
+                    },
+                    'Step 2: Chain Rule Application': {
+                        detail: 'We use the chain rule to find how the cost changes with respect to each parameter.',
+                        math: '∂J/∂θⱼ = ∂J/∂h × ∂h/∂z × ∂z/∂θⱼ<br><br>Where:<br>• ∂J/∂h depends on the cost function<br>• ∂h/∂z = σ\'(z) = σ(z)(1-σ(z))<br>• ∂z/∂θⱼ = xⱼ',
+                        example: 'For one training example, this becomes: (prediction - actual) × sigmoid_derivative × feature_value',
+                        code: `# Chain rule components
+dJ_dh = (h - y) / (h * (1 - h))  # Cost derivative
+dh_dz = h * (1 - h)              # Sigmoid derivative  
+dz_dtheta = X                     # Linear combination derivative
+
+# Combined (notice h*(1-h) terms cancel!):
+gradient = X.T @ (h - y) / m`
+                    },
+                    'Step 3: Simplification': {
+                        detail: 'After applying the chain rule and simplifying, we get a remarkably clean result.',
+                        math: 'The derivative simplifies to:<br>∂J/∂θⱼ = 1/m × Σᵢ (hθ(xᵢ) - yᵢ) × xᵢⱼ<br><br>This has the same form as linear regression gradient!',
+                        example: 'If prediction=0.8, actual=1, feature=2.5, then contribution = (0.8-1) × 2.5 = -0.5',
+                        code: `# For each parameter j:
+for j in range(n_features):
+    gradient[j] = np.mean((predictions - y) * X[:, j])
+
+# Vectorized version:
+gradient = X.T @ (predictions - y) / m`
+                    },
+                    'Step 4: Vectorization': {
+                        detail: 'Vectorization allows efficient computation using matrix operations instead of loops.',
+                        math: 'Vectorized gradient:<br>∇J = 1/m × Xᵀ(σ(Xθ) - y)<br><br>Where X is m×n, θ is n×1, y is m×1, result is n×1',
+                        example: 'For 1000 samples and 10 features, this computes all gradients in one matrix operation!',
+                        code: `# Vectorized implementation
+def compute_gradient(X, y, theta):
+    m = X.shape[0]
+    predictions = sigmoid(X @ theta)
+    gradient = X.T @ (predictions - y) / m
+    return gradient
+
+# Much faster than loops!`
+                    }
+                };
+                
+                const info = details[title];
+                if (info) {
+                    modal.show(title, `
+                        <div class="modal-highlight">
+                            <strong>${desc}</strong>
+                        </div>
+                        <p>${info.detail}</p>
+                        <div class="modal-code">
+                            <strong>Mathematics:</strong><br>
+                            ${info.math}
+                        </div>
+                        <p><strong>Example:</strong> ${info.example}</p>
+                        <div class="modal-code">
+                            <strong>Code Implementation:</strong><br>
+                            <pre>${info.code}</pre>
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Interactive implementation cards with modal
+        document.querySelectorAll('.impl-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('.impl-title').textContent;
+                
+                const cardDetails = {
+                    'Python Implementation': {
+                        description: 'Complete gradient descent implementation for logistic regression',
+                        fullCode: `import numpy as np
+import matplotlib.pyplot as plt
+
+def sigmoid(z):
+    # Clip z to prevent overflow
+    z = np.clip(z, -250, 250)
+    return 1 / (1 + np.exp(-z))
+
+def logistic_cost(theta, X, y):
+    m = X.shape[0]
+    h = sigmoid(X @ theta)
+    # Add small epsilon to prevent log(0)
+    eps = 1e-15
+    h = np.clip(h, eps, 1 - eps)
+    return -np.mean(y * np.log(h) + (1 - y) * np.log(1 - h))
+
+def gradient_descent(X, y, alpha=0.01, iterations=1000):
+    m, n = X.shape
+    theta = np.zeros(n)
+    cost_history = []
+    
+    for i in range(iterations):
+        # Forward pass
+        z = X @ theta
+        h = sigmoid(z)
+        
+        # Compute cost
+        cost = logistic_cost(theta, X, y)
+        cost_history.append(cost)
+        
+        # Compute gradient
+        gradient = X.T @ (h - y) / m
+        
+        # Update parameters
+        theta -= alpha * gradient
+        
+        # Print progress
+        if i % 100 == 0:
+            print(f"Iteration {i}, Cost: {cost:.4f}")
+    
+    return theta, cost_history
+
+# Usage example
+X = np.random.randn(1000, 3)  # Add bias term manually
+X[:, 0] = 1  # Bias column
+y = (X[:, 1] + 0.5 * X[:, 2] + np.random.randn(1000) * 0.1 > 0).astype(int)
+
+theta_final, costs = gradient_descent(X, y, alpha=0.1, iterations=1000)
+print("Final parameters:", theta_final)`,
+                        optimization: 'Use learning rate scheduling, momentum, or Adam optimizer for better convergence',
+                        tips: 'Always add bias column, normalize features, check for numerical stability'
+                    },
+                    'Convergence Tips': {
+                        description: 'Best practices for ensuring gradient descent converges effectively',
+                        strategies: `1. Learning Rate Selection:
+   • Start with α = 0.01, then try 0.003, 0.01, 0.03, 0.1, 0.3, 1.0
+   • Plot cost vs iterations to visualize convergence
+   • If cost increases: reduce α
+   • If cost decreases slowly: increase α
+
+2. Feature Scaling:
+   • Normalize features to similar scales
+   • Use StandardScaler or MinMaxScaler
+   • Helps gradient descent converge faster
+
+3. Convergence Criteria:
+   • Monitor cost function decrease
+   • Stop when |∇J| < threshold
+   • Use early stopping to prevent overfitting
+
+4. Advanced Optimizers:
+   • Adam: Adaptive learning rates
+   • RMSprop: Good for non-convex problems  
+   • L-BFGS: Second-order method for small datasets`,
+                        diagnostics: `# Convergence diagnostics
+def check_convergence(cost_history, tolerance=1e-6):
+    if len(cost_history) < 2:
+        return False
+    
+    recent_change = abs(cost_history[-1] - cost_history[-2])
+    return recent_change < tolerance
+
+def plot_convergence(cost_history):
+    plt.figure(figsize=(10, 6))
+    plt.plot(cost_history)
+    plt.title('Cost Function During Training')
+    plt.xlabel('Iteration')
+    plt.ylabel('Cost')
+    plt.grid(True)
+    plt.show()`,
+                        advanced: 'Consider using scikit-learn\'s LogisticRegression with different solvers for production use'
+                    }
+                };
+                
+                const details = cardDetails[title];
+                if (details) {
+                    modal.show(`Implementation: ${title}`, `
+                        <div class="modal-highlight">
+                            <h4>${details.description}</h4>
+                        </div>
+                        <div class="modal-code">
+                            <strong>Complete Implementation:</strong><br>
+                            <pre>${details.fullCode || details.strategies}</pre>
+                        </div>
+                        ${details.diagnostics ? `<div class="modal-code"><strong>Diagnostics:</strong><br><pre>${details.diagnostics}</pre></div>` : ''}
+                        <p><strong>Advanced Notes:</strong> ${details.advanced || details.optimization}</p>
+                        <p><strong>Pro Tips:</strong> ${details.tips || details.advanced}</p>
+                    `);
+                }
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week3_Slide46.html';
+            } else if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week3_Slide48.html';
+            }
+        });
+    </script>
+</body>
+</html>

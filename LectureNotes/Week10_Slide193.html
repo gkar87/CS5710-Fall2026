@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Text Preprocessing Pipeline</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .pipeline-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .techniques-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .pipeline-step {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 4px solid #0d9488;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .pipeline-step:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .step-number {
+            position: absolute;
+            left: -15px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 30px;
+            height: 30px;
+            background: #0d9488;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .step-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .step-desc {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .technique-card {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 4px solid #0d9488;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .technique-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .technique-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .technique-desc {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .example-banner {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .example-title {
+            font-size: 1.6em;
+            color: #0d9488;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .code-example {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 25px;
+            border-radius: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+            overflow-x: auto;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .code-example:hover {
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transform: translateY(-2px);
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: float 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    
+    <div class="course-info">CS5710 - Week 10</div>
+    <div class="slide-number">Slide 193 of 200</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Text Preprocessing Pipeline</h1>
+        
+        <div class="content-layout">
+            <div class="pipeline-section">
+                <h2 class="section-title">Processing Steps</h2>
+                
+                <div class="pipeline-step">
+                    <div class="step-number">1</div>
+                    <div class="step-title">🧹 Text Cleaning</div>
+                    <div class="step-desc">Remove noise, HTML tags, special characters</div>
+                </div>
+                
+                <div class="pipeline-step">
+                    <div class="step-number">2</div>
+                    <div class="step-title">✂️ Tokenization</div>
+                    <div class="step-desc">Split text into words, subwords, or characters</div>
+                </div>
+                
+                <div class="pipeline-step">
+                    <div class="step-number">3</div>
+                    <div class="step-title">🔡 Normalization</div>
+                    <div class="step-desc">Lowercase, expand contractions, handle numbers</div>
+                </div>
+                
+                <div class="pipeline-step">
+                    <div class="step-number">4</div>
+                    <div class="step-title">🛑 Stop Words</div>
+                    <div class="step-desc">Remove common words with little semantic value</div>
+                </div>
+                
+                <div class="pipeline-step">
+                    <div class="step-number">5</div>
+                    <div class="step-title">🌱 Stemming/Lemmatization</div>
+                    <div class="step-desc">Reduce words to their root form</div>
+                </div>
+                
+                <div class="pipeline-step">
+                    <div class="step-number">6</div>
+                    <div class="step-title">🔢 Vectorization</div>
+                    <div class="step-desc">Convert text to numerical representations</div>
+                </div>
+            </div>
+
+            <div class="techniques-section">
+                <h2 class="section-title">Advanced Techniques</h2>
+                
+                <div class="technique-card">
+                    <div class="technique-title">📊 N-grams</div>
+                    <div class="technique-desc">Capture sequences of words for context</div>
+                </div>
+                
+                <div class="technique-card">
+                    <div class="technique-title">🏷️ POS Tagging</div>
+                    <div class="technique-desc">Identify grammatical parts of speech</div>
+                </div>
+                
+                <div class="technique-card">
+                    <div class="technique-title">🌍 Named Entity Recognition</div>
+                    <div class="technique-desc">Extract persons, places, organizations</div>
+                </div>
+                
+                <div class="technique-card">
+                    <div class="technique-title">📝 Feature Engineering</div>
+                    <div class="technique-desc">Create domain-specific text features</div>
+                </div>
+                
+                <div class="technique-card">
+                    <div class="technique-title">🔤 Encoding Methods</div>
+                    <div class="technique-desc">Bag-of-Words, TF-IDF, Word Embeddings</div>
+                </div>
+                
+                <div class="technique-card">
+                    <div class="technique-title">🎯 Data Augmentation</div>
+                    <div class="technique-desc">Synonym replacement, back-translation</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="example-banner">
+            <div class="example-title">Python Implementation Example</div>
+            
+            <div class="code-example">
+import nltk
+import spacy
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+# Complete preprocessing pipeline
+def preprocess_text(text):
+    # 1. Clean text
+    text = re.sub(r'<.*?>', '', text)  # Remove HTML
+    text = re.sub(r'[^a-zA-Z\s]', '', text)  # Keep only letters
+    
+    # 2. Tokenize
+    tokens = nltk.word_tokenize(text.lower())
+    
+    # 3. Remove stop words
+    stop_words = set(nltk.corpus.stopwords.words('english'))
+    tokens = [t for t in tokens if t not in stop_words]
+    
+    # 4. Lemmatize
+    lemmatizer = nltk.WordNetLemmatizer()
+    tokens = [lemmatizer.lemmatize(t) for t in tokens]
+    
+    return ' '.join(tokens)
+
+# Vectorization
+vectorizer = TfidfVectorizer(max_features=1000)
+features = vectorizer.fit_transform(preprocessed_texts)
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week10_Slide192.html" class="nav-btn">← Previous</a>
+        <a href="Week10_Slide194.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Pipeline step details
+        const pipelineDetails = {
+            '🧹 Text Cleaning': {
+                detail: 'Text cleaning removes unwanted elements that can interfere with analysis. This includes HTML tags, URLs, special characters, extra whitespace, and non-textual elements.',
+                techniques: `
+                    <strong>Common Operations:</strong><br>
+                    • Remove HTML/XML tags<br>
+                    • Strip URLs and email addresses<br>
+                    • Handle emojis and emoticons<br>
+                    • Fix encoding issues<br>
+                    • Normalize whitespace
+                `,
+                code: `
+# Python example
+import re
+
+def clean_text(text):
+    # Remove HTML tags
+    text = re.sub(r'<[^>]+>', '', text)
+    
+    # Remove URLs
+    text = re.sub(r'http\\S+|www\\S+', '', text)
+    
+    # Remove special characters
+    text = re.sub(r'[^\\w\\s]', '', text)
+    
+    # Normalize whitespace
+    text = ' '.join(text.split())
+    
+    return text.strip()
+                `,
+                importance: 'Clean text ensures consistent input format and reduces noise that could confuse models.'
+            },
+            '✂️ Tokenization': {
+                detail: 'Tokenization breaks text into smaller units (tokens) that can be processed individually. These units can be words, subwords, or characters depending on the approach.',
+                techniques: `
+                    <strong>Tokenization Types:</strong><br>
+                    • Word tokenization: Split by spaces/punctuation<br>
+                    • Subword tokenization: BPE, WordPiece<br>
+                    • Character tokenization: Individual characters<br>
+                    • Sentence tokenization: Split into sentences
+                `,
+                code: `
+# Different tokenization approaches
+from nltk.tokenize import word_tokenize, sent_tokenize
+from transformers import BertTokenizer
+
+# Word tokenization
+words = word_tokenize("Don't tokenize this!")
+# Output: ["Do", "n't", "tokenize", "this", "!"]
+
+# Subword tokenization (BERT)
+tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+tokens = tokenizer.tokenize("unbelievable")
+# Output: ["un", "##believ", "##able"]
+                `,
+                importance: 'Proper tokenization preserves meaning while creating processable units. Different tasks benefit from different tokenization strategies.'
+            },
+            '🔡 Normalization': {
+                detail: 'Text normalization standardizes text to reduce variability and improve consistency. This includes case conversion, expanding contractions, and handling numbers.',
+                techniques: `
+                    <strong>Normalization Techniques:</strong><br>
+                    • Convert to lowercase/uppercase<br>
+                    • Expand contractions (don't → do not)<br>
+                    • Convert numbers to words or placeholders<br>
+                    • Handle accented characters<br>
+                    • Standardize date/time formats
+                `,
+                code: `
+import contractions
+
+def normalize_text(text):
+    # Lowercase
+    text = text.lower()
+    
+    # Expand contractions
+    text = contractions.fix(text)
+    
+    # Replace numbers with placeholder
+    text = re.sub(r'\\d+', '<NUM>', text)
+    
+    # Remove accents
+    import unicodedata
+    text = unicodedata.normalize('NFKD', text)
+    text = ''.join([c for c in text if not unicodedata.combining(c)])
+    
+    return text
+                `,
+                importance: 'Normalization reduces vocabulary size and helps models focus on semantic content rather than superficial variations.'
+            },
+            '🛑 Stop Words': {
+                detail: 'Stop words are common words that typically carry little semantic meaning for most NLP tasks. Removing them can improve efficiency and focus on content words.',
+                techniques: `
+                    <strong>Stop Word Handling:</strong><br>
+                    • Language-specific stop word lists<br>
+                    • Domain-specific customization<br>
+                    • Frequency-based filtering<br>
+                    • Context-aware retention<br>
+                    • Dynamic stop word generation
+                `,
+                code: `
+from nltk.corpus import stopwords
+from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
+
+# NLTK stop words
+stop_words = set(stopwords.words('english'))
+filtered = [w for w in words if w.lower() not in stop_words]
+
+# Custom stop words
+custom_stops = {'however', 'therefore', 'moreover'}
+stop_words.update(custom_stops)
+
+# Frequency-based filtering
+from collections import Counter
+word_freq = Counter(all_words)
+rare_words = {w for w, c in word_freq.items() if c < 3}
+                `,
+                importance: 'Stop word removal reduces dimensionality and computational cost, but be careful not to lose important context in tasks like sentiment analysis.'
+            },
+            '🌱 Stemming/Lemmatization': {
+                detail: 'Both techniques reduce words to their base form, but lemmatization produces valid words while stemming may produce non-words.',
+                techniques: `
+                    <strong>Comparison:</strong><br>
+                    • Stemming: Faster, rule-based, may produce non-words<br>
+                    • Lemmatization: Slower, dictionary-based, produces real words<br>
+                    <br>
+                    Example: "running"<br>
+                    • Stem: "run"<br>
+                    • Lemma: "run"<br>
+                    <br>
+                    Example: "better"<br>
+                    • Stem: "better"<br>
+                    • Lemma: "good"
+                `,
+                code: `
+from nltk.stem import PorterStemmer, WordNetLemmatizer
+
+# Stemming
+stemmer = PorterStemmer()
+stemmed = [stemmer.stem(word) for word in words]
+
+# Lemmatization (requires POS tags for best results)
+lemmatizer = WordNetLemmatizer()
+lemmas = [lemmatizer.lemmatize(word, pos='v') for word in words]
+
+# With POS tagging
+import nltk
+pos_tags = nltk.pos_tag(words)
+lemmas = [lemmatizer.lemmatize(w, pos=get_wordnet_pos(pos)) 
+          for w, pos in pos_tags]
+                `,
+                importance: 'Reduces vocabulary size and helps group related word forms together, improving model generalization.'
+            },
+            '🔢 Vectorization': {
+                detail: 'Vectorization converts text into numerical representations that machine learning models can process. Different methods capture different aspects of text.',
+                techniques: `
+                    <strong>Vectorization Methods:</strong><br>
+                    • Bag-of-Words (BoW): Word frequency counts<br>
+                    • TF-IDF: Term frequency-inverse document frequency<br>
+                    • Word2Vec: Dense word embeddings<br>
+                    • Doc2Vec: Document-level embeddings<br>
+                    • BERT embeddings: Contextual representations
+                `,
+                code: `
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+import gensim
+
+# Bag-of-Words
+bow = CountVectorizer(max_features=1000)
+bow_features = bow.fit_transform(documents)
+
+# TF-IDF
+tfidf = TfidfVectorizer(max_features=1000, ngram_range=(1,2))
+tfidf_features = tfidf.fit_transform(documents)
+
+# Word2Vec
+model = gensim.models.Word2Vec(tokenized_docs, 
+                               vector_size=100, 
+                               window=5, 
+                               min_count=2)
+
+# BERT embeddings
+from transformers import BertModel, BertTokenizer
+bert = BertModel.from_pretrained('bert-base-uncased')
+                `,
+                importance: 'The choice of vectorization dramatically impacts model performance. Dense embeddings often capture semantic relationships better than sparse representations.'
+            }
+        };
+
+        // Add click handlers for pipeline steps
+        document.querySelectorAll('.pipeline-step').forEach(step => {
+            step.addEventListener('click', function() {
+                const title = this.querySelector('.step-title').textContent;
+                const info = pipelineDetails[title];
+                
+                if (info) {
+                    modal.show(`Pipeline Step: ${title}`, `
+                        <div class="modal-highlight">
+                            <strong>Overview</strong>
+                        </div>
+                        <p>${info.detail}</p>
+                        
+                        <div class="modal-highlight">
+                            <strong>Techniques & Approaches</strong>
+                        </div>
+                        <p>${info.techniques}</p>
+                        
+                        <div class="modal-code">
+${info.code}
+                        </div>
+                        
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                            <strong>💡 Why It Matters:</strong><br>
+                            ${info.importance}
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Technique card details
+        const techniqueDetails = {
+            '📊 N-grams': {
+                explanation: 'N-grams are contiguous sequences of n items from text. They capture local context and word combinations that individual words miss.',
+                types: `
+                    • Unigrams (n=1): Individual words<br>
+                    • Bigrams (n=2): Two-word sequences<br>
+                    • Trigrams (n=3): Three-word sequences<br>
+                    • Character n-grams: Letter sequences
+                `,
+                example: `
+Text: "machine learning is fun"
+Unigrams: ["machine", "learning", "is", "fun"]
+Bigrams: ["machine learning", "learning is", "is fun"]
+Trigrams: ["machine learning is", "learning is fun"]
+                `,
+                applications: 'Language modeling, text classification, named entity recognition, machine translation'
+            },
+            '🏷️ POS Tagging': {
+                explanation: 'Part-of-Speech tagging assigns grammatical categories (noun, verb, adjective, etc.) to each word in a sentence.',
+                types: `
+                    • NN: Noun, singular<br>
+                    • VB: Verb, base form<br>
+                    • JJ: Adjective<br>
+                    • RB: Adverb<br>
+                    • DT: Determiner
+                `,
+                example: `
+import nltk
+text = "The quick brown fox jumps"
+tokens = nltk.word_tokenize(text)
+pos_tags = nltk.pos_tag(tokens)
+# [('The', 'DT'), ('quick', 'JJ'), ('brown', 'JJ'), 
+#  ('fox', 'NN'), ('jumps', 'VBZ')]
+                `,
+                applications: 'Lemmatization, syntactic parsing, information extraction, question answering'
+            },
+            '🌍 Named Entity Recognition': {
+                explanation: 'NER identifies and classifies named entities (persons, organizations, locations, etc.) in text.',
+                types: `
+                    • PERSON: People, characters<br>
+                    • ORG: Organizations, companies<br>
+                    • LOC: Locations, places<br>
+                    • DATE: Dates, times<br>
+                    • MONEY: Monetary values
+                `,
+                example: `
+import spacy
+nlp = spacy.load("en_core_web_sm")
+doc = nlp("Apple Inc. was founded by Steve Jobs in Cupertino")
+# Entities: Apple Inc. (ORG), Steve Jobs (PERSON), Cupertino (LOC)
+                `,
+                applications: 'Information extraction, question answering, content recommendation, knowledge graph construction'
+            },
+            '📝 Feature Engineering': {
+                explanation: 'Creating domain-specific features from text that capture relevant patterns for your specific task.',
+                types: `
+                    • Length features: Word count, character count<br>
+                    • Lexical features: Vocabulary richness, readability<br>
+                    • Syntactic features: Parse tree depth, POS ratios<br>
+                    • Semantic features: Sentiment scores, topic distributions<br>
+                    • Domain features: Technical terms, jargon frequency
+                `,
+                example: `
+def extract_features(text):
+    return {
+        'word_count': len(text.split()),
+        'avg_word_length': np.mean([len(w) for w in text.split()]),
+        'exclamation_count': text.count('!'),
+        'uppercase_ratio': sum(1 for c in text if c.isupper()) / len(text),
+        'sentiment_score': TextBlob(text).sentiment.polarity
+    }
+                `,
+                applications: 'Authorship attribution, spam detection, readability assessment, genre classification'
+            },
+            '🔤 Encoding Methods': {
+                explanation: 'Different methods to convert text into numerical representations, each with unique characteristics.',
+                types: `
+                    <strong>Sparse Representations:</strong><br>
+                    • One-hot encoding<br>
+                    • Bag-of-Words<br>
+                    • TF-IDF<br>
+                    <br>
+                    <strong>Dense Representations:</strong><br>
+                    • Word2Vec (CBOW, Skip-gram)<br>
+                    • GloVe<br>
+                    • FastText<br>
+                    • Contextual embeddings (BERT, GPT)
+                `,
+                example: `
+# TF-IDF Example
+from sklearn.feature_extraction.text import TfidfVectorizer
+vectorizer = TfidfVectorizer(max_features=5000)
+X = vectorizer.fit_transform(documents)
+
+# Word2Vec Example
+from gensim.models import Word2Vec
+model = Word2Vec(sentences, vector_size=100, window=5)
+vector = model.wv['machine']
+                `,
+                applications: 'All NLP tasks benefit from appropriate encoding. Dense embeddings excel at capturing semantic similarity.'
+            },
+            '🎯 Data Augmentation': {
+                explanation: 'Techniques to artificially expand training data by creating modified versions of existing text.',
+                types: `
+                    • Synonym replacement<br>
+                    • Random insertion/deletion<br>
+                    • Back-translation<br>
+                    • Paraphrasing<br>
+                    • Contextual word replacement
+                `,
+                example: `
+import nlpaug.augmenter.word as naw
+
+# Synonym replacement
+aug = naw.SynonymAug(aug_src='wordnet')
+augmented = aug.augment("The quick brown fox")
+
+# Back-translation
+aug = naw.BackTranslationAug(
+    from_model_name='facebook/wmt19-en-de',
+    to_model_name='facebook/wmt19-de-en'
+)
+augmented = aug.augment("The weather is nice today")
+                `,
+                applications: 'Improving model robustness, handling imbalanced datasets, low-resource scenarios'
+            }
+        };
+
+        // Add click handlers for technique cards
+        document.querySelectorAll('.technique-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('.technique-title').textContent;
+                const info = techniqueDetails[title];
+                
+                if (info) {
+                    modal.show(`Advanced Technique: ${title}`, `
+                        <div class="modal-highlight">
+                            <strong>Explanation</strong>
+                        </div>
+                        <p>${info.explanation}</p>
+                        
+                        <div class="modal-highlight">
+                            <strong>Types & Categories</strong>
+                        </div>
+                        <p>${info.types}</p>
+                        
+                        <div class="modal-code">
+${info.example}
+                        </div>
+                        
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                            <strong>📚 Applications:</strong><br>
+                            ${info.applications}
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Code example click handler
+        document.querySelector('.code-example').addEventListener('click', function() {
+            modal.show('Complete Preprocessing Pipeline', `
+                <div class="modal-highlight">
+                    <strong>Full Implementation with Best Practices</strong>
+                </div>
+                
+                <div class="modal-code">
+import re
+import nltk
+import spacy
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+from textblob import TextBlob
+
+class TextPreprocessor:
+    def __init__(self):
+        self.nlp = spacy.load('en_core_web_sm')
+        self.lemmatizer = WordNetLemmatizer()
+        self.stop_words = set(stopwords.words('english'))
+        
+    def clean(self, text):
+        # Remove HTML tags
+        text = re.sub(r'<[^>]+>', '', text)
+        # Remove URLs
+        text = re.sub(r'http\\S+|www\\S+', '', text)
+        # Remove mentions and hashtags
+        text = re.sub(r'@\\w+|#\\w+', '', text)
+        # Remove special characters
+        text = re.sub(r'[^A-Za-z0-9\\s]', '', text)
+        # Normalize whitespace
+        text = ' '.join(text.split())
+        return text.lower()
+    
+    def tokenize(self, text):
+        doc = self.nlp(text)
+        return [token.text for token in doc]
+    
+    def remove_stopwords(self, tokens):
+        return [t for t in tokens if t not in self.stop_words]
+    
+    def lemmatize(self, tokens):
+        return [self.lemmatizer.lemmatize(t) for t in tokens]
+    
+    def preprocess(self, text):
+        # Complete pipeline
+        text = self.clean(text)
+        tokens = self.tokenize(text)
+        tokens = self.remove_stopwords(tokens)
+        tokens = self.lemmatize(tokens)
+        return ' '.join(tokens)
+    
+    def extract_features(self, text):
+        # Additional features
+        doc = self.nlp(text)
+        return {
+            'num_tokens': len(doc),
+            'num_entities': len(doc.ents),
+            'sentiment': TextBlob(text).sentiment.polarity,
+            'subjectivity': TextBlob(text).sentiment.subjectivity,
+            'avg_word_length': np.mean([len(token.text) for token in doc])
+        }
+
+# Usage example
+preprocessor = TextPreprocessor()
+texts = ["Your raw text here...", "Another document..."]
+processed = [preprocessor.preprocess(t) for t in texts]
+
+# Vectorization
+vectorizer = TfidfVectorizer(max_features=1000, ngram_range=(1, 2))
+features = vectorizer.fit_transform(processed)
+
+# Extract additional features
+extra_features = pd.DataFrame([preprocessor.extract_features(t) for t in texts])
+                </div>
+                
+                <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                    <strong>💡 Pro Tips:</strong><br>
+                    • Always validate preprocessing on a sample before applying to entire dataset<br>
+                    • Consider task-specific requirements (e.g., keep case for NER)<br>
+                    • Create preprocessing pipelines that can be saved and reused<br>
+                    • Monitor vocabulary size and adjust filtering thresholds<br>
+                    • Test different combinations to find optimal pipeline for your task
+                </div>
+            `);
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week10_Slide192.html';
+            } else if (e.key === 'ArrowRight' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week10_Slide194.html';
+            }
+        });
+    </script>
+</body>
+</html>

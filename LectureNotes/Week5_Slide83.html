@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - AdaBoost Algorithm</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .concept-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .algorithm-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .concept-text {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .key-ideas {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .idea-item {
+            padding: 20px;
+            margin: 15px 0;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .idea-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .idea-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .idea-desc {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .algorithm-steps {
+            background: #1e293b;
+            border-radius: 15px;
+            padding: 25px;
+            color: #5eead4;
+            font-family: 'Courier New', monospace;
+            margin-top: 20px;
+        }
+
+        .step {
+            margin: 15px 0;
+            padding-left: 20px;
+            border-left: 3px solid #14b8a6;
+        }
+
+        .step-number {
+            color: #99f6e4;
+            font-weight: bold;
+        }
+
+        .visualization-banner {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .vis-title {
+            font-size: 1.4em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .boosting-visualization {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 30px;
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 15px;
+        }
+
+        .weak-learner {
+            text-align: center;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            border: 2px solid #14b8a6;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .weak-learner:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .learner-icon {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .learner-label {
+            font-weight: 600;
+            color: #0d9488;
+        }
+
+        .learner-weight {
+            font-size: 0.9em;
+            color: #64748b;
+            margin-top: 5px;
+        }
+
+        .plus-sign {
+            font-size: 2em;
+            color: #0d9488;
+            font-weight: bold;
+        }
+
+        .equals-sign {
+            font-size: 2em;
+            color: #0d9488;
+            font-weight: bold;
+        }
+
+        .strong-learner {
+            text-align: center;
+            padding: 25px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.3);
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .boosting-visualization { flex-direction: column; gap: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    
+    <div class="course-info">CS5710 - Week 5</div>
+    <div class="slide-number">Slide 83 of 100</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">AdaBoost Algorithm</h1>
+        
+        <div class="content-layout">
+            <div class="concept-section">
+                <h2 class="section-title">Core Concept</h2>
+                
+                <div class="concept-text">
+                    <strong>AdaBoost</strong> (Adaptive Boosting) combines multiple weak learners sequentially, where each learner focuses on the mistakes of the previous ones.
+                </div>
+                
+                <ul class="key-ideas">
+                    <li class="idea-item">
+                        <div class="idea-title">🎯 Adaptive Learning</div>
+                        <div class="idea-desc">Adjusts to focus on misclassified examples</div>
+                    </li>
+                    <li class="idea-item">
+                        <div class="idea-title">⚖️ Weighted Voting</div>
+                        <div class="idea-desc">Better learners get more say in final decision</div>
+                    </li>
+                    <li class="idea-item">
+                        <div class="idea-title">📈 Sequential Improvement</div>
+                        <div class="idea-desc">Each model learns from previous mistakes</div>
+                    </li>
+                    <li class="idea-item">
+                        <div class="idea-title">🔄 Sample Weighting</div>
+                        <div class="idea-desc">Increases importance of hard examples</div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="algorithm-section">
+                <h2 class="section-title">Algorithm Steps</h2>
+                
+                <div class="algorithm-steps">
+                    <div class="step">
+                        <span class="step-number">1.</span> Initialize weights: w_i = 1/n for all samples
+                    </div>
+                    <div class="step">
+                        <span class="step-number">2.</span> For t = 1 to T iterations:
+                    </div>
+                    <div class="step" style="margin-left: 40px;">
+                        <span class="step-number">a.</span> Train weak learner h_t on weighted data
+                    </div>
+                    <div class="step" style="margin-left: 40px;">
+                        <span class="step-number">b.</span> Calculate error: ε_t = Σ(w_i * I[y_i ≠ h_t(x_i)])
+                    </div>
+                    <div class="step" style="margin-left: 40px;">
+                        <span class="step-number">c.</span> Calculate learner weight: α_t = 0.5 * ln((1-ε_t)/ε_t)
+                    </div>
+                    <div class="step" style="margin-left: 40px;">
+                        <span class="step-number">d.</span> Update sample weights: w_i *= exp(-α_t * y_i * h_t(x_i))
+                    </div>
+                    <div class="step" style="margin-left: 40px;">
+                        <span class="step-number">e.</span> Normalize weights: w_i /= Σw_j
+                    </div>
+                    <div class="step">
+                        <span class="step-number">3.</span> Final prediction: H(x) = sign(Σ α_t * h_t(x))
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="visualization-banner">
+            <div class="vis-title">AdaBoost: Combining Weak Learners into a Strong Classifier</div>
+            
+            <div class="boosting-visualization">
+                <div class="weak-learner" onclick="showLearnerDetails('weak1')">
+                    <div class="learner-icon">🌱</div>
+                    <div class="learner-label">Weak Learner 1</div>
+                    <div class="learner-weight">α₁ = 0.42</div>
+                </div>
+                
+                <div class="plus-sign">+</div>
+                
+                <div class="weak-learner" onclick="showLearnerDetails('weak2')">
+                    <div class="learner-icon">🌿</div>
+                    <div class="learner-label">Weak Learner 2</div>
+                    <div class="learner-weight">α₂ = 0.65</div>
+                </div>
+                
+                <div class="plus-sign">+</div>
+                
+                <div class="weak-learner" onclick="showLearnerDetails('weak3')">
+                    <div class="learner-icon">🍀</div>
+                    <div class="learner-label">Weak Learner 3</div>
+                    <div class="learner-weight">α₃ = 0.92</div>
+                </div>
+                
+                <div class="equals-sign">=</div>
+                
+                <div class="strong-learner">
+                    <div class="learner-icon">🌳</div>
+                    <div class="learner-label">Strong Classifier</div>
+                    <div class="learner-weight">High Accuracy</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week5_Slide82.html" class="nav-btn">← Previous</a>
+        <a href="Week5_Slide84.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Show learner details
+        function showLearnerDetails(learnerType) {
+            const learnerInfo = {
+                'weak1': {
+                    title: 'First Weak Learner',
+                    content: `
+                        <div class="modal-highlight">
+                            <strong>Initial Classification Attempt</strong>
+                        </div>
+                        <p><strong>Focus:</strong> General patterns in the data</p>
+                        <p><strong>Error Rate:</strong> 40% (ε₁ = 0.40)</p>
+                        <p><strong>Weight Calculation:</strong><br>
+                        α₁ = 0.5 × ln((1-0.40)/0.40) = 0.42</p>
+                        <div class="modal-code">
+                        # Simple decision stump
+                        if feature_x > threshold:
+                            return class_1
+                        else:
+                            return class_2
+                        </div>
+                        <p><strong>Impact:</strong> Identifies easy-to-classify examples, leaving harder ones for subsequent learners.</p>
+                    `
+                },
+                'weak2': {
+                    title: 'Second Weak Learner',
+                    content: `
+                        <div class="modal-highlight">
+                            <strong>Learning from Mistakes</strong>
+                        </div>
+                        <p><strong>Focus:</strong> Examples misclassified by first learner</p>
+                        <p><strong>Error Rate:</strong> 30% (ε₂ = 0.30)</p>
+                        <p><strong>Weight Calculation:</strong><br>
+                        α₂ = 0.5 × ln((1-0.30)/0.30) = 0.65</p>
+                        <div class="modal-code">
+                        # Focuses on weighted samples
+                        # Higher weight on previously wrong predictions
+                        if weighted_feature_y > new_threshold:
+                            return class_1
+                        else:
+                            return class_2
+                        </div>
+                        <p><strong>Impact:</strong> Corrects many errors from the first learner, improving overall accuracy.</p>
+                    `
+                },
+                'weak3': {
+                    title: 'Third Weak Learner',
+                    content: `
+                        <div class="modal-highlight">
+                            <strong>Fine-tuning Hard Cases</strong>
+                        </div>
+                        <p><strong>Focus:</strong> The hardest examples still misclassified</p>
+                        <p><strong>Error Rate:</strong> 20% (ε₃ = 0.20)</p>
+                        <p><strong>Weight Calculation:</strong><br>
+                        α₃ = 0.5 × ln((1-0.20)/0.20) = 0.92</p>
+                        <div class="modal-code">
+                        # Specialized for edge cases
+                        # Very high weights on difficult samples
+                        if complex_pattern_detected:
+                            return specialized_prediction
+                        </div>
+                        <p><strong>Impact:</strong> Has the highest weight due to low error rate, strongly influences final predictions.</p>
+                    `
+                }
+            };
+            
+            const info = learnerInfo[learnerType];
+            if (info) {
+                modal.show(info.title, info.content);
+            }
+        }
+
+        // Interactive key ideas
+        document.querySelectorAll('.idea-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const title = this.querySelector('.idea-title').textContent;
+                const desc = this.querySelector('.idea-desc').textContent;
+                
+                const details = {
+                    '🎯 Adaptive Learning': {
+                        detail: 'AdaBoost adapts by increasing weights of misclassified samples, forcing subsequent learners to focus on hard cases.',
+                        example: 'If a sample is consistently misclassified, its weight increases exponentially, making it a priority for the next learner.',
+                        math: 'Weight update: w_i^(t+1) = w_i^(t) × exp(-α_t × y_i × h_t(x_i))'
+                    },
+                    '⚖️ Weighted Voting': {
+                        detail: 'Each weak learner votes with a weight proportional to its accuracy. Better performers have more influence.',
+                        example: 'A learner with 80% accuracy gets weight ~1.4, while 60% accuracy gets weight ~0.4',
+                        math: 'Learner weight: α_t = 0.5 × ln((1-ε_t)/ε_t)'
+                    },
+                    '📈 Sequential Improvement': {
+                        detail: 'Each new learner is trained on a reweighted dataset emphasizing previous mistakes.',
+                        example: 'Learner 1: 60% accuracy → Learner 2: 65% on hard cases → Combined: 75% overall',
+                        math: 'Final hypothesis: H(x) = sign(Σ α_t × h_t(x))'
+                    },
+                    '🔄 Sample Weighting': {
+                        detail: 'Correctly classified samples get lower weights, misclassified get higher weights for next iteration.',
+                        example: 'Initial weight: 1/n → After misclassification: weight × e^α → Can become 2-3x original',
+                        math: 'Normalization ensures: Σw_i = 1'
+                    }
+                };
+                
+                const info = details[title];
+                modal.show(title, `
+                    <div class="modal-highlight">
+                        <strong>${desc}</strong>
+                    </div>
+                    <p>${info.detail}</p>
+                    <div class="modal-code">
+                        <strong>Mathematical Foundation:</strong><br>
+                        ${info.math}
+                    </div>
+                    <p><strong>Example:</strong> ${info.example}</p>
+                `);
+            }
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week5_Slide84.html';
+            } else if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week5_Slide82.html';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Bellman Equations</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .bellman-intro {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            margin-bottom: 40px;
+            animation: slideInFromTop 1s ease-out 0.3s both;
+            text-align: center;
+        }
+
+        .intro-text {
+            font-size: 1.3em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+        }
+
+        .equations-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .equation-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .equation-card:nth-child(2) {
+            animation: slideInFromRight 1s ease-out 0.6s both;
+        }
+
+        .equation-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px rgba(13, 148, 136, 0.2);
+            border-color: #0d9488;
+        }
+
+        .equation-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .main-equation {
+            font-size: 2.2em;
+            font-weight: bold;
+            text-align: center;
+            color: #0d9488;
+            margin: 30px 0;
+            font-family: 'Times New Roman', serif;
+            padding: 25px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .main-equation:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.3);
+        }
+
+        .equation-explanation {
+            font-size: 1.1em;
+            line-height: 1.7;
+            color: #475569;
+            text-align: center;
+        }
+
+        .intuition-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            margin-bottom: 40px;
+            animation: slideInFromBottom 1s ease-out 0.9s both;
+        }
+
+        .intuition-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .intuition-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .intuition-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .intuition-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.3);
+        }
+
+        .intuition-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+
+        .intuition-concept {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 10px;
+        }
+
+        .intuition-desc {
+            font-size: 0.95em;
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 900px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.3s ease;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 2em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .modal-close:hover {
+            background: #f1f5f9;
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            color: #1e293b;
+            line-height: 1.8;
+        }
+
+        .modal-content p {
+            margin: 15px 0;
+            font-size: 1.05em;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-left: 4px solid #0d9488;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+
+        .modal-formula {
+            background: #f8fafc;
+            border: 2px solid #cbd5e1;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+            font-family: 'Times New Roman', serif;
+            font-size: 1.3em;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            color: #0d9488;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 1em;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.4);
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(240,253,250,0.95));
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            font-weight: 600;
+            color: #0d9488;
+            z-index: 100;
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(240,253,250,0.95));
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            font-weight: 600;
+            color: #0d9488;
+            z-index: 100;
+        }
+
+        .floating-elements {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .floating-element {
+            position: absolute;
+            font-size: 20px;
+            opacity: 0.1;
+            animation: mlFloat 20s infinite;
+            color: #0d9488;
+        }
+
+        .floating-element::before {
+            content: '⚖️';
+        }
+
+        .floating-element:nth-child(3n)::before {
+            content: '🔄';
+        }
+
+        .floating-element:nth-child(3n+1)::before {
+            content: '∞';
+        }
+
+        .floating-element:nth-child(3n+2)::before {
+            content: '🧮';
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.1; }
+            90% { opacity: 0.1; }
+            100% { transform: translateY(-100px) translateX(100px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .equations-container { grid-template-columns: 1fr; }
+            .intuition-cards { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .main-equation { font-size: 1.8em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 11</div>
+    <div class="slide-number">Slide 207 of 220</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Bellman Equations</h1>
+        
+        <div class="bellman-intro">
+            <div class="intro-text">
+                The <strong>Bellman equations</strong> are fundamental recursive relationships that describe the optimal value of being in a state. They form the theoretical foundation for dynamic programming in reinforcement learning.
+            </div>
+        </div>
+
+        <div class="equations-container">
+            <div class="equation-card">
+                <div class="equation-title">State Value Function</div>
+                <div class="main-equation">V<sup>π</sup>(s) = E[R<sub>t+1</sub> + γV<sup>π</sup>(S<sub>t+1</sub>)]</div>
+                <div class="equation-explanation">
+                    Expected value of starting in state <em>s</em> and following policy <em>π</em>
+                </div>
+            </div>
+
+            <div class="equation-card">
+                <div class="equation-title">Action Value Function</div>
+                <div class="main-equation">Q<sup>π</sup>(s,a) = E[R<sub>t+1</sub> + γV<sup>π</sup>(S<sub>t+1</sub>)]</div>
+                <div class="equation-explanation">
+                    Expected value of taking action <em>a</em> in state <em>s</em> and then following policy <em>π</em>
+                </div>
+            </div>
+        </div>
+
+        <div class="intuition-section">
+            <div class="intuition-title">Bellman Equation Intuition</div>
+            
+            <div class="intuition-cards">
+                <div class="intuition-card">
+                    <div class="intuition-icon">🎯</div>
+                    <div class="intuition-concept">Optimality Principle</div>
+                    <div class="intuition-desc">Optimal solutions contain optimal sub-solutions</div>
+                </div>
+                
+                <div class="intuition-card">
+                    <div class="intuition-icon">🔄</div>
+                    <div class="intuition-concept">Recursive Structure</div>
+                    <div class="intuition-desc">Value = Immediate reward + Discounted future value</div>
+                </div>
+                
+                <div class="intuition-card">
+                    <div class="intuition-icon">⚖️</div>
+                    <div class="intuition-concept">Consistency</div>
+                    <div class="intuition-desc">Current value must match expected future return</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week11_Slide206.html" class="nav-btn">← Previous</a>
+        <a href="Week11_Slide208.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 20; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 20 + 's';
+                element.style.animationDuration = (Math.random() * 15 + 20) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive equation cards
+        document.querySelectorAll('.equation-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('.equation-title').textContent;
+                
+                const equationDetails = {
+                    'State Value Function': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>V<sup>π</sup>(s) - The Value of Being in a State</strong>
+                            </div>
+                            
+                            <p>The state value function represents the expected return (cumulative discounted reward) when starting from state s and following policy π.</p>
+                            
+                            <div class="modal-formula">
+                                V<sup>π</sup>(s) = E<sub>π</sub>[G<sub>t</sub> | S<sub>t</sub> = s]<br><br>
+                                where G<sub>t</sub> = R<sub>t+1</sub> + γR<sub>t+2</sub> + γ²R<sub>t+3</sub> + ...
+                            </div>
+                            
+                            <div class="modal-code">
+# Computing state value function
+def compute_state_value(state, policy, env, gamma=0.9, num_episodes=1000):
+    total_return = 0
+    
+    for episode in range(num_episodes):
+        current_state = state
+        episode_return = 0
+        discount = 1.0
+        
+        while not env.is_terminal(current_state):
+            # Follow policy
+            action = policy.select_action(current_state)
+            next_state, reward = env.step(current_state, action)
+            
+            episode_return += discount * reward
+            discount *= gamma
+            current_state = next_state
+        
+        total_return += episode_return
+    
+    return total_return / num_episodes
+
+# Recursive Bellman equation for V
+def bellman_state_value(state, policy, transition_probs, rewards, gamma):
+    value = 0
+    
+    for action in policy.get_actions(state):
+        action_prob = policy.probability(action, state)
+        
+        for next_state in env.get_states():
+            trans_prob = transition_probs[state][action][next_state]
+            reward = rewards[state][action][next_state]
+            next_value = get_value(next_state)  # V(s')
+            
+            value += action_prob * trans_prob * (reward + gamma * next_value)
+    
+    return value
+                            </div>
+                            
+                            <p><strong>Bellman Equation Breakdown:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>E[·]:</strong> Expected value operator</li>
+                                <li><strong>R<sub>t+1</sub>:</strong> Immediate reward</li>
+                                <li><strong>γ:</strong> Discount factor (0 ≤ γ ≤ 1)</li>
+                                <li><strong>V<sup>π</sup>(S<sub>t+1</sub>):</strong> Value of next state</li>
+                            </div>
+                            
+                            <p><strong>Intuitive Meaning:</strong></p>
+                            <p>"The value of a state equals the immediate reward you expect to get, plus the discounted value of where you'll end up next."</p>
+                            
+                            <p><strong>Applications:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Policy evaluation: How good is a given policy?</li>
+                                <li>Value iteration: Find optimal values</li>
+                                <li>Actor-critic methods: Baseline for policy gradients</li>
+                            </ul>
+                        `
+                    },
+                    'Action Value Function': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Q<sup>π</sup>(s,a) - The Value of Taking an Action</strong>
+                            </div>
+                            
+                            <p>The action value function (Q-function) represents the expected return when taking action a in state s and then following policy π.</p>
+                            
+                            <div class="modal-formula">
+                                Q<sup>π</sup>(s,a) = E<sub>π</sub>[G<sub>t</sub> | S<sub>t</sub> = s, A<sub>t</sub> = a]<br><br>
+                                Q<sup>π</sup>(s,a) = E[R<sub>t+1</sub> + γQ<sup>π</sup>(S<sub>t+1</sub>, A<sub>t+1</sub>)]
+                            </div>
+                            
+                            <div class="modal-code">
+# Computing Q-values
+def compute_q_value(state, action, policy, env, gamma=0.9):
+    # Take the action
+    next_state, reward = env.step(state, action)
+    
+    if env.is_terminal(next_state):
+        return reward
+    else:
+        # Follow policy for next action
+        next_action = policy.select_action(next_state)
+        next_q = compute_q_value(next_state, next_action, policy, env, gamma)
+        return reward + gamma * next_q
+
+# Q-learning update (model-free)
+def q_learning_update(Q, state, action, reward, next_state, alpha, gamma):
+    """Bellman equation for Q-learning"""
+    best_next_q = max(Q[next_state].values()) if Q[next_state] else 0
+    
+    # Bellman equation update
+    Q[state][action] += alpha * (
+        reward + gamma * best_next_q - Q[state][action]
+    )
+    
+    return Q
+
+# Relationship between V and Q
+def state_value_from_q(Q, state, policy):
+    """V^π(s) = Σ_a π(a|s) * Q^π(s,a)"""
+    value = 0
+    for action in Q[state]:
+        action_prob = policy.probability(action, state)
+        value += action_prob * Q[state][action]
+    return value
+
+def optimal_state_value(Q, state):
+    """V*(s) = max_a Q*(s,a)"""
+    return max(Q[state].values()) if Q[state] else 0
+                            </div>
+                            
+                            <p><strong>Key Relationships:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>V<sup>π</sup>(s) = Σ<sub>a</sub> π(a|s) Q<sup>π</sup>(s,a):</strong> State value from Q-values</li>
+                                <li><strong>Q<sup>π</sup>(s,a) = Σ<sub>s'</sub> P(s'|s,a)[R + γV<sup>π</sup>(s')]:</strong> Q from state values</li>
+                                <li><strong>V*(s) = max<sub>a</sub> Q*(s,a):</strong> Optimal state value</li>
+                                <li><strong>π*(s) = argmax<sub>a</sub> Q*(s,a):</strong> Optimal policy</li>
+                            </ul>
+                            
+                            <p><strong>Advantages of Q-functions:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Model-free learning (don't need transition probabilities)</li>
+                                <li>Direct policy extraction: π(s) = argmax Q(s,a)</li>
+                                <li>Easy to implement (Q-learning, SARSA)</li>
+                                <li>Works with function approximation</li>
+                            </ul>
+                            
+                            <p><strong>Applications:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Q-learning algorithm</li>
+                                <li>Deep Q-Networks (DQN)</li>
+                                <li>SARSA algorithm</li>
+                                <li>Actor-critic methods (critic learns Q)</li>
+                            </ul>
+                        `
+                    }
+                };
+                
+                const details = equationDetails[title];
+                if (details) {
+                    modal.show(title, details.content);
+                }
+            });
+        });
+
+        // Interactive main equations
+        document.querySelectorAll('.main-equation').forEach(equation => {
+            equation.addEventListener('click', function() {
+                const card = this.closest('.equation-card');
+                const title = card.querySelector('.equation-title').textContent;
+                
+                if (title.includes('State Value')) {
+                    modal.show('Bellman Equation for State Values', `
+                        <div class="modal-highlight">
+                            <strong>The Fundamental Recursive Relationship</strong>
+                        </div>
+                        
+                        <div class="modal-formula">
+                            V<sup>π</sup>(s) = Σ<sub>a</sub> π(a|s) Σ<sub>s'</sub> P(s'|s,a) [R(s,a,s') + γV<sup>π</sup>(s')]
+                        </div>
+                        
+                        <p>This equation says: "The value of a state is the sum over all possible actions of the probability of taking that action times the expected immediate reward plus the discounted future value."</p>
+                        
+                        <div class="modal-code">
+# Step-by-step breakdown
+def bellman_state_equation(state, policy, env, values, gamma):
+    total_value = 0
+    
+    # Sum over all possible actions
+    for action in env.get_actions(state):
+        action_probability = policy.probability(action, state)
+        action_value = 0
+        
+        # Sum over all possible next states
+        for next_state in env.get_states():
+            transition_prob = env.transition_probability(state, action, next_state)
+            immediate_reward = env.reward(state, action, next_state)
+            future_value = values[next_state]
+            
+            action_value += transition_prob * (immediate_reward + gamma * future_value)
+        
+        total_value += action_probability * action_value
+    
+    return total_value
+
+# Simplified version for deterministic environments
+def bellman_deterministic(state, policy, env, values, gamma):
+    action = policy.get_action(state)  # Deterministic policy
+    next_state = env.transition(state, action)  # Deterministic transition
+    reward = env.reward(state, action, next_state)
+    
+    return reward + gamma * values[next_state]
+                        </div>
+                        
+                        <p><strong>Components Explained:</strong></p>
+                        <ul style="margin-left: 20px;">
+                            <li><strong>π(a|s):</strong> Policy - probability of action a in state s</li>
+                            <li><strong>P(s'|s,a):</strong> Transition probability</li>
+                            <li><strong>R(s,a,s'):</strong> Immediate reward</li>
+                            <li><strong>γ:</strong> Discount factor (importance of future rewards)</li>
+                            <li><strong>V<sup>π</sup>(s'):</strong> Value of next state</li>
+                        </ul>
+                    `);
+                } else {
+                    modal.show('Bellman Equation for Action Values', `
+                        <div class="modal-highlight">
+                            <strong>Q-Function Recursive Relationship</strong>
+                        </div>
+                        
+                        <div class="modal-formula">
+                            Q<sup>π</sup>(s,a) = Σ<sub>s'</sub> P(s'|s,a) [R(s,a,s') + γ Σ<sub>a'</sub> π(a'|s')Q<sup>π</sup>(s',a')]
+                        </div>
+                        
+                        <p>This equation says: "The Q-value of a state-action pair equals the expected immediate reward plus the discounted expected Q-value of the next state-action pair."</p>
+                        
+                        <div class="modal-code">
+# Q-function Bellman equation
+def bellman_q_equation(state, action, policy, env, q_values, gamma):
+    total_q = 0
+    
+    # Sum over all possible next states
+    for next_state in env.get_states():
+        transition_prob = env.transition_probability(state, action, next_state)
+        immediate_reward = env.reward(state, action, next_state)
+        
+        # Expected Q-value of next state under policy
+        next_q_expected = 0
+        for next_action in env.get_actions(next_state):
+            action_prob = policy.probability(next_action, next_state)
+            next_q_expected += action_prob * q_values[next_state][next_action]
+        
+        total_q += transition_prob * (immediate_reward + gamma * next_q_expected)
+    
+    return total_q
+
+# Optimal Bellman equation (Bellman optimality equation)
+def bellman_optimal_q(state, action, env, q_values, gamma):
+    """Q*(s,a) = Σ_s' P(s'|s,a)[R + γ max_a' Q*(s',a')]"""
+    total_q = 0
+    
+    for next_state in env.get_states():
+        transition_prob = env.transition_probability(state, action, next_state)
+        reward = env.reward(state, action, next_state)
+        
+        # Take maximum over next actions (optimal policy)
+        max_next_q = max(q_values[next_state].values()) if q_values[next_state] else 0
+        
+        total_q += transition_prob * (reward + gamma * max_next_q)
+    
+    return total_q
+                        </div>
+                        
+                        <p><strong>Key Insight:</strong> The Q-function version is often more practical because:</p>
+                        <ul style="margin-left: 20px;">
+                            <li>No need to know transition probabilities P(s'|s,a)</li>
+                            <li>Can learn directly from experience</li>
+                            <li>Easy to extract optimal policy: π*(s) = argmax<sub>a</sub> Q*(s,a)</li>
+                        </ul>
+                    `);
+                }
+            });
+        });
+
+        // Interactive intuition cards
+        document.querySelectorAll('.intuition-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const concept = this.querySelector('.intuition-concept').textContent;
+                
+                const intuitionDetails = {
+                    'Optimality Principle': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Bellman's Principle of Optimality</strong>
+                            </div>
+                            
+                            <p>"An optimal policy has the property that whatever the initial state and initial decision are, the remaining decisions must constitute an optimal policy with regard to the state resulting from the first decision."</p>
+                            
+                            <div class="modal-code">
+# Example: Shortest path problem
+# If the shortest path from A to C goes through B,
+# then the path from B to C must also be shortest
+
+def shortest_path_example():
+    # If path A→B→C is optimal (shortest)
+    # Then subpath B→C must also be optimal
+    
+    optimal_path_A_to_C = ['A', 'B', 'C']
+    
+    # This means:
+    assert optimal_path_A_to_C[1:] == shortest_path('B', 'C')
+    
+    # In RL terms:
+    # If policy π* is optimal starting from state s₀
+    # Then π* is also optimal starting from any state sₜ
+    # that can be reached by following π* from s₀
+
+# Dynamic programming example
+def optimal_substructure_example():
+    # Value iteration relies on this principle
+    # V*(s) = max_a Σ_s' P(s'|s,a)[R + γV*(s')]
+    #                                    ↑
+    #                            This must be optimal!
+    
+    # If V*(s') weren't optimal, we could improve V*(s)
+    # by using a better value for the next state
+    pass
+                            </div>
+                            
+                            <p><strong>Why This Matters:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Allows breaking complex problems into simpler subproblems</li>
+                                <li>Justifies dynamic programming approaches</li>
+                                <li>Ensures that local optimal decisions lead to global optimality</li>
+                                <li>Foundation for value iteration and policy iteration</li>
+                            </ul>
+                            
+                            <p><strong>Real-World Analogy:</strong></p>
+                            <p>Planning a road trip: If your optimal route from New York to Los Angeles goes through Chicago, then your route from Chicago to Los Angeles must also be optimal. You can't improve the overall trip by taking a suboptimal route for the second half.</p>
+                            
+                            <p><strong>Mathematical Consequence:</strong></p>
+                            <p>This principle allows us to write the value of a state in terms of the values of successor states, leading directly to the Bellman equations.</p>
+                        `
+                    },
+                    'Recursive Structure': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Value = Immediate + Future</strong>
+                            </div>
+                            
+                            <p>The recursive structure of the Bellman equation captures the fundamental trade-off in sequential decision making: balancing immediate rewards with future benefits.</p>
+                            
+                            <div class="modal-code">
+# Recursive structure visualization
+def recursive_value_breakdown(state, depth=0, max_depth=3):
+    if depth >= max_depth:
+        return "..."
+    
+    indent = "  " * depth
+    print(f"{indent}V({state}) = R(immediate) + γ * V(next_state)")
+    
+    # Expand next state value
+    next_state = get_next_state(state)
+    if depth < max_depth - 1:
+        print(f"{indent}V({next_state}) = ")
+        recursive_value_breakdown(next_state, depth + 1, max_depth)
+
+# Example: Investment decision
+def investment_example():
+    # State: Current wealth
+    # Action: How much to consume vs invest
+    # Value function: Expected lifetime utility
+    
+    def V(wealth, age):
+        if age >= retirement_age:
+            return utility(wealth)  # Base case
+        
+        # Recursive case: immediate utility + future value
+        immediate_utility = utility(consumption)
+        future_value = discount * V(wealth_after_investment, age + 1)
+        
+        return immediate_utility + future_value
+
+# Gaming example
+class GameState:
+    def value(self):
+        if self.is_terminal():
+            return self.final_score()  # Base case
+        
+        # Recursive case
+        immediate_points = self.get_immediate_reward()
+        
+        best_future_value = 0
+        for action in self.get_actions():
+            next_state = self.apply_action(action)
+            future_value = next_state.value()
+            best_future_value = max(best_future_value, future_value)
+        
+        return immediate_points + discount * best_future_value
+                            </div>
+                            
+                            <p><strong>Key Components:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Base Case:</strong> Terminal states (game over, goal reached)</li>
+                                <li><strong>Recursive Case:</strong> Current reward + discounted future value</li>
+                                <li><strong>Discount Factor (γ):</strong> How much we value future vs present</li>
+                            </ul>
+                            
+                            <p><strong>Why Recursion Works:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Future decisions affect current value</li>
+                                <li>Optimal decisions consider all future consequences</li>
+                                <li>Mathematical elegance: infinite horizon becomes finite computation</li>
+                            </ul>
+                            
+                            <p><strong>Computational Benefits:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Avoids recomputing the same subproblems</li>
+                                <li>Enables dynamic programming solutions</li>
+                                <li>Supports iterative improvement algorithms</li>
+                            </ul>
+                        `
+                    },
+                    'Consistency': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Self-Consistent Value Functions</strong>
+                            </div>
+                            
+                            <p>The Bellman equation requires that value functions be self-consistent: the value we assign to a state must match the expected return from actually following the policy.</p>
+                            
+                            <div class="modal-code">
+# Consistency check
+def check_bellman_consistency(V, policy, env, gamma, tolerance=1e-6):
+    """Check if value function satisfies Bellman equation"""
+    max_error = 0
+    
+    for state in env.get_states():
+        # Current value assignment
+        current_value = V[state]
+        
+        # Value according to Bellman equation
+        bellman_value = 0
+        for action in env.get_actions(state):
+            action_prob = policy.probability(action, state)
+            
+            for next_state in env.get_states():
+                trans_prob = env.transition_prob(state, action, next_state)
+                reward = env.reward(state, action, next_state)
+                next_value = V[next_state]
+                
+                bellman_value += action_prob * trans_prob * (reward + gamma * next_value)
+        
+        error = abs(current_value - bellman_value)
+        max_error = max(max_error, error)
+        
+        if error > tolerance:
+            print(f"Inconsistency in state {state}: V={current_value:.4f}, Bellman={bellman_value:.4f}")
+    
+    return max_error < tolerance
+
+# Value iteration converges to consistent solution
+def value_iteration_consistency():
+    V = initialize_values()
+    
+    for iteration in range(max_iterations):
+        V_new = {}
+        
+        for state in states:
+            # Apply Bellman equation
+            V_new[state] = bellman_update(state, V, policy, env, gamma)
+        
+        # Check convergence (consistency)
+        if max_change(V, V_new) < tolerance:
+            print(f"Converged to consistent solution at iteration {iteration}")
+            break
+        
+        V = V_new
+    
+    return V
+
+# Inconsistent values lead to policy improvement
+def policy_improvement_from_inconsistency():
+    # If V doesn't satisfy Bellman equation for current policy,
+    # then we can find a better policy
+    
+    if not is_consistent(V, policy):
+        # Extract greedy policy from current V
+        improved_policy = extract_greedy_policy(V)
+        
+        # This improved policy will have higher value
+        assert policy_value(improved_policy) >= policy_value(policy)
+                            </div>
+                            
+                            <p><strong>What Consistency Means:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>No contradictions in value assignments</li>
+                                <li>Expected returns match computed values</li>
+                                <li>Policy and value function are aligned</li>
+                                <li>No incentive to change the policy</li>
+                            </ul>
+                            
+                            <p><strong>Inconsistency Signals:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Value function can be improved</li>
+                                <li>Policy can be improved</li>
+                                <li>System hasn't converged to optimum</li>
+                                <li>Learning is still needed</li>
+                            </ul>
+                            
+                            <p><strong>Achieving Consistency:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Value Iteration:</strong> Repeatedly apply Bellman equation</li>
+                                <li><strong>Policy Iteration:</strong> Alternate policy evaluation and improvement</li>
+                                <li><strong>Temporal Difference Learning:</strong> Update toward Bellman targets</li>
+                                <li><strong>Q-learning:</strong> Update Q-values toward consistent targets</li>
+                            </ul>
+                            
+                            <p><strong>Mathematical Property:</strong></p>
+                            <p>A value function V<sup>π</sup> is consistent if and only if it satisfies the Bellman equation for policy π. This is both a necessary and sufficient condition for optimality.</p>
+                        `
+                    }
+                };
+                
+                const details = intuitionDetails[concept];
+                if (details) {
+                    modal.show(concept, details.content);
+                }
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week11_Slide208.html';
+            } else if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week11_Slide206.html';
+            }
+        });
+    </script>
+</body>
+</html>

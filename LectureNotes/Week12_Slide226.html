@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Confusion Matrix Deep Dive</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .matrix-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .metrics-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .confusion-matrix {
+            display: grid;
+            grid-template-columns: 60px 1fr 1fr;
+            grid-template-rows: 60px 1fr 1fr;
+            gap: 2px;
+            background: #e0e7ff;
+            padding: 2px;
+            border-radius: 12px;
+            margin: 20px 0;
+            font-size: 1.1em;
+        }
+
+        .matrix-label {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            border-radius: 8px;
+        }
+
+        .matrix-cell {
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .matrix-cell:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.2);
+            z-index: 10;
+        }
+
+        .cell-value {
+            font-size: 2em;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .cell-label {
+            font-size: 0.9em;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .tp { background: linear-gradient(135deg, #dcfce7, #bbf7d0); }
+        .tn { background: linear-gradient(135deg, #dbeafe, #bfdbfe); }
+        .fp { background: linear-gradient(135deg, #fef3c7, #fde68a); }
+        .fn { background: linear-gradient(135deg, #fee2e2, #fecaca); }
+
+        .metric-card {
+            padding: 20px;
+            margin: 15px 0;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .metric-name {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+            font-size: 1.2em;
+        }
+
+        .metric-formula {
+            font-family: 'Courier New', monospace;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            color: #1e293b;
+        }
+
+        .multiclass-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .multiclass-matrix {
+            display: grid;
+            grid-template-columns: 80px repeat(3, 1fr);
+            grid-template-rows: 80px repeat(3, 1fr);
+            gap: 2px;
+            background: #e0e7ff;
+            padding: 2px;
+            border-radius: 12px;
+            margin: 20px auto;
+            max-width: 600px;
+        }
+
+        .multiclass-cell {
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .multiclass-cell:hover {
+            background: linear-gradient(135deg, #ccfbf1, #99f6e4);
+            transform: scale(1.1);
+        }
+
+        .diagonal {
+            background: linear-gradient(135deg, #dcfce7, #bbf7d0) !important;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 12</div>
+    <div class="slide-number">Slide 226 of 240</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Confusion Matrix Deep Dive</h1>
+        
+        <div class="content-layout">
+            <div class="matrix-section">
+                <h2 class="section-title">Binary Classification Matrix</h2>
+                
+                <div class="confusion-matrix">
+                    <div style="grid-column: 1; grid-row: 1;"></div>
+                    <div class="matrix-label" style="grid-column: 2;">Predicted: Positive</div>
+                    <div class="matrix-label" style="grid-column: 3;">Predicted: Negative</div>
+                    <div class="matrix-label" style="grid-row: 2;">Actual: Positive</div>
+                    <div class="matrix-label" style="grid-row: 3;">Actual: Negative</div>
+                    
+                    <div class="matrix-cell tp" style="grid-column: 2; grid-row: 2;">
+                        <div class="cell-value">85</div>
+                        <div class="cell-label">True Positive (TP)</div>
+                    </div>
+                    <div class="matrix-cell fn" style="grid-column: 3; grid-row: 2;">
+                        <div class="cell-value">15</div>
+                        <div class="cell-label">False Negative (FN)</div>
+                    </div>
+                    <div class="matrix-cell fp" style="grid-column: 2; grid-row: 3;">
+                        <div class="cell-value">10</div>
+                        <div class="cell-label">False Positive (FP)</div>
+                    </div>
+                    <div class="matrix-cell tn" style="grid-column: 3; grid-row: 3;">
+                        <div class="cell-value">90</div>
+                        <div class="cell-label">True Negative (TN)</div>
+                    </div>
+                </div>
+
+                <div style="text-align: center; color: #64748b; margin-top: 20px;">
+                    <em>Click on any cell to learn more about that classification type</em>
+                </div>
+            </div>
+
+            <div class="metrics-section">
+                <h2 class="section-title">Derived Metrics</h2>
+                
+                <div class="metric-card">
+                    <div class="metric-name">Accuracy</div>
+                    <div class="metric-formula">(TP + TN) / Total = 87.5%</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-name">Precision</div>
+                    <div class="metric-formula">TP / (TP + FP) = 89.5%</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-name">Recall (Sensitivity)</div>
+                    <div class="metric-formula">TP / (TP + FN) = 85.0%</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-name">Specificity</div>
+                    <div class="metric-formula">TN / (TN + FP) = 90.0%</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-name">F1 Score</div>
+                    <div class="metric-formula">2 × (Precision × Recall) / (Precision + Recall) = 87.2%</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="multiclass-section">
+            <h2 class="section-title">Multi-class Confusion Matrix</h2>
+            
+            <div class="multiclass-matrix">
+                <div style="grid-column: 1; grid-row: 1;"></div>
+                <div class="matrix-label" style="grid-column: 2;">Pred: A</div>
+                <div class="matrix-label" style="grid-column: 3;">Pred: B</div>
+                <div class="matrix-label" style="grid-column: 4;">Pred: C</div>
+                <div class="matrix-label" style="grid-row: 2;">True: A</div>
+                <div class="matrix-label" style="grid-row: 3;">True: B</div>
+                <div class="matrix-label" style="grid-row: 4;">True: C</div>
+                
+                <div class="multiclass-cell diagonal" style="grid-column: 2; grid-row: 2;">45</div>
+                <div class="multiclass-cell" style="grid-column: 3; grid-row: 2;">3</div>
+                <div class="multiclass-cell" style="grid-column: 4; grid-row: 2;">2</div>
+                <div class="multiclass-cell" style="grid-column: 2; grid-row: 3;">5</div>
+                <div class="multiclass-cell diagonal" style="grid-column: 3; grid-row: 3;">38</div>
+                <div class="multiclass-cell" style="grid-column: 4; grid-row: 3;">7</div>
+                <div class="multiclass-cell" style="grid-column: 2; grid-row: 4;">1</div>
+                <div class="multiclass-cell" style="grid-column: 3; grid-row: 4;">4</div>
+                <div class="multiclass-cell diagonal" style="grid-column: 4; grid-row: 4;">45</div>
+            </div>
+
+            <div style="text-align: center; color: #64748b; margin-top: 20px;">
+                <em>Diagonal elements represent correct predictions for each class</em>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week12_Slide225.html" class="nav-btn">← Previous</a>
+        <a href="Week12_Slide227.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Matrix cell click handlers
+        document.querySelectorAll('.matrix-cell').forEach(cell => {
+            cell.addEventListener('click', function() {
+                const label = this.querySelector('.cell-label').textContent;
+                const value = this.querySelector('.cell-value').textContent;
+                
+                const details = {
+                    'True Positive (TP)': {
+                        meaning: 'Correctly predicted positive cases',
+                        example: 'A medical test correctly identifies a patient with the disease',
+                        importance: 'High TP means the model successfully identifies positive cases',
+                        calculation: 'Count of samples where actual = positive AND predicted = positive',
+                        impact: 'Maximizing TP is crucial when missing positive cases is costly (e.g., cancer detection)'
+                    },
+                    'True Negative (TN)': {
+                        meaning: 'Correctly predicted negative cases',
+                        example: 'A spam filter correctly identifies a legitimate email',
+                        importance: 'High TN means the model successfully identifies negative cases',
+                        calculation: 'Count of samples where actual = negative AND predicted = negative',
+                        impact: 'Important when false alarms are costly (e.g., fraud detection)'
+                    },
+                    'False Positive (FP)': {
+                        meaning: 'Incorrectly predicted as positive (Type I Error)',
+                        example: 'A medical test incorrectly indicates disease in a healthy patient',
+                        importance: 'Also called "false alarm" - predicting positive when actually negative',
+                        calculation: 'Count of samples where actual = negative BUT predicted = positive',
+                        impact: 'High FP can lead to unnecessary treatments, costs, or user frustration'
+                    },
+                    'False Negative (FN)': {
+                        meaning: 'Incorrectly predicted as negative (Type II Error)',
+                        example: 'A medical test fails to detect disease in a sick patient',
+                        importance: 'Also called "miss" - failing to detect positive cases',
+                        calculation: 'Count of samples where actual = positive BUT predicted = negative',
+                        impact: 'High FN can be dangerous in critical applications (missing cancer, security threats)'
+                    }
+                };
+                
+                const info = details[label];
+                if (info) {
+                    modal.show(label, `
+                        <div class="modal-highlight">
+                            <strong>Count in this example: ${value}</strong>
+                        </div>
+                        <p><strong>What it means:</strong> ${info.meaning}</p>
+                        <p><strong>Real-world example:</strong> ${info.example}</p>
+                        <p><strong>How it's calculated:</strong> ${info.calculation}</p>
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                            <strong>Why it matters:</strong><br>
+                            ${info.importance}
+                        </div>
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(239, 68, 68, 0.1); border-radius: 10px;">
+                            <strong>Business Impact:</strong><br>
+                            ${info.impact}
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Metric card click handlers
+        document.querySelectorAll('.metric-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const metricName = this.querySelector('.metric-name').textContent;
+                
+                const metricDetails = {
+                    'Accuracy': {
+                        formula: '(TP + TN) / (TP + TN + FP + FN)',
+                        description: 'Overall correctness of the model',
+                        when_to_use: 'When classes are balanced and all errors are equally important',
+                        limitations: 'Can be misleading with imbalanced datasets',
+                        example: 'In this case: (85 + 90) / 200 = 87.5%',
+                        interpretation: 'The model correctly classifies 87.5% of all samples'
+                    },
+                    'Precision': {
+                        formula: 'TP / (TP + FP)',
+                        description: 'Of all positive predictions, how many were correct?',
+                        when_to_use: 'When false positives are costly (spam detection, recommendation systems)',
+                        limitations: 'Ignores false negatives',
+                        example: 'In this case: 85 / (85 + 10) = 89.5%',
+                        interpretation: 'When the model predicts positive, it\'s correct 89.5% of the time'
+                    },
+                    'Recall (Sensitivity)': {
+                        formula: 'TP / (TP + FN)',
+                        description: 'Of all actual positives, how many were found?',
+                        when_to_use: 'When false negatives are costly (disease detection, fraud detection)',
+                        limitations: 'Ignores false positives',
+                        example: 'In this case: 85 / (85 + 15) = 85.0%',
+                        interpretation: 'The model finds 85% of all positive cases'
+                    },
+                    'Specificity': {
+                        formula: 'TN / (TN + FP)',
+                        description: 'Of all actual negatives, how many were correctly identified?',
+                        when_to_use: 'When correctly identifying negatives is important',
+                        limitations: 'Only considers negative class performance',
+                        example: 'In this case: 90 / (90 + 10) = 90.0%',
+                        interpretation: 'The model correctly identifies 90% of negative cases'
+                    },
+                    'F1 Score': {
+                        formula: '2 × (Precision × Recall) / (Precision + Recall)',
+                        description: 'Harmonic mean of precision and recall',
+                        when_to_use: 'When you need a balance between precision and recall',
+                        limitations: 'Assumes equal importance of precision and recall',
+                        example: 'In this case: 2 × (0.895 × 0.85) / (0.895 + 0.85) = 87.2%',
+                        interpretation: 'Balanced performance metric combining precision and recall'
+                    }
+                };
+                
+                const details = metricDetails[metricName];
+                if (details) {
+                    modal.show(`Metric: ${metricName}`, `
+                        <div class="modal-highlight">
+                            <strong>Formula:</strong><br>
+                            <code>${details.formula}</code>
+                        </div>
+                        <p><strong>What it measures:</strong> ${details.description}</p>
+                        <p><strong>When to use:</strong> ${details.when_to_use}</p>
+                        <p><strong>Limitations:</strong> ${details.limitations}</p>
+                        <div class="modal-code">
+                            <strong>Calculation Example:</strong><br>
+                            ${details.example}
+                        </div>
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                            <strong>Interpretation:</strong><br>
+                            ${details.interpretation}
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Multi-class matrix click handler
+        document.querySelectorAll('.multiclass-cell').forEach(cell => {
+            cell.addEventListener('click', function() {
+                const value = this.textContent;
+                const isDiagonal = this.classList.contains('diagonal');
+                
+                if (isDiagonal) {
+                    modal.show('Correct Classification', `
+                        <div class="modal-highlight">
+                            <strong>Count: ${value} samples correctly classified</strong>
+                        </div>
+                        <p>These are the diagonal elements representing correct predictions.</p>
+                        <h4>Multi-class Metrics:</h4>
+                        <ul style="margin: 20px 0; line-height: 1.8;">
+                            <li><strong>Macro-Average:</strong> Calculate metric for each class, then average</li>
+                            <li><strong>Micro-Average:</strong> Aggregate all TP, FP, FN across classes</li>
+                            <li><strong>Weighted-Average:</strong> Weight by class frequency</li>
+                        </ul>
+                        <div class="modal-code">
+                            Overall Accuracy = Sum(diagonal) / Total<br>
+                            = (45 + 38 + 45) / 150 = 85.3%
+                        </div>
+                    `);
+                } else if (value && value !== '') {
+                    modal.show('Misclassification', `
+                        <div class="modal-highlight">
+                            <strong>Count: ${value} samples misclassified</strong>
+                        </div>
+                        <p>Off-diagonal elements represent confusion between classes.</p>
+                        <h4>Understanding Class Confusion:</h4>
+                        <ul style="margin: 20px 0; line-height: 1.8;">
+                            <li>Higher values indicate classes that are often confused</li>
+                            <li>Can reveal similar features between classes</li>
+                            <li>Helps identify where to improve the model</li>
+                        </ul>
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(239, 68, 68, 0.1); border-radius: 10px;">
+                            <strong>Action Items:</strong><br>
+                            • Add more distinguishing features<br>
+                            • Collect more training data for confused classes<br>
+                            • Consider hierarchical classification
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week12_Slide225.html';
+            } else if (e.key === 'ArrowRight' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week12_Slide227.html';
+            }
+        });
+    </script>
+</body>
+</html>

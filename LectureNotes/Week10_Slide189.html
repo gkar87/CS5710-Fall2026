@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Sequence-to-Sequence Models</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .architecture-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .workflow-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .concept-text {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .seq2seq-diagram {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 30px 0;
+            padding: 25px;
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 15px;
+            border: 2px solid #14b8a6;
+        }
+
+        .component-box {
+            text-align: center;
+            flex: 1;
+            position: relative;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 12px;
+            margin: 0 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .component-box:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .component-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .component-desc {
+            font-size: 0.9em;
+            color: #475569;
+            line-height: 1.4;
+        }
+
+        .arrow-connector {
+            font-size: 2em;
+            color: #14b8a6;
+            margin: 0 10px;
+        }
+
+        .training-steps {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .training-step {
+            padding: 15px;
+            margin: 10px 0;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .training-step:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(13, 148, 136, 0.15);
+        }
+
+        .step-number {
+            font-weight: 600;
+            color: #0d9488;
+            margin-right: 10px;
+        }
+
+        .step-desc {
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .applications-banner {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .applications-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .applications-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+        }
+
+        .app-card {
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border: 2px solid #14b8a6;
+        }
+
+        .app-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .app-icon {
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+
+        .app-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #0d9488;
+        }
+
+        .app-desc {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .applications-grid { grid-template-columns: 1fr; }
+            .seq2seq-diagram { flex-direction: column; }
+            .arrow-connector { transform: rotate(90deg); margin: 20px 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    
+    <div class="course-info">CS5710 - Week 10</div>
+    <div class="slide-number">Slide 189 of 200</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Sequence-to-Sequence Models</h1>
+        
+        <div class="content-layout">
+            <div class="architecture-section">
+                <h2 class="section-title">Encoder-Decoder Architecture</h2>
+                
+                <div class="concept-text">
+                    <strong>Seq2Seq models</strong> transform one sequence into another using an encoder-decoder framework for variable-length input/output tasks.
+                </div>
+                
+                <div class="seq2seq-diagram">
+                    <div class="component-box">
+                        <div class="component-title">📥 Encoder</div>
+                        <div class="component-desc">Processes input sequence into fixed context vector</div>
+                    </div>
+                    <div class="arrow-connector">→</div>
+                    <div class="component-box">
+                        <div class="component-title">🧠 Context</div>
+                        <div class="component-desc">Compressed representation of input</div>
+                    </div>
+                    <div class="arrow-connector">→</div>
+                    <div class="component-box">
+                        <div class="component-title">📤 Decoder</div>
+                        <div class="component-desc">Generates output sequence from context</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 25px; padding: 20px; background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%); border-radius: 12px; border-left: 4px solid #0d9488;">
+                    <strong>Key Innovation:</strong> Handles variable-length inputs and outputs without requiring alignment between input and output sequences.
+                </div>
+            </div>
+
+            <div class="workflow-section">
+                <h2 class="section-title">Training Process</h2>
+                
+                <ul class="training-steps">
+                    <li class="training-step">
+                        <span class="step-number">1.</span>
+                        <span class="step-desc">Encoder processes entire input sequence</span>
+                    </li>
+                    <li class="training-step">
+                        <span class="step-number">2.</span>
+                        <span class="step-desc">Context vector captures sequence information</span>
+                    </li>
+                    <li class="training-step">
+                        <span class="step-number">3.</span>
+                        <span class="step-desc">Decoder generates output token by token</span>
+                    </li>
+                    <li class="training-step">
+                        <span class="step-number">4.</span>
+                        <span class="step-desc">Teacher forcing during training (using ground truth)</span>
+                    </li>
+                    <li class="training-step">
+                        <span class="step-number">5.</span>
+                        <span class="step-desc">Backpropagation through entire sequence</span>
+                    </li>
+                </ul>
+
+                <div style="margin-top: 25px; padding: 20px; background: linear-gradient(135deg, #f0fdfa, #ccfbf1); border-radius: 12px; border: 2px solid #14b8a6;">
+                    <strong>Teacher Forcing:</strong> During training, feed actual target tokens to decoder instead of predicted ones for faster convergence.
+                </div>
+            </div>
+        </div>
+
+        <div class="applications-banner">
+            <h2 class="applications-title">Seq2Seq Applications</h2>
+            
+            <div class="applications-grid">
+                <div class="app-card">
+                    <div class="app-icon">🌐</div>
+                    <div class="app-title">Machine Translation</div>
+                    <div class="app-desc">Translating text between different languages with variable sentence lengths</div>
+                </div>
+                
+                <div class="app-card">
+                    <div class="app-icon">📝</div>
+                    <div class="app-title">Text Summarization</div>
+                    <div class="app-desc">Converting long documents into concise summaries</div>
+                </div>
+                
+                <div class="app-card">
+                    <div class="app-icon">💬</div>
+                    <div class="app-title">Chatbots</div>
+                    <div class="app-desc">Generating conversational responses from user inputs</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week10_Slide188.html" class="nav-btn">← Previous</a>
+        <a href="Week10_Slide190.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive component boxes with modal
+        document.querySelectorAll('.component-box').forEach(box => {
+            box.addEventListener('click', function() {
+                const title = this.querySelector('.component-title').textContent;
+                
+                const componentDetails = {
+                    '📥 Encoder': {
+                        description: 'The encoder processes the input sequence and compresses it into a fixed-size context vector (also called thought vector).',
+                        architecture: 'Typically an LSTM or GRU that reads the input sequence token by token',
+                        example: `Input: "Hello, how are you?" (English)
+                        
+Encoder Process:
+Token 1: "Hello" → h₁
+Token 2: "," → h₂  
+Token 3: "how" → h₃
+Token 4: "are" → h₄
+Token 5: "you" → h₅
+Token 6: "?" → h₆ (final hidden state = context vector)`,
+                        mathematics: 'h_t = LSTM(x_t, h_{t-1})\ncontext = h_final',
+                        challenges: 'Information bottleneck: Must compress entire sequence into fixed-size vector'
+                    },
+                    '🧠 Context': {
+                        description: 'The context vector is a fixed-size representation that captures the meaning of the entire input sequence.',
+                        architecture: 'Usually the final hidden state of the encoder, sometimes concatenation of forward/backward states',
+                        example: `For translation "Hello" → "Hola":
+
+Context Vector (simplified):
+[0.2, -0.8, 0.5, 0.1, -0.3, ...]
+↑
+Contains compressed semantic meaning of "Hello"`,
+                        mathematics: 'context = h_encoder_final\nOR context = [h_forward; h_backward]',
+                        challenges: 'Fixed size can lose information for long sequences (attention mechanism solves this)'
+                    },
+                    '📤 Decoder': {
+                        description: 'The decoder generates the output sequence token by token, conditioned on the context vector.',
+                        architecture: 'LSTM/GRU that takes context vector as initial state and generates output sequence',
+                        example: `Context + Start Token → Decoder → Output Sequence
+
+Input Context: [encoded "Hello"]
+Decoder Process:
+Step 1: <START> → "Hola"
+Step 2: "Hola" → <END>
+
+Final Output: "Hola"`,
+                        mathematics: 's_t = LSTM(y_{t-1}, s_{t-1}, context)\ny_t = softmax(W_s * s_t)',
+                        challenges: 'Must generate coherent sequence while maintaining context from beginning'
+                    }
+                };
+                
+                const details = componentDetails[title];
+                if (details) {
+                    modal.show(title, `
+                        <div class="modal-highlight">
+                            <strong>Component Overview</strong>
+                        </div>
+                        <p>${details.description}</p>
+                        
+                        <div class="modal-highlight">
+                            <strong>Architecture:</strong><br>
+                            ${details.architecture}
+                        </div>
+                        
+                        <div class="modal-code">
+                            <strong>Example:</strong><br><br>
+                            ${details.example.replace(/\n/g, '<br>')}
+                        </div>
+                        
+                        <div class="modal-code">
+                            <strong>Mathematics:</strong><br>
+                            ${details.mathematics.replace(/\n/g, '<br>')}
+                        </div>
+                        
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(220, 38, 38, 0.1); border-radius: 10px; border-left: 4px solid #dc2626;">
+                            <strong>⚠️ Challenges:</strong><br>
+                            ${details.challenges}
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Interactive training steps with modal
+        document.querySelectorAll('.training-step').forEach(step => {
+            step.addEventListener('click', function() {
+                const stepNumber = this.querySelector('.step-number').textContent;
+                const stepDesc = this.querySelector('.step-desc').textContent;
+                
+                const stepDetails = {
+                    '1.': {
+                        title: 'Encoder Processing',
+                        explanation: 'The encoder RNN processes the input sequence sequentially, building up hidden states that capture information about the sequence.',
+                        details: `Process:
+• Read input tokens one by one
+• Update hidden state at each time step
+• Final hidden state contains sequence summary
+
+Time Complexity: O(n) where n is input length
+Space Complexity: O(h) where h is hidden size`,
+                        code: `for token in input_sequence:
+    hidden_state = encoder_rnn(token, hidden_state)
+context_vector = hidden_state  # Final state`
+                    },
+                    '2.': {
+                        title: 'Context Vector Creation', 
+                        explanation: 'The context vector acts as a compressed representation of the input sequence, serving as the bridge between encoder and decoder.',
+                        details: `Characteristics:
+• Fixed-size vector (typically 256-1024 dimensions)
+• Contains semantic meaning of input
+• Same size regardless of input length
+• Potential information bottleneck
+
+Improvements: Attention mechanisms address bottleneck`,
+                        code: `# Simple context (last hidden state)
+context = encoder_final_state
+
+# Bidirectional context  
+context = concatenate([forward_state, backward_state])`
+                    },
+                    '3.': {
+                        title: 'Sequential Decoding',
+                        explanation: 'The decoder generates output tokens sequentially, using the context vector and previously generated tokens.',
+                        details: `Generation Process:
+• Initialize with context vector
+• Generate one token at a time
+• Use previous token as next input
+• Continue until <END> token
+
+Autoregressive: Each prediction depends on previous predictions`,
+                        code: `decoder_state = context_vector
+output_sequence = []
+current_token = "<START>"
+
+while current_token != "<END>":
+    decoder_state = decoder_rnn(current_token, decoder_state)
+    current_token = predict_next_token(decoder_state)
+    output_sequence.append(current_token)`
+                    },
+                    '4.': {
+                        title: 'Teacher Forcing',
+                        explanation: 'During training, teacher forcing feeds the actual target tokens (not predictions) to the decoder for faster and more stable training.',
+                        details: `Without Teacher Forcing:
+• Use decoder's own predictions
+• Errors compound over time
+• Slow convergence, unstable training
+
+With Teacher Forcing:
+• Use ground truth target tokens
+• Faster convergence
+• More stable gradients
+• Exposure bias during inference`,
+                        code: `# Training with teacher forcing
+for t in range(target_length):
+    decoder_output = decoder(target[t-1], decoder_state)  # Use ground truth
+    loss += criterion(decoder_output, target[t])
+
+# Inference without teacher forcing
+for t in range(max_length):
+    decoder_output = decoder(predicted_token, decoder_state)  # Use prediction
+    predicted_token = torch.argmax(decoder_output)`
+                    },
+                    '5.': {
+                        title: 'Backpropagation Through Time',
+                        explanation: 'Gradients are computed and propagated backward through the entire sequence to train both encoder and decoder.',
+                        details: `BPTT Process:
+• Compute loss on entire output sequence
+• Backpropagate through decoder time steps
+• Backpropagate through encoder time steps
+• Update all parameters jointly
+
+Challenges:
+• Vanishing gradients for long sequences
+• High memory requirements
+• Gradient clipping often necessary`,
+                        code: `# Compute total loss
+total_loss = sum(cross_entropy(output[t], target[t]) 
+                for t in range(sequence_length))
+
+# Backpropagate
+total_loss.backward()
+
+# Gradient clipping (common practice)
+torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+
+# Update parameters
+optimizer.step()`
+                    }
+                };
+                
+                const details = stepDetails[stepNumber];
+                if (details) {
+                    modal.show(`Step ${stepNumber} ${details.title}`, `
+                        <div class="modal-highlight">
+                            <strong>${stepDesc}</strong>
+                        </div>
+                        <p>${details.explanation}</p>
+                        
+                        <div class="modal-highlight">
+                            <strong>Technical Details:</strong><br><br>
+                            ${details.details.replace(/\n/g, '<br>')}
+                        </div>
+                        
+                        <div class="modal-code">
+                            <strong>Implementation:</strong><br><br>
+                            ${details.code.replace(/\n/g, '<br>')}
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Interactive application cards with modal
+        document.querySelectorAll('.app-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('.app-title').textContent;
+                
+                const appDetails = {
+                    'Machine Translation': {
+                        description: 'Converting text from one language to another while preserving meaning and context.',
+                        architecture: 'Encoder-Decoder with attention mechanism, often using Transformer architecture in modern systems',
+                        example: `English → Spanish Translation:
+
+Input: "The weather is beautiful today"
+Encoder: Processes English sentence
+Context: [semantic representation]
+Decoder: Generates Spanish tokens
+Output: "El clima está hermoso hoy"
+
+Challenges:
+• Different word orders between languages
+• Idiomatic expressions
+• Cultural context`,
+                        performance: 'Google Translate achieves 90%+ accuracy for major language pairs using Transformer-based seq2seq',
+                        applications: 'Google Translate, DeepL, Facebook translation, real-time conversation apps'
+                    },
+                    'Text Summarization': {
+                        description: 'Condensing long documents into shorter versions while retaining key information.',
+                        architecture: 'Encoder processes full document, decoder generates summary with attention to important parts',
+                        example: `Document Summarization:
+
+Input: 500-word news article
+Encoder: Processes entire article
+Context: [key information extracted]
+Decoder: Generates concise summary
+Output: 50-word summary
+
+Types:
+• Extractive: Select important sentences
+• Abstractive: Generate new summary text`,
+                        performance: 'BART and T5 achieve ROUGE scores of 45+ on CNN/DailyMail dataset',
+                        applications: 'News aggregation, research paper summaries, document processing, email briefings'
+                    },
+                    'Chatbots': {
+                        description: 'Generating appropriate responses in conversational contexts based on user input.',
+                        architecture: 'Encoder processes user message and conversation history, decoder generates contextual response',
+                        example: `Conversational AI:
+
+User: "What's the weather like?"
+Encoder: Processes query + context
+Context: [intent: weather_query, entities: none]
+Decoder: Generates appropriate response
+Bot: "I'd be happy to help! Could you tell me your location?"
+
+Features:
+• Context awareness
+• Intent recognition
+• Personality consistency`,
+                        performance: 'GPT-3 based chatbots achieve human-like conversation quality in many domains',
+                        applications: 'Customer service bots, virtual assistants, therapy bots, educational tutors'
+                    }
+                };
+                
+                const details = appDetails[title];
+                if (details) {
+                    modal.show(`Seq2Seq Application: ${title}`, `
+                        <div class="modal-highlight">
+                            <h4>Application Overview</h4>
+                        </div>
+                        <p><strong>Description:</strong> ${details.description}</p>
+                        
+                        <div class="modal-code">
+                            <strong>Architecture:</strong><br>
+                            ${details.architecture}
+                        </div>
+                        
+                        <div class="modal-highlight">
+                            <strong>Example & Process:</strong><br><br>
+                            ${details.example.replace(/\n/g, '<br>')}
+                        </div>
+                        
+                        <p><strong>Performance:</strong> ${details.performance}</p>
+                        
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                            <strong>🚀 Real-World Applications:</strong><br>
+                            ${details.applications}
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week10_Slide190.html';
+            } else if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week10_Slide188.html';
+            }
+        });
+
+    </script>
+</body>
+</html>

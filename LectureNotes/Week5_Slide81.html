@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Ensemble Learning Principles</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .principle-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .types-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .principle-text {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .ensemble-types {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .ensemble-type {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #14b8a6;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .ensemble-type:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 30px rgba(13, 148, 136, 0.2);
+        }
+
+        .type-name {
+            font-size: 1.3em;
+            color: #0d9488;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .type-desc {
+            color: #475569;
+            line-height: 1.6;
+        }
+
+        .wisdom-crowd {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            margin: 40px 0;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            animation: slideInFromBottom 1s ease-out 0.5s both;
+        }
+
+        .wisdom-title {
+            font-size: 2em;
+            color: #0d9488;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .prediction-demo {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        .predictor {
+            background: #1e293b;
+            color: white;
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            animation: fadeInScale 0.5s ease-out;
+            transition: all 0.3s ease;
+        }
+
+        .predictor:hover {
+            transform: scale(1.1);
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+        }
+
+        .predictor-name {
+            font-size: 0.9em;
+            color: #94a3b8;
+            margin-bottom: 5px;
+        }
+
+        .predictor-vote {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #14b8a6;
+        }
+
+        .ensemble-result {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            margin-top: 30px;
+            font-size: 1.5em;
+            font-weight: bold;
+            box-shadow: 0 15px 40px rgba(13, 148, 136, 0.3);
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-80px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(80px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .prediction-demo { grid-template-columns: repeat(3, 1fr); }
+            .slide-title { font-size: 2.5em; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 5</div>
+    <div class="slide-number">Slide 81 of 100</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">🎯 Ensemble Learning Principles</h1>
+        
+        <div class="content-layout">
+            <div class="principle-section">
+                <h2 class="section-title">Core Principle</h2>
+                <div class="principle-text">
+                    <strong>Wisdom of the Crowd:</strong><br>
+                    Multiple models working together can achieve better performance than any individual model alone.
+                </div>
+                
+                <h3 style="color: #0d9488; margin-top: 30px;">Why Ensembles Work:</h3>
+                <ul style="margin-left: 20px; line-height: 2;">
+                    <li>🎲 <strong>Diversity:</strong> Different models make different errors</li>
+                    <li>📊 <strong>Variance Reduction:</strong> Averaging reduces overfitting</li>
+                    <li>🎯 <strong>Bias Reduction:</strong> Combining weak learners</li>
+                    <li>🛡️ <strong>Robustness:</strong> Less sensitive to outliers</li>
+                    <li>🔍 <strong>Coverage:</strong> Captures different patterns</li>
+                </ul>
+            </div>
+            
+            <div class="types-section">
+                <h2 class="section-title">Ensemble Methods</h2>
+                
+                <div class="ensemble-types">
+                    <div class="ensemble-type" data-type="bagging">
+                        <div class="type-name">📦 Bagging</div>
+                        <div class="type-desc">Bootstrap Aggregating - Train models on different samples</div>
+                    </div>
+                    
+                    <div class="ensemble-type" data-type="boosting">
+                        <div class="type-name">🚀 Boosting</div>
+                        <div class="type-desc">Sequential learning - Each model corrects previous errors</div>
+                    </div>
+                    
+                    <div class="ensemble-type" data-type="stacking">
+                        <div class="type-name">🏗️ Stacking</div>
+                        <div class="type-desc">Meta-learning - Use another model to combine predictions</div>
+                    </div>
+                    
+                    <div class="ensemble-type" data-type="voting">
+                        <div class="type-name">🗳️ Voting</div>
+                        <div class="type-desc">Simple combination - Majority vote or average</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="wisdom-crowd">
+            <h2 class="wisdom-title">Live Ensemble Demonstration</h2>
+            
+            <div class="prediction-demo" id="predictionDemo">
+                <div class="predictor">
+                    <div class="predictor-name">Model 1</div>
+                    <div class="predictor-vote">Class A</div>
+                </div>
+                <div class="predictor">
+                    <div class="predictor-name">Model 2</div>
+                    <div class="predictor-vote">Class B</div>
+                </div>
+                <div class="predictor">
+                    <div class="predictor-name">Model 3</div>
+                    <div class="predictor-vote">Class A</div>
+                </div>
+                <div class="predictor">
+                    <div class="predictor-name">Model 4</div>
+                    <div class="predictor-vote">Class A</div>
+                </div>
+                <div class="predictor">
+                    <div class="predictor-name">Model 5</div>
+                    <div class="predictor-vote">Class B</div>
+                </div>
+            </div>
+            
+            <div class="ensemble-result">
+                🏆 Ensemble Prediction: Class A (60% confidence)
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week4_Slide80.html" class="nav-btn">← Previous</a>
+        <a href="Week5_Slide82.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                const size = Math.random() * 10 + 3;
+                element.style.width = size + 'px';
+                element.style.height = size + 'px';
+                container.appendChild(element);
+            }
+        }
+
+        // Ensemble type details
+        const ensembleDetails = {
+            'bagging': {
+                title: 'Bagging (Bootstrap Aggregating)',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Key Idea:</strong> Create diversity through data sampling
+                    </div>
+                    <p><strong>How it works:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>Sample data with replacement (bootstrap)</li>
+                        <li>Train model on each sample</li>
+                        <li>Combine predictions (vote/average)</li>
+                    </ul>
+                    <p><strong>Famous Algorithm:</strong> Random Forest</p>
+                    <p><strong>Best for:</strong> Reducing variance, preventing overfitting</p>
+                    <p><strong>Parallel Training:</strong> Yes! All models independent</p>
+                `
+            },
+            'boosting': {
+                title: 'Boosting',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Key Idea:</strong> Learn from mistakes sequentially
+                    </div>
+                    <p><strong>How it works:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>Train models sequentially</li>
+                        <li>Each model focuses on previous errors</li>
+                        <li>Weighted combination of all models</li>
+                    </ul>
+                    <p><strong>Famous Algorithms:</strong> AdaBoost, XGBoost, LightGBM</p>
+                    <p><strong>Best for:</strong> Reducing bias, high accuracy</p>
+                    <p><strong>Parallel Training:</strong> No, sequential by nature</p>
+                `
+            },
+            'stacking': {
+                title: 'Stacking (Stacked Generalization)',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Key Idea:</strong> Learn how to combine models optimally
+                    </div>
+                    <p><strong>How it works:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>Train diverse base models (Level 0)</li>
+                        <li>Use predictions as features</li>
+                        <li>Train meta-model to combine (Level 1)</li>
+                    </ul>
+                    <p><strong>Advantage:</strong> Can capture complex relationships</p>
+                    <p><strong>Challenge:</strong> Risk of overfitting, needs careful validation</p>
+                    <p><strong>Pro tip:</strong> Use different algorithm types for diversity</p>
+                `
+            },
+            'voting': {
+                title: 'Voting Ensemble',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Key Idea:</strong> Democratic decision making
+                    </div>
+                    <p><strong>Types:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Hard Voting:</strong> Majority class wins</li>
+                        <li><strong>Soft Voting:</strong> Average probabilities</li>
+                        <li><strong>Weighted:</strong> Give importance to better models</li>
+                    </ul>
+                    <p><strong>When to use:</strong> Quick ensemble, similar performance models</p>
+                    <p><strong>Advantage:</strong> Simple, no training needed</p>
+                    <p><strong>Best practice:</strong> Use soft voting when possible</p>
+                `
+            }
+        };
+
+        // Make ensemble types clickable
+        document.querySelectorAll('.ensemble-type').forEach(type => {
+            type.addEventListener('click', function() {
+                const typeKey = this.dataset.type;
+                const details = ensembleDetails[typeKey];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        // Animate prediction demo
+        function animatePredictions() {
+            const predictors = document.querySelectorAll('.predictor');
+            const classes = ['Class A', 'Class B', 'Class C'];
+            
+            setInterval(() => {
+                let votes = {'Class A': 0, 'Class B': 0, 'Class C': 0};
+                
+                predictors.forEach((predictor, i) => {
+                    setTimeout(() => {
+                        const randomClass = classes[Math.floor(Math.random() * classes.length)];
+                        predictor.querySelector('.predictor-vote').textContent = randomClass;
+                        votes[randomClass]++;
+                        
+                        // Update ensemble result
+                        if (i === predictors.length - 1) {
+                            const winner = Object.keys(votes).reduce((a, b) => votes[a] > votes[b] ? a : b);
+                            const confidence = Math.round((votes[winner] / predictors.length) * 100);
+                            document.querySelector('.ensemble-result').textContent = 
+                                `🏆 Ensemble Prediction: ${winner} (${confidence}% confidence)`;
+                        }
+                    }, i * 200);
+                });
+            }, 5000);
+        }
+
+        // Initialize components
+        createFloatingElements();
+        animatePredictions();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week4_Slide80.html';
+            } else if ((e.key === 'ArrowRight' || e.key === ' ') && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week5_Slide82.html';
+            }
+        });
+    </script>
+</body>
+</html>

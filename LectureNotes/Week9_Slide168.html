@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - LeNet-5 Architecture</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px 25px;
+            border-radius: 25px;
+            font-weight: 600;
+            color: #0d9488;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            font-size: 1.1em;
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px 25px;
+            border-radius: 25px;
+            font-weight: 600;
+            color: #0d9488;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            font-size: 1.1em;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.2em;
+            text-align: center;
+            margin-bottom: 40px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        @keyframes slideInFromTop {
+            0% { transform: translateY(-50px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        .architecture-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            padding: 30px;
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(13, 148, 136, 0.1);
+            border: 2px solid rgba(13, 148, 136, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            text-align: center;
+            border-bottom: 3px solid #0d9488;
+            padding-bottom: 10px;
+        }
+
+        .lenet-architecture {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 40px 0;
+            flex-wrap: wrap;
+            gap: 15px;
+            overflow-x: auto;
+            padding: 20px 0;
+        }
+
+        .layer-block {
+            background: linear-gradient(135deg, #e6fffa 0%, #99f6e4 100%);
+            border-radius: 15px;
+            padding: 20px 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            min-width: 120px;
+            position: relative;
+        }
+
+        .layer-block:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 12px 30px rgba(13, 148, 136, 0.2);
+            border-color: #0d9488;
+        }
+
+        .layer-visual {
+            width: 80px;
+            height: auto;
+            background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+            border-radius: 8px;
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+            position: relative;
+        }
+
+        .layer-title {
+            font-size: 1em;
+            font-weight: 700;
+            color: #0d9488;
+            margin-bottom: 8px;
+        }
+
+        .layer-specs {
+            font-size: 0.8em;
+            color: #1e293b;
+            line-height: 1.3;
+        }
+
+        .arrow {
+            font-size: 24px;
+            color: #0d9488;
+            margin: 0 5px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 30px 0;
+        }
+
+        .content-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            padding: 30px;
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(13, 148, 136, 0.1);
+            border: 2px solid rgba(13, 148, 136, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .content-section:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 40px rgba(13, 148, 136, 0.15);
+            border-color: rgba(13, 148, 136, 0.3);
+        }
+
+        .content-section h3 {
+            color: #0d9488;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            font-weight: 600;
+            border-bottom: 2px solid #0d9488;
+            padding-bottom: 8px;
+        }
+
+        .content-section ul {
+            color: #1e293b;
+            line-height: 1.6;
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .content-section li {
+            margin-bottom: 8px;
+            font-size: 1em;
+        }
+
+        .specs-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 6px 20px rgba(13, 148, 136, 0.1);
+        }
+
+        .specs-table th,
+        .specs-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 0.9em;
+        }
+
+        .specs-table th {
+            background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+            color: white;
+            font-weight: 600;
+        }
+
+        .specs-table tr:hover {
+            background: #f0fdfa;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(13, 148, 136, 0.3);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(13, 148, 136, 0.4);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            margin: 5% auto;
+            padding: 40px;
+            border-radius: 25px;
+            width: 80%;
+            max-width: 900px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            border: 2px solid #0d9488;
+        }
+
+        .close {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 32px;
+            font-weight: bold;
+            color: #0d9488;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close:hover {
+            color: #14b8a6;
+        }
+
+        .modal h2 {
+            color: #0d9488;
+            font-size: 2em;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #0d9488;
+            padding-bottom: 10px;
+        }
+
+        .modal-text {
+            font-size: 1.1em;
+            line-height: 1.6;
+            color: #1e293b;
+            margin-bottom: 20px;
+        }
+
+        .modal-text ul {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+
+        .modal-text li {
+            margin-bottom: 10px;
+        }
+
+        canvas {
+            border: 2px solid #0d9488;
+            border-radius: 10px;
+            background: white;
+            margin: 20px 0;
+            max-width: 100%;
+        }
+
+        .animation-controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 0 10px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(13, 148, 136, 0.3);
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(13, 148, 136, 0.4);
+        }
+
+        .historical-note {
+            background: #ccfbf1;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 5px solid #0d9488;
+        }
+
+        .historical-note h3 {
+            color: #0d9488;
+            margin-bottom: 15px;
+            border: none;
+            padding: 0;
+        }
+
+        .historical-note p {
+            color: #1e293b;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="course-info">CS5710 - Week 9</div>
+    <div class="slide-number">Slide 168 of 180</div>
+
+    <div class="slide-container">
+        <h1 class="slide-title">🏛️ LeNet-5 Architecture</h1>
+        
+        <div class="architecture-section">
+            <h2 class="section-title">🎯 The First Modern CNN (1998)</h2>
+            
+            <div class="lenet-architecture">
+                <div class="layer-block" onclick="showModal('inputModal')">
+                    <div class="layer-visual" style="width: 40px; height: 40px;">32×32</div>
+                    <div class="layer-title">Input</div>
+                    <div class="layer-specs">32×32×1<br>Grayscale</div>
+                </div>
+                
+                <div class="arrow">→</div>
+                
+                <div class="layer-block" onclick="showModal('c1Modal')">
+                    <div class="layer-visual" style="width: 35px; height: 35px;">C1</div>
+                    <div class="layer-title">Conv1</div>
+                    <div class="layer-specs">28×28×6<br>5×5 filters</div>
+                </div>
+                
+                <div class="arrow">→</div>
+                
+                <div class="layer-block" onclick="showModal('s2Modal')">
+                    <div class="layer-visual" style="width: 20px; height: 20px;">S2</div>
+                    <div class="layer-title">SubSample</div>
+                    <div class="layer-specs">14×14×6<br>2×2 pool</div>
+                </div>
+                
+                <div class="arrow">→</div>
+                
+                <div class="layer-block" onclick="showModal('c3Modal')">
+                    <div class="layer-visual" style="width: 15px; height: 15px;">C3</div>
+                    <div class="layer-title">Conv2</div>
+                    <div class="layer-specs">10×10×16<br>5×5 filters</div>
+                </div>
+                
+                <div class="arrow">→</div>
+                
+                <div class="layer-block" onclick="showModal('s4Modal')">
+                    <div class="layer-visual" style="width: 10px; height: 10px;">S4</div>
+                    <div class="layer-title">SubSample</div>
+                    <div class="layer-specs">5×5×16<br>2×2 pool</div>
+                </div>
+                
+                <div class="arrow">→</div>
+                
+                <div class="layer-block" onclick="showModal('c5Modal')">
+                    <div class="layer-visual" style="width: 8px; height: 25px;">C5</div>
+                    <div class="layer-title">Conv3</div>
+                    <div class="layer-specs">1×1×120<br>5×5 filters</div>
+                </div>
+                
+                <div class="arrow">→</div>
+                
+                <div class="layer-block" onclick="showModal('f6Modal')">
+                    <div class="layer-visual" style="width: 15px; height: 25px;">F6</div>
+                    <div class="layer-title">Fully Connected</div>
+                    <div class="layer-specs">84 neurons<br>RBF units</div>
+                </div>
+                
+                <div class="arrow">→</div>
+                
+                <div class="layer-block" onclick="showModal('outputModal')">
+                    <div class="layer-visual" style="width: 12px; height: 25px;">OUT</div>
+                    <div class="layer-title">Output</div>
+                    <div class="layer-specs">10 classes<br>Digits 0-9</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="content-section" onclick="showModal('innovationsModal')">
+                <h3>🚀 Key Innovations</h3>
+                <ul>
+                    <li><strong>Gradient-Based Learning:</strong> First successful backpropagation in CNNs</li>
+                    <li><strong>Shared Weights:</strong> Parameter sharing across spatial locations</li>
+                    <li><strong>Subsampling:</strong> Early form of pooling for translation invariance</li>
+                    <li><strong>Local Connectivity:</strong> Neurons connect to local receptive fields</li>
+                    <li><strong>Hierarchical Features:</strong> Progressive feature abstraction</li>
+                </ul>
+            </div>
+            
+            <div class="content-section" onclick="showModal('specificationsModal')">
+                <h3>📊 Architecture Specifications</h3>
+                <table class="specs-table">
+                    <tr>
+                        <th>Layer</th>
+                        <th>Type</th>
+                        <th>Size</th>
+                        <th>Parameters</th>
+                    </tr>
+                    <tr>
+                        <td>C1</td>
+                        <td>Convolution</td>
+                        <td>28×28×6</td>
+                        <td>156</td>
+                    </tr>
+                    <tr>
+                        <td>S2</td>
+                        <td>Subsampling</td>
+                        <td>14×14×6</td>
+                        <td>12</td>
+                    </tr>
+                    <tr>
+                        <td>C3</td>
+                        <td>Convolution</td>
+                        <td>10×10×16</td>
+                        <td>1,516</td>
+                    </tr>
+                    <tr>
+                        <td>S4</td>
+                        <td>Subsampling</td>
+                        <td>5×5×16</td>
+                        <td>32</td>
+                    </tr>
+                    <tr>
+                        <td>C5</td>
+                        <td>Convolution</td>
+                        <td>1×1×120</td>
+                        <td>48,120</td>
+                    </tr>
+                    <tr>
+                        <td>F6</td>
+                        <td>Fully Connected</td>
+                        <td>84</td>
+                        <td>10,164</td>
+                    </tr>
+                    <tr>
+                        <td>Output</td>
+                        <td>RBF</td>
+                        <td>10</td>
+                        <td>840</td>
+                    </tr>
+                </table>
+                <p style="text-align: center; color: #0d9488; font-weight: 600;">Total: ~60K Parameters</p>
+            </div>
+        </div>
+
+        <div class="architecture-section">
+            <h2 class="section-title">🎬 Interactive LeNet-5 Visualization</h2>
+            <div style="text-align: center;">
+                <canvas id="lenetCanvas" width="900" height="200"></canvas>
+                <div class="animation-controls">
+                    <button class="control-btn" onclick="animateLeNet()">▶ Show Data Flow</button>
+                    <button class="control-btn" onclick="resetLeNet()">🔄 Reset</button>
+                </div>
+            </div>
+            
+            <div class="historical-note">
+                <h3>📚 Historical Significance</h3>
+                <p><strong>LeNet-5</strong> was developed by Yann LeCun and his team at Bell Labs in 1998. It was primarily designed for handwritten digit recognition and achieved remarkable success on the MNIST dataset.</p>
+                <p>This architecture laid the foundation for modern CNNs and demonstrated the power of:</p>
+                <ul>
+                    <li>Convolutional layers for local feature extraction</li>
+                    <li>Subsampling (pooling) for translation invariance</li>
+                    <li>Gradient-based learning for automatic feature discovery</li>
+                    <li>End-to-end trainable systems</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Layer-specific modals -->
+    <div id="c1Modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('c1Modal')">&times;</span>
+            <h2>🎯 C1 - First Convolutional Layer</h2>
+            <div class="modal-text">
+                <p><strong>C1</strong> is the first convolutional layer in LeNet-5:</p>
+                <ul>
+                    <li><strong>Input:</strong> 32×32×1 grayscale image</li>
+                    <li><strong>Filters:</strong> 6 filters of size 5×5</li>
+                    <li><strong>Output:</strong> 28×28×6 feature maps</li>
+                    <li><strong>Parameters:</strong> (5×5+1)×6 = 156 parameters</li>
+                    <li><strong>Activation:</strong> Tanh function</li>
+                </ul>
+                
+                <div style="text-align: center;">
+                    <h3>🎬 C1 Layer Animation</h3>
+                    <canvas id="c1Canvas" width="700" height="300"></canvas>
+                    <div class="animation-controls">
+                        <button class="control-btn" onclick="animateC1()">▶ Animate</button>
+                        <button class="control-btn" onclick="resetC1()">🔄 Reset</button>
+                    </div>
+                </div>
+                
+                <h3>🔍 Key Features:</h3>
+                <ul>
+                    <li><strong>Edge Detection:</strong> Learns basic edge and corner detectors</li>
+                    <li><strong>Local Connectivity:</strong> Each neuron sees only 5×5 region</li>
+                    <li><strong>Parameter Sharing:</strong> Same filter weights across entire image</li>
+                    <li><strong>Translation Equivariance:</strong> Features detected regardless of position</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="s2Modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('s2Modal')">&times;</span>
+            <h2>🏊 S2 - First Subsampling Layer</h2>
+            <div class="modal-text">
+                <p><strong>S2</strong> performs subsampling (early pooling):</p>
+                <ul>
+                    <li><strong>Input:</strong> 28×28×6 from C1</li>
+                    <li><strong>Operation:</strong> 2×2 average pooling with stride 2</li>
+                    <li><strong>Output:</strong> 14×14×6 feature maps</li>
+                    <li><strong>Parameters:</strong> 2×6 = 12 (weight + bias per map)</li>
+                    <li><strong>Function:</strong> σ(w × average + b)</li>
+                </ul>
+                
+                <div class="historical-note">
+                    <h3>💡 Original Implementation</h3>
+                    <p>Unlike modern max pooling, LeNet-5 used <strong>trainable subsampling</strong>:</p>
+                    <ul>
+                        <li>Each 2×2 region was averaged</li>
+                        <li>Result multiplied by learnable weight</li>
+                        <li>Bias added and sigmoid applied</li>
+                        <li>This allowed the network to learn optimal downsampling</li>
+                    </ul>
+                </div>
+                
+                <h3>🎯 Benefits:</h3>
+                <ul>
+                    <li><strong>Dimension Reduction:</strong> Reduces spatial size by 4x</li>
+                    <li><strong>Translation Invariance:</strong> Small shifts become irrelevant</li>
+                    <li><strong>Computational Efficiency:</strong> Fewer parameters in next layer</li>
+                    <li><strong>Overfitting Prevention:</strong> Acts as regularization</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="innovationsModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('innovationsModal')">&times;</span>
+            <h2>🚀 LeNet-5 Innovations</h2>
+            <div class="modal-text">
+                <p>LeNet-5 introduced several groundbreaking concepts that became standard in modern CNNs:</p>
+                
+                <div class="historical-note">
+                    <h3>🎯 Gradient-Based Learning</h3>
+                    <p>First successful application of backpropagation to train convolutional networks end-to-end. This was revolutionary because previous approaches required hand-crafted features.</p>
+                </div>
+                
+                <div class="historical-note">
+                    <h3>🔄 Weight Sharing</h3>
+                    <p>Same filter weights used across all spatial locations, dramatically reducing parameters while maintaining translation equivariance. This insight was crucial for scalability.</p>
+                </div>
+                
+                <div class="historical-note">
+                    <h3>🏗️ Hierarchical Architecture</h3>
+                    <p>Progressive feature abstraction from simple edges to complex patterns. Each layer builds upon representations learned by previous layers.</p>
+                </div>
+                
+                <h3>🌟 Impact on Modern Deep Learning:</h3>
+                <ul>
+                    <li><strong>AlexNet (2012):</strong> Scaled up LeNet principles with ReLU and dropout</li>
+                    <li><strong>VGGNet:</strong> Extended depth with smaller 3×3 filters</li>
+                    <li><strong>ResNet:</strong> Added skip connections to LeNet-style architectures</li>
+                    <li><strong>Modern CNNs:</strong> Still follow the conv-pool-conv-pool pattern</li>
+                </ul>
+                
+                <div style="text-align: center;">
+                    <h3>🎬 Complete Architecture Flow</h3>
+                    <canvas id="fullLeNetCanvas" width="800" height="250"></canvas>
+                    <div class="animation-controls">
+                        <button class="control-btn" onclick="animateFullLeNet()">▶ Show Complete Flow</button>
+                        <button class="control-btn" onclick="resetFullLeNet()">🔄 Reset</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional simplified modals -->
+    <div id="inputModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('inputModal')">&times;</span>
+            <h2>📥 Input Layer</h2>
+            <div class="modal-text">
+                <p><strong>Input specifications for LeNet-5:</strong></p>
+                <ul>
+                    <li><strong>Size:</strong> 32×32 pixels</li>
+                    <li><strong>Channels:</strong> 1 (grayscale)</li>
+                    <li><strong>Data:</strong> Handwritten digits from MNIST</li>
+                    <li><strong>Preprocessing:</strong> Normalized to [-1, 1] range</li>
+                    <li><strong>Padding:</strong> Original MNIST (28×28) centered in 32×32 field</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="c3Modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('c3Modal')">&times;</span>
+            <h2>🎯 C3 - Second Convolutional Layer</h2>
+            <div class="modal-text">
+                <p><strong>C3</strong> extracts more complex features:</p>
+                <ul>
+                    <li><strong>Input:</strong> 14×14×6 from S2</li>
+                    <li><strong>Filters:</strong> 16 filters of size 5×5</li>
+                    <li><strong>Output:</strong> 10×10×16</li>
+                    <li><strong>Special Connection:</strong> Not fully connected to all input channels</li>
+                    <li><strong>Purpose:</strong> Combines features from multiple input maps</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="s4Modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('s4Modal')">&times;</span>
+            <h2>🏊 S4 - Second Subsampling Layer</h2>
+            <div class="modal-text">
+                <p><strong>S4</strong> further reduces spatial dimensions:</p>
+                <ul>
+                    <li><strong>Input:</strong> 10×10×16 from C3</li>
+                    <li><strong>Operation:</strong> 2×2 average pooling</li>
+                    <li><strong>Output:</strong> 5×5×16</li>
+                    <li><strong>Function:</strong> Similar to S2 with trainable weights</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="c5Modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('c5Modal')">&times;</span>
+            <h2>🎯 C5 - Third Convolutional Layer</h2>
+            <div class="modal-text">
+                <p><strong>C5</strong> acts as both convolution and fully connected:</p>
+                <ul>
+                    <li><strong>Input:</strong> 5×5×16 from S4</li>
+                    <li><strong>Filters:</strong> 120 filters of size 5×5</li>
+                    <li><strong>Output:</strong> 1×1×120 (effectively 120 neurons)</li>
+                    <li><strong>Nature:</strong> Functions like fully connected layer</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="f6Modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('f6Modal')">&times;</span>
+            <h2>🔗 F6 - Fully Connected Layer</h2>
+            <div class="modal-text">
+                <p><strong>F6</strong> is the first traditional fully connected layer:</p>
+                <ul>
+                    <li><strong>Input:</strong> 120 units from C5</li>
+                    <li><strong>Output:</strong> 84 units</li>
+                    <li><strong>Activation:</strong> Radial Basis Function (RBF)</li>
+                    <li><strong>Purpose:</strong> Feature compression and abstraction</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="outputModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('outputModal')">&times;</span>
+            <h2>📤 Output Layer</h2>
+            <div class="modal-text">
+                <p><strong>Output layer</strong> performs final classification:</p>
+                <ul>
+                    <li><strong>Input:</strong> 84 units from F6</li>
+                    <li><strong>Output:</strong> 10 classes (digits 0-9)</li>
+                    <li><strong>Function:</strong> Radial Basis Function (RBF)</li>
+                    <li><strong>Decision:</strong> Nearest prototype in RBF space</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week9_Slide167.html" class="nav-btn">← Previous</a>
+        <a href="Week9_Slide169.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        function showModal(modalId) {
+            document.getElementById(modalId).style.display = "block";
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = "none";
+        }
+
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = "none";
+            }
+        }
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                var modals = document.getElementsByClassName('modal');
+                for (var i = 0; i < modals.length; i++) {
+                    modals[i].style.display = 'none';
+                }
+            } else if (event.key === 'ArrowLeft') {
+                window.location.href = 'Week9_Slide167.html';
+            } else if (event.key === 'ArrowRight') {
+                window.location.href = 'Week9_Slide169.html';
+            }
+        });
+
+        // LeNet-5 Architecture Visualization
+        function animateLeNet() {
+            const canvas = document.getElementById('lenetCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            
+            let step = 0;
+            const layers = [
+                {name: 'Input', size: [32, 32], channels: 1, x: 50},
+                {name: 'C1', size: [28, 28], channels: 6, x: 150},
+                {name: 'S2', size: [14, 14], channels: 6, x: 250},
+                {name: 'C3', size: [10, 10], channels: 16, x: 350},
+                {name: 'S4', size: [5, 5], channels: 16, x: 450},
+                {name: 'C5', size: [1, 1], channels: 120, x: 550},
+                {name: 'F6', size: [84], channels: 1, x: 650},
+                {name: 'Out', size: [10], channels: 1, x: 750}
+            ];
+            
+            function drawFrame() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                for (let i = 0; i < layers.length; i++) {
+                    const layer = layers[i];
+                    const x = layer.x;
+                    const y = 100;
+                    
+                    // Highlight current layer
+                    if (step >= i) {
+                        ctx.fillStyle = step === i ? '#0d9488' : '#99f6e4';
+                    } else {
+                        ctx.fillStyle = '#e6fffa';
+                    }
+                    
+                    // Draw layer representation
+                    if (layer.size.length === 2) {
+                        // 2D layers (conv/pool)
+                        const w = Math.min(layer.size[0] * 1.5, 60);
+                        const h = Math.min(layer.size[1] * 1.5, 60);
+                        ctx.fillRect(x - w/2, y - h/2, w, h);
+                        ctx.strokeStyle = '#0d9488';
+                        ctx.lineWidth = 2;
+                        ctx.strokeRect(x - w/2, y - h/2, w, h);
+                    } else {
+                        // 1D layers (FC)
+                        const h = Math.min(layer.size[0] * 0.8, 80);
+                        const w = 15;
+                        ctx.fillRect(x - w/2, y - h/2, w, h);
+                        ctx.strokeStyle = '#0d9488';
+                        ctx.lineWidth = 2;
+                        ctx.strokeRect(x - w/2, y - h/2, w, h);
+                    }
+                    
+                    // Layer name
+                    ctx.fillStyle = '#0d9488';
+                    ctx.font = '12px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(layer.name, x, y + 50);
+                    
+                    // Layer specifications
+                    ctx.font = '10px Arial';
+                    if (layer.size.length === 2) {
+                        ctx.fillText(`${layer.size[0]}×${layer.size[1]}×${layer.channels}`, x, y + 65);
+                    } else {
+                        ctx.fillText(`${layer.size[0]}`, x, y + 65);
+                    }
+                    
+                    // Arrow
+                    if (i < layers.length - 1) {
+                        ctx.fillStyle = step > i ? '#0d9488' : '#ccc';
+                        const arrowX = x + 40;
+                        ctx.beginPath();
+                        ctx.moveTo(arrowX, y);
+                        ctx.lineTo(arrowX + 30, y);
+                        ctx.moveTo(arrowX + 20, y - 5);
+                        ctx.lineTo(arrowX + 30, y);
+                        ctx.lineTo(arrowX + 20, y + 5);
+                        ctx.stroke();
+                    }
+                }
+                
+                step++;
+                if (step <= layers.length) {
+                    setTimeout(drawFrame, 800);
+                }
+            }
+            
+            drawFrame();
+        }
+
+        function resetLeNet() {
+            const canvas = document.getElementById('lenetCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const layers = [
+                {name: 'Input', size: [32, 32], channels: 1, x: 50},
+                {name: 'C1', size: [28, 28], channels: 6, x: 150},
+                {name: 'S2', size: [14, 14], channels: 6, x: 250},
+                {name: 'C3', size: [10, 10], channels: 16, x: 350},
+                {name: 'S4', size: [5, 5], channels: 16, x: 450},
+                {name: 'C5', size: [1, 1], channels: 120, x: 550},
+                {name: 'F6', size: [84], channels: 1, x: 650},
+                {name: 'Out', size: [10], channels: 1, x: 750}
+            ];
+            
+            for (let i = 0; i < layers.length; i++) {
+                const layer = layers[i];
+                const x = layer.x;
+                const y = 100;
+                
+                ctx.fillStyle = '#e6fffa';
+                
+                if (layer.size.length === 2) {
+                    const w = Math.min(layer.size[0] * 1.5, 60);
+                    const h = Math.min(layer.size[1] * 1.5, 60);
+                    ctx.fillRect(x - w/2, y - h/2, w, h);
+                    ctx.strokeStyle = '#0d9488';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(x - w/2, y - h/2, w, h);
+                } else {
+                    const h = Math.min(layer.size[0] * 0.8, 80);
+                    const w = 15;
+                    ctx.fillRect(x - w/2, y - h/2, w, h);
+                    ctx.strokeStyle = '#0d9488';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(x - w/2, y - h/2, w, h);
+                }
+                
+                ctx.fillStyle = '#0d9488';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(layer.name, x, y + 50);
+                
+                ctx.font = '10px Arial';
+                if (layer.size.length === 2) {
+                    ctx.fillText(`${layer.size[0]}×${layer.size[1]}×${layer.channels}`, x, y + 65);
+                } else {
+                    ctx.fillText(`${layer.size[0]}`, x, y + 65);
+                }
+                
+                if (i < layers.length - 1) {
+                    ctx.fillStyle = '#ccc';
+                    const arrowX = x + 40;
+                    ctx.beginPath();
+                    ctx.moveTo(arrowX, y);
+                    ctx.lineTo(arrowX + 30, y);
+                    ctx.moveTo(arrowX + 20, y - 5);
+                    ctx.lineTo(arrowX + 30, y);
+                    ctx.lineTo(arrowX + 20, y + 5);
+                    ctx.stroke();
+                }
+            }
+        }
+
+        // Initialize visualization
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                resetLeNet();
+            }, 100);
+        });
+    </script>
+</body>
+</html>

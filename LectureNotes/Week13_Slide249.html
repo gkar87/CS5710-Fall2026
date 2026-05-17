@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Few-Shot Learning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .concept-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .methods-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .definition-box {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+            font-size: 1.1em;
+            line-height: 1.8;
+        }
+
+        .method-item {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid #14b8a6;
+        }
+
+        .method-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .method-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .method-desc {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .examples-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .example-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .example-card {
+            text-align: center;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1, #99f6e4);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .example-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .example-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+
+        .example-name {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 10px;
+        }
+
+        .example-desc {
+            font-size: 0.9em;
+            color: #475569;
+            line-height: 1.4;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: float 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .example-cards { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    
+    <div class="course-info">CS5710 - Week 13</div>
+    <div class="slide-number">Slide 249 of 260</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Few-Shot Learning</h1>
+        
+        <div class="content-layout">
+            <div class="concept-section">
+                <h2 class="section-title">What is Few-Shot Learning?</h2>
+                
+                <div class="definition-box">
+                    <strong>Few-Shot Learning</strong> is a machine learning paradigm where models learn to recognize new concepts from only a few examples, typically 1-10 samples per class.
+                </div>
+                
+                <div class="method-item">
+                    <div class="method-title">📚 N-way K-shot</div>
+                    <div class="method-desc">Classification among N classes with K examples per class</div>
+                </div>
+                
+                <div class="method-item">
+                    <div class="method-title">🎯 Support Set</div>
+                    <div class="method-desc">Small set of labeled examples for learning</div>
+                </div>
+                
+                <div class="method-item">
+                    <div class="method-title">🔍 Query Set</div>
+                    <div class="method-desc">Examples to classify using learned knowledge</div>
+                </div>
+            </div>
+
+            <div class="methods-section">
+                <h2 class="section-title">Key Approaches</h2>
+                
+                <div class="method-item">
+                    <div class="method-title">🧮 Metric Learning</div>
+                    <div class="method-desc">Learn embeddings and compare distances</div>
+                </div>
+                
+                <div class="method-item">
+                    <div class="method-title">🔄 Optimization-Based</div>
+                    <div class="method-desc">Learn to quickly adapt model parameters</div>
+                </div>
+                
+                <div class="method-item">
+                    <div class="method-title">💾 Memory-Based</div>
+                    <div class="method-desc">Store and retrieve relevant information</div>
+                </div>
+                
+                <div class="method-item">
+                    <div class="method-title">🎨 Data Augmentation</div>
+                    <div class="method-desc">Generate synthetic examples from few samples</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="examples-section">
+            <h2 class="section-title">Few-Shot Learning Applications</h2>
+            
+            <div class="example-cards">
+                <div class="example-card">
+                    <div class="example-icon">🏥</div>
+                    <div class="example-name">Rare Disease Diagnosis</div>
+                    <div class="example-desc">Identify diseases with limited patient data</div>
+                </div>
+                
+                <div class="example-card">
+                    <div class="example-icon">🌍</div>
+                    <div class="example-name">Language Translation</div>
+                    <div class="example-desc">Translate low-resource languages</div>
+                </div>
+                
+                <div class="example-card">
+                    <div class="example-icon">🤖</div>
+                    <div class="example-name">Robotics</div>
+                    <div class="example-desc">Learn new tasks from demonstrations</div>
+                </div>
+                
+                <div class="example-card">
+                    <div class="example-icon">🎯</div>
+                    <div class="example-name">Personalization</div>
+                    <div class="example-desc">Adapt to user preferences quickly</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week13_Slide248.html" class="nav-btn">← Previous</a>
+        <a href="Week13_Slide250.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive method items with modal
+        document.querySelectorAll('.method-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const title = this.querySelector('.method-title').textContent;
+                const desc = this.querySelector('.method-desc').textContent;
+                
+                const details = {
+                    '📚 N-way K-shot': {
+                        detail: 'N-way K-shot is the standard formulation for few-shot learning tasks. N represents the number of classes to distinguish between, and K represents the number of examples per class in the support set.',
+                        example: `# 5-way 1-shot learning example
+N = 5  # Number of classes
+K = 1  # Examples per class in support set
+
+# Support set: 5 classes × 1 example = 5 examples total
+support_set = [
+    (image_dog, label=0),
+    (image_cat, label=1),
+    (image_bird, label=2),
+    (image_fish, label=3),
+    (image_horse, label=4)
+]
+
+# Query set: Test examples to classify
+query_set = [test_image1, test_image2, ...]`,
+                        applications: 'Standard benchmark tasks (miniImageNet, Omniglot), academic research',
+                        insight: 'As K increases, the task becomes easier. 1-shot is the most challenging, while 5-shot provides more information for learning.'
+                    },
+                    '🎯 Support Set': {
+                        detail: 'The support set contains the few labeled examples that the model uses to learn about new classes. This is analogous to the training set in traditional ML, but much smaller.',
+                        example: `# Creating support set for few-shot learning
+def create_support_set(classes, k_shot):
+    support_set = []
+    for class_id in classes:
+        # Sample K examples from this class
+        examples = sample_from_class(class_id, k=k_shot)
+        for example in examples:
+            support_set.append((example, class_id))
+    return support_set
+
+# Example: 3-way 2-shot
+support = create_support_set(classes=[0,1,2], k_shot=2)
+# Results in 6 examples total (3 classes × 2 examples)`,
+                        applications: 'Training phase of few-shot models, prototype computation, adaptation',
+                        insight: 'The quality and representativeness of support set examples critically impacts performance.'
+                    },
+                    '🔍 Query Set': {
+                        detail: 'The query set contains unlabeled examples that need to be classified based on knowledge gained from the support set. Performance is measured on the query set.',
+                        example: `# Query set evaluation
+def evaluate_on_query(model, support_set, query_set):
+    # Learn from support set
+    model.adapt(support_set)
+    
+    # Predict on query set
+    predictions = []
+    for query_example in query_set:
+        pred = model.predict(query_example)
+        predictions.append(pred)
+    
+    # Calculate accuracy
+    accuracy = sum(p == true_label for p in predictions) / len(query_set)
+    return accuracy`,
+                        applications: 'Model evaluation, testing generalization, performance measurement',
+                        insight: 'Query set should be disjoint from support set to properly test generalization.'
+                    },
+                    '🧮 Metric Learning': {
+                        detail: 'Metric learning approaches learn an embedding space where similar examples are close and different examples are far apart. Classification is done by comparing distances.',
+                        example: `# Prototypical Networks example
+class ProtoNet:
+    def compute_prototypes(self, support_set):
+        # Compute mean embedding for each class
+        prototypes = {}
+        for class_id in unique_classes:
+            class_examples = [x for x, y in support_set if y == class_id]
+            class_embeddings = [self.encoder(x) for x in class_examples]
+            prototypes[class_id] = np.mean(class_embeddings, axis=0)
+        return prototypes
+    
+    def classify(self, query, prototypes):
+        query_embedding = self.encoder(query)
+        distances = {c: distance(query_embedding, p) 
+                    for c, p in prototypes.items()}
+        return min(distances, key=distances.get)`,
+                        applications: 'Image classification, face verification, signature matching',
+                        insight: 'Works well when classes form compact clusters in embedding space.'
+                    },
+                    '🔄 Optimization-Based': {
+                        detail: 'Optimization-based methods like MAML learn model initializations that can be quickly fine-tuned to new tasks with just a few gradient steps.',
+                        example: `# MAML-style few-shot adaptation
+def adapt_to_task(model, support_set, adaptation_steps=5):
+    # Clone model for task-specific adaptation
+    task_model = copy.deepcopy(model)
+    optimizer = torch.optim.SGD(task_model.parameters(), lr=0.01)
+    
+    # Fine-tune on support set
+    for _ in range(adaptation_steps):
+        loss = 0
+        for x, y in support_set:
+            pred = task_model(x)
+            loss += cross_entropy(pred, y)
+        
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+    
+    return task_model`,
+                        applications: 'Robotics control, personalized models, quick adaptation scenarios',
+                        insight: 'Requires second-order derivatives during meta-training, computationally intensive.'
+                    },
+                    '💾 Memory-Based': {
+                        detail: 'Memory-based approaches store information from support examples in external memory modules and retrieve relevant information for query classification.',
+                        example: `# Memory-Augmented Neural Network
+class MANN:
+    def __init__(self):
+        self.memory = ExternalMemory(size=128)
+        self.controller = LSTM()
+    
+    def process_support(self, support_set):
+        for x, y in support_set:
+            # Encode and store in memory
+            key = self.encoder(x)
+            value = one_hot(y)
+            self.memory.write(key, value)
+    
+    def classify_query(self, query):
+        query_key = self.encoder(query)
+        # Retrieve from memory
+        retrieved = self.memory.read(query_key, k=5)
+        # Aggregate retrieved labels
+        prediction = self.controller(retrieved)
+        return prediction`,
+                        applications: 'Question answering, one-shot imitation, continual learning',
+                        insight: 'Can handle variable number of classes and examples, good for sequential learning.'
+                    },
+                    '🎨 Data Augmentation': {
+                        detail: 'Data augmentation generates synthetic examples from the few available samples to increase the effective size of the support set.',
+                        example: `# Few-shot data augmentation
+def augment_support_set(support_set, augmentation_factor=10):
+    augmented = []
+    for image, label in support_set:
+        # Original
+        augmented.append((image, label))
+        
+        # Generate augmentations
+        for _ in range(augmentation_factor):
+            aug_image = random.choice([
+                rotate(image, angle=random.uniform(-30, 30)),
+                flip(image),
+                crop_and_resize(image),
+                color_jitter(image),
+                mixup(image, other_image)
+            ])
+            augmented.append((aug_image, label))
+    
+    return augmented`,
+                        applications: 'Medical imaging, satellite imagery, any domain with limited data',
+                        insight: 'Must be careful not to introduce distribution shift through aggressive augmentation.'
+                    }
+                };
+                
+                const info = details[title];
+                if (info) {
+                    modal.show(title, `
+                        <div class="modal-highlight">
+                            <strong>${desc}</strong>
+                        </div>
+                        <p><strong>📚 Detailed Explanation:</strong></p>
+                        <p>${info.detail}</p>
+                        <div class="modal-code">
+                            ${info.example}
+                        </div>
+                        <p><strong>🚀 Applications:</strong> ${info.applications}</p>
+                        <p><strong>💡 Key Insight:</strong> ${info.insight}</p>
+                    `);
+                }
+            });
+        });
+
+        // Interactive example cards with modal
+        document.querySelectorAll('.example-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const name = this.querySelector('.example-name').textContent;
+                
+                const exampleDetails = {
+                    'Rare Disease Diagnosis': {
+                        description: 'Few-shot learning enables diagnosis of rare diseases where only a handful of cases exist in medical records.',
+                        details: `Challenge: Some diseases affect only 1 in 100,000 people
+• Limited training data (sometimes < 10 cases)
+• High stakes - mistakes can be fatal
+• Need to generalize from few examples`,
+                        approach: `Solution using few-shot learning:
+1. Pre-train on common diseases
+2. Use metric learning to create disease embeddings
+3. Compare new cases to few known examples
+4. Provide confidence scores for human review`,
+                        impact: 'Enables diagnosis of 7,000+ rare diseases, reduces diagnosis time from years to days',
+                        code: `# Rare disease classifier
+model = FewShotMedicalClassifier()
+model.load_pretrained('common_diseases')
+
+# Few examples of rare disease
+rare_examples = load_cases('CAPS_syndrome', n=5)
+
+# New patient
+new_case = PatientData(symptoms, lab_results, imaging)
+
+# Classify
+probability = model.classify_rare(
+    support=rare_examples,
+    query=new_case
+)`
+                    },
+                    'Language Translation': {
+                        description: 'Translate between languages with very limited parallel text data, especially for endangered or low-resource languages.',
+                        details: `Challenge: 7,000+ languages, most with < 1000 translated sentences
+• No large parallel corpora
+• Preserve cultural nuances
+• Handle unique grammatical structures`,
+                        approach: `Few-shot translation approach:
+1. Meta-learn from high-resource language pairs
+2. Use multilingual embeddings
+3. Adapt to new language with few examples
+4. Leverage linguistic universals`,
+                        impact: 'Enables translation for 100+ low-resource languages, preserves endangered languages',
+                        code: `# Low-resource translation
+translator = FewShotTranslator()
+
+# Few translation examples
+examples = [
+    ('Hello', 'Sawubona'),  # English to Zulu
+    ('Thank you', 'Ngiyabonga'),
+    ('Good morning', 'Sawubona ekuseni')
+]
+
+# Adapt model
+translator.adapt(examples)
+
+# Translate new sentence
+result = translator.translate('How are you?')
+# Output: 'Unjani?'`
+                    },
+                    'Robotics': {
+                        description: 'Robots learn new manipulation tasks from just a few human demonstrations, enabling quick adaptation to new environments.',
+                        details: `Challenge: Infinite variety of objects and tasks
+• Cannot pre-train on all possibilities
+• Need quick adaptation in real-world
+• Safety constraints limit trial-and-error`,
+                        approach: `Few-shot imitation learning:
+1. Human demonstrates task 3-5 times
+2. Robot extracts key features and actions
+3. Generalizes to similar objects
+4. Refines through minimal practice`,
+                        impact: 'Reduces robot training time from weeks to minutes, enables household robots',
+                        code: `# Robot few-shot learning
+robot = FewShotRobot()
+
+# Record demonstrations
+demos = []
+for i in range(5):
+    demo = record_human_demonstration()
+    demos.append(demo)
+
+# Learn task
+task_model = robot.learn_from_demos(demos)
+
+# Execute on new object
+new_object = detect_object()
+trajectory = task_model.plan(new_object)
+robot.execute(trajectory)`
+                    },
+                    'Personalization': {
+                        description: 'Quickly adapt AI systems to individual user preferences with minimal interaction, creating truly personalized experiences.',
+                        details: `Challenge: Each user is unique
+• Limited user data initially
+• Privacy concerns with data collection
+• Need rapid adaptation`,
+                        approach: `Few-shot personalization:
+1. Start with general model
+2. Collect few user interactions
+3. Adapt model to user preferences
+4. Continuously refine with feedback`,
+                        impact: 'Increases user satisfaction by 40%, reduces churn, enables true 1-to-1 personalization',
+                        code: `# Personalized recommendation
+recommender = FewShotRecommender()
+
+# Initial user interactions
+user_feedback = [
+    ('item_1', liked=True),
+    ('item_2', liked=False),
+    ('item_3', liked=True)
+]
+
+# Personalize
+user_model = recommender.personalize(
+    user_id='user_123',
+    feedback=user_feedback
+)
+
+# Generate recommendations
+recommendations = user_model.recommend(n=10)`
+                    }
+                };
+                
+                const details = exampleDetails[name];
+                if (details) {
+                    modal.show(`Few-Shot Learning: ${name}`, `
+                        <div class="modal-highlight">
+                            <strong>${details.description}</strong>
+                        </div>
+                        <p><strong>🎯 Challenge & Context:</strong></p>
+                        <p style="white-space: pre-line;">${details.details}</p>
+                        <p><strong>🔧 Approach:</strong></p>
+                        <p style="white-space: pre-line;">${details.approach}</p>
+                        <div class="modal-code">
+                            ${details.code}
+                        </div>
+                        <p><strong>💡 Impact:</strong> ${details.impact}</p>
+                    `);
+                }
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (!modal.overlay.classList.contains('active')) {
+                if (e.key === 'ArrowLeft') {
+                    window.location.href = 'Week13_Slide248.html';
+                } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                    window.location.href = 'Week13_Slide250.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

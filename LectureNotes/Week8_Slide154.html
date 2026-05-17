@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Early Stopping</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .concept-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .strategy-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .principle-card {
+            padding: 20px;
+            margin: 15px 0;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .principle-card:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .algorithm-box {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 15px;
+            font-family: 'Courier New', monospace;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: pre;
+            font-size: 0.9em;
+        }
+
+        .algorithm-box:hover {
+            transform: scale(1.02);
+            box-shadow: 0 15px 30px rgba(30, 41, 59, 0.3);
+        }
+
+        .monitoring-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-top: 25px;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid #14b8a6;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .metric-value {
+            font-size: 2em;
+            color: #0d9488;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .graph-visual {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+            border-radius: 15px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .graph-visual:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 30px 40px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            margin-top: 40px;
+        }
+
+        .nav-btn {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 10px 20px rgba(13, 148, 136, 0.2);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.3);
+        }
+
+        .floating-elements {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .floating-el {
+            position: absolute;
+            color: rgba(13, 148, 136, 0.1);
+            animation: float 20s infinite ease-in-out;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 2em;
+            cursor: pointer;
+            color: #666;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            color: #1e293b;
+            line-height: 1.8;
+        }
+
+        .modal-content h4 {
+            color: #0d9488;
+            margin: 20px 0 10px;
+            font-size: 1.3em;
+        }
+
+        .modal-content p {
+            margin: 10px 0;
+        }
+
+        .modal-content code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .modal-content pre {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 15px;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 25px;
+            border-radius: 15px;
+            font-weight: 600;
+            color: #0d9488;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 25px;
+            border-radius: 15px;
+            font-weight: 600;
+            color: #0d9488;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { opacity: 0; transform: translateY(-50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideInFromLeft {
+            from { opacity: 0; transform: translateX(-50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes slideInFromRight {
+            from { opacity: 0; transform: translateX(50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes slideInFromBottom {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-20px) rotate(90deg); }
+            50% { transform: translateY(0) rotate(180deg); }
+            75% { transform: translateY(20px) rotate(270deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    
+    <div class="course-info">CS5710 - Week 8</div>
+    <div class="slide-number">Slide 154 of 160</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Early Stopping</h1>
+        
+        <div class="content-layout">
+            <div class="concept-section">
+                <h2 class="section-title">Core Principle</h2>
+                
+                <div class="principle-card">
+                    <strong>What is Early Stopping?</strong><br>
+                    Stop training when validation performance stops improving
+                </div>
+                
+                <div class="principle-card">
+                    <strong>Why Use It?</strong><br>
+                    Prevents overfitting by finding optimal training duration
+                </div>
+                
+                <div class="principle-card">
+                    <strong>Key Metric</strong><br>
+                    Monitor validation loss or accuracy for consecutive epochs
+                </div>
+                
+                <div class="graph-visual">
+                    <div>Training vs Validation Loss</div>
+                    <div class="metric-value">📊</div>
+                    <div>Click to explore loss curves</div>
+                </div>
+            </div>
+            
+            <div class="strategy-section">
+                <h2 class="section-title">Implementation Strategy</h2>
+                
+                <div class="algorithm-box">
+# Basic Early Stopping
+patience = 10
+best_val_loss = float('inf')
+patience_counter = 0
+
+for epoch in range(max_epochs):
+    train_loss = train_one_epoch()
+    val_loss = validate()
+    
+    if val_loss < best_val_loss:
+        best_val_loss = val_loss
+        patience_counter = 0
+        save_model()
+    else:
+        patience_counter += 1
+        
+    if patience_counter >= patience:
+        print(f"Early stopping at epoch {epoch}")
+        break</div>
+                
+                <div class="algorithm-box">
+# Advanced with Learning Rate Reduction
+class EarlyStopping:
+    def __init__(self, patience=10, delta=0.001):
+        self.patience = patience
+        self.delta = delta
+        self.counter = 0
+        self.best_score = None
+        self.early_stop = False
+        
+    def __call__(self, val_loss):
+        score = -val_loss
+        if self.best_score is None:
+            self.best_score = score
+        elif score < self.best_score + self.delta:
+            self.counter += 1
+            if self.counter >= self.patience:
+                self.early_stop = True
+        else:
+            self.best_score = score
+            self.counter = 0</div>
+            </div>
+        </div>
+        
+        <div class="monitoring-section">
+            <h2 class="section-title">Monitoring Strategies</h2>
+            
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div>Patience</div>
+                    <div class="metric-value">5-20</div>
+                    <div>Epochs to wait</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div>Min Delta</div>
+                    <div class="metric-value">0.001</div>
+                    <div>Minimum improvement</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div>Restore Best</div>
+                    <div class="metric-value">✓</div>
+                    <div>Load best weights</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div>Validation Split</div>
+                    <div class="metric-value">10-20%</div>
+                    <div>Hold-out data</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div>Check Frequency</div>
+                    <div class="metric-value">Every Epoch</div>
+                    <div>Evaluation interval</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div>Metric Choice</div>
+                    <div class="metric-value">Val Loss</div>
+                    <div>Primary metric</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="navigation">
+        <a href="Week8_Slide153.html" class="nav-btn">← Previous</a>
+        <a href="Week8_Slide155.html" class="nav-btn">Next →</a>
+    </div>
+    
+    <div class="footer">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+    
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+        
+        const modal = new ModalSystem();
+        
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            const symbols = ['⏱', '📈', '📉', '🎯', '✓', '×', '↓', '↑', '◆', '●', '■', '▲'];
+            
+            for (let i = 0; i < 30; i++) {
+                const el = document.createElement('div');
+                el.className = 'floating-el';
+                el.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+                el.style.left = Math.random() * 100 + '%';
+                el.style.top = Math.random() * 100 + '%';
+                el.style.fontSize = (Math.random() * 30 + 20) + 'px';
+                el.style.animationDelay = Math.random() * 20 + 's';
+                el.style.animationDuration = (Math.random() * 20 + 20) + 's';
+                container.appendChild(el);
+            }
+        }
+        
+        // Principle cards interaction
+        document.querySelectorAll('.principle-card').forEach((card) => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('strong').textContent;
+                
+                const contents = {
+                    'What is Early Stopping?': `
+                        <div class="modal-highlight">
+                            <h4>Early Stopping Explained</h4>
+                            <p>Early stopping is a regularization technique that terminates training when the model's performance on a validation set stops improving, preventing overfitting.</p>
+                        </div>
+                        
+                        <h4>The Concept:</h4>
+                        <ul>
+                            <li><strong>Training Progress:</strong> Models improve rapidly at first, then slowly</li>
+                            <li><strong>Overfitting Point:</strong> Training loss decreases but validation loss increases</li>
+                            <li><strong>Optimal Stop:</strong> Stop when validation performance plateaus</li>
+                            <li><strong>Regularization Effect:</strong> Acts as implicit L2 regularization</li>
+                        </ul>
+                        
+                        <h4>Mathematical Intuition:</h4>
+                        <pre>
+Training iterations act as regularization:
+- Few iterations = High bias (underfitting)
+- Too many iterations = High variance (overfitting)
+- Optimal iterations = Best generalization
+
+Equivalent to constraining ||w||² in weight space
+                        </pre>
+                        
+                        <h4>Key Advantages:</h4>
+                        <ul>
+                            <li>Simple to implement</li>
+                            <li>No additional hyperparameters in the model</li>
+                            <li>Saves computational resources</li>
+                            <li>Automatic regularization</li>
+                            <li>Works with any optimizer</li>
+                        </ul>
+                        
+                        <h4>Research Foundation:</h4>
+                        <p>Yao et al. (2007) showed early stopping is equivalent to L2 regularization for linear models. For neural networks, it provides similar but more complex regularization.</p>
+                    `,
+                    
+                    'Why Use It?': `
+                        <div class="modal-highlight">
+                            <h4>Benefits of Early Stopping</h4>
+                            <p>Early stopping addresses multiple challenges in neural network training simultaneously.</p>
+                        </div>
+                        
+                        <h4>Primary Benefits:</h4>
+                        <ol>
+                            <li><strong>Prevents Overfitting:</strong>
+                                <ul>
+                                    <li>Stops before memorizing training data</li>
+                                    <li>Maintains generalization capability</li>
+                                    <li>Especially effective with limited data</li>
+                                </ul>
+                            </li>
+                            <li><strong>Saves Time & Resources:</strong>
+                                <ul>
+                                    <li>Avoids unnecessary training epochs</li>
+                                    <li>Reduces computational costs</li>
+                                    <li>Enables faster experimentation</li>
+                                </ul>
+                            </li>
+                            <li><strong>Automatic Optimization:</strong>
+                                <ul>
+                                    <li>No manual epoch selection</li>
+                                    <li>Adapts to different datasets</li>
+                                    <li>Works across architectures</li>
+                                </ul>
+                            </li>
+                        </ol>
+                        
+                        <h4>When It's Most Effective:</h4>
+                        <pre>
+Small Datasets:     High overfitting risk
+Complex Models:     Many parameters to fit
+Limited Resources:  Can't afford long training
+Noisy Data:        Prevents fitting to noise
+Transfer Learning:  Fine-tuning pretrained models
+                        </pre>
+                        
+                        <h4>Comparison with Other Regularization:</h4>
+                        <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+                            <tr style="background: #ccfbf1;">
+                                <th style="padding: 10px; text-align: left;">Method</th>
+                                <th style="padding: 10px; text-align: left;">Pros</th>
+                                <th style="padding: 10px; text-align: left;">Cons</th>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">Early Stopping</td>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">Simple, efficient</td>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">Needs validation set</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">L2 Regularization</td>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">Continuous training</td>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">Hyperparameter tuning</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">Dropout</td>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">Strong regularization</td>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">Slower convergence</td>
+                            </tr>
+                        </table>
+                    `,
+                    
+                    'Key Metric': `
+                        <div class="modal-highlight">
+                            <h4>Choosing the Right Metric</h4>
+                            <p>The choice of monitoring metric is crucial for effective early stopping.</p>
+                        </div>
+                        
+                        <h4>Common Metrics to Monitor:</h4>
+                        <ul>
+                            <li><strong>Validation Loss:</strong>
+                                <ul>
+                                    <li>Most common choice</li>
+                                    <li>Direct measure of model fit</li>
+                                    <li>Works for any task</li>
+                                </ul>
+                            </li>
+                            <li><strong>Validation Accuracy:</strong>
+                                <ul>
+                                    <li>Good for classification</li>
+                                    <li>More interpretable</li>
+                                    <li>May be noisy on small validation sets</li>
+                                </ul>
+                            </li>
+                            <li><strong>Custom Metrics:</strong>
+                                <ul>
+                                    <li>F1 Score for imbalanced data</li>
+                                    <li>AUC-ROC for ranking</li>
+                                    <li>BLEU for translation</li>
+                                    <li>IoU for segmentation</li>
+                                </ul>
+                            </li>
+                        </ul>
+                        
+                        <h4>Implementation Examples:</h4>
+                        <pre>
+# Monitor validation loss (minimize)
+monitor = 'val_loss'
+mode = 'min'
+                        
+# Monitor validation accuracy (maximize)
+monitor = 'val_accuracy'
+mode = 'max'
+
+# Monitor custom metric
+monitor = 'val_f1_score'
+mode = 'max'
+                        </pre>
+                        
+                        <h4>Best Practices:</h4>
+                        <ol>
+                            <li><strong>Consistent Validation Set:</strong> Use the same validation data throughout</li>
+                            <li><strong>Sufficient Size:</strong> Validation set should be large enough (10-20%)</li>
+                            <li><strong>Stratified Split:</strong> Maintain class distribution in validation</li>
+                            <li><strong>Multiple Metrics:</strong> Track several metrics, stop on primary</li>
+                        </ol>
+                        
+                        <h4>Avoiding False Stops:</h4>
+                        <pre>
+# Use smoothing for noisy metrics
+smoothed_metric = 0.9 * prev_metric + 0.1 * current_metric
+
+# Require minimum improvement
+if improvement < min_delta:
+    patience_counter += 1
+    
+# Wait for warm-up period
+if epoch < min_epochs:
+    continue  # Don't stop too early
+                        </pre>
+                    `
+                };
+                
+                modal.show(title, contents[title]);
+            });
+        });
+        
+        // Algorithm boxes interaction
+        document.querySelectorAll('.algorithm-box').forEach((box, index) => {
+            box.addEventListener('click', function() {
+                const titles = ['Basic Implementation', 'Advanced Implementation'];
+                const contents = [
+                    `
+                        <div class="modal-highlight">
+                            <h4>Complete Basic Early Stopping Implementation</h4>
+                        </div>
+                        
+                        <pre>
+import numpy as np
+import torch
+
+class BasicEarlyStopping:
+    def __init__(self, patience=10, verbose=True):
+        self.patience = patience
+        self.verbose = verbose
+        self.counter = 0
+        self.best_score = None
+        self.early_stop = False
+        self.val_loss_min = np.Inf
+        
+    def __call__(self, val_loss, model):
+        score = -val_loss
+        
+        if self.best_score is None:
+            self.best_score = score
+            self.save_checkpoint(val_loss, model)
+        elif score < self.best_score:
+            self.counter += 1
+            if self.verbose:
+                print(f'EarlyStopping counter: {self.counter}/{self.patience}')
+            if self.counter >= self.patience:
+                self.early_stop = True
+        else:
+            self.best_score = score
+            self.save_checkpoint(val_loss, model)
+            self.counter = 0
+    
+    def save_checkpoint(self, val_loss, model):
+        if self.verbose:
+            print(f'Validation loss decreased ({self.val_loss_min:.6f} --> {val_loss:.6f}). Saving model...')
+        torch.save(model.state_dict(), 'checkpoint.pt')
+        self.val_loss_min = val_loss
+
+# Usage Example
+early_stopping = BasicEarlyStopping(patience=10)
+
+for epoch in range(max_epochs):
+    # Training
+    model.train()
+    for batch in train_loader:
+        # ... training code ...
+        pass
+    
+    # Validation
+    model.eval()
+    val_losses = []
+    with torch.no_grad():
+        for batch in val_loader:
+            # ... validation code ...
+            val_losses.append(loss.item())
+    
+    val_loss = np.mean(val_losses)
+    early_stopping(val_loss, model)
+    
+    if early_stopping.early_stop:
+        print("Early stopping triggered")
+        break
+
+# Load best model
+model.load_state_dict(torch.load('checkpoint.pt'))
+                        </pre>
+                        
+                        <h4>Key Features:</h4>
+                        <ul>
+                            <li>Saves best model automatically</li>
+                            <li>Tracks patience counter</li>
+                            <li>Verbose logging option</li>
+                            <li>Simple to integrate</li>
+                        </ul>
+                    `,
+                    
+                    `
+                        <div class="modal-highlight">
+                            <h4>Advanced Early Stopping with Learning Rate Scheduling</h4>
+                        </div>
+                        
+                        <pre>
+import torch
+import numpy as np
+from typing import Optional
+
+class AdvancedEarlyStopping:
+    def __init__(
+        self,
+        patience: int = 10,
+        min_delta: float = 0.001,
+        percentage: bool = False,
+        mode: str = 'min',
+        baseline: Optional[float] = None,
+        restore_best_weights: bool = True,
+        start_from_epoch: int = 0
+    ):
+        self.patience = patience
+        self.min_delta = min_delta
+        self.percentage = percentage
+        self.mode = mode
+        self.baseline = baseline
+        self.restore_best_weights = restore_best_weights
+        self.start_from_epoch = start_from_epoch
+        
+        self.wait = 0
+        self.stopped_epoch = 0
+        self.best = None
+        self.best_weights = None
+        self.best_epoch = 0
+        
+        if mode == 'min':
+            self.monitor_op = np.less
+            self.min_delta *= -1
+        else:
+            self.monitor_op = np.greater
+            self.min_delta *= 1
+    
+    def __call__(self, epoch, current, model):
+        if epoch < self.start_from_epoch:
+            return False
+            
+        if self.best is None:
+            self.best = current
+            self.best_epoch = epoch
+            if self.restore_best_weights:
+                self.best_weights = model.state_dict().copy()
+            return False
+        
+        if self.percentage:
+            delta = self.min_delta * abs(self.best)
+        else:
+            delta = self.min_delta
+            
+        if self.monitor_op(current - delta, self.best):
+            self.best = current
+            self.best_epoch = epoch
+            self.wait = 0
+            if self.restore_best_weights:
+                self.best_weights = model.state_dict().copy()
+        else:
+            self.wait += 1
+            if self.wait >= self.patience:
+                self.stopped_epoch = epoch
+                if self.restore_best_weights and self.best_weights is not None:
+                    model.load_state_dict(self.best_weights)
+                return True
+        return False
+    
+    def get_best(self):
+        return self.best, self.best_epoch
+
+# Integration with Learning Rate Scheduler
+class TrainingManager:
+    def __init__(self, model, optimizer, scheduler_patience=5):
+        self.model = model
+        self.optimizer = optimizer
+        self.early_stopping = AdvancedEarlyStopping(
+            patience=15,
+            min_delta=0.001,
+            restore_best_weights=True
+        )
+        self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer,
+            mode='min',
+            factor=0.5,
+            patience=scheduler_patience,
+            verbose=True
+        )
+        
+    def train_epoch(self, train_loader, val_loader, epoch):
+        # Training
+        self.model.train()
+        train_losses = []
+        for batch in train_loader:
+            loss = self.train_step(batch)
+            train_losses.append(loss)
+        
+        # Validation
+        self.model.eval()
+        val_losses = []
+        with torch.no_grad():
+            for batch in val_loader:
+                loss = self.val_step(batch)
+                val_losses.append(loss)
+        
+        avg_val_loss = np.mean(val_losses)
+        
+        # Learning rate scheduling
+        self.scheduler.step(avg_val_loss)
+        
+        # Early stopping check
+        should_stop = self.early_stopping(epoch, avg_val_loss, self.model)
+        
+        return {
+            'train_loss': np.mean(train_losses),
+            'val_loss': avg_val_loss,
+            'should_stop': should_stop,
+            'lr': self.optimizer.param_groups[0]['lr']
+        }
+
+# Keras-style callback
+class EarlyStoppingCallback:
+    def __init__(self, monitor='val_loss', patience=10):
+        self.monitor = monitor
+        self.patience = patience
+        self.best = None
+        self.counter = 0
+        
+    def on_epoch_end(self, epoch, logs):
+        current = logs.get(self.monitor)
+        if current is None:
+            return False
+            
+        if self.best is None or current < self.best:
+            self.best = current
+            self.counter = 0
+        else:
+            self.counter += 1
+            
+        if self.counter >= self.patience:
+            print(f"\\nEarly stopping at epoch {epoch}")
+            return True
+        return False
+                        </pre>
+                        
+                        <h4>Advanced Features:</h4>
+                        <ul>
+                            <li>Min delta for significant improvements</li>
+                            <li>Percentage-based improvements</li>
+                            <li>Mode selection (min/max)</li>
+                            <li>Warm-up period support</li>
+                            <li>Integration with LR scheduling</li>
+                            <li>Best weights restoration</li>
+                        </ul>
+                    `
+                ];
+                
+                modal.show(titles[index], contents[index]);
+            });
+        });
+        
+        // Graph visual interaction
+        document.querySelector('.graph-visual').addEventListener('click', function() {
+            modal.show('Understanding Loss Curves', `
+                <div class="modal-highlight">
+                    <h4>Training vs Validation Loss Dynamics</h4>
+                    <p>Understanding the relationship between training and validation loss is key to effective early stopping.</p>
+                </div>
+                
+                <h4>Typical Loss Curve Patterns:</h4>
+                
+                <h5>1. Ideal Pattern (Good Fit):</h5>
+                <pre>
+Loss
+│     Training
+│     ╱╲_______________
+│    ╱  ╲ Validation
+│   ╱    ╲_____________
+│  ╱
+│ ╱
+└──────────────────► Epochs
+Both curves decrease and converge
+                </pre>
+                
+                <h5>2. Overfitting Pattern:</h5>
+                <pre>
+Loss
+│           Validation
+│         ╱─────────
+│      ╱─╱ 
+│    ╱──╱  ← Stop here
+│  ╱──╱ Training
+│ ╱___╱____________
+└──────────────────► Epochs
+Validation increases while training decreases
+                </pre>
+                
+                <h5>3. Underfitting Pattern:</h5>
+                <pre>
+Loss
+│ ──────── Validation
+│ ──────── Training
+│
+│
+│
+└──────────────────► Epochs
+Both curves remain high
+                </pre>
+                
+                <h4>Identifying the Stopping Point:</h4>
+                <ul>
+                    <li><strong>Optimal Stop:</strong> When validation loss starts increasing</li>
+                    <li><strong>Patience Period:</strong> Allow temporary fluctuations</li>
+                    <li><strong>Best Model:</strong> Lowest validation loss point</li>
+                </ul>
+                
+                <h4>Common Scenarios:</h4>
+                
+                <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+                    <tr style="background: #ccfbf1;">
+                        <th style="padding: 10px;">Scenario</th>
+                        <th style="padding: 10px;">Action</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border-top: 1px solid #ddd;">Validation oscillating</td>
+                        <td style="padding: 10px; border-top: 1px solid #ddd;">Increase patience, reduce learning rate</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border-top: 1px solid #ddd;">Both losses high</td>
+                        <td style="padding: 10px; border-top: 1px solid #ddd;">Model too simple, increase capacity</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border-top: 1px solid #ddd;">Large gap between curves</td>
+                        <td style="padding: 10px; border-top: 1px solid #ddd;">Add regularization, reduce model size</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border-top: 1px solid #ddd;">Validation improves slowly</td>
+                        <td style="padding: 10px; border-top: 1px solid #ddd;">Continue training, increase patience</td>
+                    </tr>
+                </table>
+                
+                <h4>Practical Tips:</h4>
+                <pre>
+# Plot losses to visualize
+import matplotlib.pyplot as plt
+
+plt.figure(figsize=(10, 5))
+plt.plot(train_losses, label='Training Loss')
+plt.plot(val_losses, label='Validation Loss')
+plt.axvline(x=best_epoch, color='r', linestyle='--', label='Best Model')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.legend()
+plt.title('Training Progress with Early Stopping')
+plt.show()
+                </pre>
+            `);
+        });
+        
+        // Metric cards interaction
+        document.querySelectorAll('.metric-card').forEach((card) => {
+            card.addEventListener('click', function() {
+                const metricName = this.querySelector('div').textContent;
+                
+                const contents = {
+                    'Patience': `
+                        <div class="modal-highlight">
+                            <h4>Setting the Right Patience Value</h4>
+                            <p>Patience determines how many epochs to wait for improvement before stopping.</p>
+                        </div>
+                        
+                        <h4>Guidelines for Different Scenarios:</h4>
+                        <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+                            <tr style="background: #ccfbf1;">
+                                <th style="padding: 10px;">Dataset Size</th>
+                                <th style="padding: 10px;">Model Complexity</th>
+                                <th style="padding: 10px;">Recommended Patience</th>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">Small (<10K)</td>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">Simple</td>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">5-10</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">Small</td>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">Complex</td>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">10-15</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">Medium (10K-100K)</td>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">Any</td>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">10-20</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">Large (>100K)</td>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">Any</td>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">15-30</td>
+                            </tr>
+                        </table>
+                        
+                        <h4>Factors to Consider:</h4>
+                        <ul>
+                            <li><strong>Learning Rate:</strong> Lower LR needs more patience</li>
+                            <li><strong>Batch Size:</strong> Smaller batches = noisier gradients = more patience</li>
+                            <li><strong>Validation Size:</strong> Smaller validation = noisier metrics = more patience</li>
+                            <li><strong>Task Complexity:</strong> Complex tasks need more exploration time</li>
+                        </ul>
+                        
+                        <h4>Adaptive Patience:</h4>
+                        <pre>
+# Dynamic patience based on improvement rate
+if improvement_rate > 0.01:
+    patience = 5
+elif improvement_rate > 0.001:
+    patience = 10
+else:
+    patience = 20
+                        </pre>
+                    `,
+                    
+                    'Min Delta': `
+                        <div class="modal-highlight">
+                            <h4>Minimum Delta Configuration</h4>
+                            <p>Min delta defines what counts as a significant improvement.</p>
+                        </div>
+                        
+                        <h4>Setting Min Delta:</h4>
+                        <pre>
+# Absolute improvement
+min_delta = 0.001  # Must improve by at least 0.001
+
+# Percentage improvement
+min_delta = 0.001  # Must improve by at least 0.1%
+percentage = True
+                        </pre>
+                        
+                        <h4>Guidelines by Metric:</h4>
+                        <ul>
+                            <li><strong>Loss Values:</strong>
+                                <ul>
+                                    <li>Classification: 0.0001 - 0.001</li>
+                                    <li>Regression: 0.001 - 0.01</li>
+                                    <li>Generation: 0.01 - 0.1</li>
+                                </ul>
+                            </li>
+                            <li><strong>Accuracy:</strong>
+                                <ul>
+                                    <li>Easy tasks: 0.001 (0.1%)</li>
+                                    <li>Hard tasks: 0.0001 (0.01%)</li>
+                                </ul>
+                            </li>
+                            <li><strong>Custom Metrics:</strong>
+                                <ul>
+                                    <li>F1 Score: 0.001 - 0.005</li>
+                                    <li>AUC: 0.0001 - 0.001</li>
+                                </ul>
+                            </li>
+                        </ul>
+                        
+                        <h4>Avoiding Premature Stopping:</h4>
+                        <pre>
+# Too high min_delta
+min_delta = 0.1  # ❌ May stop too early
+
+# Too low min_delta  
+min_delta = 0.00001  # ❌ May never stop
+
+# Just right
+min_delta = 0.001  # ✓ Balanced
+                        </pre>
+                        
+                        <h4>Adaptive Min Delta:</h4>
+                        <pre>
+# Adjust based on current loss magnitude
+if current_loss > 1.0:
+    min_delta = 0.01
+elif current_loss > 0.1:
+    min_delta = 0.001
+else:
+    min_delta = 0.0001
+                        </pre>
+                    `,
+                    
+                    'Restore Best': `
+                        <div class="modal-highlight">
+                            <h4>Restoring Best Model Weights</h4>
+                            <p>Always save and restore the best performing model during training.</p>
+                        </div>
+                        
+                        <h4>Implementation Strategy:</h4>
+                        <pre>
+class ModelCheckpoint:
+    def __init__(self, filepath='best_model.pt'):
+        self.filepath = filepath
+        self.best_score = None
+        
+    def save(self, model, score):
+        if self.best_score is None or score > self.best_score:
+            self.best_score = score
+            torch.save({
+                'model_state_dict': model.state_dict(),
+                'score': score,
+                'timestamp': time.time()
+            }, self.filepath)
+            return True
+        return False
+    
+    def load(self, model):
+        checkpoint = torch.load(self.filepath)
+        model.load_state_dict(checkpoint['model_state_dict'])
+        return checkpoint['score']
+                        </pre>
+                        
+                        <h4>What to Save:</h4>
+                        <ul>
+                            <li>Model weights (always)</li>
+                            <li>Optimizer state (for resuming)</li>
+                            <li>Learning rate scheduler state</li>
+                            <li>Current epoch number</li>
+                            <li>Best metric value</li>
+                            <li>Training configuration</li>
+                        </ul>
+                        
+                        <h4>Storage Strategies:</h4>
+                        <pre>
+# Save multiple checkpoints
+checkpoints = {
+    'best_loss': ModelCheckpoint('best_loss.pt'),
+    'best_acc': ModelCheckpoint('best_acc.pt'),
+    'latest': ModelCheckpoint('latest.pt')
+}
+
+# Version control
+checkpoint_name = f'model_epoch{epoch}_loss{loss:.4f}.pt'
+
+# Cloud backup
+if use_cloud:
+    upload_to_s3(checkpoint_path)
+                        </pre>
+                    `,
+                    
+                    'Validation Split': `
+                        <div class="modal-highlight">
+                            <h4>Creating Effective Validation Sets</h4>
+                            <p>The quality of your validation set directly impacts early stopping effectiveness.</p>
+                        </div>
+                        
+                        <h4>Split Strategies:</h4>
+                        <pre>
+from sklearn.model_selection import train_test_split
+
+# Random split
+X_train, X_val, y_train, y_val = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# Stratified split (for classification)
+X_train, X_val, y_train, y_val = train_test_split(
+    X, y, test_size=0.2, stratify=y, random_state=42
+)
+
+# Time series split
+train_size = int(0.8 * len(data))
+train_data = data[:train_size]
+val_data = data[train_size:]
+                        </pre>
+                        
+                        <h4>Recommended Sizes:</h4>
+                        <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+                            <tr style="background: #ccfbf1;">
+                                <th style="padding: 10px;">Total Dataset Size</th>
+                                <th style="padding: 10px;">Validation %</th>
+                                <th style="padding: 10px;">Minimum Val Samples</th>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;"><1,000</td>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">20-30%</td>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">200</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">1,000-10,000</td>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">15-20%</td>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">500</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">10,000-100,000</td>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">10-15%</td>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">1,000</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">>100,000</td>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">5-10%</td>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">5,000</td>
+                            </tr>
+                        </table>
+                        
+                        <h4>Important Considerations:</h4>
+                        <ul>
+                            <li>Ensure validation set represents test distribution</li>
+                            <li>No data leakage between train and validation</li>
+                            <li>Consider k-fold cross-validation for small datasets</li>
+                            <li>Keep validation set fixed throughout training</li>
+                        </ul>
+                    `,
+                    
+                    'Check Frequency': `
+                        <div class="modal-highlight">
+                            <h4>Validation Check Frequency</h4>
+                            <p>How often to evaluate on the validation set affects both training efficiency and stopping accuracy.</p>
+                        </div>
+                        
+                        <h4>Common Strategies:</h4>
+                        <ul>
+                            <li><strong>Every Epoch (Default):</strong>
+                                <pre>
+for epoch in range(max_epochs):
+    train()
+    val_loss = validate()  # Check every epoch
+    early_stopping(val_loss)
+                                </pre>
+                            </li>
+                            <li><strong>Every N Batches:</strong>
+                                <pre>
+for batch_idx, batch in enumerate(train_loader):
+    train_step(batch)
+    if batch_idx % check_interval == 0:
+        val_loss = validate()
+        early_stopping(val_loss)
+                                </pre>
+                            </li>
+                            <li><strong>Adaptive Frequency:</strong>
+                                <pre>
+# Check more frequently as training progresses
+if epoch < 10:
+    check_every = 5  # Early: check every 5 epochs
+elif epoch < 50:
+    check_every = 2  # Middle: check every 2 epochs
+else:
+    check_every = 1  # Late: check every epoch
+                                </pre>
+                            </li>
+                        </ul>
+                        
+                        <h4>Trade-offs:</h4>
+                        <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+                            <tr style="background: #ccfbf1;">
+                                <th style="padding: 10px;">Frequency</th>
+                                <th style="padding: 10px;">Pros</th>
+                                <th style="padding: 10px;">Cons</th>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">High (every batch)</td>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">Fine-grained control</td>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">Expensive, noisy</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">Medium (every epoch)</td>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">Balanced</td>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">Standard approach</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">Low (every N epochs)</td>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">Efficient</td>
+                                <td style="padding: 10px; border-top: 1px solid #ddd;">May overshoot</td>
+                            </tr>
+                        </table>
+                    `,
+                    
+                    'Metric Choice': `
+                        <div class="modal-highlight">
+                            <h4>Selecting the Right Metric</h4>
+                            <p>Choose metrics that align with your task objectives and business requirements.</p>
+                        </div>
+                        
+                        <h4>Task-Specific Recommendations:</h4>
+                        
+                        <h5>Classification Tasks:</h5>
+                        <pre>
+# Balanced classes
+monitor = 'val_accuracy'
+mode = 'max'
+
+# Imbalanced classes
+monitor = 'val_f1_score'
+mode = 'max'
+
+# Multi-class with priorities
+monitor = 'val_weighted_f1'
+mode = 'max'
+
+# Probabilistic outputs
+monitor = 'val_auc'
+mode = 'max'
+                        </pre>
+                        
+                        <h5>Regression Tasks:</h5>
+                        <pre>
+# Standard regression
+monitor = 'val_mse'
+mode = 'min'
+
+# Robust to outliers
+monitor = 'val_mae'
+mode = 'min'
+
+# Percentage errors matter
+monitor = 'val_mape'
+mode = 'min'
+                        </pre>
+                        
+                        <h5>Generation Tasks:</h5>
+                        <pre>
+# Language models
+monitor = 'val_perplexity'
+mode = 'min'
+
+# Translation
+monitor = 'val_bleu'
+mode = 'max'
+
+# Image generation
+monitor = 'val_fid'
+mode = 'min'
+                        </pre>
+                        
+                        <h4>Multiple Metrics:</h4>
+                        <pre>
+class MultiMetricEarlyStopping:
+    def __init__(self, metrics_config):
+        self.metrics = metrics_config
+        self.best_scores = {}
+        
+    def check(self, metrics_dict):
+        improved = False
+        for name, config in self.metrics.items():
+            current = metrics_dict[name]
+            mode = config['mode']
+            weight = config.get('weight', 1.0)
+            
+            if self.is_better(current, self.best_scores.get(name), mode):
+                self.best_scores[name] = current
+                improved = True
+                
+        return improved
+
+# Usage
+early_stop = MultiMetricEarlyStopping({
+    'val_loss': {'mode': 'min', 'weight': 1.0},
+    'val_acc': {'mode': 'max', 'weight': 0.5}
+})
+                        </pre>
+                        
+                        <h4>Custom Metrics:</h4>
+                        <pre>
+def custom_metric(y_true, y_pred):
+    # Business-specific metric
+    profit = calculate_profit(y_true, y_pred)
+    return profit
+
+# Use in early stopping
+val_profit = custom_metric(val_labels, val_predictions)
+early_stopping(val_profit, mode='max')
+                        </pre>
+                    `
+                };
+                
+                modal.show(metricName, contents[metricName] || 'Information not available');
+            });
+        });
+        
+        // Initialize components
+        createFloatingElements();
+        
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week8_Slide153.html';
+            } else if (e.key === 'ArrowRight' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week8_Slide155.html';
+            }
+        });
+    </script>
+</body>
+</html>

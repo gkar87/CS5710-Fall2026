@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Cross-Validation Introduction</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .concept-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .problems-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(220, 38, 38, 0.2);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title.problems {
+            color: #dc2626;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            border-radius: 2px;
+        }
+
+        .section-title::after {
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+        }
+
+        .section-title.problems::after {
+            background: linear-gradient(90deg, #dc2626, #ef4444);
+        }
+
+        .concept-description {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .problems-description {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border-radius: 15px;
+            border-left: 4px solid #dc2626;
+        }
+
+        .benefits-list {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .benefit-item {
+            padding: 15px 20px;
+            margin: 12px 0;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .problem-item {
+            padding: 15px 20px;
+            margin: 12px 0;
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border-radius: 12px;
+            border-left: 4px solid #dc2626;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .benefit-item:hover, .problem-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        .item-text {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.5;
+            font-weight: 500;
+        }
+
+        .cv-methods-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .cv-methods-title {
+            font-size: 2.2em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .cv-methods-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .cv-method-card {
+            padding: 30px;
+            border-radius: 15px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cv-method-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--method-color), var(--method-color-light));
+        }
+
+        .holdout-card {
+            --method-color: #f59e0b;
+            --method-color-light: #fbbf24;
+            background: linear-gradient(135deg, #fffbeb, #fef3c7);
+            border-color: #f59e0b;
+        }
+
+        .kfold-card {
+            --method-color: #10b981;
+            --method-color-light: #34d399;
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border-color: #10b981;
+        }
+
+        .loocv-card {
+            --method-color: #8b5cf6;
+            --method-color-light: #a78bfa;
+            background: linear-gradient(135deg, #faf5ff, #f3e8ff);
+            border-color: #8b5cf6;
+        }
+
+        .cv-method-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+
+        .method-title {
+            font-weight: 700;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .method-title.holdout {
+            color: #d97706;
+        }
+
+        .method-title.kfold {
+            color: #059669;
+        }
+
+        .method-title.loocv {
+            color: #7c3aed;
+        }
+
+        .method-description {
+            font-size: 1em;
+            line-height: 1.6;
+            color: #64748b;
+            margin-bottom: 15px;
+        }
+
+        .method-pros-cons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .pros, .cons {
+            font-size: 0.85em;
+            line-height: 1.4;
+        }
+
+        .pros {
+            color: #059669;
+        }
+
+        .cons {
+            color: #dc2626;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .cv-methods-grid { grid-template-columns: 1fr; }
+            .method-pros-cons { grid-template-columns: 1fr; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+            white-space: pre-line;
+        }
+
+        .info-box {
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .warning-box {
+            background: rgba(239, 68, 68, 0.1);
+            border-left: 4px solid #ef4444;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .success-box {
+            background: rgba(16, 185, 129, 0.1);
+            border-left: 4px solid #10b981;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    
+    <div class="course-info">CS5710 - Week 1</div>
+    <div class="slide-number">Slide 14 of 20</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Cross-Validation</h1>
+        
+        <div class="content-layout">
+            <div class="concept-section">
+                <h2 class="section-title">What is Cross-Validation?</h2>
+                
+                <div class="concept-description">
+                    <strong>Cross-validation</strong> is a statistical method for evaluating machine learning models by training and testing them on different subsets of data to get a more reliable estimate of performance.
+                </div>
+                
+                <ul class="benefits-list">
+                    <li class="benefit-item">
+                        <div class="item-text">More robust performance estimates</div>
+                    </li>
+                    <li class="benefit-item">
+                        <div class="item-text">Better use of limited data</div>
+                    </li>
+                    <li class="benefit-item">
+                        <div class="item-text">Reduces overfitting to test set</div>
+                    </li>
+                    <li class="benefit-item">
+                        <div class="item-text">Helps with model selection</div>
+                    </li>
+                    <li class="benefit-item">
+                        <div class="item-text">Provides variance estimates</div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="problems-section">
+                <h2 class="section-title problems">Problems It Solves</h2>
+                
+                <div class="problems-description">
+                    Traditional train-test splits have limitations that can lead to unreliable model evaluation and poor generalization.
+                </div>
+                
+                <ul class="benefits-list">
+                    <li class="problem-item">
+                        <div class="item-text">Single test set may not be representative</div>
+                    </li>
+                    <li class="problem-item">
+                        <div class="item-text">Wastes valuable training data</div>
+                    </li>
+                    <li class="problem-item">
+                        <div class="item-text">Performance depends on random split</div>
+                    </li>
+                    <li class="problem-item">
+                        <div class="item-text">No sense of prediction uncertainty</div>
+                    </li>
+                    <li class="problem-item">
+                        <div class="item-text">Risk of overfitting to test set</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="cv-methods-section">
+            <h2 class="cv-methods-title">Cross-Validation Methods</h2>
+            
+            <div class="cv-methods-grid">
+                <div class="cv-method-card holdout-card">
+                    <div class="method-title holdout">🔄 Hold-Out Validation</div>
+                    <div class="method-description">
+                        Split data once into train (70-80%) and test (20-30%) sets. Simple but limited.
+                    </div>
+                    <div class="method-pros-cons">
+                        <div class="pros">
+                            <strong>✅ Pros:</strong><br>
+                            • Fast and simple<br>
+                            • Good for large datasets<br>
+                            • Clear separation
+                        </div>
+                        <div class="cons">
+                            <strong>❌ Cons:</strong><br>
+                            • Wastes data<br>
+                            • High variance<br>
+                            • Split-dependent
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="cv-method-card kfold-card">
+                    <div class="method-title kfold">📊 K-Fold Cross-Validation</div>
+                    <div class="method-description">
+                        Split data into k folds, train on k-1 folds, test on 1 fold. Repeat k times. Most popular method.
+                    </div>
+                    <div class="method-pros-cons">
+                        <div class="pros">
+                            <strong>✅ Pros:</strong><br>
+                            • Uses all data<br>
+                            • Reliable estimates<br>
+                            • Provides variance
+                        </div>
+                        <div class="cons">
+                            <strong>❌ Cons:</strong><br>
+                            • k times slower<br>
+                            • Still some randomness<br>
+                            • Memory intensive
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="cv-method-card loocv-card">
+                    <div class="method-title loocv">🎯 Leave-One-Out CV</div>
+                    <div class="method-description">
+                        Use every single data point as test set once. k-fold where k = dataset size.
+                    </div>
+                    <div class="method-pros-cons">
+                        <div class="pros">
+                            <strong>✅ Pros:</strong><br>
+                            • Maximum data usage<br>
+                            • No randomness<br>
+                            • Unbiased estimates
+                        </div>
+                        <div class="cons">
+                            <strong>❌ Cons:</strong><br>
+                            • Very slow<br>
+                            • High variance<br>
+                            • Computationally expensive
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week1_Slide13.html" class="nav-btn">← Previous</a>
+        <a href="Week1_Slide15.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive benefit items with modal
+        document.querySelectorAll('.benefit-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const text = this.querySelector('.item-text').textContent;
+                
+                const benefits = {
+                    'More robust performance estimates': {
+                        explanation: 'Instead of relying on a single train-test split, cross-validation gives you multiple performance measurements, providing a more reliable estimate of how your model will perform.',
+                        example: 'Single split: 85% accuracy\nK-fold CV: 83% ± 4% accuracy (much more informative!)',
+                        why: 'A single test set might be unusually easy or hard. Multiple tests give you the full picture.'
+                    },
+                    'Better use of limited data': {
+                        explanation: 'Cross-validation allows every data point to be used for both training and testing, maximizing the value of your dataset.',
+                        example: 'With 1000 samples:\n• Hold-out: 700 train, 300 test\n• 5-fold CV: 800 train, 200 test (per fold)',
+                        why: 'In small datasets, every sample counts. CV ensures no data is permanently "wasted" in a test set.'
+                    },
+                    'Reduces overfitting to test set': {
+                        explanation: 'When you repeatedly test on the same test set during model development, you risk overfitting to that specific set. CV uses different test sets.',
+                        example: 'Model selection based on 10 different test sets vs. repeatedly testing on the same 300 samples',
+                        why: 'It\'s like studying for an exam by practicing with many different practice tests instead of just one.'
+                    },
+                    'Helps with model selection': {
+                        explanation: 'CV provides reliable performance comparisons between different models, algorithms, or hyperparameters.',
+                        example: 'Compare Random Forest vs SVM:\n• RF: 84.2% ± 2.1%\n• SVM: 82.7% ± 3.4%\n(RF wins with confidence!)',
+                        why: 'You can trust CV results for choosing between models because they\'re based on multiple evaluations.'
+                    },
+                    'Provides variance estimates': {
+                        explanation: 'CV tells you not just average performance, but also how consistent your model is across different data subsets.',
+                        example: 'Model A: 85% ± 1% (consistent)\nModel B: 85% ± 8% (unreliable)',
+                        why: 'Knowing variance helps you understand model reliability and make informed deployment decisions.'
+                    }
+                };
+                
+                const info = benefits[text];
+                modal.show('Cross-Validation Benefit', `
+                    <div class="modal-highlight">
+                        <strong>${text}</strong>
+                    </div>
+                    <p>${info.explanation}</p>
+                    <div class="modal-code">
+                        <strong>Example:</strong>
+                        ${info.example}
+                    </div>
+                    <div class="success-box">
+                        <strong>💡 Why this matters:</strong><br>
+                        ${info.why}
+                    </div>
+                `);
+            });
+        });
+
+        // Interactive problem items with modal
+        document.querySelectorAll('.problem-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const text = this.querySelector('.item-text').textContent;
+                
+                const problems = {
+                    'Single test set may not be representative': {
+                        explanation: 'Your test set might be unintentionally easier, harder, or different from the general population your model will encounter.',
+                        example: 'A facial recognition model tested only on well-lit photos when it will be used in various lighting conditions',
+                        solution: 'Cross-validation tests on multiple different subsets, giving a more representative performance estimate.'
+                    },
+                    'Wastes valuable training data': {
+                        explanation: 'In hold-out validation, 20-30% of your data is permanently set aside for testing and never used to improve the model.',
+                        example: 'With 1000 samples, 300 are "wasted" as test data that could have helped train a better model',
+                        solution: 'CV lets every sample contribute to training in most folds, maximizing learning potential.'
+                    },
+                    'Performance depends on random split': {
+                        explanation: 'Your reported performance might be artificially high or low based on how the random split happened to divide your data.',
+                        example: 'Lucky split: 92% accuracy, Unlucky split: 78% accuracy (same model, same data!)',
+                        solution: 'Multiple random splits in CV average out the randomness, giving more stable results.'
+                    },
+                    'No sense of prediction uncertainty': {
+                        explanation: 'A single accuracy number doesn\'t tell you how confident you should be in that estimate.',
+                        example: 'Is 85% accuracy reliable? You can\'t tell from a single number',
+                        solution: 'CV provides error bars: 85% ± 3% gives you confidence intervals.'
+                    },
+                    'Risk of overfitting to test set': {
+                        explanation: 'If you use the same test set repeatedly to tune your model, you\'ll eventually overfit to that specific test set.',
+                        example: 'After 20 iterations of tuning based on the same test set, your model is optimized for that specific 300 samples',
+                        solution: 'CV uses different test sets in each fold, preventing this subtle form of overfitting.'
+                    }
+                };
+                
+                const info = problems[text];
+                modal.show('Problem with Traditional Validation', `
+                    <div class="modal-highlight">
+                        <strong>${text}</strong>
+                    </div>
+                    <p>${info.explanation}</p>
+                    <div class="warning-box">
+                        <strong>⚠️ Example problem:</strong><br>
+                        ${info.example}
+                    </div>
+                    <div class="success-box">
+                        <strong>✅ How CV solves it:</strong><br>
+                        ${info.solution}
+                    </div>
+                `);
+            });
+        });
+
+        // Interactive CV method cards with modal
+        document.querySelectorAll('.cv-method-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const isHoldout = this.classList.contains('holdout-card');
+                const isKfold = this.classList.contains('kfold-card');
+                const isLoocv = this.classList.contains('loocv-card');
+                
+                if (isHoldout) {
+                    modal.show('Hold-Out Validation', `
+                        <div class="modal-highlight">
+                            <h4>🔄 Hold-Out Validation</h4>
+                            <p>The simplest form of validation - split once and test once.</p>
+                        </div>
+                        
+                        <div class="modal-code">
+                            # Typical hold-out split
+                            from sklearn.model_selection import train_test_split
+                            
+                            X_train, X_test, y_train, y_test = train_test_split(
+                                X, y, test_size=0.3, random_state=42
+                            )
+                            
+                            model.fit(X_train, y_train)
+                            accuracy = model.score(X_test, y_test)
+                            print(f"Accuracy: {accuracy:.2f}")
+                        </div>
+                        
+                        <div class="info-box">
+                            <strong>📊 When to use:</strong><br>
+                            • Large datasets (>10,000 samples)<br>
+                            • Fast prototyping<br>
+                            • When computational time is critical<br>
+                            • Initial model exploration
+                        </div>
+                        
+                        <div class="warning-box">
+                            <strong>⚠️ Watch out for:</strong><br>
+                            • High variance in results<br>
+                            • Dependency on random split<br>
+                            • May waste valuable training data<br>
+                            • Single point estimate (no confidence interval)
+                        </div>
+                    `);
+                } else if (isKfold) {
+                    modal.show('K-Fold Cross-Validation', `
+                        <div class="modal-highlight">
+                            <h4>📊 K-Fold Cross-Validation</h4>
+                            <p>The gold standard for model evaluation - multiple train/test splits for reliable results.</p>
+                        </div>
+                        
+                        <div class="modal-code">
+                            # 5-fold cross-validation
+                            from sklearn.model_selection import cross_val_score
+                            
+                            scores = cross_val_score(model, X, y, cv=5, scoring='accuracy')
+                            
+                            print(f"Accuracy: {scores.mean():.3f} (+/- {scores.std() * 2:.3f})")
+                            print(f"Individual folds: {scores}")
+                            
+                            # Output example:
+                            # Accuracy: 0.847 (+/- 0.034)
+                            # Individual folds: [0.82 0.86 0.83 0.85 0.87]
+                        </div>
+                        
+                        <div class="success-box">
+                            <strong>✅ Best practices:</strong><br>
+                            • Use k=5 or k=10 for most problems<br>
+                            • Use stratified k-fold for classification<br>
+                            • Set random_state for reproducibility<br>
+                            • Consider time-based splits for time series
+                        </div>
+                        
+                        <div class="info-box">
+                            <strong>📈 Choosing k:</strong><br>
+                            • k=5: Fast, good for large datasets<br>
+                            • k=10: More reliable, industry standard<br>
+                            • Higher k: More reliable but slower<br>
+                            • Lower k: Less reliable but faster
+                        </div>
+                    `);
+                } else if (isLoocv) {
+                    modal.show('Leave-One-Out Cross-Validation', `
+                        <div class="modal-highlight">
+                            <h4>🎯 Leave-One-Out Cross-Validation (LOOCV)</h4>
+                            <p>The most thorough validation - every single sample gets to be a test case.</p>
+                        </div>
+                        
+                        <div class="modal-code">
+                            # LOOCV with sklearn
+                            from sklearn.model_selection import LeaveOneOut, cross_val_score
+                            
+                            loo = LeaveOneOut()
+                            scores = cross_val_score(model, X, y, cv=loo)
+                            
+                            print(f"LOOCV Accuracy: {scores.mean():.3f}")
+                            print(f"Number of iterations: {len(scores)}")
+                            print(f"Standard deviation: {scores.std():.3f}")
+                            
+                            # For 1000 samples:
+                            # LOOCV Accuracy: 0.847
+                            # Number of iterations: 1000
+                            # Standard deviation: 0.041
+                        </div>
+                        
+                        <div class="success-box">
+                            <strong>✅ When LOOCV shines:</strong><br>
+                            • Small datasets (< 1000 samples)<br>
+                            • When you need maximum data usage<br>
+                            • Research settings requiring precision<br>
+                            • When computational cost isn't an issue
+                        </div>
+                        
+                        <div class="warning-box">
+                            <strong>⚠️ LOOCV limitations:</strong><br>
+                            • Computationally expensive (n iterations)<br>
+                            • High variance in estimates<br>
+                            • May not work well with unstable algorithms<br>
+                            • Can take hours/days for large datasets
+                        </div>
+                        
+                        <div class="info-box">
+                            <strong>💡 Fun fact:</strong><br>
+                            LOOCV gives you an almost unbiased estimate of model performance, but the variance can be higher than k-fold CV because the training sets are so similar to each other.
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week1_Slide13.html';
+            }
+            if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week1_Slide15.html';
+            }
+        });
+
+    </script>
+</body>
+</html>

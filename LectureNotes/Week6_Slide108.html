@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Agglomerative vs Divisive Clustering</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .agglomerative-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .divisive-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .approach-description {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 25px;
+            padding: 20px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .features-list {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .feature-item {
+            padding: 15px;
+            margin: 12px 0;
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border-left: 3px solid #14b8a6;
+        }
+
+        .feature-item:hover {
+            transform: translateX(8px);
+            box-shadow: 0 8px 20px rgba(13, 148, 136, 0.15);
+        }
+
+        .feature-icon {
+            display: inline-block;
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+
+        .feature-text {
+            font-size: 0.95em;
+            color: #475569;
+        }
+
+        .comparison-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .comparison-table th {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            font-weight: 600;
+        }
+
+        .comparison-table tr:hover {
+            background: rgba(153, 246, 228, 0.1);
+        }
+
+        .visualization-box {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+            border: 2px solid #14b8a6;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tree-visual {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .tree-level {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .tree-node {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .tree-arrow {
+            color: #0d9488;
+            font-size: 1.5em;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: float 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    
+    <div class="course-info">CS5710 - Week 6</div>
+    <div class="slide-number">Slide 108 of 120</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Agglomerative vs Divisive Clustering</h1>
+        
+        <div class="content-layout">
+            <div class="agglomerative-section">
+                <h2 class="section-title">⬆️ Agglomerative (Bottom-Up)</h2>
+                
+                <div class="approach-description">
+                    <strong>Starts with individual points</strong> and progressively merges them into larger clusters until reaching one root cluster.
+                </div>
+                
+                <div class="visualization-box">
+                    <div class="tree-visual">
+                        <div class="tree-level">
+                            <div class="tree-node">All</div>
+                        </div>
+                        <div class="tree-arrow">⬆️</div>
+                        <div class="tree-level">
+                            <div class="tree-node">AB</div>
+                            <div class="tree-node">CD</div>
+                        </div>
+                        <div class="tree-arrow">⬆️</div>
+                        <div class="tree-level">
+                            <div class="tree-node">A</div>
+                            <div class="tree-node">B</div>
+                            <div class="tree-node">C</div>
+                            <div class="tree-node">D</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <ul class="features-list">
+                    <li class="feature-item">
+                        <span class="feature-icon">✅</span>
+                        <span class="feature-text">More commonly used</span>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-icon">🎯</span>
+                        <span class="feature-text">Good for identifying small clusters</span>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-icon">⚡</span>
+                        <span class="feature-text">Faster for most datasets</span>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-icon">📊</span>
+                        <span class="feature-text">Multiple linkage options</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="divisive-section">
+                <h2 class="section-title">⬇️ Divisive (Top-Down)</h2>
+                
+                <div class="approach-description">
+                    <strong>Starts with all points in one cluster</strong> and recursively splits them into smaller clusters until each point is isolated.
+                </div>
+                
+                <div class="visualization-box">
+                    <div class="tree-visual">
+                        <div class="tree-level">
+                            <div class="tree-node">All</div>
+                        </div>
+                        <div class="tree-arrow">⬇️</div>
+                        <div class="tree-level">
+                            <div class="tree-node">AB</div>
+                            <div class="tree-node">CD</div>
+                        </div>
+                        <div class="tree-arrow">⬇️</div>
+                        <div class="tree-level">
+                            <div class="tree-node">A</div>
+                            <div class="tree-node">B</div>
+                            <div class="tree-node">C</div>
+                            <div class="tree-node">D</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <ul class="features-list">
+                    <li class="feature-item">
+                        <span class="feature-icon">🔍</span>
+                        <span class="feature-text">Better for discovering large clusters</span>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-icon">🎲</span>
+                        <span class="feature-text">More computationally intensive</span>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-icon">📈</span>
+                        <span class="feature-text">Good global view of data</span>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-icon">🔧</span>
+                        <span class="feature-text">Requires splitting strategy</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="comparison-section">
+            <h2 class="section-title">Direct Comparison</h2>
+            
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Aspect</th>
+                        <th>Agglomerative</th>
+                        <th>Divisive</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Starting Point</strong></td>
+                        <td>N clusters (individual points)</td>
+                        <td>1 cluster (all points)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Process</strong></td>
+                        <td>Merge closest clusters</td>
+                        <td>Split clusters optimally</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Time Complexity</strong></td>
+                        <td>O(n² log n)</td>
+                        <td>O(2ⁿ) worst case</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Best For</strong></td>
+                        <td>Small, detailed clusters</td>
+                        <td>Large, well-separated clusters</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Implementation</strong></td>
+                        <td>Simpler, widely available</td>
+                        <td>Complex, less common</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week6_Slide107.html" class="nav-btn">← Previous</a>
+        <a href="Week6_Slide109.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive feature items
+        document.querySelectorAll('.feature-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const text = this.querySelector('.feature-text').textContent;
+                
+                const details = {
+                    'More commonly used': {
+                        title: 'Agglomerative Popularity',
+                        content: 'Used in 90% of hierarchical clustering applications due to simplicity and efficiency. Standard implementation in scikit-learn, R, and MATLAB.'
+                    },
+                    'Good for identifying small clusters': {
+                        title: 'Small Cluster Detection',
+                        content: 'Excellent at finding tight, cohesive groups and outliers. Builds from bottom-up preserving local structure.'
+                    },
+                    'Faster for most datasets': {
+                        title: 'Computational Efficiency',
+                        content: 'O(n² log n) complexity with efficient implementations. Can use spatial data structures for acceleration.'
+                    },
+                    'Multiple linkage options': {
+                        title: 'Linkage Methods',
+                        content: 'Single linkage (minimum), Complete linkage (maximum), Average linkage (UPGMA), Ward\'s method (minimize variance).'
+                    },
+                    'Better for discovering large clusters': {
+                        title: 'Large Cluster Discovery',
+                        content: 'Top-down approach naturally identifies major divisions in data first. Good for finding primary data partitions.'
+                    },
+                    'More computationally intensive': {
+                        title: 'Computational Cost',
+                        content: 'O(2ⁿ) worst case complexity. Need to consider all possible binary splits at each level.'
+                    },
+                    'Good global view of data': {
+                        title: 'Global Perspective',
+                        content: 'Starts with complete dataset, making decisions based on global structure rather than local distances.'
+                    },
+                    'Requires splitting strategy': {
+                        title: 'Splitting Strategies',
+                        content: 'Can use K-means (DIANA), minimum spanning tree cuts, or spectral clustering for optimal splits.'
+                    }
+                };
+                
+                const detail = details[text];
+                if (detail) {
+                    modal.show(detail.title, `
+                        <div class="modal-highlight">
+                            ${detail.content}
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Interactive table rows
+        document.querySelectorAll('.comparison-table tbody tr').forEach(row => {
+            row.style.cursor = 'pointer';
+            row.addEventListener('click', function() {
+                const aspect = this.cells[0].textContent;
+                
+                const explanations = {
+                    'Starting Point': 'The fundamental difference: Agglomerative builds up from individual points, while Divisive breaks down from the whole dataset.',
+                    'Process': 'Agglomerative uses distance metrics to merge, Divisive uses splitting criteria to separate.',
+                    'Time Complexity': 'Agglomerative is polynomial time, Divisive can be exponential due to considering all possible splits.',
+                    'Best For': 'Choose based on your goal: detailed local structure (Agglomerative) or major divisions (Divisive).',
+                    'Implementation': 'Most libraries offer Agglomerative. Divisive often requires custom implementation.'
+                };
+                
+                if (explanations[aspect]) {
+                    modal.show(aspect, `
+                        <div class="modal-highlight">
+                            ${explanations[aspect]}
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Initialize
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week6_Slide107.html';
+            } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                if (!modal.overlay.classList.contains('active')) {
+                    window.location.href = 'Week6_Slide109.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

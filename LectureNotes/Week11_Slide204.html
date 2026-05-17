@@ -1,0 +1,2147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Value Functions and Bellman Equations</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .value-functions-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .bellman-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .function-card {
+            margin: 20px 0;
+            padding: 25px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .function-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.2);
+            border-color: #0d9488;
+        }
+
+        .function-title {
+            font-size: 1.3em;
+            color: #0d9488;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .function-formula {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border: 2px solid #0d9488;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            text-align: center;
+            font-family: 'Times New Roman', serif;
+            font-size: 1.1em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .function-desc {
+            font-size: 1em;
+            color: #475569;
+            line-height: 1.6;
+            margin-top: 10px;
+        }
+
+        .bellman-equations {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            margin: 40px 0;
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+        }
+
+        .equations-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .equation-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 30px 0;
+        }
+
+        .equation-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            border: 2px solid transparent;
+        }
+
+        .equation-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.2);
+            border-color: #0d9488;
+        }
+
+        .equation-type {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 15px;
+        }
+
+        .main-equation {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border: 2px solid #0d9488;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+            font-family: 'Times New Roman', serif;
+            font-size: 1.2em;
+            color: #0d9488;
+            font-weight: bold;
+        }
+
+        .intuition-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.9s both;
+        }
+
+        .intuition-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .intuition-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .intuition-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(13, 148, 136, 0.3);
+        }
+
+        .intuition-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+
+        .intuition-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 10px;
+        }
+
+        .intuition-desc {
+            font-size: 0.95em;
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.3s ease;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 2em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .modal-close:hover {
+            background: #f1f5f9;
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            color: #1e293b;
+            line-height: 1.8;
+        }
+
+        .modal-content p {
+            margin: 15px 0;
+            font-size: 1.05em;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-left: 4px solid #0d9488;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+
+        .modal-formula {
+            background: #f8fafc;
+            border: 2px solid #cbd5e1;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+            font-family: 'Times New Roman', serif;
+            font-size: 1.2em;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            color: #0d9488;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 1em;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.4);
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(240,253,250,0.95));
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            font-weight: 600;
+            color: #0d9488;
+            z-index: 100;
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(240,253,250,0.95));
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            font-weight: 600;
+            color: #0d9488;
+            z-index: 100;
+        }
+
+        .floating-elements {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .floating-element {
+            position: absolute;
+            font-size: 20px;
+            opacity: 0.1;
+            animation: mlFloat 20s infinite;
+            color: #0d9488;
+        }
+
+        .floating-element::before {
+            content: '📊';
+        }
+
+        .floating-element:nth-child(3n)::before {
+            content: '🔢';
+        }
+
+        .floating-element:nth-child(3n+1)::before {
+            content: '💰';
+        }
+
+        .floating-element:nth-child(3n+2)::before {
+            content: '⚖️';
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.1; }
+            90% { opacity: 0.1; }
+            100% { transform: translateY(-100px) translateX(100px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .equation-container { grid-template-columns: 1fr; }
+            .intuition-grid { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 11</div>
+    <div class="slide-number">Slide 204 of 220</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Value Functions and Bellman Equations</h1>
+        
+        <div class="content-layout">
+            <div class="value-functions-section">
+                <h2 class="section-title">Value Functions</h2>
+                
+                <div class="function-card">
+                    <div class="function-title">🎯 State Value Function V^π(s)</div>
+                    <div class="function-formula">
+                        V^π(s) = E_π[G_t | S_t = s]
+                    </div>
+                    <div class="function-desc">Expected return starting from state s following policy π</div>
+                </div>
+                
+                <div class="function-card">
+                    <div class="function-title">⚡ Action Value Function Q^π(s,a)</div>
+                    <div class="function-formula">
+                        Q^π(s,a) = E_π[G_t | S_t = s, A_t = a]
+                    </div>
+                    <div class="function-desc">Expected return starting from state s, taking action a, then following policy π</div>
+                </div>
+                
+                <div class="function-card">
+                    <div class="function-title">⭐ Optimal Value Functions</div>
+                    <div class="function-formula">
+                        V*(s) = max_π V^π(s)<br>
+                        Q*(s,a) = max_π Q^π(s,a)
+                    </div>
+                    <div class="function-desc">Maximum possible value achievable from state s (or state-action pair)</div>
+                </div>
+            </div>
+
+            <div class="bellman-section">
+                <h2 class="section-title">Key Relationships</h2>
+                
+                <div style="font-size: 1.1em; line-height: 1.7; color: #1e293b;">
+                    <strong>Value Function Relationships:</strong>
+                    <br><br>
+                    <div class="function-formula">
+                        V^π(s) = Σ_a π(a|s) Q^π(s,a)
+                    </div>
+                    <br>
+                    <div class="function-formula">
+                        Q^π(s,a) = Σ_{s'} P(s'|s,a)[R(s,a,s') + γV^π(s')]
+                    </div>
+                    <br>
+                    <strong>Optimal Relationships:</strong>
+                    <br><br>
+                    <div class="function-formula">
+                        V*(s) = max_a Q*(s,a)
+                    </div>
+                    <br>
+                    <div class="function-formula">
+                        Q*(s,a) = Σ_{s'} P(s'|s,a)[R(s,a,s') + γV*(s')]
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bellman-equations">
+            <div class="equations-title">Bellman Equations</div>
+            
+            <div class="equation-container">
+                <div class="equation-card">
+                    <div class="equation-type">Bellman Expectation Equation</div>
+                    <div class="main-equation">
+                        V^π(s) = Σ_a π(a|s) Σ_{s'} P(s'|s,a)[R(s,a,s') + γV^π(s')]
+                    </div>
+                    <div style="font-size: 0.95em; color: #64748b; margin-top: 10px;">
+                        Expected value under policy π
+                    </div>
+                </div>
+                
+                <div class="equation-card">
+                    <div class="equation-type">Bellman Optimality Equation</div>
+                    <div class="main-equation">
+                        V*(s) = max_a Σ_{s'} P(s'|s,a)[R(s,a,s') + γV*(s')]
+                    </div>
+                    <div style="font-size: 0.95em; color: #64748b; margin-top: 10px;">
+                        Optimal value from state s
+                    </div>
+                </div>
+                
+                <div class="equation-card">
+                    <div class="equation-type">Q-Function Bellman Equation</div>
+                    <div class="main-equation">
+                        Q^π(s,a) = Σ_{s'} P(s'|s,a)[R(s,a,s') + γΣ_{a'} π(a'|s')Q^π(s',a')]
+                    </div>
+                    <div style="font-size: 0.95em; color: #64748b; margin-top: 10px;">
+                        Action-value expectation
+                    </div>
+                </div>
+                
+                <div class="equation-card">
+                    <div class="equation-type">Optimal Q-Function</div>
+                    <div class="main-equation">
+                        Q*(s,a) = Σ_{s'} P(s'|s,a)[R(s,a,s') + γ max_{a'} Q*(s',a')]
+                    </div>
+                    <div style="font-size: 0.95em; color: #64748b; margin-top: 10px;">
+                        Optimal action-value
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="intuition-section">
+            <h2 class="section-title" style="text-align: center;">Intuitive Understanding</h2>
+            
+            <div class="intuition-grid">
+                <div class="intuition-card">
+                    <div class="intuition-icon">🎯</div>
+                    <div class="intuition-title">Value = Future Reward</div>
+                    <div class="intuition-desc">How good is it to be in this state?</div>
+                </div>
+                
+                <div class="intuition-card">
+                    <div class="intuition-icon">🔄</div>
+                    <div class="intuition-title">Recursive Structure</div>
+                    <div class="intuition-desc">Value = Immediate reward + Discounted future value</div>
+                </div>
+                
+                <div class="intuition-card">
+                    <div class="intuition-icon">🏆</div>
+                    <div class="intuition-title">Optimality</div>
+                    <div class="intuition-desc">Best possible value achievable</div>
+                </div>
+                
+                <div class="intuition-card">
+                    <div class="intuition-icon">📊</div>
+                    <div class="intuition-title">Policy Evaluation</div>
+                    <div class="intuition-desc">How good is my current strategy?</div>
+                </div>
+                
+                <div class="intuition-card">
+                    <div class="intuition-icon">⚖️</div>
+                    <div class="intuition-title">Consistency</div>
+                    <div class="intuition-desc">Bellman equations ensure self-consistency</div>
+                </div>
+                
+                <div class="intuition-card">
+                    <div class="intuition-icon">🎲</div>
+                    <div class="intuition-title">Expectation</div>
+                    <div class="intuition-desc">Average over all possible futures</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week11_Slide203.html" class="nav-btn">← Previous</a>
+        <a href="Week11_Slide205.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 20; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 20 + 's';
+                element.style.animationDuration = (Math.random() * 15 + 20) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive value function cards
+        document.querySelectorAll('.function-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('.function-title').textContent;
+                
+                const functionDetails = {
+                    '🎯 State Value Function V^π(s)': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>State Value Function V^π(s)</strong>
+                            </div>
+                            <p>The state value function tells us how good it is to be in a particular state when following policy π.</p>
+                            
+                            <div class="modal-formula">
+                                V^π(s) = E_π[Rₜ₊₁ + γRₜ₊₂ + γ²Rₜ₊₃ + ... | Sₜ = s]
+                            </div>
+                            
+                            <div class="modal-code">
+# Computing state values
+
+# Tabular case - exact computation
+def compute_state_values(policy, transitions, rewards, gamma=0.99):
+    num_states = len(transitions)
+    V = np.zeros(num_states)
+    
+    # Iterative policy evaluation
+    for iteration in range(1000):  # Until convergence
+        V_new = np.zeros(num_states)
+        
+        for s in range(num_states):
+            value = 0
+            for a in range(num_actions):
+                action_prob = policy[s, a]
+                for s_next in range(num_states):
+                    transition_prob = transitions[s, a, s_next]
+                    reward = rewards[s, a, s_next]
+                    value += action_prob * transition_prob * (
+                        reward + gamma * V[s_next]
+                    )
+            V_new[s] = value
+        
+        # Check convergence
+        if np.max(np.abs(V - V_new)) < 1e-6:
+            break
+        V = V_new
+    
+    return V
+
+# Monte Carlo estimation
+def monte_carlo_state_value(state, policy, env, num_episodes=1000):
+    returns = []
+    
+    for episode in range(num_episodes):
+        env.reset_to_state(state)
+        episode_return = 0
+        gamma_power = 1
+        
+        while not done:
+            action = policy.select_action(current_state)
+            next_state, reward, done = env.step(action)
+            episode_return += gamma_power * reward
+            gamma_power *= gamma
+            current_state = next_state
+        
+        returns.append(episode_return)
+    
+    return np.mean(returns)
+
+# Temporal Difference estimation
+def td_state_value_update(V, state, reward, next_state, alpha=0.1, gamma=0.99):
+    td_target = reward + gamma * V[next_state]
+    td_error = td_target - V[state]
+    V[state] += alpha * td_error
+    return V
+                            </div>
+                            
+                            <p><strong>Key Properties:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Policy Dependent:</strong> Different policies → different values</li>
+                                <li><strong>Expectation:</strong> Average over all possible trajectories</li>
+                                <li><strong>Recursive:</strong> Satisfies Bellman equation</li>
+                                <li><strong>Unique:</strong> Each policy has exactly one value function</li>
+                            </ul>
+                            
+                            <p><strong>Applications:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Policy evaluation: How good is current policy?</li>
+                                <li>Policy improvement: Which states need better actions?</li>
+                                <li>Planning: Expected value of being in each state</li>
+                            </ul>
+                        `
+                    },
+                    '⚡ Action Value Function Q^π(s,a)': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Action Value Function Q^π(s,a)</strong>
+                            </div>
+                            <p>The action-value function tells us how good it is to take a specific action in a state and then follow policy π.</p>
+                            
+                            <div class="modal-formula">
+                                Q^π(s,a) = E_π[Rₜ₊₁ + γRₜ₊₂ + γ²Rₜ₊₃ + ... | Sₜ = s, Aₜ = a]
+                            </div>
+                            
+                            <div class="modal-code">
+# Q-value computation and learning
+
+# Tabular Q-learning
+class QLearningAgent:
+    def __init__(self, num_states, num_actions, alpha=0.1, gamma=0.99):
+        self.Q = np.zeros((num_states, num_actions))
+        self.alpha = alpha
+        self.gamma = gamma
+    
+    def update(self, state, action, reward, next_state):
+        # Q-learning update rule
+        best_next_action = np.argmax(self.Q[next_state])
+        td_target = reward + self.gamma * self.Q[next_state, best_next_action]
+        td_error = td_target - self.Q[state, action]
+        self.Q[state, action] += self.alpha * td_error
+    
+    def select_action(self, state, epsilon=0.1):
+        if np.random.random() < epsilon:
+            return np.random.randint(self.num_actions)  # Explore
+        else:
+            return np.argmax(self.Q[state])  # Exploit
+
+# SARSA (on-policy)
+def sarsa_update(Q, s, a, r, s_next, a_next, alpha=0.1, gamma=0.99):
+    td_target = r + gamma * Q[s_next, a_next]
+    td_error = td_target - Q[s, a]
+    Q[s, a] += alpha * td_error
+    return Q
+
+# Expected SARSA
+def expected_sarsa_update(Q, s, a, r, s_next, policy, alpha=0.1, gamma=0.99):
+    expected_q = sum(policy[s_next, a_next] * Q[s_next, a_next] 
+                    for a_next in range(num_actions))
+    td_target = r + gamma * expected_q
+    td_error = td_target - Q[s, a]
+    Q[s, a] += alpha * td_error
+    return Q
+
+# Deep Q-Network (DQN)
+import torch
+import torch.nn as nn
+
+class DQN(nn.Module):
+    def __init__(self, state_size, action_size, hidden_size=128):
+        super(DQN, self).__init__()
+        self.network = nn.Sequential(
+            nn.Linear(state_size, hidden_size),
+            nn.ReLU(),
+            nn.Linear(hidden_size, hidden_size),
+            nn.ReLU(),
+            nn.Linear(hidden_size, action_size)
+        )
+    
+    def forward(self, state):
+        return self.network(state)
+
+# DQN training
+def train_dqn(dqn, target_dqn, batch, optimizer, gamma=0.99):
+    states, actions, rewards, next_states, dones = batch
+    
+    current_q_values = dqn(states).gather(1, actions.unsqueeze(1))
+    next_q_values = target_dqn(next_states).max(1)[0].detach()
+    target_q_values = rewards + (gamma * next_q_values * (1 - dones))
+    
+    loss = F.mse_loss(current_q_values.squeeze(), target_q_values)
+    
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+                            </div>
+                            
+                            <p><strong>Advantages of Q-functions:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Action Selection:</strong> Easy to find best action: argmax Q(s,·)</li>
+                                <li><strong>Policy Improvement:</strong> Greedy policy improvement</li>
+                                <li><strong>Model-Free:</strong> Don't need environment model</li>
+                                <li><strong>Off-Policy:</strong> Can learn optimal policy while following exploratory policy</li>
+                            </ul>
+                            
+                            <p><strong>Learning Algorithms:</strong> Q-learning, SARSA, DQN, Double DQN, Dueling DQN</p>
+                        `
+                    },
+                    '⭐ Optimal Value Functions': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Optimal Value Functions</strong>
+                            </div>
+                            <p>The optimal value functions represent the best possible performance achievable in the MDP.</p>
+                            
+                            <div class="modal-formula">
+                                V*(s) = max_π V^π(s) = max_a Q*(s,a)
+                                <br><br>
+                                Q*(s,a) = max_π Q^π(s,a)
+                            </div>
+                            
+                            <div class="modal-code">
+# Computing optimal value functions
+
+# Value Iteration
+def value_iteration(transitions, rewards, gamma=0.99, theta=1e-6):
+    num_states, num_actions, _ = transitions.shape
+    V = np.zeros(num_states)
+    
+    while True:
+        V_new = np.zeros(num_states)
+        
+        for s in range(num_states):
+            action_values = []
+            for a in range(num_actions):
+                value = 0
+                for s_next in range(num_states):
+                    prob = transitions[s, a, s_next]
+                    reward = rewards[s, a, s_next]
+                    value += prob * (reward + gamma * V[s_next])
+                action_values.append(value)
+            
+            V_new[s] = max(action_values)  # Bellman optimality
+        
+        # Check convergence
+        if np.max(np.abs(V - V_new)) < theta:
+            break
+        V = V_new
+    
+    return V
+
+# Extract optimal policy from optimal value function
+def extract_optimal_policy(V, transitions, rewards, gamma=0.99):
+    num_states, num_actions, _ = transitions.shape
+    policy = np.zeros((num_states, num_actions))
+    
+    for s in range(num_states):
+        action_values = []
+        for a in range(num_actions):
+            value = 0
+            for s_next in range(num_states):
+                prob = transitions[s, a, s_next]
+                reward = rewards[s, a, s_next]
+                value += prob * (reward + gamma * V[s_next])
+            action_values.append(value)
+        
+        best_action = np.argmax(action_values)
+        policy[s, best_action] = 1.0  # Deterministic optimal policy
+    
+    return policy
+
+# Q-Value Iteration
+def q_value_iteration(transitions, rewards, gamma=0.99, theta=1e-6):
+    num_states, num_actions, _ = transitions.shape
+    Q = np.zeros((num_states, num_actions))
+    
+    while True:
+        Q_new = np.zeros((num_states, num_actions))
+        
+        for s in range(num_states):
+            for a in range(num_actions):
+                value = 0
+                for s_next in range(num_states):
+                    prob = transitions[s, a, s_next]
+                    reward = rewards[s, a, s_next]
+                    # Bellman optimality for Q-function
+                    value += prob * (reward + gamma * np.max(Q[s_next]))
+                Q_new[s, a] = value
+        
+        if np.max(np.abs(Q - Q_new)) < theta:
+            break
+        Q = Q_new
+    
+    return Q
+
+# Policy Iteration
+def policy_iteration(transitions, rewards, gamma=0.99):
+    num_states, num_actions, _ = transitions.shape
+    
+    # Initialize random policy
+    policy = np.ones((num_states, num_actions)) / num_actions
+    
+    while True:
+        # Policy Evaluation
+        V = evaluate_policy(policy, transitions, rewards, gamma)
+        
+        # Policy Improvement
+        policy_stable = True
+        new_policy = np.zeros((num_states, num_actions))
+        
+        for s in range(num_states):
+            old_action = np.argmax(policy[s])
+            
+            # Compute action values
+            action_values = []
+            for a in range(num_actions):
+                value = 0
+                for s_next in range(num_states):
+                    prob = transitions[s, a, s_next]
+                    reward = rewards[s, a, s_next]
+                    value += prob * (reward + gamma * V[s_next])
+                action_values.append(value)
+            
+            best_action = np.argmax(action_values)
+            new_policy[s, best_action] = 1.0
+            
+            if best_action != old_action:
+                policy_stable = False
+        
+        policy = new_policy
+        
+        if policy_stable:
+            break
+    
+    return policy, V
+                            </div>
+                            
+                            <p><strong>Properties of Optimal Value Functions:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Unique:</strong> There's exactly one V* and Q* for each MDP</li>
+                                <li><strong>Consistency:</strong> V*(s) = max_a Q*(s,a)</li>
+                                <li><strong>Bellman Optimality:</strong> Satisfy Bellman optimality equations</li>
+                                <li><strong>Policy Independence:</strong> Same regardless of how we find them</li>
+                            </ul>
+                            
+                            <p><strong>Methods to Find Optimal Values:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Value Iteration: Directly iterate Bellman optimality</li>
+                                <li>Policy Iteration: Alternate evaluation and improvement</li>
+                                <li>Linear Programming: Solve as optimization problem</li>
+                                <li>Reinforcement Learning: Q-learning, policy gradients</li>
+                            </ul>
+                        `
+                    }
+                };
+                
+                const details = functionDetails[title];
+                if (details) {
+                    modal.show(title, details.content);
+                }
+            });
+        });
+
+        // Interactive Bellman equation cards
+        document.querySelectorAll('.equation-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('.equation-type').textContent;
+                
+                const equationDetails = {
+                    'Bellman Expectation Equation': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Bellman Expectation Equation</strong>
+                            </div>
+                            <p>Expresses the value of a state as the expected immediate reward plus the expected discounted value of successor states.</p>
+                            
+                            <div class="modal-formula">
+                                V^π(s) = Σ_a π(a|s) Σ_{s'} P(s'|s,a)[R(s,a,s') + γV^π(s')]
+                            </div>
+                            
+                            <div class="modal-code">
+# Bellman expectation equation implementation
+
+def bellman_expectation_update(V, s, policy, transitions, rewards, gamma=0.99):
+    """
+    Update state value using Bellman expectation equation
+    """
+    new_value = 0
+    
+    for a in range(num_actions):
+        action_prob = policy[s, a]  # π(a|s)
+        
+        action_value = 0
+        for s_next in range(num_states):
+            transition_prob = transitions[s, a, s_next]  # P(s'|s,a)
+            reward = rewards[s, a, s_next]  # R(s,a,s')
+            
+            action_value += transition_prob * (reward + gamma * V[s_next])
+        
+        new_value += action_prob * action_value
+    
+    return new_value
+
+# Iterative policy evaluation using Bellman expectation
+def policy_evaluation(policy, transitions, rewards, gamma=0.99, theta=1e-6):
+    """
+    Evaluate policy by iteratively applying Bellman expectation equation
+    """
+    num_states = transitions.shape[0]
+    V = np.zeros(num_states)
+    
+    iteration = 0
+    while True:
+        V_new = np.zeros(num_states)
+        
+        for s in range(num_states):
+            V_new[s] = bellman_expectation_update(
+                V, s, policy, transitions, rewards, gamma
+            )
+        
+        # Check convergence
+        delta = np.max(np.abs(V - V_new))
+        V = V_new
+        iteration += 1
+        
+        if delta < theta:
+            print(f"Converged after {iteration} iterations")
+            break
+    
+    return V
+
+# Matrix form of Bellman expectation
+def bellman_expectation_matrix(policy, transitions, rewards, gamma=0.99):
+    """
+    Solve Bellman expectation equation using matrix inversion
+    V^π = (I - γP^π)^(-1) R^π
+    """
+    num_states, num_actions, _ = transitions.shape
+    
+    # Compute policy-specific transition matrix P^π
+    P_pi = np.zeros((num_states, num_states))
+    R_pi = np.zeros(num_states)
+    
+    for s in range(num_states):
+        for s_next in range(num_states):
+            for a in range(num_actions):
+                P_pi[s, s_next] += policy[s, a] * transitions[s, a, s_next]
+        
+        for a in range(num_actions):
+            for s_next in range(num_states):
+                R_pi[s] += (policy[s, a] * transitions[s, a, s_next] * 
+                           rewards[s, a, s_next])
+    
+    # Solve (I - γP^π)V^π = R^π
+    I = np.eye(num_states)
+    V_pi = np.linalg.solve(I - gamma * P_pi, R_pi)
+    
+    return V_pi
+                            </div>
+                            
+                            <p><strong>Key Insights:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Recursive Decomposition:</strong> Value = immediate reward + future value</li>
+                                <li><strong>Expectation:</strong> Average over all possible actions and outcomes</li>
+                                <li><strong>Policy Dependence:</strong> Different policies lead to different equations</li>
+                                <li><strong>Fixed Point:</strong> True value function satisfies this equation exactly</li>
+                            </ul>
+                            
+                            <p><strong>Applications:</strong> Policy evaluation, critic networks in actor-critic methods, temporal difference learning</p>
+                        `
+                    },
+                    'Bellman Optimality Equation': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Bellman Optimality Equation</strong>
+                            </div>
+                            <p>Expresses the optimal value as the maximum over all possible actions of the expected immediate reward plus discounted optimal future value.</p>
+                            
+                            <div class="modal-formula">
+                                V*(s) = max_a Σ_{s'} P(s'|s,a)[R(s,a,s') + γV*(s')]
+                            </div>
+                            
+                            <div class="modal-code">
+# Bellman optimality equation implementation
+
+def bellman_optimality_update(V, s, transitions, rewards, gamma=0.99):
+    """
+    Update state value using Bellman optimality equation
+    """
+    action_values = []
+    
+    for a in range(num_actions):
+        action_value = 0
+        for s_next in range(num_states):
+            transition_prob = transitions[s, a, s_next]
+            reward = rewards[s, a, s_next]
+            action_value += transition_prob * (reward + gamma * V[s_next])
+        
+        action_values.append(action_value)
+    
+    return max(action_values)  # Take maximum over actions
+
+# Value iteration using Bellman optimality
+def value_iteration(transitions, rewards, gamma=0.99, theta=1e-6):
+    """
+    Find optimal value function by iteratively applying Bellman optimality
+    """
+    num_states = transitions.shape[0]
+    V = np.zeros(num_states)
+    
+    iteration = 0
+    while True:
+        V_new = np.zeros(num_states)
+        
+        for s in range(num_states):
+            V_new[s] = bellman_optimality_update(
+                V, s, transitions, rewards, gamma
+            )
+        
+        delta = np.max(np.abs(V - V_new))
+        V = V_new
+        iteration += 1
+        
+        if delta < theta:
+            print(f"Value iteration converged after {iteration} iterations")
+            break
+    
+    return V
+
+# Extract optimal policy from optimal value function
+def extract_policy_from_value(V, transitions, rewards, gamma=0.99):
+    """
+    Extract optimal policy using one-step lookahead with optimal values
+    """
+    num_states, num_actions, _ = transitions.shape
+    policy = np.zeros((num_states, num_actions))
+    
+    for s in range(num_states):
+        action_values = []
+        
+        for a in range(num_actions):
+            action_value = 0
+            for s_next in range(num_states):
+                prob = transitions[s, a, s_next]
+                reward = rewards[s, a, s_next]
+                action_value += prob * (reward + gamma * V[s_next])
+            action_values.append(action_value)
+        
+        # Greedy policy: choose action with highest value
+        best_action = np.argmax(action_values)
+        policy[s, best_action] = 1.0
+    
+    return policy
+
+# Asynchronous value iteration
+def asynchronous_value_iteration(transitions, rewards, gamma=0.99, theta=1e-6):
+    """
+    Update states in arbitrary order (often faster convergence)
+    """
+    num_states = transitions.shape[0]
+    V = np.zeros(num_states)
+    
+    iteration = 0
+    while True:
+        delta = 0
+        
+        # Update states in random order
+        for s in np.random.permutation(num_states):
+            old_value = V[s]
+            V[s] = bellman_optimality_update(V, s, transitions, rewards, gamma)
+            delta = max(delta, abs(old_value - V[s]))
+        
+        iteration += 1
+        if delta < theta:
+            break
+    
+    return V
+
+# Gauss-Seidel value iteration (use updated values immediately)
+def gauss_seidel_value_iteration(transitions, rewards, gamma=0.99, theta=1e-6):
+    """
+    Use updated values as soon as they're computed
+    """
+    num_states = transitions.shape[0]
+    V = np.zeros(num_states)
+    
+    while True:
+        delta = 0
+        
+        for s in range(num_states):
+            old_value = V[s]
+            V[s] = bellman_optimality_update(V, s, transitions, rewards, gamma)
+            delta = max(delta, abs(old_value - V[s]))
+        
+        if delta < theta:
+            break
+    
+    return V
+                            </div>
+                            
+                            <p><strong>Key Properties:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Optimality:</strong> Defines the best possible value achievable</li>
+                                <li><strong>Greedy Structure:</strong> Optimal policy is greedy w.r.t. optimal value</li>
+                                <li><strong>Contraction Mapping:</strong> Guarantees unique solution</li>
+                                <li><strong>Fixed Point:</strong> V* is the unique fixed point</li>
+                            </ul>
+                            
+                            <p><strong>Solution Methods:</strong> Value iteration, modified policy iteration, linear programming</p>
+                        `
+                    },
+                    'Q-Function Bellman Equation': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Q-Function Bellman Equation</strong>
+                            </div>
+                            <p>Expresses the action-value under a policy in terms of immediate reward and expected future action-values.</p>
+                            
+                            <div class="modal-formula">
+                                Q^π(s,a) = Σ_{s'} P(s'|s,a)[R(s,a,s') + γΣ_{a'} π(a'|s')Q^π(s',a')]
+                            </div>
+                            
+                            <div class="modal-code">
+# Q-function Bellman equation implementation
+
+def bellman_q_expectation_update(Q, s, a, policy, transitions, rewards, gamma=0.99):
+    """
+    Update Q-value using Bellman expectation equation for Q-functions
+    """
+    new_q_value = 0
+    
+    for s_next in range(num_states):
+        transition_prob = transitions[s, a, s_next]
+        reward = rewards[s, a, s_next]
+        
+        # Expected Q-value in next state under policy
+        expected_next_q = 0
+        for a_next in range(num_actions):
+            expected_next_q += policy[s_next, a_next] * Q[s_next, a_next]
+        
+        new_q_value += transition_prob * (reward + gamma * expected_next_q)
+    
+    return new_q_value
+
+# SARSA (State-Action-Reward-State-Action)
+class SARSAAgent:
+    def __init__(self, num_states, num_actions, alpha=0.1, gamma=0.99, epsilon=0.1):
+        self.Q = np.zeros((num_states, num_actions))
+        self.alpha = alpha
+        self.gamma = gamma
+        self.epsilon = epsilon
+    
+    def select_action(self, state):
+        """Epsilon-greedy action selection"""
+        if np.random.random() < self.epsilon:
+            return np.random.randint(self.num_actions)
+        else:
+            return np.argmax(self.Q[state])
+    
+    def update(self, state, action, reward, next_state, next_action):
+        """SARSA update using actual next action"""
+        td_target = reward + self.gamma * self.Q[next_state, next_action]
+        td_error = td_target - self.Q[state, action]
+        self.Q[state, action] += self.alpha * td_error
+
+# Expected SARSA
+class ExpectedSARSAAgent:
+    def __init__(self, num_states, num_actions, alpha=0.1, gamma=0.99, epsilon=0.1):
+        self.Q = np.zeros((num_states, num_actions))
+        self.alpha = alpha
+        self.gamma = gamma
+        self.epsilon = epsilon
+    
+    def get_action_probabilities(self, state):
+        """Get epsilon-greedy action probabilities"""
+        probs = np.ones(self.num_actions) * self.epsilon / self.num_actions
+        best_action = np.argmax(self.Q[state])
+        probs[best_action] += 1 - self.epsilon
+        return probs
+    
+    def update(self, state, action, reward, next_state):
+        """Expected SARSA update"""
+        next_action_probs = self.get_action_probabilities(next_state)
+        expected_next_q = np.sum(next_action_probs * self.Q[next_state])
+        
+        td_target = reward + self.gamma * expected_next_q
+        td_error = td_target - self.Q[state, action]
+        self.Q[state, action] += self.alpha * td_error
+
+# Double Expected SARSA
+class DoubleExpectedSARSAAgent:
+    def __init__(self, num_states, num_actions, alpha=0.1, gamma=0.99, epsilon=0.1):
+        self.Q1 = np.zeros((num_states, num_actions))
+        self.Q2 = np.zeros((num_states, num_actions))
+        self.alpha = alpha
+        self.gamma = gamma
+        self.epsilon = epsilon
+    
+    def update(self, state, action, reward, next_state):
+        """Double Expected SARSA to reduce overestimation bias"""
+        # Randomly choose which Q-function to update
+        if np.random.random() < 0.5:
+            # Update Q1 using Q2 for next state value
+            next_action_probs = self.get_action_probabilities(next_state, self.Q1)
+            expected_next_q = np.sum(next_action_probs * self.Q2[next_state])
+            
+            td_target = reward + self.gamma * expected_next_q
+            td_error = td_target - self.Q1[state, action]
+            self.Q1[state, action] += self.alpha * td_error
+        else:
+            # Update Q2 using Q1 for next state value
+            next_action_probs = self.get_action_probabilities(next_state, self.Q2)
+            expected_next_q = np.sum(next_action_probs * self.Q1[next_state])
+            
+            td_target = reward + self.gamma * expected_next_q
+            td_error = td_target - self.Q2[state, action]
+            self.Q2[state, action] += self.alpha * td_error
+                            </div>
+                            
+                            <p><strong>Advantages of Q-Function Approach:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Model-Free:</strong> Don't need environment transition model</li>
+                                <li><strong>Direct Policy:</strong> Policy is implicit in Q-values</li>
+                                <li><strong>Action Selection:</strong> Easy to choose actions: argmax Q(s,·)</li>
+                                <li><strong>Incremental Learning:</strong> Update with single experiences</li>
+                            </ul>
+                            
+                            <p><strong>Learning Algorithms:</strong> SARSA, Expected SARSA, Q-learning, Double Q-learning</p>
+                        `
+                    },
+                    'Optimal Q-Function': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Optimal Q-Function</strong>
+                            </div>
+                            <p>The optimal action-value function represents the maximum expected return achievable by taking action a in state s and then acting optimally.</p>
+                            
+                            <div class="modal-formula">
+                                Q*(s,a) = Σ_{s'} P(s'|s,a)[R(s,a,s') + γ max_{a'} Q*(s',a')]
+                            </div>
+                            
+                            <div class="modal-code">
+# Optimal Q-function algorithms
+
+# Q-Learning (off-policy optimal control)
+class QLearningAgent:
+    def __init__(self, num_states, num_actions, alpha=0.1, gamma=0.99):
+        self.Q = np.zeros((num_states, num_actions))
+        self.alpha = alpha
+        self.gamma = gamma
+    
+    def update(self, state, action, reward, next_state):
+        """Q-learning update: off-policy, learns optimal Q*"""
+        # Use max Q-value for next state (greedy)
+        max_next_q = np.max(self.Q[next_state])
+        td_target = reward + self.gamma * max_next_q
+        td_error = td_target - self.Q[state, action]
+        self.Q[state, action] += self.alpha * td_error
+    
+    def select_action(self, state, epsilon=0.1):
+        """Epsilon-greedy for exploration"""
+        if np.random.random() < epsilon:
+            return np.random.randint(self.num_actions)
+        else:
+            return np.argmax(self.Q[state])
+
+# Double Q-Learning (reduces overestimation bias)
+class DoubleQLearningAgent:
+    def __init__(self, num_states, num_actions, alpha=0.1, gamma=0.99):
+        self.Q1 = np.zeros((num_states, num_actions))
+        self.Q2 = np.zeros((num_states, num_actions))
+        self.alpha = alpha
+        self.gamma = gamma
+    
+    def update(self, state, action, reward, next_state):
+        """Double Q-learning update"""
+        if np.random.random() < 0.5:
+            # Update Q1, use Q2 to evaluate greedy action from Q1
+            best_action = np.argmax(self.Q1[next_state])
+            td_target = reward + self.gamma * self.Q2[next_state, best_action]
+            td_error = td_target - self.Q1[state, action]
+            self.Q1[state, action] += self.alpha * td_error
+        else:
+            # Update Q2, use Q1 to evaluate greedy action from Q2
+            best_action = np.argmax(self.Q2[next_state])
+            td_target = reward + self.gamma * self.Q1[next_state, best_action]
+            td_error = td_target - self.Q2[state, action]
+            self.Q2[state, action] += self.alpha * td_error
+    
+    def get_q_values(self, state):
+        """Average Q-values for action selection"""
+        return (self.Q1[state] + self.Q2[state]) / 2
+
+# Deep Q-Network (DQN)
+import torch
+import torch.nn as nn
+import torch.optim as optim
+
+class DQNAgent:
+    def __init__(self, state_size, action_size, lr=1e-3, gamma=0.99):
+        self.action_size = action_size
+        self.gamma = gamma
+        
+        # Main network and target network
+        self.q_network = DQN(state_size, action_size)
+        self.target_network = DQN(state_size, action_size)
+        self.optimizer = optim.Adam(self.q_network.parameters(), lr=lr)
+        
+        # Experience replay
+        self.memory = ReplayBuffer(10000)
+    
+    def update(self, batch_size=64):
+        """Train the network on a batch of experiences"""
+        if len(self.memory) < batch_size:
+            return
+        
+        # Sample batch from replay buffer
+        batch = self.memory.sample(batch_size)
+        states, actions, rewards, next_states, dones = batch
+        
+        # Current Q-values
+        current_q_values = self.q_network(states).gather(1, actions.unsqueeze(1))
+        
+        # Target Q-values using target network
+        with torch.no_grad():
+            max_next_q_values = self.target_network(next_states).max(1)[0]
+            target_q_values = rewards + (self.gamma * max_next_q_values * (1 - dones))
+        
+        # Compute loss and update
+        loss = nn.MSELoss()(current_q_values.squeeze(), target_q_values)
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+    
+    def update_target_network(self):
+        """Copy weights from main network to target network"""
+        self.target_network.load_state_dict(self.q_network.state_dict())
+
+# Dueling DQN (separate value and advantage streams)
+class DuelingDQN(nn.Module):
+    def __init__(self, state_size, action_size, hidden_size=128):
+        super(DuelingDQN, self).__init__()
+        
+        # Shared feature layers
+        self.feature_layer = nn.Sequential(
+            nn.Linear(state_size, hidden_size),
+            nn.ReLU()
+        )
+        
+        # Value stream
+        self.value_stream = nn.Sequential(
+            nn.Linear(hidden_size, hidden_size),
+            nn.ReLU(),
+            nn.Linear(hidden_size, 1)
+        )
+        
+        # Advantage stream
+        self.advantage_stream = nn.Sequential(
+            nn.Linear(hidden_size, hidden_size),
+            nn.ReLU(),
+            nn.Linear(hidden_size, action_size)
+        )
+    
+    def forward(self, state):
+        features = self.feature_layer(state)
+        
+        value = self.value_stream(features)
+        advantage = self.advantage_stream(features)
+        
+        # Combine value and advantage
+        # Q(s,a) = V(s) + A(s,a) - mean(A(s,·))
+        q_values = value + advantage - advantage.mean(dim=1, keepdim=True)
+        
+        return q_values
+                            </div>
+                            
+                            <p><strong>Key Properties:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Optimal Policy:</strong> π*(s) = argmax_a Q*(s,a)</li>
+                                <li><strong>Bellman Optimality:</strong> Satisfies optimal Bellman equation</li>
+                                <li><strong>Off-Policy Learning:</strong> Can learn optimal policy while exploring</li>
+                                <li><strong>Model-Free:</strong> No need for environment model</li>
+                            </ul>
+                            
+                            <p><strong>Advanced Methods:</strong> Double DQN, Dueling DQN, Rainbow DQN, Distributional RL</p>
+                        `
+                    }
+                };
+                
+                const details = equationDetails[title];
+                if (details) {
+                    modal.show(`Bellman Equation: ${title}`, details.content);
+                }
+            });
+        });
+
+        // Interactive intuition cards
+        document.querySelectorAll('.intuition-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('.intuition-title').textContent;
+                
+                const intuitionDetails = {
+                    'Value = Future Reward': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Value as Expected Future Reward</strong>
+                            </div>
+                            <p>The fundamental intuition: a state's value represents how much reward we expect to accumulate from that point forward.</p>
+                            
+                            <div class="modal-code">
+# Simple example: Grid World
+# Goal at (4,4) gives +100 reward
+# Each step costs -1
+
+state_values = {
+    (4, 4): 100,     # Goal state
+    (3, 4): 99,      # One step from goal
+    (2, 4): 98,      # Two steps from goal
+    (1, 4): 97,      # Three steps from goal
+    (0, 4): 96,      # Four steps from goal
+    
+    # States farther from goal have lower values
+    (0, 0): 88,      # Corner, longer path to goal
+    (2, 2): 94,      # Middle, shorter path
+}
+
+# Value tells us "how good is this state?"
+def interpret_value(state, value):
+    if value > 95:
+        return f"State {state}: Excellent position!"
+    elif value > 90:
+        return f"State {state}: Good position"
+    elif value > 80:
+        return f"State {state}: Okay position"
+    else:
+        return f"State {state}: Poor position"
+
+# Expected return calculation
+def expected_return_example():
+    # If we're in state (3,4) and always move optimally:
+    # Step 1: Move right, get -1 + reach goal
+    # Expected return = -1 + 100 = 99
+    
+    # If we're in state (2,4):
+    # Step 1: Move right, get -1 + reach (3,4) with value 99
+    # Expected return = -1 + 99 = 98
+    
+    return "Value = Expected cumulative future reward"
+                            </div>
+                            
+                            <p><strong>Key Insights:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Higher values → better states to be in</li>
+                                <li>Values include all future rewards, not just immediate</li>
+                                <li>Discount factor makes near-term rewards more valuable</li>
+                                <li>Values guide decision making: move toward high-value states</li>
+                            </ul>
+                        `
+                    },
+                    'Recursive Structure': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Recursive Nature of Value</strong>
+                            </div>
+                            <p>Value can be broken down into immediate reward plus the discounted value of where you end up next.</p>
+                            
+                            <div class="modal-code">
+# Recursive value structure
+def recursive_value_example():
+    # Being in state s is worth:
+    # 1. The immediate reward you get
+    # 2. Plus the (discounted) value of the next state
+    
+    # Example: Chess position
+    current_position_value = (
+        material_advantage +          # Immediate "reward"
+        discount_factor * 
+        expected_value_after_move     # Future value
+    )
+    
+    # This creates a recursive relationship:
+    # V(s) = R(s) + γ * E[V(s')]
+    
+    return "Value decomposes recursively"
+
+# Dynamic programming uses this recursively
+def value_backup():
+    """
+    Each value update uses values of successor states
+    """
+    old_values = {s: 0 for s in states}
+    new_values = {}
+    
+    for state in states:
+        # Calculate value using successor state values
+        new_values[state] = (
+            immediate_reward(state) + 
+            discount * sum(
+                transition_prob(state, next_state) * old_values[next_state]
+                for next_state in successor_states(state)
+            )
+        )
+    
+    return new_values
+
+# Bootstrapping: estimate based on other estimates
+def temporal_difference_example():
+    """
+    TD learning updates value estimate using other value estimates
+    """
+    # Current estimate
+    V_current = value_function[current_state]
+    
+    # Target: immediate reward + discounted next state value
+    V_target = reward + gamma * value_function[next_state]
+    
+    # Update toward target
+    value_function[current_state] += alpha * (V_target - V_current)
+    
+    return "Learning values from other value estimates"
+                            </div>
+                            
+                            <p><strong>Why Recursion Works:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Consistency:</strong> True values must satisfy recursive relationship</li>
+                                <li><strong>Bootstrapping:</strong> Use current estimates to improve estimates</li>
+                                <li><strong>Efficiency:</strong> Don't need to wait for episode completion</li>
+                                <li><strong>Convergence:</strong> Iterative updates converge to true values</li>
+                            </ul>
+                        `
+                    },
+                    'Optimality': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Optimal Value Functions</strong>
+                            </div>
+                            <p>Optimal values represent the best possible performance - what you could achieve if you acted perfectly from each state.</p>
+                            
+                            <div class="modal-code">
+# Optimality concepts
+
+def optimal_value_intuition():
+    """
+    V*(s) = maximum possible expected return from state s
+    """
+    # Consider all possible policies
+    all_policies = generate_all_possible_policies()
+    
+    # For each state, find the policy that gives highest value
+    optimal_values = {}
+    for state in states:
+        best_value = -float('inf')
+        for policy in all_policies:
+            value = evaluate_policy(policy, state)
+            best_value = max(best_value, value)
+        optimal_values[state] = best_value
+    
+    return optimal_values
+
+# Optimal policy is greedy with respect to optimal values
+def extract_optimal_policy(optimal_values):
+    """
+    Once we know V*, we can easily find optimal policy
+    """
+    optimal_policy = {}
+    
+    for state in states:
+        best_action = None
+        best_value = -float('inf')
+        
+        for action in available_actions(state):
+            # Look ahead one step
+            expected_value = 0
+            for next_state in possible_next_states(state, action):
+                prob = transition_probability(state, action, next_state)
+                reward = immediate_reward(state, action, next_state)
+                expected_value += prob * (reward + gamma * optimal_values[next_state])
+            
+            if expected_value > best_value:
+                best_value = expected_value
+                best_action = action
+        
+        optimal_policy[state] = best_action
+    
+    return optimal_policy
+
+# Multiple optimal policies can exist
+def optimal_policy_uniqueness():
+    """
+    V* is unique, but π* may not be
+    """
+    # Example: Two actions with exactly same Q-value
+    if Q_star[state, action1] == Q_star[state, action2]:
+        # Both actions are optimal
+        # Can choose either one, or mix them
+        return "Multiple optimal policies possible"
+                            </div>
+                            
+                            <p><strong>Properties of Optimal Values:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Upper Bound:</strong> V*(s) ≥ V^π(s) for all policies π</li>
+                                <li><strong>Achievable:</strong> There exists a policy that achieves V*</li>
+                                <li><strong>Unique:</strong> Only one V* for each MDP</li>
+                                <li><strong>Consistent:</strong> Satisfies Bellman optimality equation</li>
+                            </ul>
+                            
+                            <p><strong>Finding Optimal Values:</strong> Value iteration, policy iteration, or reinforcement learning</p>
+                        `
+                    },
+                    'Policy Evaluation': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Evaluating Policy Performance</strong>
+                            </div>
+                            <p>Policy evaluation answers: "How good is my current strategy?" by computing expected returns under that policy.</p>
+                            
+                            <div class="modal-code">
+# Policy evaluation examples
+
+def evaluate_random_policy():
+    """
+    How good is a completely random policy?
+    """
+    # Random policy: equal probability for all actions
+    random_policy = {
+        state: {action: 1.0/num_actions for action in actions}
+        for state in states
+    }
+    
+    # Compute value function for this policy
+    values = iterative_policy_evaluation(random_policy)
+    
+    return values
+
+def evaluate_greedy_policy():
+    """
+    How good is a greedy policy based on current values?
+    """
+    def greedy_policy(state, values):
+        best_action = None
+        best_value = -float('inf')
+        
+        for action in available_actions(state):
+            expected_value = compute_action_value(state, action, values)
+            if expected_value > best_value:
+                best_value = expected_value
+                best_action = action
+        
+        return best_action
+    
+    # Evaluate this greedy policy
+    return policy_evaluation(greedy_policy)
+
+def compare_policies():
+    """
+    Compare multiple policies to see which is better
+    """
+    policies = [
+        'random_policy',
+        'greedy_policy', 
+        'human_designed_policy',
+        'learned_policy'
+    ]
+    
+    results = {}
+    for policy in policies:
+        values = evaluate_policy(policy)
+        avg_value = np.mean(list(values.values()))
+        results[policy] = avg_value
+    
+    # Rank policies by performance
+    ranked = sorted(results.items(), key=lambda x: x[1], reverse=True)
+    return ranked
+
+# Monte Carlo policy evaluation
+def monte_carlo_evaluation(policy, num_episodes=1000):
+    """
+    Estimate policy value by running episodes
+    """
+    state_returns = {state: [] for state in states}
+    
+    for episode in range(num_episodes):
+        # Generate episode following policy
+        trajectory = generate_episode(policy)
+        
+        # Calculate returns for each state visited
+        G = 0
+        for step in reversed(trajectory):
+            state, action, reward = step
+            G = reward + gamma * G
+            state_returns[state].append(G)
+    
+    # Average returns for each state
+    value_function = {
+        state: np.mean(returns) if returns else 0
+        for state, returns in state_returns.items()
+    }
+    
+    return value_function
+                            </div>
+                            
+                            <p><strong>Why Policy Evaluation Matters:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Performance Measurement:</strong> Quantify how good a strategy is</li>
+                                <li><strong>Policy Comparison:</strong> Compare different approaches</li>
+                                <li><strong>Policy Improvement:</strong> Identify where policy can be improved</li>
+                                <li><strong>Convergence Check:</strong> Know when policy iteration has converged</li>
+                            </ul>
+                            
+                            <p><strong>Methods:</strong> Iterative evaluation, Monte Carlo, temporal difference learning</p>
+                        `
+                    },
+                    'Consistency': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Bellman Equations Ensure Consistency</strong>
+                            </div>
+                            <p>Bellman equations are consistency conditions - they ensure that value estimates are coherent with each other.</p>
+                            
+                            <div class="modal-code">
+# Consistency examples
+
+def check_bellman_consistency(values, policy):
+                            """
+    Check if value function satisfies Bellman equation
+    """
+    inconsistencies = {}
+    
+    for state in states:
+        # Left side: current value estimate
+        current_estimate = values[state]
+        
+        # Right side: Bellman equation calculation
+        bellman_value = 0
+        for action in actions:
+            action_prob = policy[state][action]
+            
+            action_value = 0
+            for next_state in states:
+                prob = transition_prob(state, action, next_state)
+                reward = reward_function(state, action, next_state)
+                action_value += prob * (reward + gamma * values[next_state])
+            
+            bellman_value += action_prob * action_value
+        
+        # Check consistency
+        error = abs(current_estimate - bellman_value)
+        if error > tolerance:
+            inconsistencies[state] = error
+    
+    return inconsistencies
+
+def fix_inconsistencies():
+    """
+    Bellman updates move values toward consistency
+    """
+    # If V(s) ≠ Bellman[V](s), update V(s) toward Bellman[V](s)
+    
+    for state in states:
+        bellman_target = compute_bellman_backup(state, values)
+        
+        # Update toward consistent value
+        values[state] = bellman_target  # Full update
+        # or
+        values[state] += alpha * (bellman_target - values[state])  # Partial update
+    
+    return values
+
+def consistency_in_learning():
+    """
+    RL algorithms gradually make values more consistent
+    """
+    # TD learning example
+    def td_update(state, reward, next_state):
+        # Current estimate
+        current_value = V[state]
+        
+        # Target based on successor value (should be consistent)
+        td_target = reward + gamma * V[next_state]
+        
+        # Move toward consistency
+        V[state] += alpha * (td_target - current_value)
+    
+    # Over time, this makes V satisfy Bellman equation
+    return "Gradual convergence to consistency"
+
+def policy_consistency():
+    """
+    Optimal policy is consistent with optimal values
+    """
+    # Policy should choose actions that lead to states with highest value
+    
+    for state in states:
+        # Check if policy chooses action that maximizes expected value
+        policy_action = current_policy[state]
+        
+        best_action = None
+        best_value = -float('inf')
+        
+        for action in actions:
+            expected_value = compute_action_value(state, action, optimal_values)
+            if expected_value > best_value:
+                best_value = expected_value
+                best_action = action
+        
+        # Policy should match optimal choice
+        assert policy_action == best_action, f"Inconsistent policy in state {state}"
+                            </div>
+                            
+                            <p><strong>Types of Consistency:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Value Consistency:</strong> V satisfies Bellman expectation equation</li>
+                                <li><strong>Optimal Consistency:</strong> V* satisfies Bellman optimality equation</li>
+                                <li><strong>Policy Consistency:</strong> Policy is greedy w.r.t. its value function</li>
+                                <li><strong>Q-V Consistency:</strong> Q^π(s,a) and V^π(s) are consistent</li>
+                            </ul>
+                            
+                            <p><strong>Importance:</strong> Consistency ensures value estimates are meaningful and policies are sensible</p>
+                        `
+                    },
+                    'Expectation': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Expected Values Over Uncertainty</strong>
+                            </div>
+                            <p>Value functions compute expectations over all sources of randomness: stochastic transitions, random policies, and uncertain outcomes.</p>
+                            
+                            <div class="modal-code">
+# Expectation in value functions
+
+def expectation_over_actions():
+    """
+    Stochastic policies: average over action probabilities
+    """
+    # π(a|s) gives probability of choosing action a in state s
+    
+    state_value = 0
+    for action in actions:
+        action_prob = policy[state][action]  # π(a|s)
+        action_value = compute_q_value(state, action)
+        state_value += action_prob * action_value
+    
+    # V^π(s) = Σ_a π(a|s) Q^π(s,a)
+    return state_value
+
+def expectation_over_transitions():
+    """
+    Stochastic environment: average over transition probabilities
+    """
+    action_value = 0
+    
+    for next_state in possible_next_states:
+        transition_prob = P[state][action][next_state]  # P(s'|s,a)
+        reward = R[state][action][next_state]           # R(s,a,s')
+        
+        outcome_value = reward + gamma * V[next_state]
+        action_value += transition_prob * outcome_value
+    
+    # Q^π(s,a) = Σ_{s'} P(s'|s,a)[R(s,a,s') + γV^π(s')]
+    return action_value
+
+def monte_carlo_expectation():
+    """
+    Estimate expectations by sampling
+    """
+    returns = []
+    
+    for sample in range(num_samples):
+        # Sample trajectory
+        episode_return = 0
+        current_state = start_state
+        
+        while not done:
+            # Sample action from policy
+            action = sample_action_from_policy(current_state, policy)
+            
+            # Sample next state from environment
+            next_state, reward = sample_transition(current_state, action)
+            
+            episode_return += gamma**timestep * reward
+            current_state = next_state
+            timestep += 1
+        
+        returns.append(episode_return)
+    
+    # Expectation ≈ average of samples
+    estimated_value = np.mean(returns)
+    return estimated_value
+
+def handle_multiple_uncertainties():
+    """
+    Combine multiple sources of randomness
+    """
+    total_expectation = 0
+    
+    # Over all possible action choices
+    for action in actions:
+        action_prob = policy[state][action]
+        
+        # Over all possible outcomes of that action
+        for next_state in states:
+            transition_prob = P[state][action][next_state]
+            
+            # Over all possible rewards
+            for reward_value in possible_rewards:
+                reward_prob = reward_distribution[state][action][next_state][reward_value]
+                
+                outcome = reward_value + gamma * V[next_state]
+                total_expectation += (action_prob * transition_prob * 
+                                    reward_prob * outcome)
+    
+    return total_expectation
+
+# Risk-sensitive alternatives to expectation
+def conditional_value_at_risk(returns, alpha=0.05):
+    """
+    CVaR: expected value of worst α fraction of outcomes
+    """
+    sorted_returns = sorted(returns)
+    cutoff_index = int(alpha * len(returns))
+    worst_outcomes = sorted_returns[:cutoff_index]
+    return np.mean(worst_outcomes)
+
+def worst_case_value(action_values):
+    """
+    Robust control: assume worst-case outcome
+    """
+    return min(action_values)
+                            </div>
+                            
+                            <p><strong>Sources of Randomness:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Policy Stochasticity:</strong> Random action selection</li>
+                                <li><strong>Transition Stochasticity:</strong> Random state transitions</li>
+                                <li><strong>Reward Stochasticity:</strong> Random reward values</li>
+                                <li><strong>Initial State:</strong> Random starting conditions</li>
+                            </ul>
+                            
+                            <p><strong>Alternatives to Expectation:</strong> Risk-sensitive RL, robust RL, distributional RL</p>
+                        `
+                    }
+                };
+                
+                const details = intuitionDetails[title];
+                if (details) {
+                    modal.show(`Value Function Intuition: ${title}`, details.content);
+                }
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week11_Slide205.html';
+            } else if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week11_Slide203.html';
+            }
+        });
+    </script>
+</body>
+</html>

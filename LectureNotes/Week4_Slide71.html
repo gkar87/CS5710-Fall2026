@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - SVM Introduction</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .definition-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .concept-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .svm-definition {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .concept-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .concept-card {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            padding: 25px;
+            border-left: 4px solid #0d9488;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .concept-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .concept-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .concept-description {
+            font-size: 1em;
+            line-height: 1.6;
+            color: #475569;
+        }
+
+        .key-features {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .feature-item {
+            padding: 12px 0;
+            color: #1e293b;
+            font-size: 1em;
+            border-bottom: 1px solid rgba(13, 148, 136, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .feature-item:last-child {
+            border-bottom: none;
+        }
+
+        .feature-icon {
+            font-size: 1.2em;
+            color: #0d9488;
+        }
+
+        .visualization-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .algorithm-comparison {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .algorithm-comparison:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            border-color: #0d9488;
+        }
+
+        .algorithm-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+            color: #0d9488;
+        }
+
+        .algorithm-name {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 15px;
+        }
+
+        .algorithm-description {
+            font-size: 0.95em;
+            line-height: 1.5;
+            color: #475569;
+            margin-bottom: 15px;
+        }
+
+        .strength-badge {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+            margin: 5px;
+            display: inline-block;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .comparison-grid { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 4</div>
+    <div class="slide-number">Slide 71 of 80</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Support Vector Machines (SVM) Introduction</h1>
+        
+        <div class="content-layout">
+            <div class="definition-section">
+                <h2 class="section-title">🎯 What is SVM?</h2>
+                
+                <div class="svm-definition">
+                    <strong>Support Vector Machine</strong> is a powerful supervised learning algorithm that finds the optimal hyperplane to separate classes with the <em>maximum margin</em>, making it highly effective for both linear and non-linear classification.
+                </div>
+                
+                <ul class="key-features">
+                    <li class="feature-item">
+                        <span class="feature-icon">📏</span>
+                        <span><strong>Maximum Margin:</strong> Finds the widest possible gap between classes</span>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-icon">🎯</span>
+                        <span><strong>Support Vectors:</strong> Uses only the most critical data points</span>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-icon">🔄</span>
+                        <span><strong>Kernel Trick:</strong> Handles non-linear data elegantly</span>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-icon">💪</span>
+                        <span><strong>Robust:</strong> Works well with high-dimensional data</span>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-icon">🎮</span>
+                        <span><strong>Versatile:</strong> Classification, regression, and outlier detection</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="concept-section">
+                <h2 class="section-title">💡 Core Concepts</h2>
+                
+                <div class="concept-cards">
+                    <div class="concept-card">
+                        <div class="concept-title">
+                            📐 Hyperplane
+                        </div>
+                        <div class="concept-description">
+                            A decision boundary that separates classes in n-dimensional space. In 2D it's a line, in 3D it's a plane.
+                        </div>
+                    </div>
+
+                    <div class="concept-card">
+                        <div class="concept-title">
+                            🎯 Support Vectors
+                        </div>
+                        <div class="concept-description">
+                            Data points closest to the hyperplane that determine its position. Only these points matter for the model.
+                        </div>
+                    </div>
+
+                    <div class="concept-card">
+                        <div class="concept-title">
+                            📏 Margin
+                        </div>
+                        <div class="concept-description">
+                            The distance between the hyperplane and nearest data points. SVM maximizes this margin for better generalization.
+                        </div>
+                    </div>
+
+                    <div class="concept-card">
+                        <div class="concept-title">
+                            🌀 Kernel Function
+                        </div>
+                        <div class="concept-description">
+                            Mathematical function that transforms data to higher dimensions where linear separation becomes possible.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="visualization-section">
+            <h2 class="section-title">⚖️ SVM vs Other Algorithms</h2>
+            <div class="comparison-grid">
+                <div class="algorithm-comparison">
+                    <div class="algorithm-icon">🌳</div>
+                    <div class="algorithm-name">Decision Trees</div>
+                    <div class="algorithm-description">
+                        Creates interpretable rules by recursively splitting data based on feature values.
+                    </div>
+                    <div class="strength-badge">Interpretable</div>
+                    <div class="strength-badge">Fast Training</div>
+                </div>
+                
+                <div class="algorithm-comparison">
+                    <div class="algorithm-icon">🎯</div>
+                    <div class="algorithm-name">Support Vector Machine</div>
+                    <div class="algorithm-description">
+                        Finds optimal separating hyperplane with maximum margin using support vectors.
+                    </div>
+                    <div class="strength-badge">High Accuracy</div>
+                    <div class="strength-badge">Kernel Trick</div>
+                </div>
+                
+                <div class="algorithm-comparison">
+                    <div class="algorithm-icon">📈</div>
+                    <div class="algorithm-name">Logistic Regression</div>
+                    <div class="algorithm-description">
+                        Uses probability-based approach to create linear decision boundaries.
+                    </div>
+                    <div class="strength-badge">Probabilities</div>
+                    <div class="strength-badge">Fast Prediction</div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 40px; padding: 30px; background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%); border-radius: 15px;">
+                <h3 style="color: #0d9488; margin-bottom: 15px; text-align: center;">🏆 When to Choose SVM</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-size: 1em;">
+                    <div>
+                        <strong style="color: #0d9488;">✅ Best for:</strong>
+                        <ul style="margin-left: 20px; margin-top: 10px; color: #1e293b;">
+                            <li>High-dimensional data</li>
+                            <li>Complex non-linear patterns</li>
+                            <li>Small to medium datasets</li>
+                            <li>Clear class separation</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <strong style="color: #dc2626;">⚠️ Avoid when:</strong>
+                        <ul style="margin-left: 20px; margin-top: 10px; color: #1e293b;">
+                            <li>Very large datasets (>100K samples)</li>
+                            <li>Need probability estimates</li>
+                            <li>Overlapping classes</li>
+                            <li>Noisy data with outliers</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week4_Slide70.html" class="nav-btn">← Previous</a>
+        <a href="Week4_Slide72.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive concept cards with modal
+        document.querySelectorAll('.concept-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('.concept-title').textContent.trim();
+                const description = this.querySelector('.concept-description').textContent.trim();
+                
+                const conceptDetails = {
+                    '📐 Hyperplane': {
+                        mathematical: 'w·x + b = 0, where w is the weight vector, x is the input vector, and b is the bias term',
+                        explanation: 'In 2D space, this is a line that divides the plane. In 3D, it\'s a plane that divides space. In higher dimensions, it\'s called a hyperplane.',
+                        example: 'For classifying emails as spam/not spam with 2 features (word count, sender reputation):\nHyperplane: 0.7×(word_count) + 0.3×(sender_rep) - 5 = 0',
+                        intuition: 'Think of it as drawing a line to separate red dots from blue dots, but in as many dimensions as you have features.'
+                    },
+                    '🎯 Support Vectors': {
+                        mathematical: 'Data points xi where yi(w·xi + b) = 1, meaning they lie exactly on the margin boundary',
+                        explanation: 'These are the "critical" training examples that determine the decision boundary. If you remove any other points, the boundary stays the same.',
+                        example: 'In a dataset of 1000 points, only 3-20 support vectors typically determine the entire decision boundary',
+                        intuition: 'Like the keystone in an arch - remove other stones and it stays up, but remove the keystone and it collapses.'
+                    },
+                    '📏 Margin': {
+                        mathematical: 'Margin = 2/||w||, where ||w|| is the magnitude of the weight vector',
+                        explanation: 'The width of the "road" between classes. SVM finds the widest possible road, making the classifier more robust to new data.',
+                        example: 'If the margin is wide, small changes in new data points won\'t affect classification. Narrow margins are more sensitive.',
+                        intuition: 'Like driving on a wide highway vs. narrow road - wide gives more room for error and feels safer.'
+                    },
+                    '🌀 Kernel Function': {
+                        mathematical: 'K(xi, xj) maps data to higher dimensional space: φ(xi)·φ(xj)',
+                        explanation: 'Mathematical trick that allows linear separation in transformed space without explicitly computing the transformation.',
+                        example: 'Data that forms concentric circles (non-linearly separable) becomes linearly separable after kernel transformation',
+                        intuition: 'Like looking at Earth from space - curved surface appears flat from the right perspective.'
+                    }
+                };
+                
+                const details = conceptDetails[title];
+                if (details) {
+                    modal.show(title, `
+                        <div class="modal-highlight">
+                            <strong>${description}</strong>
+                        </div>
+                        <div class="modal-code">
+                            <strong>Mathematical Definition:</strong><br>
+                            ${details.mathematical}
+                        </div>
+                        <p><strong>📚 Detailed Explanation:</strong><br>
+                        ${details.explanation}</p>
+                        <div class="modal-highlight">
+                            <strong>💡 Example:</strong><br>
+                            ${details.example}
+                        </div>
+                        <p><strong>🧠 Intuition:</strong> ${details.intuition}</p>
+                    `);
+                }
+            });
+        });
+
+        // Interactive algorithm comparison cards
+        document.querySelectorAll('.algorithm-comparison').forEach(card => {
+            card.addEventListener('click', function() {
+                const algorithmName = this.querySelector('.algorithm-name').textContent;
+                const algorithmDesc = this.querySelector('.algorithm-description').textContent;
+                
+                const algorithmDetails = {
+                    'Decision Trees': {
+                        strengths: 'Highly interpretable, handles mixed data types, no need for feature scaling, captures feature interactions naturally',
+                        weaknesses: 'Prone to overfitting, unstable (small data changes cause large tree changes), biased toward features with many values',
+                        complexity: 'Training: O(n log n × m × d), Prediction: O(d) where n=samples, m=features, d=depth',
+                        useCases: 'Rule-based decisions, feature selection, model interpretation, handling missing values'
+                    },
+                    'Support Vector Machine': {
+                        strengths: 'Excellent for high-dimensional data, memory efficient (stores only support vectors), versatile with kernels, robust to outliers',
+                        weaknesses: 'Slow on large datasets, no probability estimates, sensitive to feature scaling, many hyperparameters to tune',
+                        complexity: 'Training: O(n²) to O(n³), Prediction: O(k) where k=number of support vectors',
+                        useCases: 'Text classification, image classification, gene classification, any high-dimensional problem'
+                    },
+                    'Logistic Regression': {
+                        strengths: 'Provides probability estimates, fast training and prediction, no tuning of hyperparameters, less prone to overfitting',
+                        weaknesses: 'Assumes linear relationship, sensitive to outliers, requires feature scaling, struggles with complex relationships',
+                        complexity: 'Training: O(n × m), Prediction: O(m) where n=samples, m=features',
+                        useCases: 'Probability needed, baseline models, large datasets, when interpretability is important'
+                    }
+                };
+                
+                const details = algorithmDetails[algorithmName];
+                if (details) {
+                    modal.show(`Algorithm Deep Dive: ${algorithmName}`, `
+                        <div class="modal-highlight">
+                            <p>${algorithmDesc}</p>
+                        </div>
+                        <p><strong>✅ Strengths:</strong><br>
+                        ${details.strengths}</p>
+                        <p><strong>⚠️ Limitations:</strong><br>
+                        ${details.weaknesses}</p>
+                        <div class="modal-code">
+                            <strong>Time Complexity:</strong><br>
+                            ${details.complexity}
+                        </div>
+                        <p><strong>🎯 Best Use Cases:</strong><br>
+                        ${details.useCases}</p>
+                    `);
+                }
+            });
+        });
+
+        // Interactive feature items with modal
+        document.querySelectorAll('.feature-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const text = this.textContent.trim();
+                const featureName = text.split(':')[0];
+                
+                const featureDetails = {
+                    'Maximum Margin': {
+                        explanation: 'SVM doesn\'t just find any separating line - it finds the line that maximizes the distance to the nearest points from both classes.',
+                        benefit: 'Wider margins lead to better generalization on unseen data. It\'s like having a safety buffer.',
+                        formula: 'Margin = 2/||w|| where w is the weight vector. SVM minimizes ||w|| to maximize margin.',
+                        realWorld: 'In spam detection, a wide margin means the classifier is confident about borderline emails, reducing false positives.'
+                    },
+                    'Support Vectors': {
+                        explanation: 'Only the data points that lie on the margin boundary (or within it for soft margin) influence the final model.',
+                        benefit: 'Memory efficient - you only need to store support vectors, not the entire training set. Typically 5-20% of training data.',
+                        formula: 'Support vectors xi satisfy: yi(w·xi + b) ≤ 1, with equality for points on the margin.',
+                        realWorld: 'In image recognition, only the most "boundary-defining" images matter - the clearly cat images and clearly dog images don\'t help define the boundary.'
+                    },
+                    'Kernel Trick': {
+                        explanation: 'Mathematical technique that allows SVM to work with non-linear data by implicitly mapping it to higher dimensions.',
+                        benefit: 'Handles complex patterns without explicitly computing high-dimensional transformations - computationally efficient.',
+                        formula: 'K(xi, xj) = φ(xi)·φ(xj) where φ maps to higher dimensions but we never compute φ explicitly.',
+                        realWorld: 'Allows SVMs to separate circular patterns, spiral patterns, or any complex shape by "lifting" the data to higher dimensions.'
+                    },
+                    'Robust': {
+                        explanation: 'SVM performance doesn\'t degrade much with high-dimensional data, unlike many other algorithms that suffer from the "curse of dimensionality".',
+                        benefit: 'Works well even when you have more features than training examples (p > n problems).',
+                        formula: 'The decision function depends only on dot products in feature space, not the dimensionality directly.',
+                        realWorld: 'Excellent for text classification where you might have 10,000+ word features but only 1,000 documents.'
+                    },
+                    'Versatile': {
+                        explanation: 'SVM can be adapted for classification, regression (SVR), and even outlier detection (One-Class SVM).',
+                        benefit: 'Same theoretical framework works for multiple problem types by changing the loss function.',
+                        formula: 'Classification: hinge loss, Regression: ε-insensitive loss, Outlier: one-class objective',
+                        realWorld: 'Use SVM for email classification, stock price prediction, and detecting fraudulent transactions - all with similar approaches.'
+                    }
+                };
+                
+                const details = featureDetails[featureName];
+                if (details) {
+                    modal.show(`SVM Feature: ${featureName}`, `
+                        <div class="modal-highlight">
+                            <h4>What it means:</h4>
+                            <p>${details.explanation}</p>
+                        </div>
+                        <p><strong>🎯 Why it matters:</strong><br>
+                        ${details.benefit}</p>
+                        <div class="modal-code">
+                            <strong>Mathematical insight:</strong><br>
+                            ${details.formula}
+                        </div>
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                            <strong>🌍 Real-world application:</strong><br>
+                            ${details.realWorld}
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week4_Slide70.html';
+            } else if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week4_Slide72.html';
+            }
+        });
+    </script>
+</body>
+</html>

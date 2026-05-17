@@ -1,0 +1,1539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Anomaly Detection Techniques</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .techniques-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .applications-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .technique-grid {
+            display: grid;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .technique-card {
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .technique-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .technique-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .technique-desc {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .use-cases-grid {
+            display: grid;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .use-case-card {
+            padding: 20px;
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 12px;
+            border: 2px solid #14b8a6;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .use-case-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .use-case-icon {
+            font-size: 1.8em;
+            margin-bottom: 10px;
+        }
+
+        .use-case-title {
+            font-size: 1em;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #0d9488;
+        }
+
+        .use-case-desc {
+            font-size: 0.85em;
+            color: #475569;
+            line-height: 1.4;
+        }
+
+        .demo-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .demo-workspace {
+            background: #1e293b;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            min-height: 300px;
+            position: relative;
+        }
+
+        .scatter-plot {
+            width: 100%;
+            height: 250px;
+            position: relative;
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .data-point {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .normal-point {
+            background: #5eead4;
+            box-shadow: 0 0 8px rgba(94, 234, 212, 0.6);
+        }
+
+        .anomaly-point {
+            background: #ef4444;
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.8);
+            animation: pulse 2s infinite;
+        }
+
+        .data-point:hover {
+            transform: scale(1.5);
+        }
+
+        .control-panel {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .control-group {
+            text-align: center;
+        }
+
+        .demo-button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border: none;
+            border-radius: 20px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px;
+            font-size: 0.9em;
+        }
+
+        .demo-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(13, 148, 136, 0.3);
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.2); }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .control-panel { grid-template-columns: 1fr; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 13</div>
+    <div class="slide-number">Slide 251 of 260</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">🔍 Anomaly Detection Techniques</h1>
+        
+        <div class="content-layout">
+            <div class="techniques-section">
+                <h2 class="section-title">🛠️ Core Techniques</h2>
+                
+                <div class="technique-grid">
+                    <div class="technique-card" data-technique="statistical">
+                        <div class="technique-title">📊 Statistical Methods</div>
+                        <div class="technique-desc">Z-score, IQR, Grubbs' test for identifying outliers based on statistical distributions</div>
+                    </div>
+                    
+                    <div class="technique-card" data-technique="isolation">
+                        <div class="technique-title">🌳 Isolation Forest</div>
+                        <div class="technique-desc">Isolates anomalies by randomly selecting features and split values</div>
+                    </div>
+                    
+                    <div class="technique-card" data-technique="svm">
+                        <div class="technique-title">🎯 One-Class SVM</div>
+                        <div class="technique-desc">Learns the boundary of normal data to identify outliers</div>
+                    </div>
+                    
+                    <div class="technique-card" data-technique="lof">
+                        <div class="technique-title">📍 Local Outlier Factor</div>
+                        <div class="technique-desc">Measures local density deviation of data points</div>
+                    </div>
+                    
+                    <div class="technique-card" data-technique="autoencoder">
+                        <div class="technique-title">🧠 Autoencoders</div>
+                        <div class="technique-desc">Neural networks that detect anomalies through reconstruction error</div>
+                    </div>
+                    
+                    <div class="technique-card" data-technique="dbscan">
+                        <div class="technique-title">🔗 DBSCAN</div>
+                        <div class="technique-desc">Density-based clustering that identifies noise points as anomalies</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="applications-section">
+                <h2 class="section-title">🚀 Real-World Applications</h2>
+                
+                <div class="use-cases-grid">
+                    <div class="use-case-card" data-usecase="fraud">
+                        <div class="use-case-icon">💳</div>
+                        <div class="use-case-title">Fraud Detection</div>
+                        <div class="use-case-desc">Credit card & banking fraud prevention</div>
+                    </div>
+                    
+                    <div class="use-case-card" data-usecase="cybersecurity">
+                        <div class="use-case-icon">🛡️</div>
+                        <div class="use-case-title">Cybersecurity</div>
+                        <div class="use-case-desc">Network intrusion and malware detection</div>
+                    </div>
+                    
+                    <div class="use-case-card" data-usecase="maintenance">
+                        <div class="use-case-icon">⚙️</div>
+                        <div class="use-case-title">Predictive Maintenance</div>
+                        <div class="use-case-desc">Equipment failure prediction</div>
+                    </div>
+                    
+                    <div class="use-case-card" data-usecase="medical">
+                        <div class="use-case-icon">🏥</div>
+                        <div class="use-case-title">Medical Diagnosis</div>
+                        <div class="use-case-desc">Rare disease detection in medical scans</div>
+                    </div>
+                    
+                    <div class="use-case-card" data-usecase="quality">
+                        <div class="use-case-icon">🏭</div>
+                        <div class="use-case-title">Quality Control</div>
+                        <div class="use-case-desc">Manufacturing defect detection</div>
+                    </div>
+                    
+                    <div class="use-case-card" data-usecase="finance">
+                        <div class="use-case-icon">📈</div>
+                        <div class="use-case-title">Algorithmic Trading</div>
+                        <div class="use-case-desc">Market anomaly and arbitrage detection</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2 class="section-title">🎮 Interactive Anomaly Detection Demo</h2>
+            
+            <div style="text-align: center; margin-bottom: 20px;">
+                <strong style="color: #0d9488; font-size: 1.2em;">
+                    Click data points to explore, or use controls to generate new datasets
+                </strong>
+            </div>
+            
+            <div class="demo-workspace">
+                <div class="scatter-plot" id="scatterPlot">
+                    <!-- Data points will be generated here -->
+                </div>
+            </div>
+            
+            <div class="control-panel">
+                <div class="control-group">
+                    <button class="demo-button" id="generateNormal">📊 Generate Normal Data</button>
+                    <button class="demo-button" id="addAnomalies">⚠️ Add Anomalies</button>
+                </div>
+                
+                <div class="control-group">
+                    <button class="demo-button" id="runIsolationForest">🌳 Isolation Forest</button>
+                    <button class="demo-button" id="runLOF">📍 Local Outlier Factor</button>
+                </div>
+                
+                <div class="control-group">
+                    <button class="demo-button" id="runOneClassSVM">🎯 One-Class SVM</button>
+                    <button class="demo-button" id="clearPlot">🧹 Clear Plot</button>
+                </div>
+            </div>
+            
+            <div style="margin-top: 20px; text-align: center;">
+                <div style="background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%); padding: 15px; border-radius: 10px; display: inline-block;">
+                    <span style="color: #5eead4;">🟢 Normal Points</span> &nbsp;&nbsp;
+                    <span style="color: #ef4444;">🔴 Detected Anomalies</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week13_Slide250.html" class="nav-btn">← Previous</a>
+        <a href="Week13_Slide252.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Anomaly Detection Demo
+        class AnomalyDetectionDemo {
+            constructor() {
+                this.plotElement = document.getElementById('scatterPlot');
+                this.dataPoints = [];
+                this.setupControls();
+                this.generateInitialData();
+            }
+            
+            setupControls() {
+                document.getElementById('generateNormal').addEventListener('click', () => this.generateNormalData());
+                document.getElementById('addAnomalies').addEventListener('click', () => this.addAnomalies());
+                document.getElementById('runIsolationForest').addEventListener('click', () => this.runIsolationForest());
+                document.getElementById('runLOF').addEventListener('click', () => this.runLOF());
+                document.getElementById('runOneClassSVM').addEventListener('click', () => this.runOneClassSVM());
+                document.getElementById('clearPlot').addEventListener('click', () => this.clearPlot());
+            }
+            
+            generateInitialData() {
+                this.generateNormalData();
+                setTimeout(() => this.addAnomalies(), 1000);
+            }
+            
+            generateNormalData() {
+                this.clearPlot();
+                
+                // Generate normal data points (Gaussian distribution)
+                for (let i = 0; i < 100; i++) {
+                    const x = this.gaussianRandom(50, 15);
+                    const y = this.gaussianRandom(50, 15);
+                    this.addDataPoint(x, y, 'normal');
+                }
+            }
+            
+            addAnomalies() {
+                // Add some anomalous data points
+                const anomalies = [
+                    [10, 10], [90, 90], [10, 90], [90, 10],
+                    [20, 80], [80, 20], [5, 50], [95, 50]
+                ];
+                
+                anomalies.forEach(([x, y]) => {
+                    this.addDataPoint(x, y, 'anomaly');
+                });
+            }
+            
+            addDataPoint(x, y, type) {
+                const point = document.createElement('div');
+                point.className = `data-point ${type}-point`;
+                point.style.left = Math.max(0, Math.min(100, x)) + '%';
+                point.style.top = Math.max(0, Math.min(100, y)) + '%';
+                
+                point.addEventListener('click', () => {
+                    this.showPointInfo(x, y, type);
+                });
+                
+                this.plotElement.appendChild(point);
+                this.dataPoints.push({x, y, type, element: point});
+            }
+            
+            showPointInfo(x, y, type) {
+                modal.show(`Data Point Information`, `
+                    <div class="modal-highlight">
+                        <strong>Point Details</strong>
+                    </div>
+                    <p><strong>Coordinates:</strong> (${x.toFixed(2)}, ${y.toFixed(2)})</p>
+                    <p><strong>Type:</strong> ${type === 'normal' ? 'Normal Data Point' : 'Anomaly'}</p>
+                    <p><strong>Classification:</strong> ${type === 'anomaly' ? '🔴 Outlier' : '🟢 Inlier'}</p>
+                    
+                    <div style="margin-top: 20px;">
+                        <h4>Detection Methods:</h4>
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            <li><strong>Statistical:</strong> ${this.getStatisticalScore(x, y)}</li>
+                            <li><strong>Distance-based:</strong> ${this.getDistanceScore(x, y)}</li>
+                            <li><strong>Density-based:</strong> ${this.getDensityScore(x, y)}</li>
+                        </ul>
+                    </div>
+                `);
+            }
+            
+            getStatisticalScore(x, y) {
+                const distFromCenter = Math.sqrt((x-50)**2 + (y-50)**2);
+                return distFromCenter > 40 ? 'High anomaly score' : 'Normal range';
+            }
+            
+            getDistanceScore(x, y) {
+                return Math.random() > 0.7 ? 'Isolated point' : 'Well-connected';
+            }
+            
+            getDensityScore(x, y) {
+                return Math.random() > 0.6 ? 'Low density region' : 'High density region';
+            }
+            
+            runIsolationForest() {
+                this.simulateAlgorithm('Isolation Forest', 'Random feature selection and isolation path length');
+            }
+            
+            runLOF() {
+                this.simulateAlgorithm('Local Outlier Factor', 'Local density comparison with neighbors');
+            }
+            
+            runOneClassSVM() {
+                this.simulateAlgorithm('One-Class SVM', 'Decision boundary learning for normal data');
+            }
+            
+            simulateAlgorithm(name, description) {
+                modal.show(`🔬 ${name} Results`, `
+                    <div class="modal-highlight">
+                        <strong>Algorithm: ${name}</strong>
+                    </div>
+                    <p><strong>Method:</strong> ${description}</p>
+                    <p><strong>Dataset:</strong> ${this.dataPoints.length} total points</p>
+                    
+                    <div class="modal-code">
+# ${name} Implementation
+from sklearn.ensemble import IsolationForest
+from sklearn.neighbors import LocalOutlierFactor
+from sklearn.svm import OneClassSVM
+
+# Prepare data
+X = np.array([[${this.dataPoints.slice(0,3).map(p => `${p.x.toFixed(1)}, ${p.y.toFixed(1)}`).join('], [')}], ...])
+
+# Run algorithm
+${name.toLowerCase().replace(/\s+/g, '_')}_detector = ${this.getAlgorithmCode(name)}
+anomaly_scores = detector.fit_predict(X)
+
+# Results: -1 = anomaly, 1 = normal
+print(f"Detected {np.sum(anomaly_scores == -1)} anomalies")
+                    </div>
+                    
+                    <div style="margin-top: 20px;">
+                        <h4>🎯 Detection Results:</h4>
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            <li><strong>True Positives:</strong> ${Math.floor(Math.random() * 6 + 6)} anomalies detected</li>
+                            <li><strong>False Positives:</strong> ${Math.floor(Math.random() * 3 + 1)} normal points flagged</li>
+                            <li><strong>Precision:</strong> ${(85 + Math.random() * 10).toFixed(1)}%</li>
+                            <li><strong>Recall:</strong> ${(80 + Math.random() * 15).toFixed(1)}%</li>
+                        </ul>
+                    </div>
+                `);
+            }
+            
+            getAlgorithmCode(name) {
+                const codes = {
+                    'Isolation Forest': 'IsolationForest(contamination=0.1, random_state=42)',
+                    'Local Outlier Factor': 'LocalOutlierFactor(n_neighbors=5, contamination=0.1)',
+                    'One-Class SVM': 'OneClassSVM(gamma="scale", nu=0.1)'
+                };
+                return codes[name] || 'Detector()';
+            }
+            
+            clearPlot() {
+                this.plotElement.innerHTML = '';
+                this.dataPoints = [];
+            }
+            
+            gaussianRandom(mean, std) {
+                const u = 0, v = 0;
+                let u1, v1;
+                do {
+                    u1 = Math.random();
+                    v1 = Math.random();
+                } while (u1 === 0);
+                
+                const z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2 * Math.PI * v1);
+                return z0 * std + mean;
+            }
+        }
+
+        // Technique Details
+        document.querySelectorAll('.technique-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const technique = this.dataset.technique;
+                
+                const techniqueDetails = {
+                    'statistical': {
+                        title: '📊 Statistical Anomaly Detection',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Classical statistical methods for outlier detection</strong>
+                            </div>
+                            <p><strong>🔢 Core Methods:</strong></p>
+                            <ul style="margin: 15px 0; padding-left: 20px;">
+                                <li><strong>Z-Score:</strong> (x - μ) / σ > threshold (typically 2-3)</li>
+                                <li><strong>IQR Method:</strong> Points outside Q1 - 1.5*IQR or Q3 + 1.5*IQR</li>
+                                <li><strong>Grubbs' Test:</strong> Statistical test for single outliers</li>
+                                <li><strong>Modified Z-Score:</strong> Uses median absolute deviation</li>
+                            </ul>
+                            <div class="modal-code">
+import numpy as np
+from scipy import stats
+
+# Z-Score method
+def detect_outliers_zscore(data, threshold=3):
+    z_scores = np.abs(stats.zscore(data))
+    return np.where(z_scores > threshold)[0]
+
+# IQR method
+def detect_outliers_iqr(data):
+    Q1 = np.percentile(data, 25)
+    Q3 = np.percentile(data, 75)
+    IQR = Q3 - Q1
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+    return np.where((data < lower_bound) | (data > upper_bound))[0]
+                            </div>
+                            <p><strong>✅ Pros:</strong> Simple, interpretable, fast, no training required</p>
+                            <p><strong>❌ Cons:</strong> Assumes normal distribution, struggles with multivariate data</p>
+                        `
+                    },
+                    'isolation': {
+                        title: '🌳 Isolation Forest',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Tree-based anomaly detection using isolation</strong>
+                            </div>
+                            <p><strong>💡 Key Insight:</strong> Anomalies are easier to isolate than normal points</p>
+                            <p><strong>🔄 Algorithm Steps:</strong></p>
+                            <ol style="margin: 15px 0; padding-left: 20px;">
+                                <li>Randomly select a feature and split value</li>
+                                <li>Recursively partition data until points are isolated</li>
+                                <li>Count path length to isolation</li>
+                                <li>Short paths indicate anomalies</li>
+                            </ol>
+                            <div class="modal-code">
+from sklearn.ensemble import IsolationForest
+
+# Create and train Isolation Forest
+iso_forest = IsolationForest(
+    contamination=0.1,    # Expected proportion of anomalies
+    n_estimators=100,     # Number of trees
+    max_samples='auto',   # Samples per tree
+    random_state=42
+)
+
+# Fit and predict
+anomaly_labels = iso_forest.fit_predict(X)
+anomaly_scores = iso_forest.decision_function(X)
+
+# -1 = anomaly, 1 = normal
+anomalies = X[anomaly_labels == -1]
+                            </div>
+                            <p><strong>✅ Pros:</strong> No assumptions about data distribution, handles high dimensions, linear time complexity</p>
+                            <p><strong>❌ Cons:</strong> Parameter tuning needed, may struggle with very high-dimensional data</p>
+                        `
+                    },
+                    'svm': {
+                        title: '🎯 One-Class SVM',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Support Vector Machine for novelty detection</strong>
+                            </div>
+                            <p><strong>🎯 Goal:</strong> Learn a decision boundary that encompasses normal data</p>
+                            <p><strong>🧮 Mathematical Approach:</strong></p>
+                            <ul style="margin: 15px 0; padding-left: 20px;">
+                                <li>Find hyperplane that separates normal data from origin</li>
+                                <li>Maximize margin between data and origin</li>
+                                <li>Use kernel trick for non-linear boundaries</li>
+                                <li>Nu parameter controls boundary tightness</li>
+                            </ul>
+                            <div class="modal-code">
+from sklearn.svm import OneClassSVM
+
+# Create One-Class SVM
+svm_detector = OneClassSVM(
+    kernel='rbf',         # Radial basis function kernel
+    gamma='scale',        # Kernel coefficient
+    nu=0.05,             # Upper bound on fraction of outliers
+    shrinking=True       # Use shrinking heuristic
+)
+
+# Train on normal data only
+svm_detector.fit(X_normal)
+
+# Predict on new data
+predictions = svm_detector.predict(X_test)
+decision_scores = svm_detector.decision_function(X_test)
+
+# Positive scores = normal, negative = anomaly
+                            </div>
+                            <p><strong>✅ Pros:</strong> Effective in high dimensions, memory efficient, customizable kernels</p>
+                            <p><strong>❌ Cons:</strong> Sensitive to feature scaling, hyperparameter selection critical</p>
+                        `
+                    },
+                    'lof': {
+                        title: '📍 Local Outlier Factor (LOF)',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Density-based anomaly detection using local neighborhoods</strong>
+                            </div>
+                            <p><strong>📐 Core Concept:</strong> Compare local density of a point to the density of its neighbors</p>
+                            <p><strong>🔢 Algorithm Steps:</strong></p>
+                            <ol style="margin: 15px 0; padding-left: 20px;">
+                                <li>Find k-nearest neighbors for each point</li>
+                                <li>Calculate local reachability density (LRD)</li>
+                                <li>Compare point's LRD to neighbors' LRD</li>
+                                <li>LOF > 1.5 typically indicates anomaly</li>
+                            </ol>
+                            <div class="modal-code">
+from sklearn.neighbors import LocalOutlierFactor
+
+# Create LOF detector
+lof_detector = LocalOutlierFactor(
+    n_neighbors=20,       # Number of neighbors to consider
+    contamination=0.1,    # Expected outlier fraction
+    metric='euclidean',   # Distance metric
+    algorithm='auto'      # Algorithm for neighbor search
+)
+
+# Fit and predict in one step
+outlier_labels = lof_detector.fit_predict(X)
+
+# Get LOF scores (negative = more abnormal)
+lof_scores = lof_detector.negative_outlier_factor_
+
+# Identify outliers
+outliers = X[outlier_labels == -1]
+print(f"Detected {len(outliers)} outliers")
+                            </div>
+                            <p><strong>✅ Pros:</strong> Handles varying densities, local anomaly detection, no global assumptions</p>
+                            <p><strong>❌ Cons:</strong> Sensitive to k parameter, computationally expensive for large datasets</p>
+                        `
+                    },
+                    'autoencoder': {
+                        title: '🧠 Autoencoder Anomaly Detection',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Neural network approach using reconstruction error</strong>
+                            </div>
+                            <p><strong>🔄 Architecture:</strong> Encoder → Bottleneck → Decoder</p>
+                            <p><strong>💡 Detection Logic:</strong> Normal data reconstructs well, anomalies have high reconstruction error</p>
+                            <div class="modal-code">
+import torch
+import torch.nn as nn
+import torch.optim as optim
+
+class Autoencoder(nn.Module):
+    def __init__(self, input_dim, encoding_dim):
+        super().__init__()
+        # Encoder
+        self.encoder = nn.Sequential(
+            nn.Linear(input_dim, 128),
+            nn.ReLU(),
+            nn.Linear(128, 64),
+            nn.ReLU(),
+            nn.Linear(64, encoding_dim),
+            nn.ReLU()
+        )
+        
+        # Decoder
+        self.decoder = nn.Sequential(
+            nn.Linear(encoding_dim, 64),
+            nn.ReLU(),
+            nn.Linear(64, 128),
+            nn.ReLU(),
+            nn.Linear(128, input_dim),
+            nn.Sigmoid()
+        )
+    
+    def forward(self, x):
+        encoded = self.encoder(x)
+        decoded = self.decoder(encoded)
+        return decoded
+
+# Training
+autoencoder = Autoencoder(input_dim=784, encoding_dim=32)
+criterion = nn.MSELoss()
+optimizer = optim.Adam(autoencoder.parameters())
+
+# Anomaly detection
+reconstruction_errors = []
+for data in test_loader:
+    reconstructed = autoencoder(data)
+    error = criterion(reconstructed, data)
+    reconstruction_errors.append(error.item())
+
+# Threshold-based detection
+threshold = np.percentile(reconstruction_errors, 95)
+anomalies = np.array(reconstruction_errors) > threshold
+                            </div>
+                            <p><strong>✅ Pros:</strong> Learns complex patterns, handles high-dimensional data, unsupervised learning</p>
+                            <p><strong>❌ Cons:</strong> Requires hyperparameter tuning, black box, needs sufficient training data</p>
+                        `
+                    },
+                    'dbscan': {
+                        title: '🔗 DBSCAN for Anomaly Detection',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Density-based clustering that identifies noise as anomalies</strong>
+                            </div>
+                            <p><strong>🎯 Key Idea:</strong> Points that don't belong to any dense cluster are anomalies</p>
+                            <p><strong>⚙️ Parameters:</strong></p>
+                            <ul style="margin: 15px 0; padding-left: 20px;">
+                                <li><strong>eps (ε):</strong> Maximum distance between points in a cluster</li>
+                                <li><strong>min_samples:</strong> Minimum points required to form a cluster</li>
+                                <li><strong>Core points:</strong> Have ≥ min_samples within eps</li>
+                                <li><strong>Noise points:</strong> Don't belong to any cluster (anomalies)</li>
+                            </ul>
+                            <div class="modal-code">
+from sklearn.cluster import DBSCAN
+import numpy as np
+
+# Apply DBSCAN clustering
+dbscan = DBSCAN(
+    eps=0.5,              # Maximum distance between samples
+    min_samples=5,        # Minimum samples in neighborhood
+    metric='euclidean',   # Distance metric
+    algorithm='auto'      # Algorithm for neighbor search
+)
+
+# Fit and get cluster labels
+cluster_labels = dbscan.fit_predict(X)
+
+# Identify anomalies (label = -1)
+anomalies = X[cluster_labels == -1]
+normal_points = X[cluster_labels != -1]
+
+print(f"Found {len(anomalies)} anomalies out of {len(X)} points")
+print(f"Formed {len(set(cluster_labels)) - (1 if -1 in cluster_labels else 0)} clusters")
+
+# Visualize results
+import matplotlib.pyplot as plt
+plt.scatter(normal_points[:, 0], normal_points[:, 1], c='blue', alpha=0.6, label='Normal')
+plt.scatter(anomalies[:, 0], anomalies[:, 1], c='red', alpha=0.8, label='Anomalies')
+plt.legend()
+                            </div>
+                            <p><strong>✅ Pros:</strong> No need to specify number of clusters, finds arbitrary shaped clusters, robust to outliers</p>
+                            <p><strong>❌ Cons:</strong> Sensitive to eps and min_samples, struggles with varying densities</p>
+                        `
+                    }
+                };
+                
+                const details = techniqueDetails[technique];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        // Use Case Details
+        document.querySelectorAll('.use-case-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const usecase = this.dataset.usecase;
+                
+                const useCaseDetails = {
+                    'fraud': {
+                        title: '💳 Fraud Detection Systems',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Real-time financial fraud prevention</strong>
+                            </div>
+                            <p><strong>🎯 Challenge:</strong> Detect fraudulent transactions among millions of legitimate ones</p>
+                            <p><strong>📊 Typical Features:</strong></p>
+                            <ul style="margin: 15px 0; padding-left: 20px;">
+                                <li>Transaction amount and frequency</li>
+                                <li>Merchant category and location</li>
+                                <li>Time of day and day of week</li>
+                                <li>User behavior patterns</li>
+                                <li>Device and IP information</li>
+                            </ul>
+                            <div class="modal-code">
+# Fraud detection pipeline
+features = [
+    'amount', 'merchant_category', 'hour_of_day',
+    'days_since_last_transaction', 'location_risk_score',
+    'device_fingerprint', 'velocity_1h', 'velocity_24h'
+]
+
+# Ensemble approach
+from sklearn.ensemble import IsolationForest
+from sklearn.svm import OneClassSVM
+from sklearn.neighbors import LocalOutlierFactor
+
+# Train multiple detectors
+iso_forest = IsolationForest(contamination=0.001)  # 0.1% fraud rate
+svm_detector = OneClassSVM(nu=0.001)
+lof_detector = LocalOutlierFactor(contamination=0.001)
+
+# Voting ensemble
+predictions = []
+predictions.append(iso_forest.fit_predict(X))
+predictions.append(svm_detector.fit_predict(X))
+predictions.append(lof_detector.fit_predict(X))
+
+# Majority vote
+final_prediction = np.mean(predictions, axis=0) < 0
+                            </div>
+                            <p><strong>📈 Performance Metrics:</strong></p>
+                            <ul style="margin: 15px 0; padding-left: 20px;">
+                                <li><strong>Precision:</strong> 85-95% (minimize false positives)</li>
+                                <li><strong>Recall:</strong> 70-85% (catch most fraud)</li>
+                                <li><strong>Latency:</strong> < 100ms for real-time decisions</li>
+                                <li><strong>Cost Savings:</strong> $10M+ annually for large banks</li>
+                            </ul>
+                        `
+                    },
+                    'cybersecurity': {
+                        title: '🛡️ Cybersecurity & Network Intrusion Detection',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Protecting networks from cyber threats</strong>
+                            </div>
+                            <p><strong>🔍 Detection Types:</strong></p>
+                            <ul style="margin: 15px 0; padding-left: 20px;">
+                                <li><strong>Network intrusions:</strong> Unusual traffic patterns</li>
+                                <li><strong>Malware detection:</strong> Abnormal file behaviors</li>
+                                <li><strong>DDoS attacks:</strong> Traffic volume anomalies</li>
+                                <li><strong>Insider threats:</strong> Unusual user activities</li>
+                            </ul>
+                            <div class="modal-code">
+# Network traffic anomaly detection
+import pandas as pd
+from sklearn.preprocessing import StandardScaler
+
+# Network features
+features = [
+    'packet_count', 'byte_count', 'duration',
+    'src_port', 'dst_port', 'protocol_type',
+    'flag_status', 'connection_state'
+]
+
+# Preprocess network logs
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(network_data[features])
+
+# LSTM Autoencoder for sequence anomalies
+from tensorflow.keras import Sequential
+from tensorflow.keras.layers import LSTM, Dense, RepeatVector, TimeDistributed
+
+model = Sequential([
+    LSTM(50, activation='relu', input_shape=(timesteps, n_features)),
+    RepeatVector(timesteps),
+    LSTM(50, activation='relu', return_sequences=True),
+    TimeDistributed(Dense(n_features))
+])
+
+model.compile(optimizer='adam', loss='mse')
+model.fit(X_normal, X_normal, epochs=100, batch_size=32, validation_split=0.1)
+
+# Detect anomalies based on reconstruction error
+reconstructed = model.predict(X_test)
+mse = np.mean(np.power(X_test - reconstructed, 2), axis=1)
+threshold = np.percentile(mse, 95)
+anomalies = mse > threshold
+                            </div>
+                            <p><strong>🏢 Industry Impact:</strong> Prevents billions in cybersecurity damages, protects critical infrastructure</p>
+                        `
+                    },
+                    'maintenance': {
+                        title: '⚙️ Predictive Maintenance',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Preventing equipment failures before they happen</strong>
+                            </div>
+                            <p><strong>🔧 Applications:</strong> Aircraft engines, manufacturing equipment, wind turbines, oil rigs</p>
+                            <p><strong>📡 Sensor Data:</strong></p>
+                            <ul style="margin: 15px 0; padding-left: 20px;">
+                                <li>Vibration patterns and frequencies</li>
+                                <li>Temperature and pressure readings</li>
+                                <li>Acoustic emissions and sound patterns</li>
+                                <li>Oil analysis and contamination levels</li>
+                                <li>Current and voltage measurements</li>
+                            </ul>
+                            <div class="modal-code">
+# Predictive maintenance pipeline
+import numpy as np
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.ensemble import IsolationForest
+
+# Time-series features extraction
+def extract_features(signal, window_size=100):
+    features = []
+    for i in range(0, len(signal) - window_size, window_size//2):
+        window = signal[i:i+window_size]
+        features.append([
+            np.mean(window),           # Mean
+            np.std(window),            # Standard deviation
+            np.max(window) - np.min(window),  # Range
+            np.percentile(window, 75) - np.percentile(window, 25),  # IQR
+            np.mean(np.abs(np.diff(window))),  # Mean absolute difference
+            np.sum(window > np.mean(window) + 2*np.std(window))  # Outlier count
+        ])
+    return np.array(features)
+
+# Anomaly detection on sensor readings
+vibration_features = extract_features(vibration_data)
+temp_features = extract_features(temperature_data)
+combined_features = np.hstack([vibration_features, temp_features])
+
+# Train on normal operating conditions
+detector = IsolationForest(contamination=0.05, random_state=42)
+detector.fit(combined_features)
+
+# Real-time monitoring
+def monitor_equipment(new_data):
+    features = extract_features(new_data)
+    anomaly_score = detector.decision_function(features)
+    if np.mean(anomaly_score) < threshold:
+        return "ALERT: Equipment anomaly detected!"
+    return "Normal operation"
+                            </div>
+                            <p><strong>💰 ROI:</strong> 15-25% reduction in maintenance costs, 70-90% reduction in unplanned downtime</p>
+                        `
+                    },
+                    'medical': {
+                        title: '🏥 Medical Anomaly Detection',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Early detection of rare diseases and medical conditions</strong>
+                            </div>
+                            <p><strong>🔬 Medical Applications:</strong></p>
+                            <ul style="margin: 15px 0; padding-left: 20px;">
+                                <li><strong>Radiology:</strong> Detecting tumors in CT/MRI scans</li>
+                                <li><strong>Cardiology:</strong> Identifying arrhythmias in ECG</li>
+                                <li><strong>Pathology:</strong> Unusual cell patterns in biopsies</li>
+                                <li><strong>Drug safety:</strong> Adverse reaction detection</li>
+                            </ul>
+                            <div class="modal-code">
+# Medical image anomaly detection
+import tensorflow as tf
+from tensorflow.keras.applications import VGG16
+
+# Feature extraction from medical images
+base_model = VGG16(weights='imagenet', include_top=False)
+feature_extractor = tf.keras.Model(
+    inputs=base_model.input,
+    outputs=base_model.layers[-2].output
+)
+
+# Extract features from normal scans
+normal_features = []
+for image in normal_medical_images:
+    features = feature_extractor.predict(image)
+    normal_features.append(features.flatten())
+
+normal_features = np.array(normal_features)
+
+# Train autoencoder on normal features
+from sklearn.decomposition import PCA
+from sklearn.svm import OneClassSVM
+
+# Dimensionality reduction
+pca = PCA(n_components=100)
+reduced_features = pca.fit_transform(normal_features)
+
+# One-Class SVM for anomaly detection
+svm_detector = OneClassSVM(nu=0.1, gamma='scale')
+svm_detector.fit(reduced_features)
+
+# Detect anomalies in new scans
+def detect_medical_anomaly(new_image):
+    features = feature_extractor.predict(new_image).flatten()
+    reduced = pca.transform([features])
+    prediction = svm_detector.predict(reduced)
+    confidence = svm_detector.decision_function(reduced)
+    
+    if prediction[0] == -1:
+        return f"Anomaly detected (confidence: {abs(confidence[0]):.3f})"
+    else:
+        return "Normal scan"
+                            </div>
+                            <p><strong>⚕️ Clinical Impact:</strong> Earlier disease detection, reduced diagnostic errors, improved patient outcomes</p>
+                        `
+                    },
+                    'quality': {
+                        title: '🏭 Manufacturing Quality Control',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Automated defect detection in manufacturing processes</strong>
+                            </div>
+                            <p><strong>🏭 Manufacturing Applications:</strong></p>
+                            <ul style="margin: 15px 0; padding-left: 20px;">
+                                <li><strong>Visual inspection:</strong> Surface defects, scratches, dents</li>
+                                <li><strong>Dimensional analysis:</strong> Size and shape variations</li>
+                                <li><strong>Process monitoring:</strong> Temperature, pressure, timing anomalies</li>
+                                <li><strong>Assembly verification:</strong> Missing or misplaced components</li>
+                            </ul>
+                            <div class="modal-code">
+# Computer vision quality control
+import cv2
+import numpy as np
+from sklearn.cluster import DBSCAN
+
+class QualityControlSystem:
+    def __init__(self):
+        self.reference_template = None
+        self.defect_detector = None
+    
+    def setup_reference(self, good_samples):
+        # Create reference template from good samples
+        self.reference_template = np.mean(good_samples, axis=0)
+        
+        # Train anomaly detector on good samples
+        features = self.extract_features(good_samples)
+        self.defect_detector = IsolationForest(contamination=0.05)
+        self.defect_detector.fit(features)
+    
+    def extract_features(self, images):
+        features = []
+        for img in images:
+            # Statistical features
+            mean_intensity = np.mean(img)
+            std_intensity = np.std(img)
+            
+            # Texture features (Haralick features)
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            edges = cv2.Canny(gray, 50, 150)
+            edge_density = np.sum(edges > 0) / edges.size
+            
+            # Shape features
+            contours, _ = cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            if contours:
+                largest_contour = max(contours, key=cv2.contourArea)
+                area = cv2.contourArea(largest_contour)
+                perimeter = cv2.arcLength(largest_contour, True)
+                circularity = 4 * np.pi * area / (perimeter ** 2) if perimeter > 0 else 0
+            else:
+                area, perimeter, circularity = 0, 0, 0
+            
+            features.append([mean_intensity, std_intensity, edge_density, area, circularity])
+        
+        return np.array(features)
+    
+    def inspect_product(self, test_image):
+        features = self.extract_features([test_image])
+        anomaly_score = self.defect_detector.decision_function(features)
+        
+        if anomaly_score[0] < -0.1:  # Threshold for defect
+            return "DEFECT DETECTED", abs(anomaly_score[0])
+        else:
+            return "PASS", anomaly_score[0]
+
+# Usage
+qc_system = QualityControlSystem()
+qc_system.setup_reference(good_product_images)
+
+# Inspect new products
+for product_image in production_line:
+    result, confidence = qc_system.inspect_product(product_image)
+    print(f"Product: {result} (Confidence: {confidence:.3f})")
+                            </div>
+                            <p><strong>📊 Benefits:</strong> 99%+ defect detection accuracy, 50% reduction in manual inspection time</p>
+                        `
+                    },
+                    'finance': {
+                        title: '📈 Algorithmic Trading Anomaly Detection',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Detecting market anomalies and trading opportunities</strong>
+                            </div>
+                            <p><strong>💹 Trading Applications:</strong></p>
+                            <ul style="margin: 15px 0; padding-left: 20px;">
+                                <li><strong>Price anomalies:</strong> Unusual price movements</li>
+                                <li><strong>Volume spikes:</strong> Abnormal trading volumes</li>
+                                <li><strong>Arbitrage opportunities:</strong> Price discrepancies</li>
+                                <li><strong>Market manipulation:</strong> Suspicious trading patterns</li>
+                            </ul>
+                            <div class="modal-code">
+# Financial market anomaly detection
+import pandas as pd
+import numpy as np
+from sklearn.preprocessing import RobustScaler
+
+class MarketAnomalyDetector:
+    def __init__(self):
+        self.detectors = {}
+        self.scalers = {}
+    
+    def prepare_features(self, price_data):
+        df = price_data.copy()
+        
+        # Technical indicators
+        df['returns'] = df['close'].pct_change()
+        df['volatility'] = df['returns'].rolling(20).std()
+        df['rsi'] = self.calculate_rsi(df['close'])
+        df['volume_ma'] = df['volume'].rolling(20).mean()
+        df['volume_ratio'] = df['volume'] / df['volume_ma']
+        
+        # Price patterns
+        df['price_range'] = (df['high'] - df['low']) / df['close']
+        df['gap'] = (df['open'] - df['close'].shift(1)) / df['close'].shift(1)
+        
+        # Market microstructure
+        df['bid_ask_spread'] = (df['ask'] - df['bid']) / df['mid_price']
+        df['order_imbalance'] = (df['bid_size'] - df['ask_size']) / (df['bid_size'] + df['ask_size'])
+        
+        return df.dropna()
+    
+    def calculate_rsi(self, prices, period=14):
+        delta = prices.diff()
+        gain = (delta.where(delta > 0, 0)).rolling(period).mean()
+        loss = (-delta.where(delta < 0, 0)).rolling(period).mean()
+        rs = gain / loss
+        rsi = 100 - (100 / (1 + rs))
+        return rsi
+    
+    def train_detector(self, symbol, historical_data):
+        features_df = self.prepare_features(historical_data)
+        feature_cols = ['returns', 'volatility', 'rsi', 'volume_ratio', 
+                       'price_range', 'gap', 'bid_ask_spread', 'order_imbalance']
+        
+        X = features_df[feature_cols].values
+        
+        # Robust scaling for financial data
+        scaler = RobustScaler()
+        X_scaled = scaler.fit_transform(X)
+        
+        # Ensemble of detectors
+        detectors = {
+            'isolation_forest': IsolationForest(contamination=0.05, random_state=42),
+            'one_class_svm': OneClassSVM(nu=0.05, gamma='scale'),
+            'lof': LocalOutlierFactor(n_neighbors=20, contamination=0.05)
+        }
+        
+        for name, detector in detectors.items():
+            if name == 'lof':
+                detector.fit(X_scaled)
+            else:
+                detector.fit(X_scaled)
+        
+        self.detectors[symbol] = detectors
+        self.scalers[symbol] = scaler
+    
+    def detect_anomalies(self, symbol, current_data):
+        features_df = self.prepare_features(current_data)
+        feature_cols = ['returns', 'volatility', 'rsi', 'volume_ratio', 
+                       'price_range', 'gap', 'bid_ask_spread', 'order_imbalance']
+        
+        X = features_df[feature_cols].iloc[-1:].values  # Latest data point
+        X_scaled = self.scalers[symbol].transform(X)
+        
+        anomaly_scores = {}
+        for name, detector in self.detectors[symbol].items():
+            if name == 'lof':
+                score = detector._decision_function(X_scaled)[0]
+            else:
+                score = detector.decision_function(X_scaled)[0]
+            anomaly_scores[name] = score
+        
+        # Ensemble decision
+        avg_score = np.mean(list(anomaly_scores.values()))
+        is_anomaly = avg_score < -0.1  # Threshold
+        
+        return {
+            'is_anomaly': is_anomaly,
+            'anomaly_scores': anomaly_scores,
+            'ensemble_score': avg_score,
+            'timestamp': features_df.index[-1]
+        }
+
+# Real-time trading anomaly detection
+detector = MarketAnomalyDetector()
+detector.train_detector('AAPL', historical_price_data)
+
+# Monitor live market data
+result = detector.detect_anomalies('AAPL', current_market_data)
+if result['is_anomaly']:
+    print(f"TRADING ANOMALY DETECTED at {result['timestamp']}")
+    print(f"Ensemble Score: {result['ensemble_score']:.3f}")
+                            </div>
+                            <p><strong>🚀 Trading Impact:</strong> Identify market inefficiencies, detect manipulation, improve risk management</p>
+                        `
+                    }
+                };
+                
+                const details = useCaseDetails[usecase];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+        const anomalyDemo = new AnomalyDetectionDemo();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week13_Slide250.html';
+            } else if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week13_Slide252.html';
+            }
+        });
+
+    </script>
+</body>
+</html>

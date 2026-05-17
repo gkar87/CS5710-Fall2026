@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Meta-Learning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .concept-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .approaches-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .definition-box {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+            font-size: 1.1em;
+            line-height: 1.8;
+        }
+
+        .principle-item {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid #14b8a6;
+        }
+
+        .principle-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .principle-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .principle-desc {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .approaches-grid {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .approach-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .approach-card {
+            text-align: center;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1, #99f6e4);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            border: 2px solid transparent;
+        }
+
+        .approach-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            border-color: #0d9488;
+        }
+
+        .approach-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+
+        .approach-name {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 10px;
+        }
+
+        .approach-desc {
+            font-size: 0.9em;
+            color: #475569;
+            line-height: 1.4;
+        }
+
+        .approach-examples {
+            font-size: 0.85em;
+            color: #64748b;
+            margin-top: 10px;
+            font-style: italic;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: float 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .approach-cards { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    
+    <div class="course-info">CS5710 - Week 13</div>
+    <div class="slide-number">Slide 248 of 260</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Meta-Learning</h1>
+        
+        <div class="content-layout">
+            <div class="concept-section">
+                <h2 class="section-title">Learning to Learn</h2>
+                
+                <div class="definition-box">
+                    <strong>Meta-Learning</strong> is the science of systematically observing how different machine learning approaches perform on a wide range of learning tasks, and then learning from this experience to learn new tasks more quickly and accurately.
+                </div>
+                
+                <div class="principle-item">
+                    <div class="principle-title">🧠 Quick Adaptation</div>
+                    <div class="principle-desc">Learn new tasks with minimal training examples</div>
+                </div>
+                
+                <div class="principle-item">
+                    <div class="principle-title">🔄 Transfer Knowledge</div>
+                    <div class="principle-desc">Apply knowledge from previous tasks to new ones</div>
+                </div>
+            </div>
+
+            <div class="approaches-section">
+                <h2 class="section-title">Core Principles</h2>
+                
+                <div class="principle-item">
+                    <div class="principle-title">📊 Task Distribution</div>
+                    <div class="principle-desc">Learning from a distribution of tasks</div>
+                </div>
+                
+                <div class="principle-item">
+                    <div class="principle-title">🎯 Fast Adaptation</div>
+                    <div class="principle-desc">Quickly adapt to new tasks with few examples</div>
+                </div>
+                
+                <div class="principle-item">
+                    <div class="principle-title">⚙️ Learning Algorithm</div>
+                    <div class="principle-desc">Learn how to update model parameters efficiently</div>
+                </div>
+                
+                <div class="principle-item">
+                    <div class="principle-title">🏗️ Inductive Bias</div>
+                    <div class="principle-desc">Build better priors for new tasks</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="approaches-grid">
+            <h2 class="section-title">Meta-Learning Approaches</h2>
+            
+            <div class="approach-cards">
+                <div class="approach-card">
+                    <div class="approach-icon">🎯</div>
+                    <div class="approach-name">Model-Agnostic Meta-Learning</div>
+                    <div class="approach-desc">MAML finds initialization that enables fast adaptation</div>
+                    <div class="approach-examples">Examples: MAML, Reptile, FOMAML</div>
+                </div>
+                
+                <div class="approach-card">
+                    <div class="approach-icon">📈</div>
+                    <div class="approach-name">Metric Learning</div>
+                    <div class="approach-desc">Learn similarity metrics for comparing examples</div>
+                    <div class="approach-examples">Examples: Prototypical Nets, Matching Networks</div>
+                </div>
+                
+                <div class="approach-card">
+                    <div class="approach-icon">🔧</div>
+                    <div class="approach-name">Optimization-Based</div>
+                    <div class="approach-desc">Learn to optimize model parameters</div>
+                    <div class="approach-examples">Examples: Learning to learn by gradient descent</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week13_Slide247.html" class="nav-btn">← Previous</a>
+        <a href="Week13_Slide249.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive principle items with modal
+        document.querySelectorAll('.principle-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const title = this.querySelector('.principle-title').textContent;
+                const desc = this.querySelector('.principle-desc').textContent;
+                
+                const details = {
+                    '🧠 Quick Adaptation': {
+                        detail: 'Meta-learning enables models to adapt to new tasks with just a few examples, mimicking human-like learning. Instead of training from scratch, the model leverages prior knowledge to quickly understand new concepts.',
+                        example: `# MAML inner loop (task adaptation)
+for task in tasks:
+    # Clone the meta-model
+    task_model = model.clone()
+    
+    # Adapt on support set (few examples)
+    for x, y in task.support_set:
+        loss = criterion(task_model(x), y)
+        grad = torch.autograd.grad(loss, task_model.parameters())
+        # Fast adaptation with gradient step
+        task_model.update(grad, lr=inner_lr)
+    
+    # Evaluate on query set
+    meta_loss += evaluate(task_model, task.query_set)`,
+                        applications: 'Few-shot image classification, personalized recommendations, robotics control',
+                        insight: 'Humans learn new concepts from few examples by leveraging prior knowledge. Meta-learning gives ML models similar capabilities.'
+                    },
+                    '🔄 Transfer Knowledge': {
+                        detail: 'Meta-learning creates models that can effectively transfer knowledge across tasks. The model learns general representations and adaptation strategies that work across different but related problems.',
+                        example: `# Knowledge transfer across tasks
+meta_knowledge = {
+    'feature_extractor': shared_backbone,
+    'task_embeddings': task_representations,
+    'adaptation_strategy': learned_optimizer
+}
+
+# Apply to new task
+def transfer_to_new_task(new_task_data):
+    # Use meta-knowledge for initialization
+    model = initialize_from_meta(meta_knowledge)
+    # Fine-tune on new task
+    model.adapt(new_task_data)
+    return model`,
+                        applications: 'Cross-domain adaptation, multi-task learning, continual learning',
+                        insight: 'Meta-learning discovers shared structure across tasks, enabling efficient knowledge transfer.'
+                    },
+                    '📊 Task Distribution': {
+                        detail: 'Meta-learning operates on distributions of tasks rather than single datasets. During meta-training, the model sees many different tasks and learns patterns that generalize across them.',
+                        example: `# Task distribution sampling
+class TaskDistribution:
+    def sample_task(self):
+        # Sample N classes for N-way classification
+        classes = random.sample(all_classes, N)
+        
+        # Sample K examples per class (support set)
+        support = sample_examples(classes, K)
+        
+        # Sample query examples for evaluation
+        query = sample_examples(classes, Q)
+        
+        return Task(support, query)
+
+# Meta-training loop
+for iteration in range(meta_iterations):
+    task_batch = [task_dist.sample_task() for _ in range(batch_size)]
+    meta_update(task_batch)`,
+                        applications: 'Few-shot learning, multi-domain learning, personalization',
+                        insight: 'By training on diverse tasks, the model learns to identify and adapt to task-specific patterns quickly.'
+                    },
+                    '🎯 Fast Adaptation': {
+                        detail: 'Meta-learning optimizes for fast adaptation rather than just performance on a fixed dataset. The goal is to find model parameters that can be quickly fine-tuned for new tasks.',
+                        example: `# Fast adaptation objective
+def meta_objective(meta_params, tasks):
+                        total_loss = 0
+    for task in tasks:
+        # Fast adaptation (1-5 gradient steps)
+        adapted_params = meta_params
+        for step in range(adaptation_steps):
+            loss = task_loss(adapted_params, task.support)
+            adapted_params = adapted_params - α * gradient(loss)
+        
+        # Evaluate adapted model
+        total_loss += task_loss(adapted_params, task.query)
+    
+    return total_loss / len(tasks)`,
+                        applications: 'Online learning, real-time personalization, edge deployment',
+                        insight: 'The model learns an initialization that is sensitive to task-specific gradients, enabling rapid specialization.'
+                    },
+                    '⚙️ Learning Algorithm': {
+                        detail: 'Meta-learning can learn the learning algorithm itself, including how to update parameters, which features to attend to, and how to incorporate new information.',
+                        example: `# Learned optimizer
+class LearnedOptimizer(nn.Module):
+    def __init__(self):
+                        self.lstm = nn.LSTM(input_size=2, hidden_size=20)
+        
+    def forward(self, gradients, loss):
+        # Input: gradients and loss history
+        optimizer_input = torch.cat([gradients, loss], dim=-1)
+        
+        # LSTM processes optimization trajectory
+        update, hidden = self.lstm(optimizer_input, hidden)
+        
+        # Output: parameter updates
+        return update
+
+# Use learned optimizer
+optimizer = LearnedOptimizer()
+for step in range(adaptation_steps):
+    loss = compute_loss(model, data)
+    grads = torch.autograd.grad(loss, model.parameters())
+    updates = optimizer(grads, loss)
+    model.update(updates)`,
+                        applications: 'Neural architecture search, hyperparameter optimization, automated ML',
+                        insight: 'Learning the learning algorithm itself enables more flexible and efficient adaptation strategies.'
+                    },
+                    '🏗️ Inductive Bias': {
+                        detail: 'Meta-learning builds useful inductive biases - assumptions about the problem space that guide learning. These biases help the model make good predictions even with limited data.',
+                        example: `# Inductive bias through architecture
+class MetaLearner(nn.Module):
+    def __init__(self):
+                        # Shared feature extractor (inductive bias)
+        self.backbone = ResNet()
+        
+        # Task-specific heads
+        self.task_heads = nn.ModuleDict()
+        
+    def forward(self, x, task_id):
+        # Common features (transfer across tasks)
+        features = self.backbone(x)
+        
+        # Task-specific predictions
+        if task_id not in self.task_heads:
+            # Create new head for new task
+            self.task_heads[task_id] = nn.Linear(512, num_classes)
+        
+        return self.task_heads[task_id](features)`,
+                        applications: 'Domain adaptation, zero-shot learning, compositional generalization',
+                        insight: 'Good inductive biases dramatically reduce the amount of data needed to learn new tasks.'
+                    }
+                };
+                
+                const info = details[title];
+                if (info) {
+                    modal.show(title, `
+                        <div class="modal-highlight">
+                            <strong>${desc}</strong>
+                        </div>
+                        <p><strong>📚 Detailed Explanation:</strong></p>
+                        <p>${info.detail}</p>
+                        <div class="modal-code">
+                            ${info.example}
+                        </div>
+                        <p><strong>🚀 Applications:</strong> ${info.applications}</p>
+                        <p><strong>💡 Key Insight:</strong> ${info.insight}</p>
+                    `);
+                }
+            });
+        });
+
+        // Interactive approach cards with modal
+        document.querySelectorAll('.approach-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const name = this.querySelector('.approach-name').textContent;
+                
+                const approachDetails = {
+                    'Model-Agnostic Meta-Learning': {
+                        description: 'MAML finds model initializations that can be quickly adapted to new tasks with just a few gradient steps.',
+                        algorithm: `MAML Algorithm:
+1. Initialize meta-parameters θ
+2. For each task batch:
+   a. Sample task Ti from task distribution
+   b. Compute adapted parameters: θ'i = θ - α∇θL_Ti(fθ)
+   c. Compute meta-loss using adapted params
+3. Update meta-parameters: θ = θ - β∇θΣL_Ti(fθ'i)`,
+                        code: `import torch
+import torch.nn as nn
+
+class MAML:
+    def __init__(self, model, inner_lr=0.01, meta_lr=0.001):
+        self.model = model
+        self.inner_lr = inner_lr
+        self.meta_lr = meta_lr
+        self.meta_optimizer = torch.optim.Adam(model.parameters(), lr=meta_lr)
+    
+    def inner_loop(self, support_x, support_y):
+        # Clone model for task-specific adaptation
+        task_model = copy.deepcopy(self.model)
+        task_optimizer = torch.optim.SGD(task_model.parameters(), lr=self.inner_lr)
+        
+        # Adapt on support set
+        for _ in range(5):  # 5 inner steps
+            loss = F.cross_entropy(task_model(support_x), support_y)
+            task_optimizer.zero_grad()
+            loss.backward()
+            task_optimizer.step()
+        
+        return task_model
+    
+    def meta_update(self, tasks):
+        meta_loss = 0
+        
+        for task in tasks:
+            # Inner loop adaptation
+            adapted_model = self.inner_loop(task.support_x, task.support_y)
+            
+            # Compute loss on query set
+            query_loss = F.cross_entropy(adapted_model(task.query_x), task.query_y)
+            meta_loss += query_loss
+        
+        # Meta-update
+        self.meta_optimizer.zero_grad()
+        meta_loss.backward()
+        self.meta_optimizer.step()`,
+                        strengths: 'Model-agnostic, theoretically grounded, works with any differentiable model',
+                        limitations: 'Computationally expensive (second-order derivatives), memory intensive',
+                        applications: 'Few-shot classification, reinforcement learning, robotics'
+                    },
+                    'Metric Learning': {
+                        description: 'Metric learning approaches learn a distance function to compare examples, enabling classification by finding nearest neighbors in the learned metric space.',
+                        algorithm: `Prototypical Networks:
+1. Compute prototype for each class: ck = mean(support examples of class k)
+2. For query example x:
+   - Compute distances to all prototypes
+   - Classify based on nearest prototype
+3. Train by minimizing negative log-likelihood`,
+                        code: `class PrototypicalNetwork(nn.Module):
+    def __init__(self, encoder):
+        super().__init__()
+        self.encoder = encoder
+    
+    def compute_prototypes(self, support_x, support_y, n_way):
+        # Encode support examples
+        embeddings = self.encoder(support_x)
+        
+        # Compute class prototypes (mean of embeddings)
+        prototypes = []
+        for c in range(n_way):
+            class_embeddings = embeddings[support_y == c]
+            prototype = class_embeddings.mean(dim=0)
+            prototypes.append(prototype)
+        
+        return torch.stack(prototypes)
+    
+    def forward(self, query_x, prototypes):
+        # Encode query examples
+        query_embeddings = self.encoder(query_x)
+        
+        # Compute distances to prototypes
+        distances = torch.cdist(query_embeddings, prototypes)
+        
+        # Return negative distances (for softmax)
+        return -distances
+    
+    def loss(self, support_x, support_y, query_x, query_y, n_way):
+        prototypes = self.compute_prototypes(support_x, support_y, n_way)
+        logits = self.forward(query_x, prototypes)
+        return F.cross_entropy(logits, query_y)`,
+                        strengths: 'Simple and effective, non-parametric classifier, interpretable',
+                        limitations: 'Assumes single prototype per class, may not capture multi-modal distributions',
+                        applications: 'Few-shot image classification, speaker verification, drug discovery'
+                    },
+                    'Optimization-Based': {
+                        description: 'These methods learn to optimize, either by learning the optimization algorithm itself or by learning to generate parameter updates.',
+                        algorithm: `Learning to Learn by Gradient Descent:
+1. Replace standard optimizer with learned LSTM
+2. LSTM takes gradients and outputs parameter updates
+3. Train LSTM to minimize loss across many optimization trajectories`,
+                        code: `class LearnedOptimizer(nn.Module):
+    def __init__(self, param_dim):
+        super().__init__()
+        # LSTM for each parameter
+        self.lstm = nn.LSTM(
+            input_size=2,  # gradient and parameter
+            hidden_size=20,
+            num_layers=2
+        )
+        self.output = nn.Linear(20, 1)
+        self.hidden_state = None
+    
+    def forward(self, gradients, parameters):
+        # Concatenate gradients and parameters
+        inputs = torch.stack([gradients, parameters], dim=-1)
+        
+        # Process through LSTM
+        if self.hidden_state is None:
+            output, self.hidden_state = self.lstm(inputs)
+        else:
+            output, self.hidden_state = self.lstm(inputs, self.hidden_state)
+        
+        # Generate update
+        update = self.output(output).squeeze(-1)
+        
+        return update
+    
+    def reset_state(self):
+        self.hidden_state = None
+
+# Usage
+learned_opt = LearnedOptimizer(param_dim=model.num_parameters())
+
+for step in range(num_steps):
+    loss = compute_loss(model, batch)
+    grads = torch.autograd.grad(loss, model.parameters())
+    
+    # Use learned optimizer
+    updates = learned_opt(grads, model.parameters())
+    
+    # Apply updates
+    with torch.no_grad():
+        for param, update in zip(model.parameters(), updates):
+            param.data.add_(update)`,
+                        strengths: 'Can learn complex optimization strategies, adapts to problem structure',
+                        limitations: 'Difficult to train, may not generalize to different architectures',
+                        applications: 'Neural architecture search, hyperparameter optimization, few-shot learning'
+                    }
+                };
+                
+                const details = approachDetails[name];
+                if (details) {
+                    modal.show(`Meta-Learning: ${name}`, `
+                        <div class="modal-highlight">
+                            <strong>${details.description}</strong>
+                        </div>
+                        <p><strong>📐 Algorithm:</strong></p>
+                        <p style="white-space: pre-line; background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px;">${details.algorithm}</p>
+                        <div class="modal-code">
+                            ${details.code}
+                        </div>
+                        <p><strong>✅ Strengths:</strong> ${details.strengths}</p>
+                        <p><strong>⚠️ Limitations:</strong> ${details.limitations}</p>
+                        <p><strong>🚀 Applications:</strong> ${details.applications}</p>
+                    `);
+                }
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (!modal.overlay.classList.contains('active')) {
+                if (e.key === 'ArrowLeft') {
+                    window.location.href = 'Week13_Slide247.html';
+                } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                    window.location.href = 'Week13_Slide249.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Regularization Introduction (L1 and L2)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.2em;
+            text-align: center;
+            margin-bottom: 45px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 45px;
+            margin-bottom: 35px;
+        }
+
+        .problem-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .solution-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.7em;
+            color: #0d9488;
+            margin-bottom: 20px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .definition-text {
+            font-size: 1.15em;
+            line-height: 1.7;
+            color: #1e293b;
+            margin-bottom: 25px;
+            padding: 22px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .problem-list {
+            list-style: none;
+            margin-top: 18px;
+        }
+
+        .problem-item {
+            padding: 18px;
+            margin: 12px 0;
+            background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%);
+            border-radius: 12px;
+            border-left: 4px solid #ef4444;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .problem-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(239, 68, 68, 0.15);
+        }
+
+        .solution-list {
+            list-style: none;
+            margin-top: 18px;
+        }
+
+        .solution-item {
+            padding: 18px;
+            margin: 12px 0;
+            background: linear-gradient(135deg, #dcfdf7 0%, #a7f3d0 100%);
+            border-radius: 12px;
+            border-left: 4px solid #10b981;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .solution-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.15);
+        }
+
+        .item-title {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+            font-size: 1.05em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .item-desc {
+            font-size: 0.95em;
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        .regularization-types {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .types-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 35px;
+            margin-top: 25px;
+        }
+
+        .regularization-card {
+            padding: 30px;
+            border-radius: 18px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 3px solid;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        }
+
+        .regularization-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .l1-card {
+            border-color: #f59e0b;
+        }
+
+        .l2-card {
+            border-color: #3b82f6;
+        }
+
+        .reg-icon {
+            font-size: 3em;
+            margin-bottom: 18px;
+        }
+
+        .reg-title {
+            font-size: 1.4em;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .l1-card .reg-title {
+            color: #f59e0b;
+        }
+
+        .l2-card .reg-title {
+            color: #3b82f6;
+        }
+
+        .reg-formula {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 18px;
+            border-radius: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            margin: 18px 0;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .reg-characteristics {
+            text-align: left;
+            margin-top: 20px;
+        }
+
+        .characteristic {
+            background: rgba(13, 148, 136, 0.05);
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+            font-size: 0.9em;
+            color: #475569;
+            border-left: 3px solid #0d9488;
+        }
+
+        .comparison-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            margin-top: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.9s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        }
+
+        .comparison-table th {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            padding: 18px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 1.05em;
+        }
+
+        .comparison-table td {
+            padding: 15px 18px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .comparison-table tr:hover {
+            background: rgba(13, 148, 136, 0.05);
+        }
+
+        .l1-highlight {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%) !important;
+            color: #92400e !important;
+            font-weight: 600;
+        }
+
+        .l2-highlight {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%) !important;
+            color: #1e40af !important;
+            font-weight: 600;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .types-grid { grid-template-columns: 1fr; }
+            .comparison-table { font-size: 0.9em; }
+            .comparison-table th, .comparison-table td { padding: 12px; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    
+    <div class="course-info">CS5710 - Week 2</div>
+    <div class="slide-number">Slide 34 of 40</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Regularization Introduction (L1 & L2)</h1>
+        
+        <div class="content-layout">
+            <div class="problem-section">
+                <h2 class="section-title">⚠️ The Overfitting Problem</h2>
+                
+                <div class="definition-text">
+                    <strong>Overfitting</strong> occurs when a model learns the training data too well, including noise and irrelevant patterns, leading to poor generalization on new data.
+                </div>
+                
+                <ul class="problem-list">
+                    <li class="problem-item">
+                        <div class="item-title">🎯 <span>Perfect Training Score</span></div>
+                        <div class="item-desc">Model achieves near-perfect accuracy on training data</div>
+                    </li>
+                    <li class="problem-item">
+                        <div class="item-title">📉 <span>Poor Test Performance</span></div>
+                        <div class="item-desc">Significant drop in accuracy on unseen test data</div>
+                    </li>
+                    <li class="problem-item">
+                        <div class="item-title">🎢 <span>High Model Complexity</span></div>
+                        <div class="item-desc">Too many parameters or very large coefficient values</div>
+                    </li>
+                    <li class="problem-item">
+                        <div class="item-title">📊 <span>Noise Learning</span></div>
+                        <div class="item-desc">Model memorizes random fluctuations in training data</div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="solution-section">
+                <h2 class="section-title">🛡️ Regularization Solution</h2>
+                
+                <div class="definition-text">
+                    <strong>Regularization</strong> adds a penalty term to the cost function that constrains model complexity, preventing overfitting by keeping parameters small.
+                </div>
+                
+                <ul class="solution-list">
+                    <li class="solution-item">
+                        <div class="item-title">🎛️ <span>Parameter Penalty</span></div>
+                        <div class="item-desc">Adds cost for large coefficient values</div>
+                    </li>
+                    <li class="solution-item">
+                        <div class="item-title">⚖️ <span>Bias-Variance Balance</span></div>
+                        <div class="item-desc">Trades slight bias for significant variance reduction</div>
+                    </li>
+                    <li class="solution-item">
+                        <div class="item-title">🎯 <span>Better Generalization</span></div>
+                        <div class="item-desc">Improves performance on unseen data</div>
+                    </li>
+                    <li class="solution-item">
+                        <div class="item-title">🔧 <span>Automatic Feature Selection</span></div>
+                        <div class="item-desc">Some techniques can eliminate irrelevant features</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="regularization-types">
+            <h2 class="section-title">🎯 Types of Regularization</h2>
+            
+            <div class="types-grid">
+                <div class="regularization-card l1-card">
+                    <div class="reg-icon">🔶</div>
+                    <div class="reg-title">L1 Regularization (Lasso)</div>
+                    
+                    <div class="reg-formula">
+                        Cost = MSE + λ∑|θᵢ|
+                    </div>
+                    
+                    <div class="reg-characteristics">
+                        <div class="characteristic">
+                            <strong>📍 Manhattan Distance:</strong> Sum of absolute values
+                        </div>
+                        <div class="characteristic">
+                            <strong>✂️ Feature Selection:</strong> Can zero out coefficients
+                        </div>
+                        <div class="characteristic">
+                            <strong>💎 Sparse Solutions:</strong> Creates sparse models
+                        </div>
+                        <div class="characteristic">
+                            <strong>🎯 Use Case:</strong> When you have many irrelevant features
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="regularization-card l2-card">
+                    <div class="reg-icon">🔵</div>
+                    <div class="reg-title">L2 Regularization (Ridge)</div>
+                    
+                    <div class="reg-formula">
+                        Cost = MSE + λ∑θᵢ²
+                    </div>
+                    
+                    <div class="reg-characteristics">
+                        <div class="characteristic">
+                            <strong>📏 Euclidean Distance:</strong> Sum of squared values
+                        </div>
+                        <div class="characteristic">
+                            <strong>📉 Shrinks Coefficients:</strong> Reduces but doesn't eliminate
+                        </div>
+                        <div class="characteristic">
+                            <strong>🌊 Smooth Solutions:</strong> Prefers smaller, distributed weights
+                        </div>
+                        <div class="characteristic">
+                            <strong>🎯 Use Case:</strong> When all features are potentially relevant
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="comparison-section">
+            <h2 class="section-title">📊 L1 vs L2 Comparison</h2>
+            
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Aspect</th>
+                        <th>L1 (Lasso)</th>
+                        <th>L2 (Ridge)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Formula</strong></td>
+                        <td class="l1-highlight">λ∑|θᵢ|</td>
+                        <td class="l2-highlight">λ∑θᵢ²</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Geometric Shape</strong></td>
+                        <td class="l1-highlight">Diamond/Rhombus</td>
+                        <td class="l2-highlight">Circle/Sphere</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Feature Selection</strong></td>
+                        <td class="l1-highlight">Yes - Sets coefficients to exactly 0</td>
+                        <td class="l2-highlight">No - Shrinks towards 0 but doesn't eliminate</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Solution Type</strong></td>
+                        <td class="l1-highlight">Sparse (many zeros)</td>
+                        <td class="l2-highlight">Dense (small non-zeros)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Computational</strong></td>
+                        <td class="l1-highlight">More complex optimization</td>
+                        <td class="l2-highlight">Has closed-form solution</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Multicollinearity</strong></td>
+                        <td class="l1-highlight">Picks one feature from correlated group</td>
+                        <td class="l2-highlight">Distributes weights among correlated features</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Best Use Case</strong></td>
+                        <td class="l1-highlight">High-dimensional data with irrelevant features</td>
+                        <td class="l2-highlight">All features relevant, prevent overfitting</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week2_Slide33.html" class="nav-btn">← Previous</a>
+        <a href="Week2_Slide35.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive problem items
+        document.querySelectorAll('.problem-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const titleText = this.querySelector('.item-title span').textContent;
+                const desc = this.querySelector('.item-desc').textContent;
+                
+                const problemDetails = {
+                    'Perfect Training Score': {
+                        detail: 'The model achieves 99%+ accuracy on training data, which seems great but is actually a warning sign.',
+                        example: 'Housing price model: 99.9% training accuracy but only 65% test accuracy',
+                        cause: 'Model memorizes specific examples instead of learning generalizable patterns.',
+                        fix: 'Use regularization to constrain model complexity and improve generalization.'
+                    },
+                    'Poor Test Performance': {
+                        detail: 'Large gap between training and test performance indicates the model doesn\'t generalize well.',
+                        example: 'Image classifier: 95% training, 70% test → 25% generalization gap',
+                        cause: 'Model learned noise, outliers, and training-specific patterns that don\'t exist in new data.',
+                        fix: 'Add regularization penalty to discourage overly complex solutions.'
+                    },
+                    'High Model Complexity': {
+                        detail: 'Models with too many parameters relative to data size are prone to overfitting.',
+                        example: 'Polynomial regression: degree 15 with 100 data points',
+                        cause: 'More parameters than necessary allow the model to fit noise perfectly.',
+                        fix: 'Regularization constrains parameter values, reducing effective complexity.'
+                    },
+                    'Noise Learning': {
+                        detail: 'The model learns random variations in the training data that aren\'t true patterns.',
+                        example: 'Stock price prediction learning daily random fluctuations as if they\'re systematic',
+                        cause: 'High model flexibility allows fitting to any pattern, including meaningless ones.',
+                        fix: 'Regularization smooths the model, making it less sensitive to noise.'
+                    }
+                };
+                
+                const info = problemDetails[titleText];
+                if (info) {
+                    modal.show(`Overfitting Problem: ${titleText}`, `
+                        <div class="modal-highlight" style="background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%);">
+                            <strong>${desc}</strong>
+                        </div>
+                        
+                        <p><strong>📖 Detailed Explanation:</strong><br>
+                        ${info.detail}</p>
+                        
+                        <div class="modal-code">
+                            <strong>🔍 Example:</strong><br>
+                            ${info.example}
+                        </div>
+                        
+                        <p><strong>🔍 Root Cause:</strong><br>
+                        ${info.cause}</p>
+                        
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(16, 185, 129, 0.1); border-radius: 10px; border-left: 4px solid #10b981;">
+                            <strong>💊 Solution:</strong><br>
+                            ${info.fix}
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Interactive solution items
+        document.querySelectorAll('.solution-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const titleText = this.querySelector('.item-title span').textContent;
+                const desc = this.querySelector('.item-desc').textContent;
+                
+                const solutionDetails = {
+                    'Parameter Penalty': {
+                        detail: 'Regularization adds a penalty term to the cost function that increases with parameter magnitude.',
+                        example: 'Original: Cost = MSE\nRegularized: Cost = MSE + λ(penalty term)',
+                        mechanism: 'During optimization, the algorithm must balance fitting the data and keeping parameters small.',
+                        benefit: 'Prevents any single parameter from becoming too large and dominating the model.'
+                    },
+                    'Bias-Variance Balance': {
+                        detail: 'Regularization introduces controlled bias to significantly reduce variance, improving overall performance.',
+                        example: 'Unregularized: High variance, wildly different models from different training sets\nRegularized: Slight bias, consistent models across training sets',
+                        mechanism: 'Constrains the hypothesis space, making the model more stable but slightly less flexible.',
+                        benefit: 'Lower total error due to bias-variance tradeoff optimization.'
+                    },
+                    'Better Generalization': {
+                        detail: 'By preventing overfitting, regularized models perform better on new, unseen data.',
+                        example: 'Test accuracy often improves by 5-15% with proper regularization',
+                        mechanism: 'Smoother decision boundaries that capture true patterns rather than noise.',
+                        benefit: 'Models that work well in real-world deployment, not just on training data.'
+                    },
+                    'Automatic Feature Selection': {
+                        detail: 'L1 regularization can automatically identify and eliminate irrelevant features by setting their coefficients to zero.',
+                        example: 'Start with 1000 features, L1 regularization keeps only 50 important ones',
+                        mechanism: 'The L1 penalty creates sparse solutions where unimportant features get zero weights.',
+                        benefit: 'Simpler, more interpretable models with automatic dimensionality reduction.'
+                    }
+                };
+                
+                const info = solutionDetails[titleText];
+                if (info) {
+                    modal.show(`Regularization Benefit: ${titleText}`, `
+                        <div class="modal-highlight">
+                            <strong>${desc}</strong>
+                        </div>
+                        
+                        <p><strong>📖 How It Works:</strong><br>
+                        ${info.detail}</p>
+                        
+                        <div class="modal-code">
+                            <strong>📊 Example:</strong><br>
+                            ${info.example}
+                        </div>
+                        
+                        <p><strong>⚙️ Mechanism:</strong><br>
+                        ${info.mechanism}</p>
+                        
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                            <strong>🎯 Key Benefit:</strong><br>
+                            ${info.benefit}
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Interactive regularization cards
+        document.querySelectorAll('.regularization-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const isL1 = this.classList.contains('l1-card');
+                const title = isL1 ? 'L1 Regularization (Lasso)' : 'L2 Regularization (Ridge)';
+                
+                if (isL1) {
+                    modal.show(title, `
+                        <div class="modal-highlight" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);">
+                            <h4>🔶 L1 Regularization (Lasso)</h4>
+                            <p><strong>Formula:</strong> Cost = MSE + λ∑|θᵢ|</p>
+                        </div>
+                        
+                        <p><strong>🎯 Key Concept:</strong><br>
+                        L1 adds the sum of absolute values of parameters as a penalty. This creates a "diamond-shaped" constraint region.</p>
+                        
+                        <div class="modal-code">
+                            # Python implementation
+                            from sklearn.linear_model import Lasso
+                            
+                            # λ (lambda) controls regularization strength
+                            lasso = Lasso(alpha=0.1)  # alpha = λ
+                            lasso.fit(X_train, y_train)
+                            
+                            # Many coefficients will be exactly 0
+                            print("Non-zero features:", np.sum(lasso.coef_ != 0))
+                        </div>
+                        
+                        <h4 style="color: #0d9488; margin-top: 20px;">✨ Unique Properties:</h4>
+                        <ul style="line-height: 1.8;">
+                            <li><strong>🗡️ Sparse Solutions:</strong> Sets coefficients to exactly 0</li>
+                            <li><strong>✂️ Automatic Feature Selection:</strong> Eliminates irrelevant features</li>
+                            <li><strong>🔍 Interpretability:</strong> Easier to understand with fewer features</li>
+                            <li><strong>💾 Storage Efficient:</strong> Sparse models require less memory</li>
+                        </ul>
+                        
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(245, 158, 11, 0.1); border-radius: 10px;">
+                            <strong>🎯 Best Use Cases:</strong><br>
+                            • High-dimensional data with many irrelevant features<br>
+                            • When you need interpretable models<br>
+                            • Feature selection is more important than prediction accuracy<br>
+                            • Data with natural sparsity (text, genomics)
+                        </div>
+                    `);
+                } else {
+                    modal.show(title, `
+                        <div class="modal-highlight" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);">
+                            <h4>🔵 L2 Regularization (Ridge)</h4>
+                            <p><strong>Formula:</strong> Cost = MSE + λ∑θᵢ²</p>
+                        </div>
+                        
+                        <p><strong>🎯 Key Concept:</strong><br>
+                        L2 adds the sum of squared parameters as a penalty. This creates a "circular" constraint region that shrinks coefficients smoothly.</p>
+                        
+                        <div class="modal-code">
+                            # Python implementation
+                            from sklearn.linear_model import Ridge
+                            
+                            # λ (lambda) controls regularization strength
+                            ridge = Ridge(alpha=1.0)  # alpha = λ
+                            ridge.fit(X_train, y_train)
+                            
+                            # All coefficients are small but non-zero
+                            print("Max coefficient:", np.max(np.abs(ridge.coef_)))
+                        </div>
+                        
+                        <h4 style="color: #0d9488; margin-top: 20px;">✨ Unique Properties:</h4>
+                        <ul style="line-height: 1.8;">
+                            <li><strong>🌊 Smooth Shrinkage:</strong> Reduces all coefficients proportionally</li>
+                            <li><strong>🤝 Handles Multicollinearity:</strong> Distributes weights among correlated features</li>
+                            <li><strong>⚡ Computationally Efficient:</strong> Has closed-form solution</li>
+                            <li><strong>📊 Stable Solutions:</strong> Small changes in data don't cause big changes in model</li>
+                        </ul>
+                        
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(59, 130, 246, 0.1); border-radius: 10px;">
+                            <strong>🎯 Best Use Cases:</strong><br>
+                            • All features are potentially relevant<br>
+                            • Multicollinear features (correlated predictors)<br>
+                            • When you want to prevent overfitting without feature selection<br>
+                            • Small to medium datasets where sparsity isn't needed
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week2_Slide33.html';
+            } else if ((e.key === 'ArrowRight' || e.key === ' ') && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week2_Slide35.html';
+            }
+        });
+
+    </script>
+</body>
+</html>

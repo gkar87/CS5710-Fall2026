@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Support Vectors and Decision Boundary</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .theory-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .interactive-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .definition-box {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .formula-box {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            text-align: center;
+        }
+
+        .properties-list {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .property-item {
+            padding: 15px 20px;
+            margin: 10px 0;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .property-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(13, 148, 136, 0.15);
+        }
+
+        .property-icon {
+            font-size: 1.5em;
+            min-width: 30px;
+        }
+
+        .property-text {
+            flex: 1;
+            color: #475569;
+            line-height: 1.4;
+        }
+
+        .svm-playground {
+            width: 100%;
+            height: 450px;
+            background: #1e293b;
+            border-radius: 15px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #0d9488;
+        }
+
+        .playground-controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 10px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .control-btn {
+            padding: 8px 15px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(13, 148, 136, 0.3);
+        }
+
+        .data-point {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .data-point.positive {
+            background: linear-gradient(135deg, #10b981, #34d399);
+        }
+
+        .data-point.negative {
+            background: linear-gradient(135deg, #ef4444, #f87171);
+        }
+
+        .data-point.support {
+            border: 3px solid #fbbf24;
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.8);
+        }
+
+        .data-point:hover {
+            transform: scale(1.3);
+        }
+
+        .decision-line {
+            position: absolute;
+            height: 2px;
+            background: #5eead4;
+            transform-origin: center;
+            box-shadow: 0 0 10px rgba(94, 234, 212, 0.6);
+        }
+
+        .margin-line {
+            position: absolute;
+            height: 1px;
+            background: #fbbf24;
+            transform-origin: center;
+            opacity: 0.8;
+        }
+
+        .equation-display {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #5eead4;
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .mathematical-details {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .math-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .math-card {
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            border-radius: 15px;
+            padding: 25px;
+            border: 2px solid #cbd5e1;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .math-card:hover {
+            border-color: #0d9488;
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .math-title {
+            font-size: 1.3em;
+            color: #0d9488;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .math-formula {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 15px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            text-align: center;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .math-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    
+    <div class="course-info">CS5710 - Week 4</div>
+    <div class="slide-number">Slide 73 of 80</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Support Vectors and Decision Boundary</h1>
+        
+        <div class="content-layout">
+            <div class="theory-section">
+                <h2 class="section-title">Support Vector Theory</h2>
+                
+                <div class="definition-box">
+                    <strong>Support Vectors</strong> are the training examples that lie closest to the decision boundary and directly determine its position and orientation.
+                </div>
+                
+                <div class="formula-box">
+                    Decision Boundary: w·x + b = 0<br>
+                    Support Vectors: |w·x + b| = 1
+                </div>
+                
+                <ul class="properties-list">
+                    <li class="property-item">
+                        <span class="property-icon">🎯</span>
+                        <span class="property-text"><strong>Critical Points:</strong> Only support vectors determine the final model</span>
+                    </li>
+                    <li class="property-item">
+                        <span class="property-icon">📏</span>
+                        <span class="property-text"><strong>Distance:</strong> Exactly on the margin boundaries (distance = margin)</span>
+                    </li>
+                    <li class="property-item">
+                        <span class="property-icon">⚖️</span>
+                        <span class="property-text"><strong>Lagrange:</strong> Have non-zero multipliers (αᵢ > 0)</span>
+                    </li>
+                    <li class="property-item">
+                        <span class="property-icon">🔄</span>
+                        <span class="property-text"><strong>Influence:</strong> Removing them changes the decision boundary</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="interactive-section">
+                <h2 class="section-title">Interactive SVM Playground</h2>
+                
+                <div class="svm-playground" id="svmPlayground">
+                    <div class="playground-controls">
+                        <button class="control-btn" onclick="addPoint('positive')">+ Positive</button>
+                        <button class="control-btn" onclick="addPoint('negative')">+ Negative</button>
+                        <button class="control-btn" onclick="updateSVM()">Update SVM</button>
+                        <button class="control-btn" onclick="resetPlayground()">Reset</button>
+                    </div>
+                    
+                    <!-- Initial data points -->
+                    <div class="data-point positive support" style="top: 100px; left: 100px;" data-x="100" data-y="100"></div>
+                    <div class="data-point positive" style="top: 80px; left: 150px;" data-x="150" data-y="80"></div>
+                    <div class="data-point positive support" style="top: 150px; left: 120px;" data-x="120" data-y="150"></div>
+                    
+                    <div class="data-point negative support" style="top: 300px; left: 250px;" data-x="250" data-y="300"></div>
+                    <div class="data-point negative" style="top: 320px; left: 280px;" data-x="280" data-y="320"></div>
+                    <div class="data-point negative support" style="top: 280px; left: 300px;" data-x="300" data-y="280"></div>
+                    
+                    <!-- Decision boundary and margins -->
+                    <div class="decision-line" style="width: 300px; top: 200px; left: 50px; transform: rotate(30deg);"></div>
+                    <div class="margin-line" style="width: 300px; top: 170px; left: 50px; transform: rotate(30deg);"></div>
+                    <div class="margin-line" style="width: 300px; top: 230px; left: 50px; transform: rotate(30deg);"></div>
+                    
+                    <div class="equation-display">
+                        w·x + b = 0<br>
+                        Support vectors: 3
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                    <strong>Instructions:</strong><br>
+                    🟢 Green = Positive class (+1)<br>
+                    🔴 Red = Negative class (-1)<br>
+                    💛 Yellow border = Support vectors<br>
+                    Click points to learn more!
+                </div>
+            </div>
+        </div>
+
+        <div class="mathematical-details">
+            <h2 class="section-title">Mathematical Foundation</h2>
+            
+            <div class="math-grid">
+                <div class="math-card">
+                    <div class="math-title">🎯 Decision Function</div>
+                    <div class="math-formula">
+                        f(x) = sign(w·x + b)
+                    </div>
+                    <p>The decision function classifies new points based on which side of the hyperplane they fall on.</p>
+                </div>
+                
+                <div class="math-card">
+                    <div class="math-title">📏 Margin Calculation</div>
+                    <div class="math-formula">
+                        margin = 2 / ||w||
+                    </div>
+                    <p>The margin width is inversely proportional to the norm of the weight vector.</p>
+                </div>
+                
+                <div class="math-card">
+                    <div class="math-title">🎭 Support Vector Condition</div>
+                    <div class="math-formula">
+                        yᵢ(w·xᵢ + b) = 1
+                    </div>
+                    <p>Support vectors satisfy this equality constraint exactly - they lie on the margin boundary.</p>
+                </div>
+                
+                <div class="math-card">
+                    <div class="math-title">⚖️ Dual Formulation</div>
+                    <div class="math-formula">
+                        f(x) = Σ αᵢyᵢ(xᵢ·x) + b
+                    </div>
+                    <p>The decision function depends only on support vectors (where αᵢ > 0).</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week4_Slide72.html" class="nav-btn">← Previous</a>
+        <a href="Week4_Slide74.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive property items
+        document.querySelectorAll('.property-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const text = this.querySelector('.property-text').innerHTML;
+                const icon = this.querySelector('.property-icon').textContent;
+                
+                const details = {
+                    '🎯': {
+                        title: 'Critical Points Property',
+                        explanation: 'Support vectors are the only training points that matter for the final SVM model.',
+                        detail: 'If you remove any non-support vector from the training set, the decision boundary remains exactly the same. This makes SVMs incredibly efficient - they essentially compress all the training information into just the support vectors.',
+                        math: 'f(x) = Σ αᵢyᵢK(xᵢ,x) + b where αᵢ > 0 only for support vectors'
+                    },
+                    '📏': {
+                        title: 'Distance Property',
+                        explanation: 'Support vectors lie exactly on the margin boundaries, at distance = margin width from the decision boundary.',
+                        detail: 'The margin width is 2/||w||, and support vectors are at distance 1/||w|| from the decision boundary. This geometric property ensures they are the "closest" points to the boundary.',
+                        math: 'distance(xᵢ, boundary) = |w·xᵢ + b| / ||w|| = 1 / ||w|| for support vectors'
+                    },
+                    '⚖️': {
+                        title: 'Lagrange Multiplier Property',
+                        explanation: 'In the dual optimization formulation, only support vectors have non-zero Lagrange multipliers.',
+                        detail: 'The KKT conditions state that αᵢ = 0 for all non-support vectors. This mathematical property directly connects to the sparsity of the SVM solution.',
+                        math: 'αᵢ > 0 ⟺ xᵢ is a support vector (KKT complementary slackness)'
+                    },
+                    '🔄': {
+                        title: 'Influence Property',
+                        explanation: 'Moving or removing a support vector changes the decision boundary, while moving non-support vectors has no effect.',
+                        detail: 'This property makes SVMs robust to outliers that are far from the boundary, while being sensitive to the most informative examples (support vectors) that define the class separation.',
+                        math: '∂f/∂xᵢ ≠ 0 if xᵢ is support vector, ∂f/∂xᵢ = 0 otherwise'
+                    }
+                };
+                
+                const info = details[icon];
+                modal.show(info.title, `
+                    <div class="modal-highlight">
+                        <strong>${text.replace('<strong>', '').replace('</strong>', '')}</strong>
+                    </div>
+                    <p>${info.explanation}</p>
+                    <p>${info.detail}</p>
+                    <div class="modal-code">
+                        <strong>Mathematical Form:</strong><br>
+                        ${info.math}
+                    </div>
+                `);
+            });
+        });
+
+        // Interactive data points in playground
+        document.querySelectorAll('.data-point').forEach(point => {
+            point.addEventListener('click', function() {
+                const isPositive = this.classList.contains('positive');
+                const isSupport = this.classList.contains('support');
+                const className = isPositive ? 'Positive (+1)' : 'Negative (-1)';
+                const x = this.getAttribute('data-x') || 'unknown';
+                const y = this.getAttribute('data-y') || 'unknown';
+                
+                if (isSupport) {
+                    modal.show(`Support Vector: ${className}`, `
+                        <div class="modal-highlight">
+                            <strong>Support Vector at position (${x}, ${y})</strong>
+                        </div>
+                        <p>This is a support vector that directly influences the decision boundary.</p>
+                        <div class="modal-code">
+                            Class: ${isPositive ? '+1' : '-1'}<br>
+                            Constraint: y(w·x + b) = 1<br>
+                            Lagrange multiplier: α > 0<br>
+                            Distance to boundary: 1/||w||
+                        </div>
+                        <p><strong>Impact:</strong> If you move or remove this point, the decision boundary will change!</p>
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(251, 191, 36, 0.1); border-radius: 10px;">
+                            <strong>💡 Key Insight:</strong> This point is "on the edge" - it's one of the hardest examples to classify correctly.
+                        </div>
+                    `);
+                } else {
+                    modal.show(`Regular Point: ${className}`, `
+                        <div class="modal-highlight">
+                            <strong>Non-Support Vector at position (${x}, ${y})</strong>
+                        </div>
+                        <p>This is a regular training point that doesn't affect the decision boundary.</p>
+                        <div class="modal-code">
+                            Class: ${isPositive ? '+1' : '-1'}<br>
+                            Constraint: y(w·x + b) > 1<br>
+                            Lagrange multiplier: α = 0<br>
+                            Distance to boundary: > 1/||w||
+                        </div>
+                        <p><strong>Impact:</strong> You can move or remove this point without changing the model!</p>
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                            <strong>🛡️ Safety Zone:</strong> This point is safely classified with high confidence.
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Interactive math cards
+        document.querySelectorAll('.math-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('.math-title').textContent;
+                const formula = this.querySelector('.math-formula').textContent;
+                const desc = this.querySelector('p').textContent;
+                
+                const details = {
+                    '🎯 Decision Function': {
+                        expanded: 'f(x) = sign(Σᵢ αᵢyᵢK(xᵢ,x) + b)',
+                        explanation: 'The decision function determines class membership. For linear SVMs, K(xᵢ,x) = xᵢ·x (dot product).',
+                        example: 'If f(x) > 0 → Class +1, if f(x) < 0 → Class -1, if f(x) = 0 → on boundary'
+                    },
+                    '📏 Margin Calculation': {
+                        expanded: 'margin = 2/||w|| = 2/√(w₁² + w₂² + ... + wₙ²)',
+                        explanation: 'The margin is the perpendicular distance between the two margin hyperplanes. Maximizing margin means minimizing ||w||.',
+                        example: 'If w = [3, 4], then ||w|| = 5, so margin = 2/5 = 0.4 units'
+                    },
+                    '🎭 Support Vector Condition': {
+                        expanded: 'yᵢ(w·xᵢ + b) = 1 for support vectors, yᵢ(w·xᵢ + b) ≥ 1 for all points',
+                        explanation: 'Support vectors lie exactly on the margin boundary. All other correctly classified points satisfy the inequality with strict inequality.',
+                        example: 'For a support vector at x=[1,2] with y=+1: +1×(w·[1,2] + b) = 1'
+                    },
+                    '⚖️ Dual Formulation': {
+                        expanded: 'f(x) = Σᵢ₌₁ⁿ αᵢyᵢ(xᵢ·x) + b, where αᵢ > 0 only for support vectors',
+                        explanation: 'The dual form shows that only support vectors contribute to predictions. Non-support vectors have αᵢ = 0.',
+                        example: 'If only 3 out of 1000 training points are support vectors, the sum only has 3 terms!'
+                    }
+                };
+                
+                const info = details[title];
+                modal.show(title, `
+                    <div class="modal-highlight">
+                        ${desc}
+                    </div>
+                    <div class="modal-code">
+                        <strong>Standard Form:</strong><br>
+                        ${formula}<br><br>
+                        <strong>Expanded Form:</strong><br>
+                        ${info.expanded}
+                    </div>
+                    <p><strong>Explanation:</strong> ${info.explanation}</p>
+                    <p><strong>Example:</strong> ${info.example}</p>
+                `);
+            });
+        });
+
+        // Playground interactions
+        function addPoint(type) {
+            const playground = document.getElementById('svmPlayground');
+            const point = document.createElement('div');
+            point.className = `data-point ${type}`;
+            point.style.top = (Math.random() * 350 + 50) + 'px';
+            point.style.left = (Math.random() * 350 + 50) + 'px';
+            point.setAttribute('data-x', Math.random() * 350 + 50);
+            point.setAttribute('data-y', Math.random() * 350 + 50);
+            
+            point.addEventListener('click', function() {
+                const className = type === 'positive' ? 'Positive (+1)' : 'Negative (-1)';
+                const x = this.getAttribute('data-x');
+                const y = this.getAttribute('data-y');
+                modal.show(`New ${className} Point`, `
+                    <div class="modal-highlight">
+                        <strong>New ${className} point added at (${Math.round(x)}, ${Math.round(y)})</strong>
+                    </div>
+                    <p>This new point will influence the SVM decision boundary. Click "Update SVM" to recalculate the optimal hyperplane.</p>
+                    <p>Depending on its position, this point might become a support vector if it's close to the class boundary.</p>
+                `);
+            });
+            
+            playground.appendChild(point);
+        }
+
+        function updateSVM() {
+            // Simulate SVM update (in a real implementation, this would recalculate the optimal hyperplane)
+            modal.show('SVM Updated!', `
+                <div class="modal-highlight">
+                    <strong>Support Vector Machine Recalculated</strong>
+                </div>
+                <p>In a real implementation, this would:</p>
+                <ul style="margin: 20px 0; line-height: 1.8;">
+                    <li>• Run the SVM optimization algorithm</li>
+                    <li>• Find the new optimal hyperplane</li>
+                    <li>• Identify which points are support vectors</li>
+                    <li>• Update the margin boundaries</li>
+                </ul>
+                <div class="modal-code">
+                    Optimization: min ½||w||² subject to yᵢ(w·xᵢ + b) ≥ 1
+                </div>
+                <p>The new decision boundary would maximize the margin for the updated dataset.</p>
+            `);
+        }
+
+        function resetPlayground() {
+            // Reset to original state
+            const playground = document.getElementById('svmPlayground');
+            const points = playground.querySelectorAll('.data-point');
+            points.forEach(point => {
+                if (!point.style.top.includes('100px') && !point.style.top.includes('80px') && 
+                    !point.style.top.includes('150px') && !point.style.top.includes('300px') &&
+                    !point.style.top.includes('320px') && !point.style.top.includes('280px')) {
+                    point.remove();
+                }
+            });
+            
+            modal.show('Playground Reset', `
+                <div class="modal-highlight">
+                    <strong>SVM Playground has been reset to initial state</strong>
+                </div>
+                <p>All custom points have been removed. The playground now shows the original dataset with:</p>
+                <ul style="margin: 20px 0; line-height: 1.8;">
+                    <li>• 3 positive class points (green)</li>
+                    <li>• 3 negative class points (red)</li>
+                    <li>• 3 support vectors (yellow border)</li>
+                </ul>
+                <p>You can start experimenting again by adding new points!</p>
+            `);
+        }
+
+        // Initialize components
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week4_Slide72.html';
+            } else if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week4_Slide74.html';
+            }
+        });
+    </script>
+</body>
+</html>

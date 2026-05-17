@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Vanishing/Exploding Gradient Problem</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .problem-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .vanishing-section, .exploding-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+        }
+
+        .exploding-section {
+            animation: slideInFromRight 1s ease-out 0.3s both;
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .vanishing-section .section-title {
+            color: #6366f1;
+        }
+
+        .exploding-section .section-title {
+            color: #ef4444;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            border-radius: 2px;
+        }
+
+        .vanishing-section .section-title::after {
+            background: linear-gradient(90deg, #6366f1, #818cf8);
+        }
+
+        .exploding-section .section-title::after {
+            background: linear-gradient(90deg, #ef4444, #f87171);
+        }
+
+        .problem-description {
+            font-size: 1.15em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 25px;
+            padding: 20px;
+            border-radius: 15px;
+            border-left: 4px solid;
+        }
+
+        .vanishing-section .problem-description {
+            background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+            border-left-color: #6366f1;
+        }
+
+        .exploding-section .problem-description {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            border-left-color: #ef4444;
+        }
+
+        .math-visualization {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .gradient-flow {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding: 30px;
+            background: rgba(13, 148, 136, 0.05);
+            border-radius: 15px;
+            margin: 30px 0;
+        }
+
+        .gradient-node {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2em;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .gradient-node:hover {
+            transform: scale(1.15);
+        }
+
+        .vanishing-node {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            animation: vanish 3s ease-in-out infinite;
+        }
+
+        .exploding-node {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            animation: explode 3s ease-in-out infinite;
+        }
+
+        @keyframes vanish {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.3; transform: scale(0.7); }
+        }
+
+        @keyframes explode {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+        }
+
+        .arrow {
+            font-size: 2em;
+            color: #14b8a6;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .solutions-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            margin-top: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.5s both;
+        }
+
+        .solution-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .solution-card {
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
+            padding: 25px;
+            border-radius: 15px;
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .solution-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.2);
+        }
+
+        .solution-title {
+            font-size: 1.3em;
+            color: #0d9488;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .solution-desc {
+            color: #64748b;
+            line-height: 1.6;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .course-info {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            color: #0d9488;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            color: #0d9488;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @keyframes slideInFromTop {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInFromLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInFromRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInFromBottom {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .clickable {
+            cursor: pointer;
+            text-decoration: underline dotted;
+            transition: all 0.3s ease;
+        }
+
+        .clickable:hover {
+            text-decoration: underline solid;
+        }
+    </style>
+</head>
+<body>
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    
+    <div class="course-info">CS5710 - Week 10</div>
+    <div class="slide-number">Slide 184 of 200</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Vanishing/Exploding Gradient Problem</h1>
+        
+        <div class="problem-grid">
+            <div class="vanishing-section">
+                <h2 class="section-title">📉 Vanishing Gradients</h2>
+                
+                <div class="problem-description">
+                    Gradients become exponentially smaller as they propagate back through time, making it impossible to learn <span class="clickable" data-type="vanishing">long-range dependencies</span>.
+                </div>
+                
+                <div class="math-visualization">
+                    <strong>Mathematical Explanation:</strong><br>
+                    ∂h<sub>t</sub>/∂h<sub>k</sub> = ∏<sub>i=k+1</sub><sup>t</sup> W<sup>T</sup> × diag(f'(h<sub>i-1</sub>))<br><br>
+                    
+                    If ||W|| < 1 and |f'(h)| < 1:<br>
+                    → Gradient ≈ (0.5)<sup>t-k</sup> → 0 as t-k grows
+                </div>
+                
+                <div class="gradient-flow">
+                    <div class="gradient-node vanishing-node" data-step="1">t-3</div>
+                    <span class="arrow">→</span>
+                    <div class="gradient-node vanishing-node" data-step="2" style="animation-delay: 0.5s;">t-2</div>
+                    <span class="arrow">→</span>
+                    <div class="gradient-node vanishing-node" data-step="3" style="animation-delay: 1s;">t-1</div>
+                    <span class="arrow">→</span>
+                    <div class="gradient-node vanishing-node" data-step="4" style="animation-delay: 1.5s;">t</div>
+                </div>
+                
+                <p style="text-align: center; color: #6366f1; font-weight: 600;">
+                    Gradient magnitude decreases exponentially
+                </p>
+            </div>
+
+            <div class="exploding-section">
+                <h2 class="section-title">📈 Exploding Gradients</h2>
+                
+                <div class="problem-description">
+                    Gradients grow exponentially during backpropagation, causing <span class="clickable" data-type="exploding">numerical instability</span> and making training impossible.
+                </div>
+                
+                <div class="math-visualization">
+                    <strong>Mathematical Explanation:</strong><br>
+                    ∂h<sub>t</sub>/∂h<sub>k</sub> = ∏<sub>i=k+1</sub><sup>t</sup> W<sup>T</sup> × diag(f'(h<sub>i-1</sub>))<br><br>
+                    
+                    If ||W|| > 1 and |f'(h)| ≥ 1:<br>
+                    → Gradient ≈ (2.0)<sup>t-k</sup> → ∞ as t-k grows
+                </div>
+                
+                <div class="gradient-flow">
+                    <div class="gradient-node exploding-node" data-step="1">t-3</div>
+                    <span class="arrow">→</span>
+                    <div class="gradient-node exploding-node" data-step="2" style="animation-delay: 0.5s;">t-2</div>
+                    <span class="arrow">→</span>
+                    <div class="gradient-node exploding-node" data-step="3" style="animation-delay: 1s;">t-1</div>
+                    <span class="arrow">→</span>
+                    <div class="gradient-node exploding-node" data-step="4" style="animation-delay: 1.5s;">t</div>
+                </div>
+                
+                <p style="text-align: center; color: #ef4444; font-weight: 600;">
+                    Gradient magnitude increases exponentially
+                </p>
+            </div>
+        </div>
+
+        <div class="solutions-section">
+            <h2 class="section-title" style="color: #0d9488;">Solutions & Mitigation Strategies</h2>
+            
+            <div class="solution-grid">
+                <div class="solution-card" data-solution="clipping">
+                    <div class="solution-title">🔧 Gradient Clipping</div>
+                    <div class="solution-desc">
+                        Limit gradient magnitude to prevent explosion. Simple but effective for exploding gradients.
+                    </div>
+                </div>
+                
+                <div class="solution-card" data-solution="lstm">
+                    <div class="solution-title">🏗️ LSTM/GRU</div>
+                    <div class="solution-desc">
+                        Architectures with gating mechanisms that control gradient flow and preserve information.
+                    </div>
+                </div>
+                
+                <div class="solution-card" data-solution="initialization">
+                    <div class="solution-title">⚙️ Better Initialization</div>
+                    <div class="solution-desc">
+                        Xavier/He initialization to keep gradients in stable range from the start.
+                    </div>
+                </div>
+                
+                <div class="solution-card" data-solution="residual">
+                    <div class="solution-title">🔗 Skip Connections</div>
+                    <div class="solution-desc">
+                        Residual connections provide gradient highways, bypassing problematic layers.
+                    </div>
+                </div>
+                
+                <div class="solution-card" data-solution="normalization">
+                    <div class="solution-title">📊 Batch Normalization</div>
+                    <div class="solution-desc">
+                        Normalize activations to prevent gradient saturation and maintain stable flow.
+                    </div>
+                </div>
+                
+                <div class="solution-card" data-solution="truncation">
+                    <div class="solution-title">✂️ Truncated BPTT</div>
+                    <div class="solution-desc">
+                        Limit gradient propagation to fixed number of steps, preventing extreme values.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week10_Slide183.html" class="nav-btn">← Previous</a>
+        <a href="Week10_Slide185.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Clickable problem descriptions
+        document.querySelectorAll('.clickable').forEach(elem => {
+            elem.addEventListener('click', function() {
+                const type = this.dataset.type;
+                
+                const details = {
+                    'vanishing': {
+                        title: 'Understanding Long-Range Dependencies',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>Why Long-Range Dependencies Matter</h4>
+                                <p>Many sequence tasks require remembering information from much earlier in the sequence to make correct predictions.</p>
+                            </div>
+                            
+                            <h4 style="color: #6366f1; margin: 20px 0;">Examples of Long-Range Dependencies:</h4>
+                            
+                            <div class="modal-code">
+# Language Example:
+"The cat, who had been sleeping peacefully in the sunny 
+window for most of the afternoon while the rain poured 
+outside, suddenly [jumped/jumps]"
+
+# Model needs to remember "cat" (singular) from 20+ words ago
+                            </div>
+                            
+                            <div style="background: rgba(99, 102, 241, 0.1); padding: 15px; border-radius: 10px; margin: 15px 0;">
+                                <strong>Document Understanding:</strong><br>
+                                • Connecting pronouns to entities mentioned paragraphs earlier<br>
+                                • Understanding context established at document beginning<br>
+                                • Tracking narrative threads across chapters
+                            </div>
+                            
+                            <div style="background: rgba(99, 102, 241, 0.1); padding: 15px; border-radius: 10px; margin: 15px 0;">
+                                <strong>Time Series:</strong><br>
+                                • Seasonal patterns in data (yearly cycles)<br>
+                                • Long-term trends vs short-term fluctuations<br>
+                                • Dependencies between events separated by long delays
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(239, 68, 68, 0.1); border-radius: 10px;">
+                                <strong>⚠️ Vanishing Gradient Impact:</strong><br>
+                                When gradients vanish, the network cannot learn these long-range dependencies because error signals from distant time steps become too weak to cause weight updates.
+                            </div>
+                        `
+                    },
+                    'exploding': {
+                        title: 'Numerical Instability in Training',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>How Exploding Gradients Break Training</h4>
+                                <p>When gradients explode, they cause catastrophic numerical problems that completely destabilize the learning process.</p>
+                            </div>
+                            
+                            <h4 style="color: #ef4444; margin: 20px 0;">Symptoms of Exploding Gradients:</h4>
+                            
+                            <div class="modal-code">
+# Training Log with Exploding Gradients:
+Epoch 1, Batch 10: Loss = 2.31
+Epoch 1, Batch 11: Loss = 2.28
+Epoch 1, Batch 12: Loss = 156.72  ← Sudden jump
+Epoch 1, Batch 13: Loss = 8492.33
+Epoch 1, Batch 14: Loss = NaN      ← Training failed
+
+# Weight values:
+Before explosion: W = [[0.52, -0.31], [0.18, 0.44]]
+After explosion:  W = [[8.3e+15, -2.1e+16], [NaN, Inf]]
+                            </div>
+                            
+                            <div style="background: rgba(239, 68, 68, 0.1); padding: 15px; border-radius: 10px; margin: 15px 0;">
+                                <strong>1. Loss Explosion:</strong><br>
+                                • Loss suddenly jumps to huge values<br>
+                                • Often becomes NaN (Not a Number)<br>
+                                • Model outputs become meaningless
+                            </div>
+                            
+                            <div style="background: rgba(239, 68, 68, 0.1); padding: 15px; border-radius: 10px; margin: 15px 0;">
+                                <strong>2. Weight Corruption:</strong><br>
+                                • Weights grow to astronomical values<br>
+                                • Can overflow to Infinity<br>
+                                • Once corrupted, model cannot recover
+                            </div>
+                            
+                            <div style="background: rgba(239, 68, 68, 0.1); padding: 15px; border-radius: 10px; margin: 15px 0;">
+                                <strong>3. Gradient Values:</strong><br>
+                                • Gradients can reach 10^10 or higher<br>
+                                • Single bad batch can destroy months of training<br>
+                                • Makes learning rate selection extremely difficult
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                                <strong>✅ Prevention is Key:</strong><br>
+                                Unlike vanishing gradients which slow learning, exploding gradients completely break it. That's why gradient clipping is essential for RNN training.
+                            </div>
+                        `
+                    }
+                };
+                
+                const detail = details[type];
+                if (detail) {
+                    modal.show(detail.title, detail.content);
+                }
+            });
+        });
+
+        // Gradient node interactions
+        document.querySelectorAll('.gradient-node').forEach(node => {
+            node.addEventListener('click', function() {
+                const step = this.dataset.step;
+                const isVanishing = this.classList.contains('vanishing-node');
+                
+                const title = isVanishing ? 
+                    `Vanishing Gradient at Step ${step}` : 
+                    `Exploding Gradient at Step ${step}`;
+                
+                const gradient = isVanishing ? 
+                    Math.pow(0.5, parseInt(step)) : 
+                    Math.pow(2, parseInt(step));
+                
+                modal.show(title, `
+                    <div class="modal-highlight">
+                        <h4>Gradient Magnitude at Time Step ${step}</h4>
+                        <p>${isVanishing ? 'Gradient shrinks' : 'Gradient grows'} exponentially with each backward step through time.</p>
+                    </div>
+                    
+                    <div class="modal-code">
+# Gradient calculation at step ${step}:
+Initial gradient: 1.0
+Multiplication factor per step: ${isVanishing ? '0.5' : '2.0'}
+
+Gradient after ${step} steps:
+g = 1.0 × ${isVanishing ? '0.5' : '2.0'}^${step} = ${gradient.toExponential(3)}
+
+${isVanishing ? 
+    `# Effect on learning:
+if gradient < 1e-5:
+    weight_update ≈ 0  # No learning happens!` :
+    `# Effect on weights:
+weight_update = learning_rate × ${gradient.toExponential(2)}
+# Even with lr=0.001, update is huge!`}
+                    </div>
+                    
+                    <h4 style="color: ${isVanishing ? '#6366f1' : '#ef4444'}; margin: 20px 0;">
+                        Physical Interpretation:
+                    </h4>
+                    
+                    <div style="background: rgba(${isVanishing ? '99, 102, 241' : '239, 68, 68'}, 0.1); padding: 15px; border-radius: 10px;">
+                        ${isVanishing ? 
+                        `• Information from ${4 - parseInt(step)} steps ago is multiplied by ${gradient.toExponential(2)}<br>
+                        • This makes it ${(1/gradient).toFixed(0)}× weaker than current information<br>
+                        • Network effectively "forgets" distant past<br>
+                        • Learning about long-term patterns becomes impossible` :
+                        `• Error signal is amplified ${gradient.toFixed(0)}× from original<br>
+                        • Small errors become massive corrections<br>
+                        • Causes wild oscillations in weight space<br>
+                        • Network becomes unstable and diverges`}
+                    </div>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                        <strong>📊 Rule of Thumb:</strong><br>
+                        ${isVanishing ? 
+                        'Gradients below 10^-5 are too small to cause meaningful weight updates.' :
+                        'Gradients above 10^2 risk destabilizing training without clipping.'}
+                    </div>
+                `);
+            });
+        });
+
+        // Solution cards
+        document.querySelectorAll('.solution-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const solution = this.dataset.solution;
+                
+                const solutions = {
+                    'clipping': {
+                        title: 'Gradient Clipping',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>How Gradient Clipping Works</h4>
+                                <p>Gradient clipping prevents exploding gradients by limiting the maximum gradient magnitude during backpropagation.</p>
+                            </div>
+                            
+                            <div class="modal-code">
+# Gradient Clipping Implementation
+def clip_gradients(gradients, max_norm=5.0):
+    """
+    Clip gradients to maximum L2 norm
+    """
+    total_norm = 0
+    for grad in gradients:
+        total_norm += np.sum(grad ** 2)
+    total_norm = np.sqrt(total_norm)
+    
+    clip_ratio = max_norm / (total_norm + 1e-6)
+    clip_ratio = min(clip_ratio, 1.0)
+    
+    clipped_gradients = []
+    for grad in gradients:
+        clipped_gradients.append(grad * clip_ratio)
+    
+    return clipped_gradients
+
+# PyTorch example:
+torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=5.0)
+
+# TensorFlow example:
+optimizer = tf.keras.optimizers.Adam(clipnorm=5.0)
+                            </div>
+                            
+                            <h4 style="color: #0d9488; margin: 20px 0;">Types of Gradient Clipping:</h4>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>1. Norm Clipping (Most Common):</strong><br>
+                                • Scale down gradients if L2 norm exceeds threshold<br>
+                                • Preserves gradient direction<br>
+                                • Typical values: 1.0 to 10.0
+                            </div>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>2. Value Clipping:</strong><br>
+                                • Clip each gradient element to [-threshold, threshold]<br>
+                                • Can change gradient direction<br>
+                                • Less commonly used
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(251, 191, 36, 0.1); border-radius: 10px;">
+                                <strong>⚡ Best Practices:</strong><br>
+                                • Start with max_norm = 5.0<br>
+                                • Monitor gradient norms during training<br>
+                                • Adjust based on how often clipping occurs<br>
+                                • Essential for RNN/LSTM training
+                            </div>
+                        `
+                    },
+                    'lstm': {
+                        title: 'LSTM/GRU Architecture Solution',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>Gated Architectures to the Rescue</h4>
+                                <p>LSTM and GRU use gating mechanisms to control information flow and gradient propagation, solving both vanishing and exploding gradient problems.</p>
+                            </div>
+                            
+                            <h4 style="color: #0d9488; margin: 20px 0;">Key Innovation: Gating Mechanisms</h4>
+                            
+                            <div class="modal-code">
+# LSTM solves gradient problems through:
+
+1. Cell State Highway:
+   c_t = f_t * c_{t-1} + i_t * candidate
+   # Gradient can flow directly through c_{t-1} → c_t
+   
+2. Forget Gate (f_t):
+   f_t = sigmoid(W_f @ [h_{t-1}, x_t] + b_f)
+   # Controls what to remember
+   
+3. Input Gate (i_t):
+   i_t = sigmoid(W_i @ [h_{t-1}, x_t] + b_i)
+   # Controls what new info to store
+   
+4. Output Gate (o_t):
+   o_t = sigmoid(W_o @ [h_{t-1}, x_t] + b_o)
+   # Controls what to output
+                            </div>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 15px 0;">
+                                <strong>Why LSTM Prevents Vanishing Gradients:</strong><br>
+                                • Cell state provides linear path for gradients<br>
+                                • Forget gate can be ~1, preserving gradients<br>
+                                • No activation function on cell state updates<br>
+                                • Gradient = f_t × gradient from future (can be ~1)
+                            </div>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 15px 0;">
+                                <strong>Why LSTM Prevents Exploding Gradients:</strong><br>
+                                • Gates use sigmoid (output in [0,1])<br>
+                                • Multiplicative interactions bound gradient growth<br>
+                                • Cell state uses addition, not multiplication<br>
+                                • Natural gradient clipping through gate saturation
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(99, 102, 241, 0.1); border-radius: 10px;">
+                                <strong>🎯 GRU Alternative:</strong><br>
+                                • Simpler than LSTM (2 gates vs 3)<br>
+                                • Update gate z_t and reset gate r_t<br>
+                                • Often performs similarly with fewer parameters<br>
+                                • Better for smaller datasets
+                            </div>
+                        `
+                    },
+                    'initialization': {
+                        title: 'Smart Weight Initialization',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>Initialization Strategies for RNNs</h4>
+                                <p>Proper weight initialization can prevent gradients from vanishing or exploding from the very start of training.</p>
+                            </div>
+                            
+                            <div class="modal-code">
+# Xavier/Glorot Initialization
+def xavier_init(shape):
+    """For tanh activation"""
+    fan_in, fan_out = shape
+    limit = np.sqrt(6 / (fan_in + fan_out))
+    return np.random.uniform(-limit, limit, shape)
+
+# He Initialization  
+def he_init(shape):
+    """For ReLU activation"""
+    fan_in = shape[0]
+    std = np.sqrt(2 / fan_in)
+    return np.random.normal(0, std, shape)
+
+# Orthogonal Initialization (Best for RNNs)
+def orthogonal_init(shape):
+    """Preserves gradient norm"""
+    flat_shape = (shape[0], np.prod(shape[1:]))
+    a = np.random.normal(0, 1, flat_shape)
+    u, _, v = np.linalg.svd(a, full_matrices=False)
+    q = u if u.shape == flat_shape else v
+    return q.reshape(shape)
+                            </div>
+                            
+                            <h4 style="color: #0d9488; margin: 20px 0;">Why Initialization Matters for RNNs:</h4>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Recurrent Weight Matrix W_h:</strong><br>
+                                • Applied repeatedly at each time step<br>
+                                • Eigenvalues determine gradient behavior<br>
+                                • |λ| < 1 → vanishing, |λ| > 1 → exploding<br>
+                                • Orthogonal init → eigenvalues = ±1
+                            </div>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Input Weight Matrix W_x:</strong><br>
+                                • Standard Xavier/He initialization works well<br>
+                                • Scale based on input dimension<br>
+                                • Prevents initial activation saturation
+                            </div>
+                            
+                            <div class="modal-code">
+# PyTorch RNN initialization example
+for name, param in rnn.named_parameters():
+    if 'weight_ih' in name:
+        # Input-hidden weights
+                        nn.init.xavier_uniform_(param)
+    elif 'weight_hh' in name:
+        # Hidden-hidden weights (recurrent)
+        nn.init.orthogonal_(param)
+    elif 'bias' in name:
+        # Biases
+        nn.init.zeros_(param)
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(251, 191, 36, 0.1); border-radius: 10px;">
+                                <strong>💡 Best Practice:</strong><br>
+                                Always use orthogonal initialization for recurrent weights in vanilla RNNs. For LSTMs/GRUs, framework defaults are usually good.
+                            </div>
+                        `
+                    },
+                    'residual': {
+                        title: 'Skip/Residual Connections',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>Gradient Highways via Skip Connections</h4>
+                                <p>Residual connections provide direct paths for gradients to flow, bypassing the problematic recurrent transformations.</p>
+                            </div>
+                            
+                            <div class="modal-code">
+# Standard RNN (gradient must flow through all transformations)
+h_t = tanh(W_x @ x_t + W_h @ h_{t-1} + b)
+
+# RNN with Residual Connection
+h_t = h_{t-1} + tanh(W_x @ x_t + W_h @ h_{t-1} + b)
+#     ^^^^^^^^ Skip connection
+
+# Gradient flow:
+∂L/∂h_{t-1} = ∂L/∂h_t × (1 + ∂tanh(...)/∂h_{t-1})
+#                         ^ Direct path ensures gradient flows
+                            </div>
+                            
+                            <h4 style="color: #0d9488; margin: 20px 0;">Types of Skip Connections for RNNs:</h4>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>1. Dense Connections (Within Time):</strong><br>
+                                • Connect current hidden state to multiple future states<br>
+                                • h_t influences h_{t+1}, h_{t+2}, h_{t+3} directly<br>
+                                • Provides multiple gradient paths
+                            </div>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>2. Highway Networks:</strong><br>
+                                • Learnable gates control skip vs transform<br>
+                                • T(x) = Highway gate (learned)<br>
+                                • y = T(x) × Transform(x) + (1-T(x)) × x<br>
+                                • Adaptive gradient flow control
+                            </div>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>3. Layer Normalization + Skip:</strong><br>
+                                • h_t = LayerNorm(h_{t-1} + RNN_Cell(x_t, h_{t-1}))<br>
+                                • Combines normalization with residual<br>
+                                • Very stable gradient flow
+                            </div>
+                            
+                            <div class="modal-code">
+# Implementation example
+class ResidualRNN(nn.Module):
+    def __init__(self, input_size, hidden_size):
+        super().__init__()
+        self.rnn = nn.RNN(input_size, hidden_size)
+        self.projection = nn.Linear(hidden_size, hidden_size)
+        
+    def forward(self, x, h_0):
+        rnn_out, _ = self.rnn(x, h_0)
+        # Add skip connection
+        output = h_0 + self.projection(rnn_out)
+        return output
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(99, 102, 241, 0.1); border-radius: 10px;">
+                                <strong>✨ Key Insight:</strong><br>
+                                Skip connections are why Transformers work so well - they're essentially all skip connections with attention!
+                            </div>
+                        `
+                    },
+                    'normalization': {
+                        title: 'Batch/Layer Normalization',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>Normalization for Stable Gradients</h4>
+                                <p>Normalization techniques keep activations in a stable range, preventing gradient saturation and maintaining healthy gradient flow.</p>
+                            </div>
+                            
+                            <div class="modal-code">
+# Layer Normalization for RNNs
+def layer_norm(x, gamma, beta, eps=1e-5):
+    """
+    Normalize across features for each time step
+    x: [batch_size, hidden_size]
+    """
+    mean = np.mean(x, axis=-1, keepdims=True)
+    var = np.var(x, axis=-1, keepdims=True)
+    x_norm = (x - mean) / np.sqrt(var + eps)
+    return gamma * x_norm + beta
+
+# Apply in RNN
+class LayerNormRNN(nn.Module):
+    def forward(self, x_t, h_prev):
+        # Standard RNN computation
+        pre_activation = self.W_x @ x_t + self.W_h @ h_prev + self.b
+        
+        # Apply layer norm before activation
+        normalized = layer_norm(pre_activation, self.gamma, self.beta)
+        
+        # Then activation
+        h_t = torch.tanh(normalized)
+        return h_t
+                            </div>
+                            
+                            <h4 style="color: #0d9488; margin: 20px 0;">Why Normalization Helps RNNs:</h4>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Prevents Saturation:</strong><br>
+                                • Keeps inputs to activation functions in linear region<br>
+                                • tanh'(x) ≈ 1 near x=0, ≈ 0 for |x| > 2<br>
+                                • Normalization keeps x near 0<br>
+                                • Gradients remain ≈ 1 instead of ≈ 0
+                            </div>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Controls Variance:</strong><br>
+                                • Variance grows/shrinks exponentially in RNNs<br>
+                                • Normalization resets variance to 1<br>
+                                • Prevents both explosion and vanishing<br>
+                                • Acts like adaptive gradient clipping
+                            </div>
+                            
+                            <h4 style="color: #0d9488; margin: 20px 0;">Batch Norm vs Layer Norm for RNNs:</h4>
+                            
+                            <div class="modal-code">
+# Batch Norm (problematic for RNNs):
+# - Normalizes across batch dimension
+# - Different statistics for each time step
+# - Doesn't work well with variable length sequences
+
+# Layer Norm (preferred for RNNs):
+# - Normalizes across feature dimension  
+# - Same operation regardless of batch/time
+# - Works with any sequence length
+# - No running statistics needed
+
+# Implementation comparison:
+batch_norm: norm over [batch, :]
+layer_norm: norm over [:, features]
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(251, 191, 36, 0.1); border-radius: 10px;">
+                                <strong>🎯 Recommendation:</strong><br>
+                                Use Layer Normalization for RNNs/LSTMs. It's more stable and doesn't require tracking running statistics for different sequence positions.
+                            </div>
+                        `
+                    },
+                    'truncation': {
+                        title: 'Truncated BPTT',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>Limiting Gradient Propagation Length</h4>
+                                <p>Truncated BPTT stops gradient flow after a fixed number of steps, preventing both extreme vanishing and explosion while maintaining practical training speed.</p>
+                            </div>
+                            
+                            <div class="modal-code">
+# Full BPTT (problematic)
+def full_bptt(sequence, model):
+    """
+    Process entire sequence, can be 1000s of steps
+    """
+    states = [initial_state]
+    for t in range(len(sequence)):  # Could be very long!
+        states.append(model(sequence[t], states[-1]))
+    
+    loss = compute_loss(states, targets)
+    loss.backward()  # Gradient through ALL time steps
+    
+# Truncated BPTT (practical)
+def truncated_bptt(sequence, model, k=35):
+    """
+    Process in chunks of k steps
+    """
+    hidden = initial_state
+    for i in range(0, len(sequence), k):
+        # Process chunk
+        chunk = sequence[i:i+k]
+        hidden = hidden.detach()  # Stop gradient
+        
+        outputs = []
+        for t in range(len(chunk)):
+            hidden = model(chunk[t], hidden)
+            outputs.append(hidden)
+        
+        # Backprop only through k steps
+        loss = compute_loss(outputs, targets[i:i+k])
+        loss.backward()
+        optimizer.step()
+                            </div>
+                            
+                            <h4 style="color: #0d9488; margin: 20px 0;">Truncation Strategies:</h4>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>1. Fixed Window (k steps):</strong><br>
+                                • Common values: k = 35-100<br>
+                                • Trade-off: memory vs long-range learning<br>
+                                • Smaller k = less memory, faster training<br>
+                                • Larger k = better long-range dependencies
+                            </div>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>2. Random Truncation:</strong><br>
+                                • Randomly vary k between batches<br>
+                                • k ~ Uniform(k_min, k_max)<br>
+                                • Helps model be robust to different lengths<br>
+                                • Prevents overfitting to fixed window
+                            </div>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>3. Gradient Checkpointing:</strong><br>
+                                • Store checkpoints every m steps<br>
+                                • Recompute forward pass during backward<br>
+                                • Allows longer sequences with less memory<br>
+                                • Used in modern large models
+                            </div>
+                            
+                            <h4 style="color: #0d9488; margin: 20px 0;">Maintaining Hidden State:</h4>
+                            
+                            <div class="modal-code">
+# Key: Detach hidden state between chunks
+hidden = hidden.detach()  # In PyTorch
+hidden = tf.stop_gradient(hidden)  # In TensorFlow
+
+# This maintains information flow (hidden state)
+# while stopping gradient flow (no BPTT beyond k)
+
+# The model still sees long sequences
+# but gradients only flow through k steps
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(251, 191, 36, 0.1); border-radius: 10px;">
+                                <strong>⚡ Modern Alternative:</strong><br>
+                                Transformers with attention mechanisms have largely replaced the need for truncated BPTT by processing sequences in parallel with controlled receptive fields.
+                            </div>
+                        `
+                    }
+                };
+                
+                const sol = solutions[solution];
+                if (sol) {
+                    modal.show(sol.title, sol.content);
+                }
+            });
+        });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week10_Slide183.html';
+            } else if (e.key === 'ArrowRight') {
+                window.location.href = 'Week10_Slide185.html';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Model Evaluation Strategy</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .strategy-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .principles-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .key-concept {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .principle-list {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .principle-item {
+            padding: 20px;
+            margin: 15px 0;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .principle-item:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .principle-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .principle-desc {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .evaluation-framework {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .framework-diagram {
+            background: #1e293b;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .pipeline-steps {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .pipeline-step {
+            background: rgba(13, 148, 136, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(13, 148, 136, 0.3);
+        }
+
+        .pipeline-step:hover {
+            background: rgba(13, 148, 136, 0.2);
+            transform: translateY(-5px);
+            border-color: #0d9488;
+        }
+
+        .step-number {
+            width: 30px;
+            height: 30px;
+            background: #0d9488;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin: 0 auto 10px;
+        }
+
+        .step-title {
+            color: #5eead4;
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
+
+        .step-desc {
+            color: #94a3b8;
+            font-size: 0.8em;
+            line-height: 1.3;
+        }
+
+        .metrics-overview {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.9s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(13, 148, 136, 0.4);
+        }
+
+        .metric-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .metric-name {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .metric-usage {
+            font-size: 0.85em;
+            opacity: 0.9;
+            line-height: 1.3;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: float 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .pipeline-steps { grid-template-columns: 1fr; }
+            .metrics-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 12</div>
+    <div class="slide-number">Slide 221 of 240</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Model Evaluation Strategy</h1>
+        
+        <div class="content-layout">
+            <div class="strategy-section">
+                <h2 class="section-title">Evaluation Strategy</h2>
+                
+                <div class="key-concept">
+                    <strong>Model Evaluation</strong> is the systematic process of assessing how well a machine learning model performs on unseen data and meets business objectives.
+                </div>
+                
+                <div style="font-size: 1.1em; line-height: 1.7; color: #1e293b;">
+                    <strong>Why Evaluation Matters:</strong><br><br>
+                    • <strong>Performance Assessment:</strong> Quantify model accuracy and reliability<br>
+                    • <strong>Model Selection:</strong> Choose the best algorithm for your problem<br>
+                    • <strong>Hyperparameter Tuning:</strong> Optimize model configuration<br>
+                    • <strong>Business Impact:</strong> Ensure models meet real-world requirements<br>
+                    • <strong>Risk Mitigation:</strong> Identify potential failures before deployment
+                </div>
+            </div>
+
+            <div class="principles-section">
+                <h2 class="section-title">Core Principles</h2>
+                
+                <ul class="principle-list">
+                    <li class="principle-item" onclick="showPrincipleDetail('holdout')">
+                        <div class="principle-title">🔒 Data Holdout</div>
+                        <div class="principle-desc">Never evaluate on training data</div>
+                    </li>
+                    <li class="principle-item" onclick="showPrincipleDetail('representative')">
+                        <div class="principle-title">📊 Representative Data</div>
+                        <div class="principle-desc">Test data must reflect real-world distribution</div>
+                    </li>
+                    <li class="principle-item" onclick="showPrincipleDetail('multiple-metrics')">
+                        <div class="principle-title">📏 Multiple Metrics</div>
+                        <div class="principle-desc">Use comprehensive evaluation criteria</div>
+                    </li>
+                    <li class="principle-item" onclick="showPrincipleDetail('statistical')">
+                        <div class="principle-title">📈 Statistical Significance</div>
+                        <div class="principle-desc">Account for variance in performance</div>
+                    </li>
+                    <li class="principle-item" onclick="showPrincipleDetail('business-alignment')">
+                        <div class="principle-title">🎯 Business Alignment</div>
+                        <div class="principle-desc">Metrics must align with business goals</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="evaluation-framework">
+            <h2 class="section-title">Evaluation Pipeline</h2>
+            
+            <div class="framework-diagram">
+                <div class="pipeline-steps">
+                    <div class="pipeline-step" onclick="showStepDetail('data-prep')">
+                        <div class="step-number">1</div>
+                        <div class="step-title">Data Preparation</div>
+                        <div class="step-desc">Split, clean, and prepare evaluation datasets</div>
+                    </div>
+                    
+                    <div class="pipeline-step" onclick="showStepDetail('metric-selection')">
+                        <div class="step-number">2</div>
+                        <div class="step-title">Metric Selection</div>
+                        <div class="step-desc">Choose appropriate evaluation metrics</div>
+                    </div>
+                    
+                    <div class="pipeline-step" onclick="showStepDetail('validation')">
+                        <div class="step-number">3</div>
+                        <div class="step-title">Validation Strategy</div>
+                        <div class="step-desc">Design cross-validation approach</div>
+                    </div>
+                    
+                    <div class="pipeline-step" onclick="showStepDetail('testing')">
+                        <div class="step-number">4</div>
+                        <div class="step-title">Model Testing</div>
+                        <div class="step-desc">Execute evaluation on test data</div>
+                    </div>
+                    
+                    <div class="pipeline-step" onclick="showStepDetail('analysis')">
+                        <div class="step-number">5</div>
+                        <div class="step-title">Results Analysis</div>
+                        <div class="step-desc">Interpret and communicate findings</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="metrics-overview">
+            <h2 class="section-title">Key Evaluation Metrics</h2>
+            
+            <div class="metrics-grid">
+                <div class="metric-card" onclick="showMetricDetail('accuracy')">
+                    <div class="metric-icon">🎯</div>
+                    <div class="metric-name">Accuracy</div>
+                    <div class="metric-usage">Overall correctness for balanced datasets</div>
+                </div>
+                
+                <div class="metric-card" onclick="showMetricDetail('precision-recall')">
+                    <div class="metric-icon">⚖️</div>
+                    <div class="metric-name">Precision & Recall</div>
+                    <div class="metric-usage">Important for imbalanced classifications</div>
+                </div>
+                
+                <div class="metric-card" onclick="showMetricDetail('f1-score')">
+                    <div class="metric-icon">🔄</div>
+                    <div class="metric-name">F1-Score</div>
+                    <div class="metric-usage">Harmonic mean of precision and recall</div>
+                </div>
+                
+                <div class="metric-card" onclick="showMetricDetail('auc-roc')">
+                    <div class="metric-icon">📈</div>
+                    <div class="metric-name">AUC-ROC</div>
+                    <div class="metric-usage">Classification performance across thresholds</div>
+                </div>
+                
+                <div class="metric-card" onclick="showMetricDetail('mse-rmse')">
+                    <div class="metric-icon">📊</div>
+                    <div class="metric-name">MSE/RMSE</div>
+                    <div class="metric-usage">Regression error magnitude</div>
+                </div>
+                
+                <div class="metric-card" onclick="showMetricDetail('r-squared')">
+                    <div class="metric-icon">📉</div>
+                    <div class="metric-name">R-Squared</div>
+                    <div class="metric-usage">Explained variance in regression</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week11_Slide220.html" class="nav-btn">← Previous</a>
+        <a href="Week12_Slide222.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Principle details
+        function showPrincipleDetail(principle) {
+            const principles = {
+                'holdout': {
+                    title: 'Data Holdout Principle',
+                    content: `
+                        <div class="modal-highlight">
+                            Never evaluate model performance using the same data used for training
+                        </div>
+                        <h4>Why This Matters:</h4>
+                        <ul>
+                            <li><strong>Overfitting Detection:</strong> Training accuracy can be misleadingly high</li>
+                            <li><strong>Generalization Assessment:</strong> Only unseen data reveals true performance</li>
+                            <li><strong>Honest Evaluation:</strong> Prevents inflated performance metrics</li>
+                        </ul>
+                        <div class="modal-code">
+# Wrong: Evaluating on training data
+model.fit(X_train, y_train)
+accuracy = model.score(X_train, y_train)  # Biased!
+
+# Right: Evaluating on test data
+model.fit(X_train, y_train)
+accuracy = model.score(X_test, y_test)  # Honest evaluation
+                        </div>
+                        <p><strong>Key Rule:</strong> Test data should remain completely unseen during model development</p>
+                    `
+                },
+                'representative': {
+                    title: 'Representative Data Sampling',
+                    content: `
+                        <div class="modal-highlight">
+                            Evaluation data must accurately reflect the real-world data distribution
+                        </div>
+                        <h4>Common Issues:</h4>
+                        <ul>
+                            <li><strong>Temporal Drift:</strong> Data changes over time</li>
+                            <li><strong>Selection Bias:</strong> Non-random sampling</li>
+                            <li><strong>Population Mismatch:</strong> Test ≠ Production data</li>
+                            <li><strong>Feature Distribution:</strong> Shifts in input characteristics</li>
+                        </ul>
+                        <div class="modal-code">
+# Ensure representative sampling
+from sklearn.model_selection import train_test_split
+
+# Stratified split for classification
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, stratify=y, random_state=42
+)
+
+# Time-based split for temporal data
+train_data = data[data['date'] < '2023-01-01']
+test_data = data[data['date'] >= '2023-01-01']
+                        </div>
+                        <p><strong>Best Practice:</strong> Regularly validate that test data represents current production data</p>
+                    `
+                },
+                'multiple-metrics': {
+                    title: 'Multiple Evaluation Metrics',
+                    content: `
+                        <div class="modal-highlight">
+                            Single metrics rarely capture complete model performance picture
+                        </div>
+                        <h4>Why Multiple Metrics:</h4>
+                        <ul>
+                            <li><strong>Different Perspectives:</strong> Each metric reveals different aspects</li>
+                            <li><strong>Business Goals:</strong> Different stakeholders care about different metrics</li>
+                            <li><strong>Edge Cases:</strong> Some metrics hide important failure modes</li>
+                            <li><strong>Robustness:</strong> Consistent performance across metrics indicates reliability</li>
+                        </ul>
+                        <div class="modal-code">
+# Classification metrics suite
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
+
+metrics = {
+    'accuracy': accuracy_score(y_true, y_pred),
+    'precision': precision_score(y_true, y_pred, average='weighted'),
+    'recall': recall_score(y_true, y_pred, average='weighted'),
+    'f1_score': f1_score(y_true, y_pred, average='weighted'),
+    'auc_roc': roc_auc_score(y_true, y_pred_proba)
+}
+                        </div>
+                        <p><strong>Recommendation:</strong> Create evaluation dashboards showing multiple complementary metrics</p>
+                    `
+                },
+                'statistical': {
+                    title: 'Statistical Significance Testing',
+                    content: `
+                        <div class="modal-highlight">
+                            Account for randomness and variance in model performance measurements
+                        </div>
+                        <h4>Sources of Variance:</h4>
+                        <ul>
+                            <li><strong>Data Sampling:</strong> Different train/test splits</li>
+                            <li><strong>Algorithm Randomness:</strong> Random initialization, bootstrapping</li>
+                            <li><strong>Cross-validation:</strong> Performance varies across folds</li>
+                            <li><strong>Small Datasets:</strong> Higher variance in estimates</li>
+                        </ul>
+                        <div class="modal-code">
+# Statistical significance testing
+from scipy import stats
+import numpy as np
+
+# Compare two models with paired t-test
+model1_scores = cross_val_score(model1, X, y, cv=10)
+model2_scores = cross_val_score(model2, X, y, cv=10)
+
+t_stat, p_value = stats.ttest_rel(model1_scores, model2_scores)
+
+if p_value < 0.05:
+    print("Significant difference detected")
+else:
+    print("No significant difference")
+                        </div>
+                        <p><strong>Best Practice:</strong> Always report confidence intervals and statistical significance</p>
+                    `
+                },
+                'business-alignment': {
+                    title: 'Business Goal Alignment',
+                    content: `
+                        <div class="modal-highlight">
+                            Evaluation metrics must align with actual business objectives and constraints
+                        </div>
+                        <h4>Business Considerations:</h4>
+                        <ul>
+                            <li><strong>Cost Sensitivity:</strong> Different errors have different costs</li>
+                            <li><strong>User Experience:</strong> How do errors affect users?</li>
+                            <li><strong>Regulatory Requirements:</strong> Fairness, explainability constraints</li>
+                            <li><strong>Operational Constraints:</strong> Latency, memory, compute requirements</li>
+                        </ul>
+                        <div class="modal-code">
+# Custom business metric example
+def business_value_score(y_true, y_pred, cost_fn_positive=100, cost_fp=10):
+    """
+    Calculate business value considering different error costs
+    """
+    tn = np.sum((y_true == 0) & (y_pred == 0))
+    fp = np.sum((y_true == 0) & (y_pred == 1))
+    fn = np.sum((y_true == 1) & (y_pred == 0))
+    tp = np.sum((y_true == 1) & (y_pred == 1))
+    
+    return tp * revenue_per_tp - fp * cost_fp - fn * cost_fn
+                        </div>
+                        <p><strong>Key Insight:</strong> Technical metrics should translate to business value</p>
+                    `
+                }
+            };
+            
+            const info = principles[principle];
+            modal.show(info.title, info.content);
+        }
+
+        // Pipeline step details
+        function showStepDetail(step) {
+            const steps = {
+                'data-prep': {
+                    title: 'Data Preparation for Evaluation',
+                    content: `
+                        <div class="modal-highlight">
+                            Proper data preparation is crucial for reliable evaluation
+                        </div>
+                        <h4>Key Steps:</h4>
+                        <ul>
+                            <li><strong>Data Splitting:</strong> Train/validation/test splits</li>
+                            <li><strong>Data Cleaning:</strong> Handle missing values, outliers</li>
+                            <li><strong>Preprocessing:</strong> Scaling, encoding, feature engineering</li>
+                            <li><strong>Stratification:</strong> Maintain class balance across splits</li>
+                        </ul>
+                        <div class="modal-code">
+# Comprehensive data preparation
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+
+# 1. Initial split
+X_temp, X_test, y_temp, y_test = train_test_split(
+    X, y, test_size=0.2, stratify=y, random_state=42
+)
+
+# 2. Split remaining into train/validation
+X_train, X_val, y_train, y_val = train_test_split(
+    X_temp, y_temp, test_size=0.25, stratify=y_temp, random_state=42
+)
+
+# 3. Preprocessing (fit on train only)
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_val_scaled = scaler.transform(X_val)
+X_test_scaled = scaler.transform(X_test)
+                        </div>
+                        <p><strong>Critical:</strong> All preprocessing must be fit only on training data</p>
+                    `
+                },
+                'metric-selection': {
+                    title: 'Choosing Evaluation Metrics',
+                    content: `
+                        <div class="modal-highlight">
+                            Select metrics that align with your problem type and business goals
+                        </div>
+                        <h4>Classification Metrics:</h4>
+                        <ul>
+                            <li><strong>Balanced datasets:</strong> Accuracy, F1-score</li>
+                            <li><strong>Imbalanced datasets:</strong> Precision, Recall, AUC-ROC</li>
+                            <li><strong>Multi-class:</strong> Macro/Micro averaged metrics</li>
+                            <li><strong>Probabilistic:</strong> Log-loss, Brier score</li>
+                        </ul>
+                        <h4>Regression Metrics:</h4>
+                        <ul>
+                            <li><strong>Scale-dependent:</strong> MAE, MSE, RMSE</li>
+                            <li><strong>Scale-independent:</strong> MAPE, R²</li>
+                            <li><strong>Robust to outliers:</strong> MAE, Huber loss</li>
+                        </ul>
+                        <div class="modal-code">
+# Metric selection based on problem
+def select_metrics(problem_type, is_imbalanced=False):
+    if problem_type == 'classification':
+        if is_imbalanced:
+            return ['precision', 'recall', 'f1_weighted', 'auc_roc']
+        else:
+            return ['accuracy', 'f1_score', 'auc_roc']
+    elif problem_type == 'regression':
+        return ['mae', 'mse', 'rmse', 'r2']
+                        </div>
+                    `
+                },
+                'validation': {
+                    title: 'Validation Strategy Design',
+                    content: `
+                        <div class="modal-highlight">
+                            Choose appropriate validation approach based on data characteristics
+                        </div>
+                        <h4>Validation Strategies:</h4>
+                        <ul>
+                            <li><strong>K-Fold CV:</strong> General purpose, independent samples</li>
+                            <li><strong>Stratified K-Fold:</strong> Imbalanced classification</li>
+                            <li><strong>Time Series Split:</strong> Temporal data</li>
+                            <li><strong>Group K-Fold:</strong> Grouped/clustered data</li>
+                            <li><strong>Leave-One-Out:</strong> Small datasets</li>
+                        </ul>
+                        <div class="modal-code">
+# Validation strategy selection
+from sklearn.model_selection import KFold, StratifiedKFold, TimeSeriesSplit
+
+def choose_cv_strategy(X, y, data_type='tabular'):
+    if data_type == 'time_series':
+        return TimeSeriesSplit(n_splits=5)
+    elif len(np.unique(y)) > 1:  # Classification
+        return StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+    else:  # Regression
+        return KFold(n_splits=5, shuffle=True, random_state=42)
+
+cv = choose_cv_strategy(X, y, 'tabular')
+scores = cross_val_score(model, X, y, cv=cv)
+                        </div>
+                    `
+                },
+                'testing': {
+                    title: 'Model Testing Execution',
+                    content: `
+                        <div class="modal-highlight">
+                            Execute systematic testing with proper experimental controls
+                        </div>
+                        <h4>Testing Best Practices:</h4>
+                        <ul>
+                            <li><strong>Single Test Set:</strong> Use test data only once</li>
+                            <li><strong>Consistent Environment:</strong> Same preprocessing, random seeds</li>
+                            <li><strong>Multiple Runs:</strong> Account for randomness</li>
+                            <li><strong>Baseline Comparison:</strong> Compare against simple baselines</li>
+                        </ul>
+                        <div class="modal-code">
+# Systematic model testing
+def evaluate_model(model, X_test, y_test, metrics=['accuracy', 'f1']):
+    """
+    Comprehensive model evaluation
+    """
+    results = {}
+    y_pred = model.predict(X_test)
+    y_pred_proba = model.predict_proba(X_test)[:, 1] if hasattr(model, 'predict_proba') else None
+    
+    for metric in metrics:
+        if metric == 'accuracy':
+            results[metric] = accuracy_score(y_test, y_pred)
+        elif metric == 'f1':
+            results[metric] = f1_score(y_test, y_pred, average='weighted')
+        elif metric == 'auc' and y_pred_proba is not None:
+            results[metric] = roc_auc_score(y_test, y_pred_proba)
+    
+    return results
+                        </div>
+                    `
+                },
+                'analysis': {
+                    title: 'Results Analysis and Interpretation',
+                    content: `
+                        <div class="modal-highlight">
+                            Transform evaluation results into actionable insights
+                        </div>
+                        <h4>Analysis Components:</h4>
+                        <ul>
+                            <li><strong>Performance Summary:</strong> Key metrics with confidence intervals</li>
+                            <li><strong>Error Analysis:</strong> Where and why the model fails</li>
+                            <li><strong>Comparative Analysis:</strong> Performance vs baselines/alternatives</li>
+                            <li><strong>Business Impact:</strong> Translation to business metrics</li>
+                        </ul>
+                        <div class="modal-code">
+# Results analysis framework
+def analyze_results(results_dict, baseline_results=None):
+    """
+    Comprehensive results analysis
+    """
+    analysis = {
+        'performance_summary': {},
+        'statistical_significance': {},
+        'improvement_over_baseline': {},
+        'recommendations': []
+    }
+    
+    for metric, scores in results_dict.items():
+        analysis['performance_summary'][metric] = {
+            'mean': np.mean(scores),
+            'std': np.std(scores),
+            'ci_95': np.percentile(scores, [2.5, 97.5])
+        }
+        
+        if baseline_results and metric in baseline_results:
+            improvement = (np.mean(scores) - np.mean(baseline_results[metric])) / np.mean(baseline_results[metric])
+            analysis['improvement_over_baseline'][metric] = f"{improvement:.2%}"
+    
+    return analysis
+                        </div>
+                    `
+                }
+            };
+            
+            const info = steps[step];
+            modal.show(info.title, info.content);
+        }
+
+        // Metric details
+        function showMetricDetail(metric) {
+            const metrics = {
+                'accuracy': {
+                    title: 'Accuracy Metric',
+                    content: `
+                        <div class="modal-highlight">
+                            Proportion of correct predictions among total predictions
+                        </div>
+                        <h4>Formula:</h4>
+                        <div class="modal-code">
+Accuracy = (TP + TN) / (TP + TN + FP + FN)
+
+Where:
+- TP: True Positives
+- TN: True Negatives  
+- FP: False Positives
+- FN: False Negatives
+                        </div>
+                        <h4>When to Use:</h4>
+                        <ul>
+                            <li><strong>Balanced datasets:</strong> Equal class distribution</li>
+                            <li><strong>Equal error costs:</strong> All mistakes have same impact</li>
+                            <li><strong>Simple interpretation:</strong> Easy to explain to stakeholders</li>
+                        </ul>
+                        <h4>Limitations:</h4>
+                        <ul>
+                            <li>Misleading for imbalanced datasets</li>
+                            <li>Doesn't distinguish between different error types</li>
+                            <li>Can hide poor performance on minority classes</li>
+                        </ul>
+                    `
+                },
+                'precision-recall': {
+                    title: 'Precision & Recall',
+                    content: `
+                        <div class="modal-highlight">
+                            Precision focuses on correctness of positive predictions, Recall on completeness
+                        </div>
+                        <h4>Formulas:</h4>
+                        <div class="modal-code">
+Precision = TP / (TP + FP)
+"Of all positive predictions, how many were correct?"
+
+Recall = TP / (TP + FN)  
+"Of all actual positives, how many were found?"
+                        </div>
+                        <h4>Trade-off:</h4>
+                        <ul>
+                            <li><strong>High Precision:</strong> Few false positives, but may miss true positives</li>
+                            <li><strong>High Recall:</strong> Find most positives, but many false positives</li>
+                            <li><strong>Balance:</strong> Usually need to optimize both simultaneously</li>
+                        </ul>
+                        <h4>Use Cases:</h4>
+                        <ul>
+                            <li><strong>Spam Detection:</strong> High precision (don't block important emails)</li>
+                            <li><strong>Disease Screening:</strong> High recall (don't miss cases)</li>
+                            <li><strong>Fraud Detection:</strong> Balance both</li>
+                        </ul>
+                    `
+                },
+                'f1-score': {
+                    title: 'F1-Score',
+                    content: `
+                        <div class="modal-highlight">
+                            Harmonic mean of precision and recall, balancing both metrics
+                        </div>
+                        <h4>Formula:</h4>
+                        <div class="modal-code">
+F1 = 2 * (Precision * Recall) / (Precision + Recall)
+
+# Also written as:
+F1 = 2 * TP / (2 * TP + FP + FN)
+                        </div>
+                        <h4>Properties:</h4>
+                        <ul>
+                            <li><strong>Harmonic Mean:</strong> Penalizes extreme values</li>
+                            <li><strong>Single Number:</strong> Easy to compare models</li>
+                            <li><strong>Balanced:</strong> Considers both precision and recall</li>
+                            <li><strong>Range:</strong> 0 (worst) to 1 (best)</li>
+                        </ul>
+                        <h4>Variants:</h4>
+                        <ul>
+                            <li><strong>Macro F1:</strong> Average F1 across classes</li>
+                            <li><strong>Micro F1:</strong> Global F1 calculation</li>
+                            <li><strong>Weighted F1:</strong> Class-weighted average</li>
+                        </ul>
+                    `
+                },
+                'auc-roc': {
+                    title: 'AUC-ROC (Area Under ROC Curve)',
+                    content: `
+                        <div class="modal-highlight">
+                            Measures model's ability to discriminate between classes across all thresholds
+                        </div>
+                        <h4>ROC Curve:</h4>
+                        <div class="modal-code">
+ROC plots:
+- X-axis: False Positive Rate (FPR) = FP / (FP + TN)
+- Y-axis: True Positive Rate (TPR) = TP / (TP + FN)
+
+AUC = Area under the ROC curve
+Range: 0.5 (random) to 1.0 (perfect)
+                        </div>
+                        <h4>Interpretation:</h4>
+                        <ul>
+                            <li><strong>AUC = 0.5:</strong> Random classifier</li>
+                            <li><strong>AUC > 0.7:</strong> Acceptable performance</li>
+                            <li><strong>AUC > 0.8:</strong> Good performance</li>
+                            <li><strong>AUC > 0.9:</strong> Excellent performance</li>
+                        </ul>
+                        <h4>Advantages:</h4>
+                        <ul>
+                            <li>Threshold-independent</li>
+                            <li>Scale-invariant</li>
+                            <li>Good for binary classification</li>
+                        </ul>
+                    `
+                },
+                'mse-rmse': {
+                    title: 'MSE & RMSE for Regression',
+                    content: `
+                        <div class="modal-highlight">
+                            Mean Squared Error and Root Mean Squared Error measure prediction accuracy
+                        </div>
+                        <h4>Formulas:</h4>
+                        <div class="modal-code">
+MSE = (1/n) * Σ(y_true - y_pred)²
+
+RMSE = √MSE = √[(1/n) * Σ(y_true - y_pred)²]
+
+Where n = number of samples
+                        </div>
+                        <h4>Properties:</h4>
+                        <ul>
+                            <li><strong>MSE:</strong> Squared units, penalizes large errors heavily</li>
+                            <li><strong>RMSE:</strong> Same units as target, easier to interpret</li>
+                            <li><strong>Sensitivity:</strong> Very sensitive to outliers</li>
+                            <li><strong>Differentiable:</strong> Good for gradient-based optimization</li>
+                        </ul>
+                        <h4>When to Use:</h4>
+                        <ul>
+                            <li>When large errors are particularly bad</li>
+                            <li>Normal distribution of errors</li>
+                            <li>Few outliers in data</li>
+                        </ul>
+                    `
+                },
+                'r-squared': {
+                    title: 'R-Squared (Coefficient of Determination)',
+                    content: `
+                        <div class="modal-highlight">
+                            Proportion of variance in target variable explained by the model
+                        </div>
+                        <h4>Formula:</h4>
+                        <div class="modal-code">
+R² = 1 - (SS_res / SS_tot)
+
+Where:
+- SS_res = Σ(y_true - y_pred)²  (residual sum of squares)
+- SS_tot = Σ(y_true - y_mean)²  (total sum of squares)
+
+Range: -∞ to 1
+                        </div>
+                        <h4>Interpretation:</h4>
+                        <ul>
+                            <li><strong>R² = 1:</strong> Perfect fit (explains all variance)</li>
+                            <li><strong>R² = 0:</strong> Model no better than mean baseline</li>
+                            <li><strong>R² < 0:</strong> Model worse than mean baseline</li>
+                            <li><strong>R² = 0.7:</strong> Model explains 70% of variance</li>
+                        </ul>
+                        <h4>Limitations:</h4>
+                        <ul>
+                            <li>Always increases with more features</li>
+                            <li>Doesn't indicate causation</li>
+                            <li>Can be misleading with non-linear relationships</li>
+                        </ul>
+                    `
+                }
+            };
+            
+            const info = metrics[metric];
+            modal.show(info.title, info.content);
+        }
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 30; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (!modal.overlay.classList.contains('active')) {
+                if (e.key === 'ArrowRight' || e.key === ' ') {
+                    window.location.href = 'Week12_Slide222.html';
+                } else if (e.key === 'ArrowLeft') {
+                    window.location.href = 'Week11_Slide220.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

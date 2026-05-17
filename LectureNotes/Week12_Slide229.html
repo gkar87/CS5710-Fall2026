@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Multi-class Metrics</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .strategy-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .averaging-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .ova-diagram {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid #e0f2fe;
+        }
+
+        .ova-diagram:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.2);
+            border-color: #0d9488;
+        }
+
+        .class-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 15px 0;
+            padding: 15px;
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 10px;
+        }
+
+        .class-label {
+            font-weight: 600;
+            color: #0d9488;
+            font-size: 1.1em;
+        }
+
+        .vs-label {
+            color: #64748b;
+            font-style: italic;
+        }
+
+        .rest-label {
+            color: #475569;
+        }
+
+        .averaging-method {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid #0d9488;
+        }
+
+        .averaging-method:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .method-name {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 10px;
+        }
+
+        .method-formula {
+            font-family: 'Courier New', monospace;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-size: 0.9em;
+        }
+
+        .method-description {
+            color: #475569;
+            line-height: 1.6;
+        }
+
+        .comparison-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .comparison-table {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 2px;
+            background: #e0e7ff;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .table-header {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .table-cell {
+            background: white;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .table-cell:hover {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            transform: scale(1.05);
+        }
+
+        .cell-metric {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+        }
+
+        .cell-value {
+            color: #475569;
+            font-size: 0.95em;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .comparison-table { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 12</div>
+    <div class="slide-number">Slide 229 of 240</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Multi-class Metrics</h1>
+        
+        <div class="content-layout">
+            <div class="strategy-section">
+                <h2 class="section-title">One-vs-All Strategy</h2>
+                
+                <div class="ova-diagram">
+                    <h3 style="color: #0d9488; margin-bottom: 20px;">Binary Decomposition</h3>
+                    
+                    <div class="class-row">
+                        <div class="class-label">Class A</div>
+                        <div class="vs-label">vs</div>
+                        <div class="rest-label">Classes B, C, D</div>
+                    </div>
+                    
+                    <div class="class-row">
+                        <div class="class-label">Class B</div>
+                        <div class="vs-label">vs</div>
+                        <div class="rest-label">Classes A, C, D</div>
+                    </div>
+                    
+                    <div class="class-row">
+                        <div class="class-label">Class C</div>
+                        <div class="vs-label">vs</div>
+                        <div class="rest-label">Classes A, B, D</div>
+                    </div>
+                    
+                    <div class="class-row">
+                        <div class="class-label">Class D</div>
+                        <div class="vs-label">vs</div>
+                        <div class="rest-label">Classes A, B, C</div>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; color: #64748b; font-style: italic; margin-top: 15px;">
+                    Click to learn about One-vs-All decomposition
+                </div>
+            </div>
+
+            <div class="averaging-section">
+                <h2 class="section-title">Averaging Methods</h2>
+                
+                <div class="averaging-method">
+                    <div class="method-name">Macro Average</div>
+                    <div class="method-formula">Average of per-class metrics</div>
+                    <div class="method-description">
+                        Treats all classes equally regardless of support
+                    </div>
+                </div>
+
+                <div class="averaging-method">
+                    <div class="method-name">Micro Average</div>
+                    <div class="method-formula">Aggregate counts, then calculate</div>
+                    <div class="method-description">
+                        Weights classes by their frequency in the dataset
+                    </div>
+                </div>
+
+                <div class="averaging-method">
+                    <div class="method-name">Weighted Average</div>
+                    <div class="method-formula">Weight by class support</div>
+                    <div class="method-description">
+                        Balances macro and micro approaches
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="comparison-section">
+            <h2 class="section-title">Averaging Methods Comparison</h2>
+            
+            <div class="comparison-table">
+                <div class="table-header">Method</div>
+                <div class="table-header">Macro</div>
+                <div class="table-header">Micro</div>
+                <div class="table-header">Weighted</div>
+                
+                <div class="table-cell">
+                    <div class="cell-metric">Precision</div>
+                    <div class="cell-value">0.75</div>
+                </div>
+                <div class="table-cell">
+                    <div class="cell-metric">Precision</div>
+                    <div class="cell-value">0.82</div>
+                </div>
+                <div class="table-cell">
+                    <div class="cell-metric">Precision</div>
+                    <div class="cell-value">0.79</div>
+                </div>
+                
+                <div class="table-cell">
+                    <div class="cell-metric">Recall</div>
+                    <div class="cell-value">0.73</div>
+                </div>
+                <div class="table-cell">
+                    <div class="cell-metric">Recall</div>
+                    <div class="cell-value">0.82</div>
+                </div>
+                <div class="table-cell">
+                    <div class="cell-metric">Recall</div>
+                    <div class="cell-value">0.80</div>
+                </div>
+                
+                <div class="table-cell">
+                    <div class="cell-metric">F1-Score</div>
+                    <div class="cell-value">0.74</div>
+                </div>
+                <div class="table-cell">
+                    <div class="cell-metric">F1-Score</div>
+                    <div class="cell-value">0.82</div>
+                </div>
+                <div class="table-cell">
+                    <div class="cell-metric">F1-Score</div>
+                    <div class="cell-value">0.79</div>
+                </div>
+            </div>
+
+            <div style="margin-top: 30px; padding: 25px; background: linear-gradient(135deg, #f0fdfa, #ccfbf1); border-radius: 15px;">
+                <strong style="color: #0d9488; font-size: 1.2em;">Key Insight:</strong><br>
+                <span style="color: #475569;">
+                    Micro average equals overall accuracy for multi-class problems. 
+                    Macro average gives equal weight to all classes, revealing performance on minority classes.
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week12_Slide228.html" class="nav-btn">← Previous</a>
+        <a href="Week12_Slide230.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // One-vs-All diagram click handler
+        document.querySelector('.ova-diagram').addEventListener('click', function() {
+            modal.show('One-vs-All (OvA) Strategy', `
+                <div class="modal-highlight">
+                    <strong>Decompose Multi-class into Binary Problems</strong>
+                </div>
+                <h4>How it works:</h4>
+                <p>For each class, create a binary classifier that distinguishes that class from all others.</p>
+                
+                <h4>Process:</h4>
+                <ol style="margin: 20px 0; line-height: 1.8;">
+                    <li><strong>Training:</strong> Train K binary classifiers (one per class)</li>
+                    <li><strong>Each classifier:</strong> Class i vs All other classes</li>
+                    <li><strong>Prediction:</strong> Choose class with highest confidence score</li>
+                    <li><strong>Metrics:</strong> Calculate precision/recall for each binary problem</li>
+                </ol>
+                
+                <div class="modal-code">
+                    Example: 4 classes → 4 binary classifiers
+                    
+                    Classifier 1: Class A vs {B, C, D}
+                    Classifier 2: Class B vs {A, C, D}  
+                    Classifier 3: Class C vs {A, B, D}
+                    Classifier 4: Class D vs {A, B, C}
+                </div>
+                
+                <h4>Advantages:</h4>
+                <ul style="margin: 20px 0; line-height: 1.8;">
+                    <li>Works with any binary classifier</li>
+                    <li>Parallelizable training</li>
+                    <li>Per-class performance metrics</li>
+                    <li>Handles class imbalance naturally</li>
+                </ul>
+                
+                <h4>Challenges:</h4>
+                <ul style="margin: 20px 0; line-height: 1.8;">
+                    <li>Class imbalance in each binary problem</li>
+                    <li>Calibration issues when combining scores</li>
+                    <li>May not be optimal for all algorithms</li>
+                </ul>
+            `);
+        });
+
+        // Averaging method click handlers
+        document.querySelectorAll('.averaging-method').forEach(method => {
+            method.addEventListener('click', function() {
+                const methodName = this.querySelector('.method-name').textContent;
+                
+                const methods = {
+                    'Macro Average': {
+                        formula: 'Σ(metric_per_class) / number_of_classes',
+                        calculation: 'Calculate metric for each class separately, then average',
+                        use_case: 'When all classes are equally important',
+                        example: 'Classes A, B, C have F1: 0.9, 0.7, 0.6 → Macro F1 = (0.9+0.7+0.6)/3 = 0.73',
+                        pros: 'Equal treatment of all classes, reveals minority class performance',
+                        cons: 'May be dominated by poorly performing classes'
+                    },
+                    'Micro Average': {
+                        formula: 'Aggregate all TP, FP, FN across classes, then calculate',
+                        calculation: 'Sum confusion matrices, then compute metrics',
+                        use_case: 'When you care about overall performance across all samples',
+                        example: 'Total TP=850, FP=100, FN=150 → Micro F1 = 2×850/(2×850+100+150) = 0.87',
+                        pros: 'Reflects overall accuracy, weighted by class frequency',
+                        cons: 'Dominated by majority classes in imbalanced datasets'
+                    },
+                    'Weighted Average': {
+                        formula: 'Σ(metric_per_class × class_support) / total_samples',
+                        calculation: 'Weight each class metric by its frequency',
+                        use_case: 'When you want to balance class importance with frequency',
+                        example: 'Class A (1000 samples, F1=0.9), Class B (500 samples, F1=0.7) → Weighted F1 = (0.9×1000+0.7×500)/1500 = 0.83',
+                        pros: 'Balances fairness with practical importance',
+                        cons: 'Still biased toward majority classes'
+                    }
+                };
+                
+                const info = methods[methodName];
+                if (info) {
+                    modal.show(methodName, `
+                        <div class="modal-highlight">
+                            <strong>Formula:</strong> ${info.formula}
+                        </div>
+                        <p><strong>How it's calculated:</strong> ${info.calculation}</p>
+                        <p><strong>When to use:</strong> ${info.use_case}</p>
+                        
+                        <div class="modal-code">
+                            Example Calculation:
+                            ${info.example}
+                        </div>
+                        
+                        <h4>Advantages:</h4>
+                        <p style="color: #059669;">${info.pros}</p>
+                        
+                        <h4>Disadvantages:</h4>
+                        <p style="color: #dc2626;">${info.cons}</p>
+                        
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                            <strong>💡 Pro Tip:</strong><br>
+                            Always report multiple averaging methods to get a complete picture of your model's performance!
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Table cell click handlers
+        document.querySelectorAll('.table-cell').forEach(cell => {
+            cell.addEventListener('click', function() {
+                const metric = this.querySelector('.cell-metric').textContent;
+                const value = this.querySelector('.cell-value').textContent;
+                const columnIndex = Array.from(this.parentElement.children).indexOf(this);
+                const methods = ['Macro', 'Micro', 'Weighted'];
+                const method = methods[columnIndex - 1]; // -1 because first column is label
+                
+                if (method) {
+                    const interpretations = {
+                        'Macro': {
+                            meaning: 'Equal importance to all classes',
+                            interpretation: 'Average performance across classes, regardless of how many samples each class has',
+                            good_for: 'Detecting poor performance on minority classes',
+                            bad_for: 'Overall system performance assessment'
+                        },
+                        'Micro': {
+                            meaning: 'Overall performance across all samples',
+                            interpretation: 'Performance weighted by class frequency - essentially overall accuracy for multi-class',
+                            good_for: 'Understanding real-world system performance',
+                            bad_for: 'Identifying minority class issues'
+                        },
+                        'Weighted': {
+                            meaning: 'Compromise between macro and micro',
+                            interpretation: 'Each class weighted by its support (number of samples)',
+                            good_for: 'Balanced view of class-wise and overall performance',
+                            bad_for: 'When classes should truly be treated equally'
+                        }
+                    };
+                    
+                    const info = interpretations[method];
+                    modal.show(`${method} ${metric}: ${value}`, `
+                        <div class="modal-highlight">
+                            <strong>${method} Average ${metric}: ${value}</strong>
+                        </div>
+                        <p><strong>What it means:</strong> ${info.meaning}</p>
+                        <p><strong>Interpretation:</strong> ${info.interpretation}</p>
+                        <p><strong>Good for:</strong> ${info.good_for}</p>
+                        <p><strong>Not ideal for:</strong> ${info.bad_for}</p>
+                        
+                        <div class="modal-code">
+                            Context: Dataset with 4 classes
+                            Class A: 1000 samples (common)
+                            Class B: 500 samples (medium)  
+                            Class C: 100 samples (rare)
+                            Class D: 50 samples (very rare)
+                        </div>
+                        
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                            <strong>Decision Guide:</strong><br>
+                            • Balanced classes → Use any method<br>
+                            • Imbalanced classes → Compare macro vs micro<br>
+                            • Production systems → Focus on weighted/micro<br>
+                            • Research/fairness → Include macro average
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week12_Slide228.html';
+            } else if (e.key === 'ArrowRight' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week12_Slide230.html';
+            }
+        });
+    </script>
+</body>
+</html>

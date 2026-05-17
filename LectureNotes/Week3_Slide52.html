@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Distance Metrics</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .theory-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .metrics-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .theory-text {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .metric-cards {
+            display: grid;
+            gap: 20px;
+        }
+
+        .metric-card {
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border: 2px solid rgba(13, 148, 136, 0.3);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.15);
+        }
+
+        .metric-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .metric-icon {
+            font-size: 1.5em;
+            margin-right: 10px;
+        }
+
+        .metric-formula {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 15px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .metric-desc {
+            font-size: 1em;
+            color: #475569;
+            line-height: 1.6;
+        }
+
+        .demo-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .demo-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-top: 30px;
+        }
+
+        .demo-controls {
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            border-radius: 15px;
+            padding: 30px;
+        }
+
+        .demo-visualization {
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .demo-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #cbd5e1;
+            border-radius: 10px;
+            font-size: 1em;
+            margin: 10px 0;
+        }
+
+        .demo-button {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px 5px;
+            width: 100%;
+        }
+
+        .demo-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(13, 148, 136, 0.3);
+        }
+
+        .demo-output {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            min-height: 120px;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .demo-grid { grid-template-columns: 1fr; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 3</div>
+    <div class="slide-number">Slide 52 of 60</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Distance Metrics</h1>
+        
+        <div class="content-layout">
+            <div class="theory-section">
+                <h2 class="section-title">Why Distance Matters in k-NN</h2>
+                
+                <div class="theory-text">
+                    <strong>Distance metrics</strong> are fundamental to k-NN algorithm. They determine how we measure "similarity" between data points to find the k nearest neighbors.
+                </div>
+                
+                <div style="font-size: 1.1em; line-height: 1.7; color: #1e293b;">
+                    <strong>Key Concepts:</strong>
+                    <br><br>
+                    • <strong>Similarity:</strong> Closer points are more similar
+                    <br>
+                    • <strong>Feature Space:</strong> Distance calculated in n-dimensional space
+                    <br>
+                    • <strong>Scale Sensitivity:</strong> Different metrics handle feature scales differently
+                    <br>
+                    • <strong>Geometric Interpretation:</strong> Each metric defines different "shapes" of neighborhoods
+                </div>
+            </div>
+
+            <div class="metrics-section">
+                <h2 class="section-title">Common Distance Metrics</h2>
+                
+                <div class="metric-cards">
+                    <div class="metric-card">
+                        <div class="metric-title">
+                            <span class="metric-icon">📏</span>
+                            Euclidean Distance
+                        </div>
+                        <div class="metric-formula">
+                            d = √[(x₁-x₂)² + (y₁-y₂)²]
+                        </div>
+                        <div class="metric-desc">
+                            Straight-line distance. Most intuitive and commonly used. Creates circular neighborhoods.
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-title">
+                            <span class="metric-icon">🏢</span>
+                            Manhattan Distance
+                        </div>
+                        <div class="metric-formula">
+                            d = |x₁-x₂| + |y₁-y₂|
+                        </div>
+                        <div class="metric-desc">
+                            City-block distance. Sum of absolute differences. Creates diamond-shaped neighborhoods.
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-title">
+                            <span class="metric-icon">⚡</span>
+                            Minkowski Distance
+                        </div>
+                        <div class="metric-formula">
+                            d = (Σ|xᵢ-yᵢ|ᵖ)^(1/p)
+                        </div>
+                        <div class="metric-desc">
+                            General form. p=1: Manhattan, p=2: Euclidean. Flexible shape control.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2 class="demo-title">🎮 Interactive Distance Calculator</h2>
+            <p style="text-align: center; color: #475569; margin-bottom: 20px;">
+                Compare different distance metrics between two 2D points
+            </p>
+            
+            <div class="demo-grid">
+                <div class="demo-controls">
+                    <h4 style="color: #0d9488; margin-bottom: 20px;">Input Points</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <input type="number" class="demo-input" id="x1" placeholder="Point 1 X" value="0">
+                        <input type="number" class="demo-input" id="y1" placeholder="Point 1 Y" value="0">
+                        <input type="number" class="demo-input" id="x2" placeholder="Point 2 X" value="3">
+                        <input type="number" class="demo-input" id="y2" placeholder="Point 2 Y" value="4">
+                    </div>
+                    <input type="number" class="demo-input" id="p-value" placeholder="p value for Minkowski" value="2" step="0.1" min="1">
+                    <button class="demo-button" onclick="calculateDistances()">Calculate All Distances</button>
+                </div>
+                
+                <div class="demo-visualization">
+                    <h4 style="color: #0d9488; margin-bottom: 20px;">Distance Results</h4>
+                    <div class="demo-output" id="distanceOutput">
+                        Click "Calculate All Distances" to see results
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week3_Slide51.html" class="nav-btn">← Previous</a>
+        <a href="Week3_Slide53.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive metric cards
+        document.querySelectorAll('.metric-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('.metric-title').textContent.trim();
+                
+                const metricDetails = {
+                    '📏 Euclidean Distance': {
+                        intuition: 'Imagine measuring with a ruler - the straight line distance between two points.',
+                        properties: 'Sensitive to outliers, works well when all features have similar scales',
+                        applications: 'Most common choice for continuous features, image processing, recommendations',
+                        visualization: 'Creates circular neighborhoods around each point',
+                        example: `
+                            Point A: (1, 2)<br>
+                            Point B: (4, 6)<br>
+                            Distance = √[(4-1)² + (6-2)²] = √[9 + 16] = √25 = 5
+                        `
+                    },
+                    '🏢 Manhattan Distance': {
+                        intuition: 'Like walking through city blocks - you can only move horizontally or vertically.',
+                        properties: 'Less sensitive to outliers, better for high-dimensional sparse data',
+                        applications: 'Text analysis, recommendation systems, categorical features',
+                        visualization: 'Creates diamond-shaped neighborhoods around each point',
+                        example: `
+                            Point A: (1, 2)<br>
+                            Point B: (4, 6)<br>
+                            Distance = |4-1| + |6-2| = 3 + 4 = 7
+                        `
+                    },
+                    '⚡ Minkowski Distance': {
+                        intuition: 'A flexible metric that generalizes both Euclidean and Manhattan distances.',
+                        properties: 'Parameter p controls the shape: p=1 (Manhattan), p=2 (Euclidean), p=∞ (Chebyshev)',
+                        applications: 'When you want to experiment with different neighborhood shapes',
+                        visualization: 'Shape changes from diamond (p=1) to circle (p=2) to square (p=∞)',
+                        example: `
+                            Point A: (1, 2), Point B: (4, 6)<br>
+                            p=1: 7 (Manhattan)<br>
+                            p=2: 5 (Euclidean)<br>
+                            p=3: 4.33
+                        `
+                    }
+                };
+                
+                const detail = metricDetails[title];
+                if (detail) {
+                    modal.show(title.replace(/[📏🏢⚡]\s/, ''), `
+                        <div class="modal-highlight">
+                            <strong>Intuition:</strong><br>
+                            ${detail.intuition}
+                        </div>
+                        
+                        <p><strong>Properties:</strong><br>${detail.properties}</p>
+                        <p><strong>Best Applications:</strong><br>${detail.applications}</p>
+                        <p><strong>Visualization:</strong><br>${detail.visualization}</p>
+                        
+                        <div class="modal-code">
+                            <strong>Example:</strong><br>
+                            ${detail.example}
+                        </div>
+                        
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                            <strong>💡 Pro Tip:</strong><br>
+                            Always normalize your features before using distance metrics to prevent features with larger scales from dominating the distance calculation!
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Distance calculation function
+        function calculateDistances() {
+            const x1 = parseFloat(document.getElementById('x1').value) || 0;
+            const y1 = parseFloat(document.getElementById('y1').value) || 0;
+            const x2 = parseFloat(document.getElementById('x2').value) || 0;
+            const y2 = parseFloat(document.getElementById('y2').value) || 0;
+            const p = parseFloat(document.getElementById('p-value').value) || 2;
+            
+            // Calculate distances
+            const euclidean = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+            const manhattan = Math.abs(x2 - x1) + Math.abs(y2 - y1);
+            const minkowski = Math.pow(Math.pow(Math.abs(x2 - x1), p) + Math.pow(Math.abs(y2 - y1), p), 1/p);
+            
+            const output = document.getElementById('distanceOutput');
+            output.innerHTML = `
+                <strong>Points:</strong> (${x1}, ${y1}) → (${x2}, ${y2})<br><br>
+                <strong>📏 Euclidean:</strong> ${euclidean.toFixed(3)}<br>
+                <strong>🏢 Manhattan:</strong> ${manhattan.toFixed(3)}<br>
+                <strong>⚡ Minkowski (p=${p}):</strong> ${minkowski.toFixed(3)}<br><br>
+                <em>Click the metric cards above to learn more!</em>
+            `;
+            
+            // Show analysis modal after calculation
+            setTimeout(() => {
+                let analysis = '';
+                if (euclidean < manhattan) {
+                    analysis = 'Euclidean < Manhattan: The straight line is shorter than the city-block path.';
+                } else if (euclidean > manhattan) {
+                    analysis = 'Euclidean > Manhattan: This is mathematically impossible - check your calculation!';
+                } else {
+                    analysis = 'Euclidean = Manhattan: This only happens when points are aligned horizontally or vertically.';
+                }
+                
+                modal.show('Distance Analysis', `
+                    <div class="modal-highlight">
+                        <strong>Results for points (${x1}, ${y1}) and (${x2}, ${y2}):</strong>
+                    </div>
+                    
+                    <div style="background: #1e293b; color: #5eead4; padding: 20px; border-radius: 10px; font-family: monospace;">
+                        Euclidean:  ${euclidean.toFixed(3)}<br>
+                        Manhattan:  ${manhattan.toFixed(3)}<br>
+                        Minkowski: ${minkowski.toFixed(3)} (p=${p})
+                    </div>
+                    
+                    <div style="margin-top: 20px;">
+                        <strong>Analysis:</strong><br>
+                        ${analysis}
+                    </div>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                        <strong>🔍 Key Insight:</strong><br>
+                        Manhattan distance is always ≥ Euclidean distance. The ratio varies based on the alignment of points.
+                    </div>
+                `);
+            }, 500);
+        }
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week3_Slide51.html';
+            } else if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week3_Slide53.html';
+            }
+        });
+    </script>
+</body>
+</html>

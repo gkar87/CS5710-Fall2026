@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - LIME Explanations</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .concept-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .demo-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .lime-steps {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid #0d9488;
+        }
+
+        .lime-steps:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.2);
+        }
+
+        .step-number {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            background: #0d9488;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: 600;
+            margin-right: 15px;
+        }
+
+        .step-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 10px;
+        }
+
+        .step-description {
+            color: #475569;
+            line-height: 1.6;
+        }
+
+        .lime-demo {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            height: 400px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .lime-demo:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .demo-original {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 120px;
+            height: 80px;
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: #92400e;
+        }
+
+        .demo-perturbed {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 120px;
+            height: 80px;
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: #1e40af;
+        }
+
+        .demo-explanation {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+            border-radius: 8px;
+            padding: 15px;
+            color: #166534;
+        }
+
+        .feature-importance {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 8px 0;
+            padding: 8px;
+            background: white;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .feature-bar {
+            height: 4px;
+            background: #0d9488;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .comparison-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .comparison-table {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 2px;
+            background: #e0e7ff;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .table-header {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .table-cell {
+            background: white;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .table-cell:hover {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            transform: scale(1.02);
+        }
+
+        .cell-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+        }
+
+        .cell-content {
+            color: #475569;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .comparison-table { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 12</div>
+    <div class="slide-number">Slide 233 of 240</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">LIME Explanations</h1>
+        
+        <div class="content-layout">
+            <div class="concept-section">
+                <h2 class="section-title">LIME Algorithm Steps</h2>
+                
+                <div class="lime-steps">
+                    <div class="step-number">1</div>
+                    <div class="step-title">Select Instance to Explain</div>
+                    <div class="step-description">
+                        Choose the specific prediction you want to understand and explain to stakeholders.
+                    </div>
+                </div>
+
+                <div class="lime-steps">
+                    <div class="step-number">2</div>
+                    <div class="step-title">Generate Perturbations</div>
+                    <div class="step-description">
+                        Create many variations of the instance by randomly modifying features while staying realistic.
+                    </div>
+                </div>
+
+                <div class="lime-steps">
+                    <div class="step-number">3</div>
+                    <div class="step-title">Get Model Predictions</div>
+                    <div class="step-description">
+                        Run the black-box model on all perturbed samples to see how predictions change.
+                    </div>
+                </div>
+
+                <div class="lime-steps">
+                    <div class="step-number">4</div>
+                    <div class="step-title">Weight by Similarity</div>
+                    <div class="step-description">
+                        Assign higher weights to perturbations that are more similar to the original instance.
+                    </div>
+                </div>
+
+                <div class="lime-steps">
+                    <div class="step-number">5</div>
+                    <div class="step-title">Fit Local Linear Model</div>
+                    <div class="step-description">
+                        Train a simple, interpretable model (like linear regression) on the weighted perturbed data.
+                    </div>
+                </div>
+
+                <div class="lime-steps">
+                    <div class="step-number">6</div>
+                    <div class="step-title">Extract Explanation</div>
+                    <div class="step-description">
+                        Use the linear model's coefficients as feature importance scores for the local explanation.
+                    </div>
+                </div>
+            </div>
+
+            <div class="demo-section">
+                <h2 class="section-title">LIME in Action</h2>
+                
+                <div class="lime-demo">
+                    <div class="demo-original">
+                        Original<br>Instance<br>
+                        <small>Prediction: 0.82</small>
+                    </div>
+                    
+                    <div class="demo-perturbed">
+                        Perturbed<br>Samples<br>
+                        <small>1000 variations</small>
+                    </div>
+                    
+                    <div style="position: absolute; top: 120px; left: 20px; right: 20px;">
+                        <div style="text-align: center; font-weight: 600; color: #0d9488; margin-bottom: 15px;">
+                            Local Linear Model Feature Importance
+                        </div>
+                        
+                        <div class="feature-importance">
+                            <span>Credit Score</span>
+                            <div style="flex: 1; margin: 0 10px;">
+                                <div class="feature-bar" style="width: 85%;"></div>
+                            </div>
+                            <span>+0.23</span>
+                        </div>
+                        
+                        <div class="feature-importance">
+                            <span>Income Level</span>
+                            <div style="flex: 1; margin: 0 10px;">
+                                <div class="feature-bar" style="width: 70%;"></div>
+                            </div>
+                            <span>+0.18</span>
+                        </div>
+                        
+                        <div class="feature-importance">
+                            <span>Employment</span>
+                            <div style="flex: 1; margin: 0 10px;">
+                                <div class="feature-bar" style="width: 60%;"></div>
+                            </div>
+                            <span>+0.15</span>
+                        </div>
+                        
+                        <div class="feature-importance">
+                            <span>Debt Ratio</span>
+                            <div style="flex: 1; margin: 0 10px;">
+                                <div class="feature-bar" style="width: 45%; background: #dc2626;"></div>
+                            </div>
+                            <span>-0.12</span>
+                        </div>
+                        
+                        <div class="feature-importance">
+                            <span>Age</span>
+                            <div style="flex: 1; margin: 0 10px;">
+                                <div class="feature-bar" style="width: 30%;"></div>
+                            </div>
+                            <span>+0.08</span>
+                        </div>
+                    </div>
+                    
+                    <div class="demo-explanation">
+                        <strong>Local Explanation:</strong> This loan approval is primarily driven by excellent credit score and high income, with employment status providing additional confidence despite moderate debt ratio concerns.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="comparison-section">
+            <h2 class="section-title">LIME vs SHAP vs Global Methods</h2>
+            
+            <div class="comparison-table">
+                <div class="table-header">Aspect</div>
+                <div class="table-header">LIME</div>
+                <div class="table-header">SHAP</div>
+                
+                <div class="table-cell">
+                    <div class="cell-title">Scope</div>
+                    <div class="cell-content">Local explanations only</div>
+                </div>
+                <div class="table-cell">
+                    <div class="cell-title">Scope</div>
+                    <div class="cell-content">Both local & global</div>
+                </div>
+                
+                <div class="table-cell">
+                    <div class="cell-title">Method</div>
+                    <div class="cell-content">Local surrogate model</div>
+                </div>
+                <div class="table-cell">
+                    <div class="cell-title">Method</div>
+                    <div class="cell-content">Game theory (Shapley)</div>
+                </div>
+                
+                <div class="table-cell">
+                    <div class="cell-title">Model Agnostic</div>
+                    <div class="cell-content">Yes - works with any model</div>
+                </div>
+                <div class="table-cell">
+                    <div class="cell-title">Model Agnostic</div>
+                    <div class="cell-content">Yes - but has optimized versions</div>
+                </div>
+                
+                <div class="table-cell">
+                    <div class="cell-title">Speed</div>
+                    <div class="cell-content">Fast for single predictions</div>
+                </div>
+                <div class="table-cell">
+                    <div class="cell-title">Speed</div>
+                    <div class="cell-content">Slower but batch-optimized</div>
+                </div>
+                
+                <div class="table-cell">
+                    <div class="cell-title">Consistency</div>
+                    <div class="cell-content">Can vary between runs</div>
+                </div>
+                <div class="table-cell">
+                    <div class="cell-title">Consistency</div>
+                    <div class="cell-content">Mathematically consistent</div>
+                </div>
+                
+                <div class="table-cell">
+                    <div class="cell-title">Data Types</div>
+                    <div class="cell-content">Text, images, tabular</div>
+                </div>
+                <div class="table-cell">
+                    <div class="cell-title">Data Types</div>
+                    <div class="cell-content">Primarily tabular, some image</div>
+                </div>
+                
+                <div class="table-cell">
+                    <div class="cell-title">Interpretability</div>
+                    <div class="cell-content">Simple linear coefficients</div>
+                </div>
+                <div class="table-cell">
+                    <div class="cell-title">Interpretability</div>
+                    <div class="cell-content">Contribution values with axioms</div>
+                </div>
+                
+                <div class="table-cell">
+                    <div class="cell-title">Best For</div>
+                    <div class="cell-content">Quick individual explanations</div>
+                </div>
+                <div class="table-cell">
+                    <div class="cell-title">Best For</div>
+                    <div class="cell-content">Comprehensive model analysis</div>
+                </div>
+                
+                <div class="table-cell">
+                    <div class="cell-title">Limitations</div>
+                    <div class="cell-content">Locality assumption, instability</div>
+                </div>
+                <div class="table-cell">
+                    <div class="cell-title">Limitations</div>
+                    <div class="cell-content">Computational cost, complexity</div>
+                </div>
+            </div>
+
+            <div style="margin-top: 30px; padding: 25px; background: linear-gradient(135deg, #f0fdfa, #ccfbf1); border-radius: 15px; text-align: center;">
+                <strong style="color: #0d9488; font-size: 1.2em;">Choosing the Right Method:</strong><br>
+                <span style="color: #475569;">
+                    Use LIME for quick, ad-hoc explanations of individual predictions. 
+                    Use SHAP for comprehensive analysis and consistent explanations. 
+                    Consider computational budget and audience needs.
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week12_Slide232.html" class="nav-btn">← Previous</a>
+        <a href="Week12_Slide234.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // LIME steps click handlers
+        document.querySelectorAll('.lime-steps').forEach(step => {
+            step.addEventListener('click', function() {
+                const title = this.querySelector('.step-title').textContent;
+                const stepNum = this.querySelector('.step-number').textContent;
+                
+                const stepDetails = {
+                    'Select Instance to Explain': {
+                        purpose: 'Choose the specific prediction that needs explanation',
+                        details: 'Could be a rejected loan application, a medical diagnosis, or a recommendation that seems surprising',
+                        example: 'Customer John Doe was denied a loan with score 0.23, but he has good credit - why?',
+                        considerations: 'Pick instances that are important, controversial, or represent common cases'
+                    },
+                    'Generate Perturbations': {
+                        purpose: 'Create synthetic data points around the instance to explore local behavior',
+                        details: 'For tabular data: modify feature values within realistic ranges. For text: remove/replace words. For images: hide/modify regions',
+                        example: 'For loan data: change income from $50k to $45k, $55k, $60k while keeping other features similar',
+                        considerations: 'Perturbations must be realistic and respect feature relationships and constraints'
+                    },
+                    'Get Model Predictions': {
+                        purpose: 'Understand how the black-box model responds to local changes',
+                        details: 'Run your complex model (neural network, ensemble, etc.) on all perturbed samples',
+                        example: 'Original: 0.23, Income+10k: 0.31, Income-5k: 0.18, Credit+50: 0.35',
+                        considerations: 'This step can be expensive - balance number of perturbations with computational cost'
+                    },
+                    'Weight by Similarity': {
+                        purpose: 'Focus explanation on most relevant nearby points',
+                        details: 'Use distance metrics to assign higher weights to perturbations closer to original instance',
+                        example: 'Small changes get weight 0.9, medium changes get 0.5, large changes get 0.1',
+                        considerations: 'Choice of distance metric and kernel affects explanation quality'
+                    },
+                    'Fit Local Linear Model': {
+                        purpose: 'Create simple, interpretable approximation of complex model behavior locally',
+                        details: 'Use weighted regression with perturbations as X, predictions as y, and similarity as weights',
+                        example: 'Linear model: prediction = 0.2 + 0.3×credit_score + 0.1×income - 0.2×debt_ratio',
+                        considerations: 'Linear assumption may not capture all local complexity - check goodness of fit'
+                    },
+                    'Extract Explanation': {
+                        purpose: 'Translate linear model coefficients into human-readable explanations',
+                        details: 'Coefficients show direction and magnitude of feature influence on this specific prediction',
+                        example: 'Credit score has strongest positive impact (+0.3), debt ratio hurts most (-0.2)',
+                        considerations: 'Explanation is only valid locally - may not generalize to different instances'
+                    }
+                };
+                
+                const info = stepDetails[title];
+                modal.show(`Step ${stepNum}: ${title}`, `
+                    <div class="modal-highlight">
+                        <strong>Step ${stepNum}: ${title}</strong>
+                    </div>
+                    <p><strong>Purpose:</strong> ${info.purpose}</p>
+                    <p><strong>How it works:</strong> ${info.details}</p>
+                    <p><strong>Example:</strong> ${info.example}</p>
+                    <p><strong>Key considerations:</strong> ${info.considerations}</p>
+                    
+                    <div class="modal-code">
+                        Python Implementation (Step ${stepNum}):
+                        
+                        import lime
+                        import lime.lime_tabular
+                        
+                        # Step ${stepNum} example code:
+                        ${stepNum === '1' ? `
+                        # Select instance to explain
+                        instance_idx = 42
+                        instance = X_test.iloc[instance_idx]
+                        prediction = model.predict_proba([instance])[0]` : ''}
+                        ${stepNum === '2' ? `
+                        # Generate perturbations
+                        explainer = lime.lime_tabular.LimeTabularExplainer(
+                            X_train.values,
+                            feature_names=X_train.columns,
+                            class_names=['Reject', 'Approve'],
+                            mode='classification'
+                        )` : ''}
+                        ${stepNum === '3' ? `
+                        # Get model predictions on perturbations
+                        explanation = explainer.explain_instance(
+                            instance.values,
+                            model.predict_proba,
+                            num_features=len(X_train.columns),
+                            num_samples=1000  # number of perturbations
+                        )` : ''}
+                        ${stepNum === '4' ? `
+                        # Weight by similarity (handled internally)
+                        # LIME uses exponential kernel: exp(-D²/σ²)
+                        # where D is distance and σ controls locality` : ''}
+                        ${stepNum === '5' ? `
+                        # Fit local linear model (handled internally)
+                        # sklearn.linear_model.Ridge with sample weights` : ''}
+                        ${stepNum === '6' ? `
+                        # Extract explanation
+                        explanation.show_in_notebook(show_table=True)
+                        explanation.as_list()  # [(feature, importance), ...]` : ''}
+                    </div>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                        <strong>💡 Pro Tip:</strong><br>
+                        ${stepNum === '1' ? 'Always validate explanations on multiple similar instances to check consistency!' : ''}
+                        ${stepNum === '2' ? 'Balance realism with diversity - too constrained perturbations limit explanation scope!' : ''}
+                        ${stepNum === '3' ? 'Monitor model prediction distribution on perturbations - wide variance indicates complex local behavior!' : ''}
+                        ${stepNum === '4' ? 'Experiment with different distance metrics (euclidean, cosine, manhattan) for your data type!' : ''}
+                        ${stepNum === '5' ? 'Check R² of local model - low values indicate linear approximation may be poor!' : ''}
+                        ${stepNum === '6' ? 'Present explanations in domain terms, not just feature names - "High debt ratio" vs "debt_ratio=0.8"!' : ''}
+                    </div>
+                `);
+            });
+        });
+
+        // LIME demo click handler
+        document.querySelector('.lime-demo').addEventListener('click', function() {
+            modal.show('LIME Demonstration Explained', `
+                <div class="modal-highlight">
+                    <strong>LIME in Action: Local Interpretable Model-Agnostic Explanations</strong>
+                </div>
+                <h4>What you're seeing:</h4>
+                <ul style="margin: 20px 0; line-height: 1.8;">
+                    <li><strong>Original Instance:</strong> The specific case we want to explain (loan application)</li>
+                    <li><strong>Perturbed Samples:</strong> 1000 variations of the original with slight modifications</li>
+                    <li><strong>Feature Bars:</strong> Linear model coefficients showing local feature importance</li>
+                    <li><strong>Local Explanation:</strong> Human-readable interpretation of the model's reasoning</li>
+                </ul>
+                
+                <h4>Reading the Explanation:</h4>
+                <div class="modal-code">
+                    Feature Importance (Local Linear Model):
+                    • Credit Score: +0.23 (strongest positive influence)
+                    • Income Level: +0.18 (major positive factor)  
+                    • Employment: +0.15 (helps approval chances)
+                    • Debt Ratio: -0.12 (main concern)
+                    • Age: +0.08 (minor positive influence)
+                    
+                    Interpretation: "For this specific applicant, 
+                    credit score is the most important factor driving 
+                    approval, while debt ratio is the main concern."
+                </div>
+                
+                <h4>Key Insights:</h4>
+                <ul style="margin: 20px 0; line-height: 1.8;">
+                    <li><strong>Local validity:</strong> This explanation is specific to this applicant's profile</li>
+                    <li><strong>Simplicity:</strong> Complex model reduced to understandable linear relationships</li>
+                    <li><strong>Actionable:</strong> Shows exactly what factors matter for this case</li>
+                    <li><strong>Model-agnostic:</strong> Works regardless of underlying model complexity</li>
+                </ul>
+                
+                <div style="margin-top: 20px; padding: 15px; background: rgba(239, 68, 68, 0.1); border-radius: 10px;">
+                    <strong>⚠️ Important Limitation:</strong><br>
+                    LIME explanations are only valid in the local neighborhood of the explained instance. Different instances may have completely different explanations even from the same model!
+                </div>
+            `);
+        });
+
+        // Comparison table click handlers
+        document.querySelectorAll('.table-cell').forEach(cell => {
+            cell.addEventListener('click', function() {
+                const title = this.querySelector('.cell-title').textContent;
+                const content = this.querySelector('.cell-content').textContent;
+                
+                const cellDetails = {
+                    'Scope': {
+                        'Local explanations only': 'LIME focuses exclusively on explaining individual predictions in their local neighborhood',
+                        'Both local & global': 'SHAP can provide both individual explanations and global model insights through summary plots'
+                    },
+                    'Method': {
+                        'Local surrogate model': 'LIME fits simple interpretable models (linear regression) to approximate complex model behavior locally',
+                        'Game theory (Shapley)': 'SHAP uses Shapley values from cooperative game theory to fairly attribute prediction contributions'
+                    },
+                    'Model Agnostic': {
+                        'Yes - works with any model': 'LIME treats any model as black box, only requiring prediction function access',
+                        'Yes - but has optimized versions': 'SHAP is model-agnostic but has specialized fast implementations for tree models, deep networks'
+                    },
+                    'Speed': {
+                        'Fast for single predictions': 'LIME is optimized for explaining one instance at a time with minimal computation',
+                        'Slower but batch-optimized': 'SHAP can be slow for single instances but efficient when explaining many instances together'
+                    },
+                    'Consistency': {
+                        'Can vary between runs': 'LIME uses random perturbations, so explanations may vary slightly between runs',
+                        'Mathematically consistent': 'SHAP values are deterministic and always satisfy efficiency, symmetry, dummy, additivity axioms'
+                    },
+                    'Data Types': {
+                        'Text, images, tabular': 'LIME has specialized explainers for different data types with appropriate perturbation strategies',
+                        'Primarily tabular, some image': 'SHAP works best with tabular data, has some image support, limited text capabilities'
+                    },
+                    'Interpretability': {
+                        'Simple linear coefficients': 'LIME produces intuitive linear model coefficients that are easy to understand',
+                        'Contribution values with axioms': 'SHAP values have theoretical guarantees but may be harder to interpret for non-technical users'
+                    },
+                    'Best For': {
+                        'Quick individual explanations': 'LIME excels when you need fast, ad-hoc explanations for specific predictions',
+                        'Comprehensive model analysis': 'SHAP is better for systematic model analysis, debugging, and understanding global behavior'
+                    },
+                    'Limitations': {
+                        'Locality assumption, instability': 'LIME assumes local linearity and can be unstable due to random sampling',
+                        'Computational cost, complexity': 'SHAP can be computationally expensive and results may be complex to interpret'
+                    }
+                };
+                
+                const details = cellDetails[title];
+                if (details && details[content]) {
+                    modal.show(`${title}: ${content}`, `
+                        <div class="modal-highlight">
+                            <strong>${title}: ${content}</strong>
+                        </div>
+                        <p>${details[content]}</p>
+                        
+                        <div class="modal-code">
+                            Practical Example:
+                            
+                            ${title === 'Scope' ? (content.includes('LIME') ? `
+                            # LIME - explain single instance
+                            explanation = explainer.explain_instance(instance, model.predict_proba)
+                            explanation.show_in_notebook()  # one prediction only` : `
+                            # SHAP - explain batch + global insights  
+                            shap_values = explainer.shap_values(X_test)
+                            shap.summary_plot(shap_values, X_test)  # global view`) : ''}
+                            
+                            ${title === 'Speed' ? (content.includes('LIME') ? `
+                            # LIME - fast single explanation
+                            start = time.time()
+                            explanation = lime_explainer.explain_instance(instance, model.predict_proba, num_samples=1000)
+                            print(f"Time: {time.time() - start:.2f}s")  # ~2-5 seconds` : `
+                            # SHAP - batch processing efficient
+                            start = time.time()
+                            shap_values = shap.TreeExplainer(model).shap_values(X_test[:100])
+                            print(f"Time per instance: {(time.time() - start)/100:.2f}s")`) : ''}
+                            
+                            ${title === 'Consistency' ? (content.includes('LIME') ? `
+                            # LIME - may vary between runs
+                            exp1 = explainer.explain_instance(instance, model.predict_proba, num_samples=1000)
+                            exp2 = explainer.explain_instance(instance, model.predict_proba, num_samples=1000)
+                            # exp1 != exp2 due to random perturbations` : `
+                            # SHAP - always consistent
+                            shap1 = explainer.shap_values(instance.reshape(1,-1))
+                            shap2 = explainer.shap_values(instance.reshape(1,-1))
+                            # shap1 == shap2 always`) : ''}
+                        </div>
+                        
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                            <strong>💡 Decision Guide:</strong><br>
+                            ${content.includes('LIME') ? 'Choose LIME when you need quick explanations for individual cases, especially for non-technical audiences or when working with diverse data types.' : 'Choose SHAP when you need rigorous, consistent explanations for model analysis, debugging, or when mathematical guarantees are important.'}
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week12_Slide232.html';
+            } else if (e.key === 'ArrowRight' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week12_Slide234.html';
+            }
+        });
+    </script>
+</body>
+</html>

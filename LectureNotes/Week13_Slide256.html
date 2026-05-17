@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Hybrid Recommender Systems</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .hybrid-overview {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 35px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 0.8s ease-out 0.2s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .overview-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .approaches-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .approach-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 0.8s ease-out;
+            animation-fill-mode: both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .approach-card:nth-child(1) { animation-delay: 0.3s; }
+        .approach-card:nth-child(2) { animation-delay: 0.4s; }
+        .approach-card:nth-child(3) { animation-delay: 0.5s; }
+
+        .approach-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px rgba(13, 148, 136, 0.2);
+        }
+
+        .approach-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+            display: inline-block;
+            animation: pulse 2s infinite;
+        }
+
+        .approach-title {
+            font-size: 1.5em;
+            color: #0d9488;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .approach-description {
+            font-size: 1em;
+            line-height: 1.6;
+            color: #1e293b;
+            margin-bottom: 15px;
+        }
+
+        .approach-features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .feature-tag {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            font-weight: 600;
+            color: #0d9488;
+        }
+
+        .implementations-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 35px;
+            margin-top: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 0.8s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .impl-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .impl-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .impl-item {
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            padding: 15px;
+            border-radius: 15px;
+            background: linear-gradient(135deg, rgba(204, 251, 241, 0.2), rgba(153, 246, 228, 0.2));
+        }
+
+        .impl-item:hover {
+            transform: scale(1.1);
+            background: linear-gradient(135deg, #ccfbf1, #99f6e4);
+        }
+
+        .impl-logo {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .impl-name {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 5px;
+        }
+
+        .impl-metric {
+            font-size: 0.9em;
+            color: #64748b;
+        }
+
+        .learn-more {
+            margin-top: 15px;
+            color: #14b8a6;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        .tech-list {
+            list-style: none;
+            margin: 20px 0;
+        }
+
+        .tech-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .tech-list li:last-child {
+            border-bottom: none;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .approaches-grid { grid-template-columns: 1fr; }
+            .impl-grid { grid-template-columns: repeat(2, 1fr); }
+            .slide-title { font-size: 2.5em; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 13</div>
+    <div class="slide-number">Slide 256 of 260</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">🔀 Hybrid Recommender Systems</h1>
+        
+        <div class="hybrid-overview">
+            <h2 class="overview-title">Combining the Best of All Worlds</h2>
+            <p style="font-size: 1.1em; line-height: 1.8; color: #1e293b;">
+                Hybrid recommender systems leverage multiple recommendation techniques to overcome 
+                the limitations of individual approaches. By combining collaborative filtering, 
+                content-based filtering, and other methods, they deliver more accurate, diverse, 
+                and robust recommendations.
+            </p>
+        </div>
+
+        <div class="approaches-grid">
+            <div class="approach-card" data-approach="weighted">
+                <div class="approach-icon">⚖️</div>
+                <h3 class="approach-title">Weighted Hybrid</h3>
+                <p class="approach-description">
+                    Combines predictions from multiple recommenders using weighted averages 
+                    to produce a final recommendation score.
+                </p>
+                <div class="approach-features">
+                    <span class="feature-tag">Linear Combination</span>
+                    <span class="feature-tag">Adjustable Weights</span>
+                    <span class="feature-tag">Simple to Implement</span>
+                </div>
+                <div class="learn-more">Click for details →</div>
+            </div>
+
+            <div class="approach-card" data-approach="switching">
+                <div class="approach-icon">🔄</div>
+                <h3 class="approach-title">Switching Hybrid</h3>
+                <p class="approach-description">
+                    Dynamically selects the best recommender based on the current situation 
+                    and available data.
+                </p>
+                <div class="approach-features">
+                    <span class="feature-tag">Context-Aware</span>
+                    <span class="feature-tag">Adaptive Selection</span>
+                    <span class="feature-tag">Cold Start Solution</span>
+                </div>
+                <div class="learn-more">Click for details →</div>
+            </div>
+
+            <div class="approach-card" data-approach="mixed">
+                <div class="approach-icon">🎨</div>
+                <h3 class="approach-title">Mixed Hybrid</h3>
+                <p class="approach-description">
+                    Presents recommendations from different algorithms simultaneously 
+                    in a unified interface.
+                </p>
+                <div class="approach-features">
+                    <span class="feature-tag">Diverse Results</span>
+                    <span class="feature-tag">Multiple Perspectives</span>
+                    <span class="feature-tag">User Choice</span>
+                </div>
+                <div class="learn-more">Click for details →</div>
+            </div>
+        </div>
+
+        <div class="approaches-grid">
+            <div class="approach-card" data-approach="feature-combination">
+                <div class="approach-icon">🧩</div>
+                <h3 class="approach-title">Feature Combination</h3>
+                <p class="approach-description">
+                    Merges features from different data sources into a single recommendation 
+                    algorithm.
+                </p>
+                <div class="approach-features">
+                    <span class="feature-tag">Unified Model</span>
+                    <span class="feature-tag">Deep Learning</span>
+                    <span class="feature-tag">Rich Features</span>
+                </div>
+                <div class="learn-more">Click for details →</div>
+            </div>
+
+            <div class="approach-card" data-approach="cascade">
+                <div class="approach-icon">🏔️</div>
+                <h3 class="approach-title">Cascade Hybrid</h3>
+                <p class="approach-description">
+                    Uses a staged process where one recommender refines the recommendations 
+                    of another.
+                </p>
+                <div class="approach-features">
+                    <span class="feature-tag">Sequential Refinement</span>
+                    <span class="feature-tag">Efficient Filtering</span>
+                    <span class="feature-tag">Quality Focus</span>
+                </div>
+                <div class="learn-more">Click for details →</div>
+            </div>
+
+            <div class="approach-card" data-approach="meta-level">
+                <div class="approach-icon">🧠</div>
+                <h3 class="approach-title">Meta-Level Hybrid</h3>
+                <p class="approach-description">
+                    One recommender's model becomes input to another, creating a 
+                    two-level architecture.
+                </p>
+                <div class="approach-features">
+                    <span class="feature-tag">Model Stacking</span>
+                    <span class="feature-tag">Learned Representations</span>
+                    <span class="feature-tag">Advanced ML</span>
+                </div>
+                <div class="learn-more">Click for details →</div>
+            </div>
+        </div>
+
+        <div class="implementations-section">
+            <h2 class="impl-title">Real-World Implementations</h2>
+            <div class="impl-grid">
+                <div class="impl-item" data-company="netflix">
+                    <div class="impl-logo">🎬</div>
+                    <div class="impl-name">Netflix</div>
+                    <div class="impl-metric">80% Content Discovery</div>
+                </div>
+                <div class="impl-item" data-company="amazon">
+                    <div class="impl-logo">📦</div>
+                    <div class="impl-name">Amazon</div>
+                    <div class="impl-metric">35% Sales from Recs</div>
+                </div>
+                <div class="impl-item" data-company="spotify">
+                    <div class="impl-logo">🎵</div>
+                    <div class="impl-name">Spotify</div>
+                    <div class="impl-metric">31% Discovery Weekly</div>
+                </div>
+                <div class="impl-item" data-company="youtube">
+                    <div class="impl-logo">📹</div>
+                    <div class="impl-name">YouTube</div>
+                    <div class="impl-metric">70% Watch Time</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week13_Slide255.html" class="nav-btn">← Previous</a>
+        <a href="Week13_Slide257.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.body;
+            for (let i = 0; i < 15; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (18 + Math.random() * 10) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Approach details
+        const approachDetails = {
+            'weighted': {
+                title: 'Weighted Hybrid Systems',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>⚖️ Balancing Multiple Recommendation Strategies</strong>
+                    </div>
+                    
+                    <h4>How Weighted Hybrids Work:</h4>
+                    <p>Weighted hybrid systems compute scores from multiple recommendation algorithms 
+                    and combine them using weighted linear combinations. The weights can be learned 
+                    through optimization or set based on empirical performance.</p>
+                    
+                    <div class="modal-code">
+# Weighted Hybrid Recommender
+import numpy as np
+
+class WeightedHybrid:
+    def __init__(self, weights):
+        self.weights = weights  # {'cf': 0.6, 'cb': 0.3, 'kb': 0.1}
+        
+    def recommend(self, user_id, n_items=10):
+        # Get predictions from each model
+        cf_scores = collaborative_filter.predict(user_id)
+        cb_scores = content_based.predict(user_id)
+        kb_scores = knowledge_based.predict(user_id)
+        
+        # Weighted combination
+        final_scores = (
+            self.weights['cf'] * cf_scores +
+            self.weights['cb'] * cb_scores +
+            self.weights['kb'] * kb_scores
+        )
+        
+        # Return top N items
+        top_items = np.argsort(final_scores)[-n_items:][::-1]
+        return top_items
+                    </div>
+                    
+                    <h4>Key Advantages:</h4>
+                    <ul class="tech-list">
+                        <li><strong>🎯 Accuracy:</strong> Combines strengths of multiple algorithms</li>
+                        <li><strong>⚡ Performance:</strong> Can be computed in parallel</li>
+                        <li><strong>🔧 Tunability:</strong> Weights can be adjusted per user segment</li>
+                        <li><strong>📊 Interpretability:</strong> Clear contribution from each component</li>
+                    </ul>
+                    
+                    <div class="modal-highlight">
+                        <strong>Example:</strong> Netflix uses weighted combinations of collaborative filtering (60%), 
+                        content similarity (25%), and trending algorithms (15%) to generate personalized rows.
+                    </div>
+                `
+            },
+            'switching': {
+                title: 'Switching Hybrid Systems',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>🔄 Intelligent Algorithm Selection</strong>
+                    </div>
+                    
+                    <h4>Adaptive Recommendation Strategy:</h4>
+                    <p>Switching hybrids use a decision mechanism to choose which recommendation 
+                    algorithm to apply based on the current situation. This approach is particularly 
+                    effective for handling the cold start problem.</p>
+                    
+                    <div class="modal-code">
+# Switching Hybrid Based on Context
+class SwitchingHybrid:
+    def recommend(self, user_id, context):
+        user_history = get_user_history(user_id)
+        
+        if len(user_history) < 5:
+            # New user - use knowledge-based
+            return knowledge_based_recommender(user_id)
+            
+        elif context['browsing_category']:
+            # User browsing specific category - use content-based
+            return content_based_recommender(
+                user_id, 
+                category=context['browsing_category']
+            )
+            
+        elif sufficient_rating_density(user_id):
+            # Enough data - use collaborative filtering
+            return collaborative_filter(user_id)
+            
+        else:
+            # Default to popularity-based
+            return popularity_recommender(context['region'])
+                    </div>
+                    
+                    <h4>Switching Criteria:</h4>
+                    <ul class="tech-list">
+                        <li><strong>👤 User Profile:</strong> New vs. experienced users</li>
+                        <li><strong>📊 Data Availability:</strong> Sparse vs. dense interaction data</li>
+                        <li><strong>🎯 Confidence Level:</strong> Switch when prediction confidence is low</li>
+                        <li><strong>📱 Context:</strong> Device, time of day, location</li>
+                    </ul>
+                    
+                    <div class="modal-highlight">
+                        <strong>Success Story:</strong> LinkedIn switches between skill-based, network-based, 
+                        and content-based recommendations depending on user activity and profile completeness.
+                    </div>
+                `
+            },
+            'mixed': {
+                title: 'Mixed Hybrid Systems',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>🎨 Diverse Recommendations in One View</strong>
+                    </div>
+                    
+                    <h4>Presenting Multiple Perspectives:</h4>
+                    <p>Mixed hybrids present recommendations from different algorithms simultaneously, 
+                    allowing users to see diverse options. This approach increases the chance of 
+                    satisfying different user needs and moods.</p>
+                    
+                    <div class="modal-code">
+# Mixed Hybrid Display Strategy
+class MixedHybridUI:
+    def generate_homepage(self, user_id):
+        sections = []
+        
+        # Section 1: Personalized (Collaborative Filtering)
+        sections.append({
+            'title': 'Recommended for You',
+            'items': collaborative_filter(user_id, n=10),
+            'algorithm': 'collaborative'
+        })
+        
+        # Section 2: Similar to Recent (Content-Based)
+        sections.append({
+            'title': 'Because You Watched...',
+            'items': content_based_similar(user_id, n=10),
+            'algorithm': 'content'
+        })
+        
+        # Section 3: Trending Now (Popularity)
+        sections.append({
+            'title': 'Trending in Your Area',
+            'items': trending_recommender(user_region, n=10),
+            'algorithm': 'popularity'
+        })
+        
+        # Section 4: Expert Picks (Knowledge-Based)
+        sections.append({
+            'title': 'Critics Choice',
+            'items': expert_recommendations(user_preferences, n=10),
+            'algorithm': 'knowledge'
+        })
+        
+        return render_homepage(sections)
+                    </div>
+                    
+                    <h4>Implementation Examples:</h4>
+                    <ul class="tech-list">
+                        <li><strong>🎬 Netflix:</strong> Rows like "Trending Now", "Because You Watched", "Top Picks"</li>
+                        <li><strong>🛍️ Amazon:</strong> "Customers Also Bought", "Related Items", "Best Sellers"</li>
+                        <li><strong>🎵 Spotify:</strong> "Made for You", "Popular Near You", "Similar Artists"</li>
+                        <li><strong>📰 News Apps:</strong> "Personalized", "Trending", "Editor's Choice"</li>
+                    </ul>
+                    
+                    <div class="modal-highlight">
+                        <strong>Benefit:</strong> Users get 40% more diverse recommendations, leading to 
+                        increased engagement and discovery of new content categories.
+                    </div>
+                `
+            },
+            'feature-combination': {
+                title: 'Feature Combination Hybrid',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>🧩 Unified Feature Space for Deep Learning</strong>
+                    </div>
+                    
+                    <h4>Combining All Signals:</h4>
+                    <p>Feature combination hybrids merge features from multiple data sources into 
+                    a single model, often using deep learning to learn complex interactions between 
+                    different types of features.</p>
+                    
+                    <div class="modal-code">
+# Deep Learning Feature Combination
+import tensorflow as tf
+
+class DeepHybridModel(tf.keras.Model):
+    def __init__(self):
+        super().__init__()
+        
+        # User features branch
+        self.user_embedding = tf.keras.layers.Embedding(
+            n_users, embedding_dim=64
+        )
+        self.user_dense = tf.keras.layers.Dense(128, activation='relu')
+        
+        # Item features branch
+        self.item_embedding = tf.keras.layers.Embedding(
+            n_items, embedding_dim=64
+        )
+        self.item_dense = tf.keras.layers.Dense(128, activation='relu')
+        
+        # Content features branch
+        self.content_cnn = tf.keras.layers.Conv1D(
+            filters=32, kernel_size=3
+        )
+        self.content_pool = tf.keras.layers.GlobalMaxPooling1D()
+        
+        # Context features branch
+        self.context_dense = tf.keras.layers.Dense(64, activation='relu')
+        
+        # Fusion layers
+        self.fusion = tf.keras.layers.Dense(256, activation='relu')
+        self.dropout = tf.keras.layers.Dropout(0.3)
+        self.output_layer = tf.keras.layers.Dense(1, activation='sigmoid')
+        
+    def call(self, inputs):
+        user_id, item_id, content, context = inputs
+        
+        # Process each feature type
+        user_vec = self.user_dense(self.user_embedding(user_id))
+        item_vec = self.item_dense(self.item_embedding(item_id))
+        content_vec = self.content_pool(self.content_cnn(content))
+        context_vec = self.context_dense(context)
+        
+        # Concatenate all features
+        combined = tf.concat([user_vec, item_vec, content_vec, context_vec], axis=1)
+        
+        # Final prediction
+        fused = self.dropout(self.fusion(combined))
+        return self.output_layer(fused)
+                    </div>
+                    
+                    <h4>Feature Types Combined:</h4>
+                    <ul class="tech-list">
+                        <li><strong>👤 User Features:</strong> Demographics, preferences, history</li>
+                        <li><strong>📦 Item Features:</strong> Categories, attributes, metadata</li>
+                        <li><strong>🔗 Interaction Features:</strong> Ratings, clicks, time spent</li>
+                        <li><strong>🌍 Contextual Features:</strong> Time, location, device, session</li>
+                    </ul>
+                    
+                    <div class="modal-highlight">
+                        <strong>Google's Wide & Deep:</strong> Combines memorization (wide) and generalization (deep) 
+                        to achieve 3.9% improvement in app downloads from Play Store recommendations.
+                    </div>
+                `
+            },
+            'cascade': {
+                title: 'Cascade Hybrid Systems',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>🏔️ Sequential Refinement Process</strong>
+                    </div>
+                    
+                    <h4>Multi-Stage Filtering:</h4>
+                    <p>Cascade hybrids use a staged approach where each recommender refines the 
+                    recommendations from the previous stage, creating increasingly personalized results.</p>
+                    
+                    <div class="modal-code">
+# Cascade Hybrid Pipeline
+class CascadeHybrid:
+    def recommend(self, user_id, n_recommendations=10):
+        # Stage 1: Coarse filtering (fast)
+        candidates = self.coarse_filter(user_id, n=1000)
+        print(f"Stage 1: {len(candidates)} candidates")
+        
+        # Stage 2: Content-based scoring
+        content_scores = self.content_scorer(user_id, candidates)
+        top_500 = candidates[np.argsort(content_scores)[-500:]]
+        print(f"Stage 2: {len(top_500)} candidates")
+        
+        # Stage 3: Collaborative filtering
+        cf_scores = self.collaborative_scorer(user_id, top_500)
+        top_100 = top_500[np.argsort(cf_scores)[-100:]]
+        print(f"Stage 3: {len(top_100)} candidates")
+        
+        # Stage 4: Deep learning re-ranking
+        final_scores = self.deep_model.predict(user_id, top_100)
+        top_n = top_100[np.argsort(final_scores)[-n_recommendations:]]
+        
+        # Stage 5: Business rules and diversity
+        return self.apply_business_rules(top_n, user_id)
+    
+    def coarse_filter(self, user_id, n):
+        # Fast candidate generation
+        return popularity_based_filter(n) + \
+               recent_items_filter(n//2) + \
+               category_filter(user_id, n//2)
+                    </div>
+                    
+                    <h4>Benefits of Cascading:</h4>
+                    <ul class="tech-list">
+                        <li><strong>⚡ Efficiency:</strong> Expensive models only score filtered candidates</li>
+                        <li><strong>🎯 Precision:</strong> Each stage improves recommendation quality</li>
+                        <li><strong>🔧 Modularity:</strong> Easy to add/remove stages</li>
+                        <li><strong>📊 Scalability:</strong> Can handle millions of items efficiently</li>
+                    </ul>
+                    
+                    <div class="modal-highlight">
+                        <strong>YouTube's Funnel:</strong> Processes 1 billion videos through candidate generation (millions) 
+                        → ranking (hundreds) → final selection (dozens) in under 100ms.
+                    </div>
+                `
+            },
+            'meta-level': {
+                title: 'Meta-Level Hybrid Systems',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>🧠 Learning from Learned Models</strong>
+                    </div>
+                    
+                    <h4>Two-Level Architecture:</h4>
+                    <p>Meta-level hybrids use the output of one recommendation model as input features 
+                    for another model, creating a sophisticated two-tier learning system.</p>
+                    
+                    <div class="modal-code">
+# Meta-Level Hybrid Architecture
+class MetaLevelHybrid:
+    def __init__(self):
+        # Level 1: Base recommenders
+        self.cf_model = CollaborativeFilter()
+        self.cb_model = ContentBasedFilter()
+        self.mf_model = MatrixFactorization()
+        
+        # Level 2: Meta-learner
+        self.meta_model = XGBoostRegressor()
+        
+    def train(self, train_data):
+        # Step 1: Train base models
+        self.cf_model.fit(train_data)
+        self.cb_model.fit(train_data)
+        self.mf_model.fit(train_data)
+        
+        # Step 2: Generate meta-features
+        meta_features = []
+        for user_id, item_id, rating in train_data:
+            features = np.array([
+                self.cf_model.predict(user_id, item_id),
+                self.cb_model.predict(user_id, item_id),
+                self.mf_model.predict(user_id, item_id),
+                self.cf_model.confidence(user_id, item_id),
+                self.cb_model.similarity_score(user_id, item_id),
+                self.mf_model.latent_distance(user_id, item_id),
+                user_activity_level(user_id),
+                item_popularity(item_id),
+                time_since_release(item_id)
+            ])
+            meta_features.append((features, rating))
+        
+        # Step 3: Train meta-learner
+        X = np.array([f[0] for f in meta_features])
+        y = np.array([f[1] for f in meta_features])
+        self.meta_model.fit(X, y)
+    
+    def predict(self, user_id, item_id):
+        # Get base predictions
+        base_preds = np.array([
+            self.cf_model.predict(user_id, item_id),
+            self.cb_model.predict(user_id, item_id),
+            self.mf_model.predict(user_id, item_id),
+            # ... additional meta-features
+        ])
+        
+        # Meta-level prediction
+        return self.meta_model.predict(base_preds.reshape(1, -1))[0]
+                    </div>
+                    
+                    <h4>Meta-Learning Advantages:</h4>
+                    <ul class="tech-list">
+                        <li><strong>🎓 Learns Optimal Combination:</strong> Automatically finds best way to combine models</li>
+                        <li><strong>🔍 Captures Interactions:</strong> Discovers when each model works best</li>
+                        <li><strong>📈 Superior Performance:</strong> Often outperforms simple combinations</li>
+                        <li><strong>🛡️ Robustness:</strong> Compensates for individual model weaknesses</li>
+                    </ul>
+                    
+                    <div class="modal-highlight">
+                        <strong>Netflix Prize Winner:</strong> BellKor's Pragmatic Chaos used meta-level 
+                        blending of 100+ models to achieve 10.06% improvement over Netflix's Cinematch.
+                    </div>
+                `
+            }
+        };
+
+        // Company implementation details
+        const companyDetails = {
+            'netflix': {
+                title: 'Netflix Hybrid Architecture',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>🎬 Netflix: The Recommendation Powerhouse</strong>
+                    </div>
+                    
+                    <h4>Multi-Algorithm Approach:</h4>
+                    <p>Netflix uses a sophisticated hybrid system combining multiple algorithms to 
+                    generate personalized homepages with 40+ recommendation rows.</p>
+                    
+                    <h4>Key Components:</h4>
+                    <ul class="tech-list">
+                        <li><strong>Personalized Video Ranker (PVR):</strong> Orders entire catalog for each user</li>
+                        <li><strong>Top-N Ranker:</strong> Generates genre-specific recommendations</li>
+                        <li><strong>Trending Now:</strong> Combines temporal patterns with personal taste</li>
+                        <li><strong>Continue Watching:</strong> Predicts which shows users will resume</li>
+                        <li><strong>Because You Watched:</strong> Content-based similarity with CF validation</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Simplified Netflix Row Generation
+rows = []
+rows.append(generate_top_picks(user))  # PVR algorithm
+rows.append(trending_for_you(user, region))  # Hybrid trending
+rows.append(because_you_watched(user, recent_watch))  # Content-based
+rows.append(new_releases_for_you(user))  # Filtered by taste
+rows.append(my_list_suggestions(user))  # Collaborative filtering
+                    </div>
+                    
+                    <div class="modal-highlight">
+                        <strong>Impact:</strong> 80% of viewing hours come from recommendations, 
+                        saving Netflix $1B annually through reduced churn.
+                    </div>
+                `
+            },
+            'amazon': {
+                title: 'Amazon Recommendation Engine',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>📦 Amazon: Item-to-Item Collaborative Filtering Pioneer</strong>
+                    </div>
+                    
+                    <h4>Hybrid Strategy:</h4>
+                    <p>Amazon combines item-based collaborative filtering with content analysis, 
+                    browsing history, and purchase patterns to drive 35% of revenue.</p>
+                    
+                    <h4>Recommendation Types:</h4>
+                    <ul class="tech-list">
+                        <li><strong>Frequently Bought Together:</strong> Association rules + collaborative filtering</li>
+                        <li><strong>Customers Who Bought Also Bought:</strong> Item-to-item CF</li>
+                        <li><strong>Recommended for You:</strong> Matrix factorization + deep learning</li>
+                        <li><strong>Lightning Deals:</strong> Personalized promotions based on price sensitivity</li>
+                        <li><strong>Subscribe & Save:</strong> Temporal patterns + consumption prediction</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Amazon's Item-to-Item Algorithm
+def recommend_items(user_cart):
+    recommendations = {}
+    for item in user_cart:
+        similar_items = get_similar_items(item)
+        for similar, score in similar_items:
+            if similar not in user_cart:
+                recommendations[similar] = max(
+                    recommendations.get(similar, 0), 
+                    score * item_weight(item)
+                )
+    return sorted(recommendations.items(), key=lambda x: x[1], reverse=True)
+                    </div>
+                    
+                    <div class="modal-highlight">
+                        <strong>Scale:</strong> Processes 2.5M recommendations per second during peak times, 
+                        analyzing 1 billion+ user-item interactions daily.
+                    </div>
+                `
+            },
+            'spotify': {
+                title: 'Spotify Music Recommendation',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>🎵 Spotify: The Music Discovery Engine</strong>
+                    </div>
+                    
+                    <h4>Three-Pillar Approach:</h4>
+                    <p>Spotify combines collaborative filtering, natural language processing, and 
+                    audio analysis to create personalized playlists for 500M+ users.</p>
+                    
+                    <h4>Core Algorithms:</h4>
+                    <ul class="tech-list">
+                        <li><strong>Discover Weekly:</strong> CF + audio features + exploration</li>
+                        <li><strong>Release Radar:</strong> Follow graph + listening history</li>
+                        <li><strong>Daily Mix:</strong> Clustering + genre preferences</li>
+                        <li><strong>Radio:</strong> Acoustic similarity + collaborative signals</li>
+                        <li><strong>Spotify Wrapped:</strong> Temporal analysis + social features</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Spotify's BaRT (Bandits for Recommendations as Treatments)
+class SpotifyBaRT:
+    def generate_playlist(self, user_id):
+        # Exploration vs Exploitation
+        explore_ratio = calculate_explore_ratio(user_id)
+        
+        playlist = []
+        for i in range(30):  # 30 songs
+            if random() < explore_ratio:
+                # Explore: add discovery track
+                song = sample_from_audio_similarity(user_taste)
+            else:
+                # Exploit: add familiar track
+                song = sample_from_listening_history(user_id)
+            playlist.append(song)
+            
+        return optimize_flow(playlist)  # Reorder for listening experience
+                    </div>
+                    
+                    <div class="modal-highlight">
+                        <strong>Success:</strong> Discover Weekly has 40% weekly active users, generating 
+                        2.3 billion streams monthly and discovering 8,000 artists per week.
+                    </div>
+                `
+            },
+            'youtube': {
+                title: 'YouTube Recommendation System',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>📹 YouTube: Deep Neural Networks at Scale</strong>
+                    </div>
+                    
+                    <h4>Two-Stage Deep Learning:</h4>
+                    <p>YouTube uses a two-stage approach: candidate generation (retrieval) followed 
+                    by ranking, processing billions of videos for 2B+ users.</p>
+                    
+                    <h4>System Architecture:</h4>
+                    <ul class="tech-list">
+                        <li><strong>Candidate Generation:</strong> Deep neural network produces hundreds of videos</li>
+                        <li><strong>Ranking Network:</strong> Scores each video using hundreds of features</li>
+                        <li><strong>Freshness:</strong> Balances new content with proven videos</li>
+                        <li><strong>Diversity:</strong> Ensures variety in topics and creators</li>
+                        <li><strong>Fairness:</strong> Promotes smaller creators and diverse voices</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# YouTube's Two-Tower Neural Network
+class YouTubeRecommender:
+    def __init__(self):
+        self.user_tower = build_user_network()
+        self.video_tower = build_video_network()
+        
+    def candidate_generation(self, user_features):
+        user_embedding = self.user_tower(user_features)
+        # Approximate nearest neighbor search
+        candidates = ann_search(user_embedding, n=500)
+        return candidates
+    
+    def ranking(self, user_features, video_candidates):
+        scores = []
+        for video in video_candidates:
+            features = combine_features(user_features, video)
+            score = self.ranking_network(features)
+            scores.append(score)
+        return sort_by_score(video_candidates, scores)
+                    </div>
+                    
+                    <div class="modal-highlight">
+                        <strong>Impact:</strong> 70% of watch time comes from recommendations, with 
+                        average session duration increasing 60% since implementing deep learning.
+                    </div>
+                `
+            }
+        };
+
+        // Add click handlers for approach cards
+        document.querySelectorAll('.approach-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const approach = this.dataset.approach;
+                const details = approachDetails[approach];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        // Add click handlers for company implementations
+        document.querySelectorAll('.impl-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const company = this.dataset.company;
+                const details = companyDetails[company];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        // Initialize floating elements
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week13_Slide255.html';
+            } else if (e.key === 'ArrowRight' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week13_Slide257.html';
+            }
+        });
+    </script>
+</body>
+</html>

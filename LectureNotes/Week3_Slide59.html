@@ -1,0 +1,1717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Classification Metrics</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .metrics-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .confusion-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .metric-card {
+            padding: 20px;
+            margin: 15px 0;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .metric-name {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+            font-size: 1.2em;
+            display: flex;
+            align-items: center;
+        }
+
+        .metric-icon {
+            font-size: 1.3em;
+            margin-right: 10px;
+        }
+
+        .metric-formula {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #475569;
+            margin-bottom: 5px;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .metric-desc {
+            font-size: 0.9em;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .confusion-matrix {
+            width: 100%;
+            max-width: 350px;
+            margin: 20px auto;
+            border-collapse: separate;
+            border-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .confusion-matrix:hover {
+            transform: scale(1.02);
+        }
+
+        .cm-cell {
+            width: 80px;
+            height: 80px;
+            text-align: center;
+            vertical-align: middle;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .cm-header {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            font-size: 0.9em;
+        }
+
+        .cm-label {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            font-size: 0.9em;
+        }
+
+        .cm-tp {
+            background: linear-gradient(135deg, #10b981, #34d399);
+            color: white;
+        }
+
+        .cm-fp {
+            background: linear-gradient(135deg, #f59e0b, #fbbf24);
+            color: white;
+        }
+
+        .cm-fn {
+            background: linear-gradient(135deg, #ef4444, #f87171);
+            color: white;
+        }
+
+        .cm-tn {
+            background: linear-gradient(135deg, #6366f1, #818cf8);
+            color: white;
+        }
+
+        .cm-cell:hover {
+            transform: scale(1.1);
+            z-index: 10;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .matrix-labels {
+            text-align: center;
+            margin: 15px 0;
+            font-size: 0.9em;
+            color: #64748b;
+        }
+
+        .calculator-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .calc-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-top: 30px;
+        }
+
+        .calc-inputs {
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            border-radius: 15px;
+            padding: 30px;
+        }
+
+        .calc-results {
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            border-radius: 15px;
+            padding: 30px;
+        }
+
+        .input-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #cbd5e1;
+            border-radius: 10px;
+            font-size: 1em;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #0d9488;
+        }
+
+        .input-label {
+            display: block;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .calculate-button {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 20px;
+            font-size: 1.1em;
+        }
+
+        .calculate-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(13, 148, 136, 0.3);
+        }
+
+        .results-display {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 25px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            min-height: 300px;
+            margin-top: 15px;
+            white-space: pre-wrap;
+        }
+
+        .visual-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.9s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            margin-top: 30px;
+        }
+
+        .visual-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-top: 30px;
+        }
+
+        .chart-container {
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .chart-canvas {
+            border: 2px solid #cbd5e1;
+            border-radius: 10px;
+            background: white;
+            margin: 15px 0;
+        }
+
+        .preset-examples {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .preset-button {
+            background: rgba(13, 148, 136, 0.1);
+            border: 2px solid #0d9488;
+            border-radius: 10px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+            text-align: center;
+        }
+
+        .preset-button:hover {
+            background: #0d9488;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .preset-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .preset-desc {
+            font-size: 0.8em;
+            opacity: 0.8;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .calc-grid { grid-template-columns: 1fr; }
+            .visual-grid { grid-template-columns: 1fr; }
+            .preset-examples { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .input-group { grid-template-columns: 1fr; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+            white-space: pre-wrap;
+        }
+
+        .metric-comparison {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .comparison-card {
+            background: rgba(13, 148, 136, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 3</div>
+    <div class="slide-number">Slide 59 of 60</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Classification Metrics</h1>
+        
+        <div class="content-layout">
+            <div class="metrics-section">
+                <h2 class="section-title">Essential Metrics</h2>
+                
+                <div class="metric-card" data-metric="accuracy">
+                    <div class="metric-name">
+                        <span class="metric-icon">🎯</span>
+                        Accuracy
+                    </div>
+                    <div class="metric-formula">Accuracy = (TP + TN) / (TP + TN + FP + FN)</div>
+                    <div class="metric-desc">
+                        Overall correctness - what fraction of predictions were right?
+                    </div>
+                </div>
+
+                <div class="metric-card" data-metric="precision">
+                    <div class="metric-name">
+                        <span class="metric-icon">🔍</span>
+                        Precision
+                    </div>
+                    <div class="metric-formula">Precision = TP / (TP + FP)</div>
+                    <div class="metric-desc">
+                        Of positive predictions, how many were actually positive? (Quality focus)
+                    </div>
+                </div>
+
+                <div class="metric-card" data-metric="recall">
+                    <div class="metric-name">
+                        <span class="metric-icon">📡</span>
+                        Recall (Sensitivity)
+                    </div>
+                    <div class="metric-formula">Recall = TP / (TP + FN)</div>
+                    <div class="metric-desc">
+                        Of actual positives, how many did we find? (Coverage focus)
+                    </div>
+                </div>
+
+                <div class="metric-card" data-metric="specificity">
+                    <div class="metric-name">
+                        <span class="metric-icon">🛡️</span>
+                        Specificity
+                    </div>
+                    <div class="metric-formula">Specificity = TN / (TN + FP)</div>
+                    <div class="metric-desc">
+                        Of actual negatives, how many did we correctly identify?
+                    </div>
+                </div>
+
+                <div class="metric-card" data-metric="f1">
+                    <div class="metric-name">
+                        <span class="metric-icon">⚖️</span>
+                        F1-Score
+                    </div>
+                    <div class="metric-formula">F1 = 2 × (Precision × Recall) / (Precision + Recall)</div>
+                    <div class="metric-desc">
+                        Harmonic mean of precision and recall - balanced measure
+                    </div>
+                </div>
+            </div>
+
+            <div class="confusion-section">
+                <h2 class="section-title">Confusion Matrix</h2>
+                
+                <table class="confusion-matrix" id="confusionMatrix">
+                    <tr>
+                        <td class="cm-cell cm-header"></td>
+                        <td class="cm-cell cm-header">Predicted<br>Positive</td>
+                        <td class="cm-cell cm-header">Predicted<br>Negative</td>
+                    </tr>
+                    <tr>
+                        <td class="cm-cell cm-label">Actual<br>Positive</td>
+                        <td class="cm-cell cm-tp" data-cell="tp">
+                            <div>TP</div>
+                            <div style="font-size: 0.8em;">85</div>
+                        </td>
+                        <td class="cm-cell cm-fn" data-cell="fn">
+                            <div>FN</div>
+                            <div style="font-size: 0.8em;">15</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="cm-cell cm-label">Actual<br>Negative</td>
+                        <td class="cm-cell cm-fp" data-cell="fp">
+                            <div>FP</div>
+                            <div style="font-size: 0.8em;">10</div>
+                        </td>
+                        <td class="cm-cell cm-tn" data-cell="tn">
+                            <div>TN</div>
+                            <div style="font-size: 0.8em;">90</div>
+                        </td>
+                    </tr>
+                </table>
+                
+                <div class="matrix-labels">
+                    <strong>TP:</strong> True Positive &nbsp;|&nbsp; 
+                    <strong>FP:</strong> False Positive<br>
+                    <strong>FN:</strong> False Negative &nbsp;|&nbsp; 
+                    <strong>TN:</strong> True Negative
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px; font-size: 0.9em;">
+                    <strong>Click on matrix cells or metric cards for detailed explanations</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="calculator-section">
+            <h2 class="section-title" style="text-align: center;">🧮 Interactive Metrics Calculator</h2>
+            <p style="text-align: center; color: #475569; margin-bottom: 20px;">
+                Enter your confusion matrix values and see all metrics calculated automatically
+            </p>
+            
+            <div class="calc-grid">
+                <div class="calc-inputs">
+                    <h4 style="color: #0d9488; margin-bottom: 20px; text-align: center;">Confusion Matrix Values</h4>
+                    
+                    <div class="input-group">
+                        <div>
+                            <label class="input-label">True Positives (TP)</label>
+                            <input type="number" class="input-field" id="inputTP" value="85" min="0">
+                        </div>
+                        <div>
+                            <label class="input-label">False Negatives (FN)</label>
+                            <input type="number" class="input-field" id="inputFN" value="15" min="0">
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <div>
+                            <label class="input-label">False Positives (FP)</label>
+                            <input type="number" class="input-field" id="inputFP" value="10" min="0">
+                        </div>
+                        <div>
+                            <label class="input-label">True Negatives (TN)</label>
+                            <input type="number" class="input-field" id="inputTN" value="90" min="0">
+                        </div>
+                    </div>
+                    
+                    <button class="calculate-button" onclick="calculateMetrics()">Calculate All Metrics</button>
+                    
+                    <div class="preset-examples">
+                        <div class="preset-button" onclick="loadPreset('balanced')">
+                            <div class="preset-title">Balanced Model</div>
+                            <div class="preset-desc">Good overall performance</div>
+                        </div>
+                        
+                        <div class="preset-button" onclick="loadPreset('conservative')">
+                            <div class="preset-title">Conservative Model</div>
+                            <div class="preset-desc">High precision, lower recall</div>
+                        </div>
+                        
+                        <div class="preset-button" onclick="loadPreset('aggressive')">
+                            <div class="preset-title">Aggressive Model</div>
+                            <div class="preset-desc">High recall, lower precision</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="calc-results">
+                    <h4 style="color: #0d9488; margin-bottom: 20px; text-align: center;">Calculated Metrics</h4>
+                    <div class="results-display" id="metricsResults">
+                        Enter confusion matrix values and click "Calculate All Metrics" to see detailed analysis of classification performance.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="visual-section">
+            <h2 class="section-title" style="text-align: center;">📊 Metrics Visualization</h2>
+            
+            <div class="visual-grid">
+                <div class="chart-container">
+                    <h4 style="color: #0d9488; margin-bottom: 15px;">Precision vs Recall Tradeoff</h4>
+                    <canvas class="chart-canvas" id="precisionRecallChart" width="350" height="250"></canvas>
+                    <div style="font-size: 0.9em; color: #64748b; margin-top: 10px;">
+                        Visualizes the relationship between precision and recall for different classification thresholds
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <h4 style="color: #0d9488; margin-bottom: 15px;">ROC Curve</h4>
+                    <canvas class="chart-canvas" id="rocChart" width="350" height="250"></canvas>
+                    <div style="font-size: 0.9em; color: #64748b; margin-top: 10px;">
+                        True Positive Rate vs False Positive Rate - measures discriminative ability
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week3_Slide58.html" class="nav-btn">← Previous</a>
+        <a href="Week3_Slide60.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Metric details
+        const metricDetails = {
+            'accuracy': {
+                title: 'Accuracy: Overall Correctness',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Formula:</strong> Accuracy = (TP + TN) / (TP + TN + FP + FN)<br>
+                        <strong>Interpretation:</strong> What percentage of all predictions were correct?
+                    </div>
+                    
+                    <h4 style="color: #0d9488; margin-top: 20px;">When Accuracy is Useful:</h4>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>• <strong>Balanced datasets:</strong> Equal or similar number of positive and negative examples</li>
+                        <li>• <strong>Equal error costs:</strong> False positives and false negatives have similar consequences</li>
+                        <li>• <strong>General performance:</strong> Quick overall assessment of model quality</li>
+                        <li>• <strong>Baseline comparison:</strong> Comparing different models on same dataset</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+                        Example 1: Balanced Dataset
+                        Dataset: 500 positive, 500 negative examples
+                        Results: TP=450, TN=480, FP=20, FN=50
+                        Accuracy = (450+480)/(450+480+20+50) = 930/1000 = 93%
+                        ✅ Accuracy is meaningful here
+                        
+                        Example 2: Imbalanced Dataset  
+                        Dataset: 990 negative, 10 positive examples (1% positive)
+                        Naive model: Always predict negative
+                        Results: TP=0, TN=990, FP=0, FN=10
+                        Accuracy = (0+990)/(0+990+0+10) = 990/1000 = 99%
+                        ❌ 99% accuracy but completely useless model!
+                    </div>
+                    
+                    <div style="background: rgba(239, 68, 68, 0.1); padding: 15px; border-radius: 10px; margin: 20px 0;">
+                        <strong>⚠️ Accuracy Paradox:</strong><br>
+                        High accuracy can be misleading with imbalanced datasets. A model that always predicts the majority class can have high accuracy but zero utility!
+                    </div>
+                    
+                    <p><strong>Best Practices:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>• Always check class distribution first</li>
+                        <li>• Use accuracy alongside precision, recall, and F1-score</li>
+                        <li>• Consider balanced accuracy for imbalanced datasets</li>
+                        <li>• Compare against baseline (majority class classifier)</li>
+                    </ul>
+                `
+            },
+            'precision': {
+                title: 'Precision: Quality of Positive Predictions',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Formula:</strong> Precision = TP / (TP + FP)<br>
+                        <strong>Question:</strong> "Of all positive predictions, how many were actually positive?"
+                    </div>
+                    
+                    <h4 style="color: #0d9488; margin-top: 20px;">Intuitive Understanding:</h4>
+                    <p>Precision measures the <strong>quality</strong> of your positive predictions. High precision means when you say "positive," you're usually right.</p>
+                    
+                    <div class="modal-code">
+                        Email Spam Filter Example:
+                        Model predicts 100 emails as SPAM
+                        - 95 are actually spam (TP = 95)
+                        - 5 are actually legitimate (FP = 5)
+                        
+                        Precision = 95 / (95 + 5) = 95/100 = 95%
+                        
+                        Interpretation: When the model says "spam", it's right 95% of the time
+                        Impact: Only 5% of flagged emails are legitimate (low false alarm rate)
+                    </div>
+                    
+                    <h4 style="color: #0d9488; margin-top: 20px;">When Precision Matters Most:</h4>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>• <strong>Medical diagnosis:</strong> False positive = unnecessary treatment/anxiety</li>
+                        <li>• <strong>Fraud detection:</strong> False positive = blocking legitimate transactions</li>
+                        <li>• <strong>Spam filtering:</strong> False positive = missing important emails</li>
+                        <li>• <strong>Job candidate screening:</strong> False positive = interviewing unqualified candidates</li>
+                    </ul>
+                    
+                    <div class="metric-comparison">
+                        <div class="comparison-card">
+                            <strong>High Precision</strong><br>
+                            Conservative model<br>
+                            "Better safe than sorry"<br>
+                            Few false alarms
+                        </div>
+                        <div class="comparison-card">
+                            <strong>Low Precision</strong><br>
+                            Liberal model<br>
+                            "Cast a wide net"<br>
+                            Many false alarms
+                        </div>
+                    </div>
+                    
+                    <p><strong>Precision-Recall Tradeoff:</strong></p>
+                    <p>Usually, increasing precision decreases recall. Making the model more conservative (higher threshold) reduces false positives but increases false negatives.</p>
+                    
+                    <div style="background: rgba(13, 148, 136, 0.1); padding: 15px; border-radius: 10px; margin: 20px 0;">
+                        <strong>💡 Memory Trick:</strong><br>
+                        <strong>P</strong>recision = <strong>P</strong>ositive <strong>P</strong>redictive Value<br>
+                        Of my positive predictions, what percentage were precise (correct)?
+                    </div>
+                `
+            },
+            'recall': {
+                title: 'Recall (Sensitivity): Coverage of Actual Positives',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Formula:</strong> Recall = TP / (TP + FN)<br>
+                        <strong>Question:</strong> "Of all actual positives, how many did I find?"
+                    </div>
+                    
+                    <h4 style="color: #0d9488; margin-top: 20px;">Intuitive Understanding:</h4>
+                    <p>Recall measures the <strong>coverage</strong> of your model. High recall means you're catching most of the positive cases.</p>
+                    
+                    <div class="modal-code">
+                        Cancer Screening Example:
+                        Hospital screens 1000 patients
+                        - 50 actually have cancer
+                        - Model detects 45 of them (TP = 45)  
+                        - Model misses 5 cases (FN = 5)
+                        
+                        Recall = 45 / (45 + 5) = 45/50 = 90%
+                        
+                        Interpretation: The model catches 90% of cancer cases
+                        Impact: 10% of cancer patients go undetected (dangerous!)
+                    </div>
+                    
+                    <h4 style="color: #0d9488; margin-top: 20px;">When Recall Matters Most:</h4>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>• <strong>Disease screening:</strong> Missing sick patients can be fatal</li>
+                        <li>• <strong>Security screening:</strong> Missing threats has severe consequences</li>
+                        <li>• <strong>Search engines:</strong> Users expect to find relevant results</li>
+                        <li>• <strong>Fraud detection:</strong> Missing fraudulent transactions costs money</li>
+                        <li>• <strong>Quality control:</strong> Missing defective products affects reputation</li>
+                    </ul>
+                    
+                    <div class="metric-comparison">
+                        <div class="comparison-card">
+                            <strong>High Recall</strong><br>
+                            Aggressive model<br>
+                            "Don't miss anything"<br>
+                            Catches most positives
+                        </div>
+                        <div class="comparison-card">
+                            <strong>Low Recall</strong><br>
+                            Conservative model<br>
+                            "Only the obvious ones"<br>
+                            Misses many positives
+                        </div>
+                    </div>
+                    
+                    <h4 style="color: #0d9488; margin-top: 20px;">Other Names for Recall:</h4>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>• <strong>Sensitivity:</strong> How sensitive is the test to detecting positives?</li>
+                        <li>• <strong>True Positive Rate (TPR):</strong> Rate of correctly identified positives</li>
+                        <li>• <strong>Hit Rate:</strong> What fraction of targets did we hit?</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+                        Recall vs Precision Example:
+                        
+                        Dataset: 100 positive cases, 900 negative cases
+                        
+                        Conservative Model (High Precision):
+                        Predicts 50 as positive: 48 TP, 2 FP, 52 FN
+                        Precision = 48/(48+2) = 96%  ✅ High
+                        Recall = 48/(48+52) = 48%    ❌ Low
+                        
+                        Aggressive Model (High Recall):  
+                        Predicts 200 as positive: 95 TP, 105 FP, 5 FN
+                        Precision = 95/(95+105) = 47.5% ❌ Low  
+                        Recall = 95/(95+5) = 95%        ✅ High
+                    </div>
+                    
+                    <div style="background: rgba(13, 148, 136, 0.1); padding: 15px; border-radius: 10px; margin: 20px 0;">
+                        <strong>🎯 Memory Trick:</strong><br>
+                        <strong>R</strong>ecall = <strong>R</strong>emember Rate<br>
+                        Of all the actual positives, how many did I remember to catch?
+                    </div>
+                `
+            },
+            'specificity': {
+                title: 'Specificity: Correct Identification of Negatives',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Formula:</strong> Specificity = TN / (TN + FP)<br>
+                        <strong>Question:</strong> "Of all actual negatives, how many did I correctly identify?"
+                    </div>
+                    
+                    <p>Specificity is the "recall for the negative class" - it measures how well your model identifies negative cases.</p>
+                    
+                    <div class="modal-code">
+                        Medical Test Example:
+                        1000 healthy patients tested
+                        - 950 correctly identified as healthy (TN = 950)
+                        - 50 incorrectly flagged as sick (FP = 50)
+                        
+                        Specificity = 950 / (950 + 50) = 950/1000 = 95%
+                        
+                        Interpretation: 95% of healthy patients are correctly identified
+                        Impact: 5% of healthy patients get false positive results
+                    </div>
+                    
+                    <h4 style="color: #0d9488; margin-top: 20px;">Relationship to Other Metrics:</h4>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>• <strong>Specificity = 1 - False Positive Rate</strong></li>
+                        <li>• <strong>High specificity = Low false positive rate</strong></li>
+                        <li>• <strong>Recall focuses on positives, Specificity focuses on negatives</strong></li>
+                    </ul>
+                    
+                    <div class="modal-code">
+                        ROC Curve Connection:
+                        - X-axis: False Positive Rate = 1 - Specificity
+                        - Y-axis: True Positive Rate = Recall
+                        
+                        Perfect classifier: Specificity = 100%, Recall = 100%
+                        Random classifier: Specificity = 50%, Recall = 50%
+                    </div>
+                    
+                    <h4 style="color: #0d9488; margin-top: 20px;">When Specificity is Critical:</h4>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>• <strong>Medical screening:</strong> Avoid unnecessary anxiety/treatment</li>
+                        <li>• <strong>Legal systems:</strong> Don't convict innocent people</li>
+                        <li>• <strong>Quality control:</strong> Don't reject good products</li>
+                        <li>• <strong>Security systems:</strong> Don't block authorized users</li>
+                    </ul>
+                    
+                    <div style="background: rgba(13, 148, 136, 0.1); padding: 15px; border-radius: 10px; margin: 20px 0;">
+                        <strong>🔍 Clinical Insight:</strong><br>
+                        In medical testing, you want both high sensitivity (catch all sick patients) AND high specificity (don't alarm healthy patients). The challenge is balancing both!
+                    </div>
+                `
+            },
+            'f1': {
+                title: 'F1-Score: Balanced Precision and Recall',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Formula:</strong> F1 = 2 × (Precision × Recall) / (Precision + Recall)<br>
+                        <strong>Purpose:</strong> Single metric that balances precision and recall
+                    </div>
+                    
+                    <h4 style="color: #0d9488; margin-top: 20px;">Why F1-Score?</h4>
+                    <p>F1-score is the <strong>harmonic mean</strong> of precision and recall. It's more conservative than arithmetic mean - both precision and recall need to be high for a high F1-score.</p>
+                    
+                    <div class="modal-code">
+                        Comparison of Means:
+                        Precision = 90%, Recall = 10%
+                        
+                        Arithmetic Mean = (90 + 10) / 2 = 50%
+                        Harmonic Mean (F1) = 2 × (90 × 10) / (90 + 10) = 18%
+                        
+                        F1 punishes extreme imbalance between precision and recall!
+                    </div>
+                    
+                    <h4 style="color: #0d9488; margin-top: 20px;">F1-Score Scenarios:</h4>
+                    
+                    <div class="metric-comparison">
+                        <div class="comparison-card">
+                            <strong>Balanced Model</strong><br>
+                            Precision: 80%<br>
+                            Recall: 80%<br>
+                            F1: 80%
+                        </div>
+                        <div class="comparison-card">
+                            <strong>High Precision</strong><br>
+                            Precision: 95%<br>
+                            Recall: 50%<br>
+                            F1: 66%
+                        </div>
+                        <div class="comparison-card">
+                            <strong>High Recall</strong><br>
+                            Precision: 50%<br>
+                            Recall: 95%<br>
+                            F1: 66%
+                        </div>
+                    </div>
+                    
+                    <h4 style="color: #0d9488; margin-top: 20px;">When to Use F1-Score:</h4>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>• <strong>Imbalanced datasets:</strong> More meaningful than accuracy</li>
+                        <li>• <strong>Need balance:</strong> Both precision and recall are important</li>
+                        <li>• <strong>Model comparison:</strong> Single number for ranking models</li>
+                        <li>• <strong>Binary classification:</strong> Standard evaluation metric</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+                        Real Example: Email Spam Detection
+                        
+                        Model A (Conservative):
+                        Precision: 98% (few false positives)
+                        Recall: 70% (misses some spam)
+                        F1: 82%
+                        
+                        Model B (Aggressive):  
+                        Precision: 75% (more false positives)
+                        Recall: 95% (catches almost all spam)
+                        F1: 84%
+                        
+                        Model B wins on F1-score despite lower precision!
+                    </div>
+                    
+                    <h4 style="color: #0d9488; margin-top: 20px;">F1-Score Variants:</h4>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>• <strong>Macro F1:</strong> Average F1 across all classes</li>
+                        <li>• <strong>Micro F1:</strong> F1 calculated from global TP, FP, FN</li>
+                        <li>• <strong>Weighted F1:</strong> F1 weighted by class support</li>
+                        <li>• <strong>F-beta:</strong> Generalization that weights precision vs recall</li>
+                    </ul>
+                    
+                    <div style="background: rgba(13, 148, 136, 0.1); padding: 15px; border-radius: 10px; margin: 20px 0;">
+                        <strong>🎯 Key Insight:</strong><br>
+                        F1-score forces you to improve BOTH precision and recall. You can't game the system by optimizing just one metric at the expense of the other!
+                    </div>
+                `
+            }
+        };
+
+        // Confusion matrix cell details
+        const cellDetails = {
+            'tp': {
+                title: 'True Positives (TP)',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>True Positives (TP):</strong><br>
+                        Cases where the model correctly predicted positive and the actual label was positive
+                    </div>
+                    
+                    <h4 style="color: #0d9488; margin-top: 20px;">Real-World Examples:</h4>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>• <strong>Medical diagnosis:</strong> Patient has disease, test is positive ✅</li>
+                        <li>• <strong>Spam filter:</strong> Email is spam, classified as spam ✅</li>
+                        <li>• <strong>Fraud detection:</strong> Transaction is fraudulent, flagged as fraud ✅</li>
+                        <li>• <strong>Quality control:</strong> Product is defective, rejected ✅</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+                        Example: Cancer Screening
+                        1000 patients screened
+                        100 actually have cancer
+                        Model correctly identifies 85 of them
+                        
+                        TP = 85 (correctly identified cancer patients)
+                        
+                        This is what we WANT - catching the positive cases!
+                    </div>
+                    
+                    <p><strong>Impact on Metrics:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>• <strong>Increases Accuracy:</strong> More correct predictions</li>
+                        <li>• <strong>Increases Precision:</strong> More true positives in positive predictions</li>
+                        <li>• <strong>Increases Recall:</strong> More actual positives found</li>
+                        <li>• <strong>Increases F1:</strong> Improves both precision and recall</li>
+                    </ul>
+                    
+                    <div style="background: rgba(16, 185, 129, 0.1); padding: 15px; border-radius: 10px; margin: 20px 0;">
+                        <strong>✅ Goal:</strong> Maximize True Positives while minimizing False Positives and False Negatives
+                    </div>
+                `
+            },
+            'fp': {
+                title: 'False Positives (FP) - Type I Error',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>False Positives (FP):</strong><br>
+                        Cases where the model incorrectly predicted positive but the actual label was negative
+                    </div>
+                    
+                    <h4 style="color: #0d9488; margin-top: 20px;">Real-World Examples:</h4>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>• <strong>Medical diagnosis:</strong> Healthy patient, test says sick ❌</li>
+                        <li>• <strong>Spam filter:</strong> Important email marked as spam ❌</li>
+                        <li>• <strong>Fraud detection:</strong> Legitimate transaction blocked ❌</li>
+                        <li>• <strong>Fire alarm:</strong> No fire, but alarm goes off ❌</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+                        Example: Pregnancy Test
+                        Test says: POSITIVE (pregnant)
+                        Reality: NEGATIVE (not pregnant)
+                        
+                        Result: False positive
+                        Impact: Unnecessary excitement/anxiety, follow-up tests needed
+                        
+                        This is a "false alarm" - crying wolf when there's no wolf
+                    </div>
+                    
+                    <p><strong>Consequences of False Positives:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>• <strong>Wasted resources:</strong> Unnecessary follow-up actions</li>
+                        <li>• <strong>User frustration:</strong> False alarms reduce trust</li>
+                        <li>• <strong>Opportunity cost:</strong> Time spent on non-issues</li>
+                        <li>• <strong>System overload:</strong> Too many false alerts to handle</li>
+                    </ul>
+                    
+                    <p><strong>Impact on Metrics:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>• <strong>Decreases Precision:</strong> More wrong positives in predictions</li>
+                        <li>• <strong>Decreases Specificity:</strong> More negatives incorrectly identified</li>
+                        <li>• <strong>May decrease Accuracy:</strong> More incorrect predictions overall</li>
+                        <li>• <strong>Increases False Positive Rate:</strong> More type I errors</li>
+                    </ul>
+                    
+                    <div style="background: rgba(245, 158, 11, 0.1); padding: 15px; border-radius: 10px; margin: 20px 0;">
+                        <strong>⚠️ Trade-off:</strong> Reducing FP often increases FN (false negatives). Finding the right balance depends on the cost of each type of error.
+                    </div>
+                `
+            },
+            'fn': {
+                title: 'False Negatives (FN) - Type II Error',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>False Negatives (FN):</strong><br>
+                        Cases where the model incorrectly predicted negative but the actual label was positive
+                    </div>
+                    
+                    <h4 style="color: #0d9488; margin-top: 20px;">Real-World Examples:</h4>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>• <strong>Medical diagnosis:</strong> Sick patient, test says healthy ❌</li>
+                        <li>• <strong>Security screening:</strong> Weapon missed by scanner ❌</li>
+                        <li>• <strong>Spam filter:</strong> Spam email reaches inbox ❌</li>
+                        <li>• <strong>Quality control:</strong> Defective product shipped ❌</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+                        Example: Cancer Screening
+                        Test says: NEGATIVE (no cancer)
+                        Reality: POSITIVE (cancer present)
+                        
+                        Result: False negative
+                        Impact: Patient doesn't get treatment, cancer progresses
+                        
+                        This is "missing the target" - failing to detect what's there
+                    </div>
+                    
+                    <p><strong>Consequences of False Negatives:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>• <strong>Missed opportunities:</strong> Failing to act when action needed</li>
+                        <li>• <strong>Safety risks:</strong> Threats go undetected</li>
+                        <li>• <strong>Progressive problems:</strong> Issues worsen over time</li>
+                        <li>• <strong>Lost revenue:</strong> Missing business opportunities</li>
+                    </ul>
+                    
+                    <p><strong>Impact on Metrics:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>• <strong>Decreases Recall:</strong> More actual positives missed</li>
+                        <li>• <strong>May decrease Accuracy:</strong> More incorrect predictions overall</li>
+                        <li>• <strong>Decreases F1:</strong> Hurts the precision-recall balance</li>
+                        <li>• <strong>Increases Miss Rate:</strong> More type II errors</li>
+                    </ul>
+                    
+                    <h4 style="color: #0d9488; margin-top: 20px;">FP vs FN - Which is Worse?</h4>
+                    <div class="metric-comparison">
+                        <div class="comparison-card">
+                            <strong>FP Worse</strong><br>
+                            Spam filtering<br>
+                            False alarms<br>
+                            Wasted resources
+                        </div>
+                        <div class="comparison-card">
+                            <strong>FN Worse</strong><br>
+                            Medical diagnosis<br>
+                            Security threats<br>
+                            Safety critical
+                        </div>
+                    </div>
+                    
+                    <div style="background: rgba(239, 68, 68, 0.1); padding: 15px; border-radius: 10px; margin: 20px 0;">
+                        <strong>🚨 Critical Point:</strong> In many domains (medicine, security), false negatives are more dangerous than false positives. Better to be overly cautious than to miss critical cases.
+                    </div>
+                `
+            },
+            'tn': {
+                title: 'True Negatives (TN)',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>True Negatives (TN):</strong><br>
+                        Cases where the model correctly predicted negative and the actual label was negative
+                    </div>
+                    
+                    <h4 style="color: #0d9488; margin-top: 20px;">Real-World Examples:</h4>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>• <strong>Medical screening:</strong> Healthy patient, test negative ✅</li>
+                        <li>• <strong>Spam filter:</strong> Legitimate email not flagged ✅</li>
+                        <li>• <strong>Security check:</strong> Safe person allowed through ✅</li>
+                        <li>• <strong>Quality control:</strong> Good product approved ✅</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+                        Example: Airport Security
+                        1000 passengers screened
+                        990 are not carrying weapons
+                        System correctly identifies 985 as safe
+                        
+                        TN = 985 (correctly identified safe passengers)
+                        
+                        This allows normal operations to continue smoothly
+                    </div>
+                    
+                    <p><strong>Why True Negatives Matter:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>• <strong>System efficiency:</strong> Most cases are negative in many applications</li>
+                        <li>• <strong>User experience:</strong> Normal cases processed without interruption</li>
+                        <li>• <strong>Cost savings:</strong> No unnecessary follow-up actions</li>
+                        <li>• <strong>Trust building:</strong> System doesn't cry wolf constantly</li>
+                    </ul>
+                    
+                    <p><strong>Impact on Metrics:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>• <strong>Increases Accuracy:</strong> More correct predictions overall</li>
+                        <li>• <strong>Increases Specificity:</strong> More negatives correctly identified</li>
+                        <li>• <strong>Decreases False Positive Rate:</strong> Fewer type I errors</li>
+                        <li>• <strong>May not affect Precision/Recall:</strong> These focus on positive class</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+                        Imbalanced Dataset Impact:
+                        Dataset: 10 positive, 990 negative examples
+                        Perfect classifier: TP=10, TN=990, FP=0, FN=0
+                        
+                        TN dominates accuracy calculation:
+                        Accuracy = (10+990)/(10+990+0+0) = 1000/1000 = 100%
+                        
+                        But TN doesn't appear in Precision or Recall formulas!
+                    </div>
+                    
+                    <div style="background: rgba(99, 102, 241, 0.1); padding: 15px; border-radius: 10px; margin: 20px 0;">
+                        <strong>💡 Often Overlooked:</strong> True negatives are the "silent heroes" of classification. They don't get attention but are crucial for system performance, especially in imbalanced datasets where most cases are negative.
+                    </div>
+                `
+            }
+        };
+
+        // Make metric cards clickable
+        document.querySelectorAll('.metric-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const metricName = this.getAttribute('data-metric');
+                const detail = metricDetails[metricName];
+                if (detail) {
+                    modal.show(detail.title, detail.content);
+                }
+            });
+        });
+
+        // Make confusion matrix cells clickable
+        document.querySelectorAll('[data-cell]').forEach(cell => {
+            cell.addEventListener('click', function() {
+                const cellName = this.getAttribute('data-cell');
+                const detail = cellDetails[cellName];
+                if (detail) {
+                    modal.show(detail.title, detail.content);
+                }
+            });
+        });
+
+        // Preset examples
+        const presets = {
+            'balanced': { tp: 85, fn: 15, fp: 10, tn: 90 },
+            'conservative': { tp: 75, fn: 25, fp: 5, tn: 95 },
+            'aggressive': { tp: 95, fn: 5, fp: 25, tn: 75 }
+        };
+
+        function loadPreset(type) {
+            const preset = presets[type];
+            document.getElementById('inputTP').value = preset.tp;
+            document.getElementById('inputFN').value = preset.fn;
+            document.getElementById('inputFP').value = preset.fp;
+            document.getElementById('inputTN').value = preset.tn;
+            calculateMetrics();
+        }
+
+        // Calculate metrics
+        function calculateMetrics() {
+            const tp = parseInt(document.getElementById('inputTP').value) || 0;
+            const fn = parseInt(document.getElementById('inputFN').value) || 0;
+            const fp = parseInt(document.getElementById('inputFP').value) || 0;
+            const tn = parseInt(document.getElementById('inputTN').value) || 0;
+            
+            const total = tp + fn + fp + tn;
+            
+            if (total === 0) {
+                document.getElementById('metricsResults').textContent = 'Please enter valid numbers for all fields.';
+                return;
+            }
+            
+            // Calculate metrics
+            const accuracy = (tp + tn) / total;
+            const precision = tp === 0 && fp === 0 ? 0 : tp / (tp + fp);
+            const recall = tp === 0 && fn === 0 ? 0 : tp / (tp + fn);
+            const specificity = tn === 0 && fp === 0 ? 0 : tn / (tn + fp);
+            const f1 = precision + recall === 0 ? 0 : (2 * precision * recall) / (precision + recall);
+            
+            // Additional metrics
+            const fpr = fp / (fp + tn); // False Positive Rate
+            const fnr = fn / (fn + tp); // False Negative Rate
+            const npv = tn / (tn + fn);  // Negative Predictive Value
+            
+            const results = `CLASSIFICATION METRICS ANALYSIS
+${'='.repeat(40)}
+
+CONFUSION MATRIX VALUES:
+True Positives (TP):   ${tp}
+False Negatives (FN):  ${fn}  
+False Positives (FP):  ${fp}
+True Negatives (TN):   ${tn}
+Total Predictions:     ${total}
+
+PRIMARY METRICS:
+${'─'.repeat(20)}
+Accuracy    = (TP + TN) / Total        = ${(accuracy * 100).toFixed(2)}%
+Precision   = TP / (TP + FP)          = ${(precision * 100).toFixed(2)}%  
+Recall      = TP / (TP + FN)          = ${(recall * 100).toFixed(2)}%
+Specificity = TN / (TN + FP)          = ${(specificity * 100).toFixed(2)}%
+F1-Score    = 2×(P×R)/(P+R)           = ${(f1 * 100).toFixed(2)}%
+
+ADDITIONAL METRICS:
+${'─'.repeat(20)}
+False Positive Rate = FP / (FP + TN)  = ${(fpr * 100).toFixed(2)}%
+False Negative Rate = FN / (FN + TP)  = ${(fnr * 100).toFixed(2)}%
+Negative Pred. Value = TN / (TN + FN) = ${(npv * 100).toFixed(2)}%
+
+CLASS DISTRIBUTION:
+${'─'.repeat(20)}
+Actual Positives: ${tp + fn} (${((tp + fn) / total * 100).toFixed(1)}%)
+Actual Negatives: ${fp + tn} (${((fp + tn) / total * 100).toFixed(1)}%)
+Pred. Positives:  ${tp + fp} (${((tp + fp) / total * 100).toFixed(1)}%)
+Pred. Negatives:  ${fn + tn} (${((fn + tn) / total * 100).toFixed(1)}%)
+
+INTERPRETATION:
+${'─'.repeat(20)}
+${accuracy >= 0.9 ? '✅' : accuracy >= 0.8 ? '🟨' : '❌'} Accuracy: ${accuracy >= 0.9 ? 'Excellent' : accuracy >= 0.8 ? 'Good' : 'Needs Improvement'}
+${precision >= 0.9 ? '✅' : precision >= 0.8 ? '🟨' : '❌'} Precision: ${precision >= 0.9 ? 'Very Reliable' : precision >= 0.8 ? 'Reliable' : 'Many False Alarms'}
+${recall >= 0.9 ? '✅' : recall >= 0.8 ? '🟨' : '❌'} Recall: ${recall >= 0.9 ? 'Catches Almost All' : recall >= 0.8 ? 'Good Coverage' : 'Misses Many Cases'}
+${f1 >= 0.9 ? '✅' : f1 >= 0.8 ? '🟨' : '❌'} F1-Score: ${f1 >= 0.9 ? 'Excellent Balance' : f1 >= 0.8 ? 'Good Balance' : 'Imbalanced P/R'}`;
+
+            document.getElementById('metricsResults').textContent = results;
+            
+            // Update confusion matrix display
+            updateConfusionMatrix(tp, fn, fp, tn);
+            
+            // Update charts
+            updateCharts(precision, recall, specificity, fpr);
+            
+            // Show detailed analysis
+            setTimeout(() => {
+                const analysis = getDetailedAnalysis(accuracy, precision, recall, f1, tp, fn, fp, tn);
+                modal.show('Detailed Metrics Analysis', analysis);
+            }, 500);
+        }
+
+        function updateConfusionMatrix(tp, fn, fp, tn) {
+            document.querySelector('[data-cell="tp"] div:last-child').textContent = tp;
+            document.querySelector('[data-cell="fn"] div:last-child').textContent = fn;
+            document.querySelector('[data-cell="fp"] div:last-child').textContent = fp;
+            document.querySelector('[data-cell="tn"] div:last-child').textContent = tn;
+        }
+
+        function getDetailedAnalysis(accuracy, precision, recall, f1, tp, fn, fp, tn) {
+            const total = tp + fn + fp + tn;
+            const classImbalance = Math.abs((tp + fn) - (fp + tn)) / total;
+            
+            let analysis = `
+                <div class="modal-highlight">
+                    <strong>Overall Performance Summary</strong>
+                </div>
+                
+                <h4 style="color: #0d9488; margin-top: 20px;">Model Characteristics:</h4>
+                <ul style="line-height: 1.8; margin-left: 20px;">
+                    <li><strong>Total Predictions:</strong> ${total}</li>
+                    <li><strong>Correct Predictions:</strong> ${tp + tn} (${(accuracy * 100).toFixed(1)}%)</li>
+                    <li><strong>Incorrect Predictions:</strong> ${fp + fn} (${((1-accuracy) * 100).toFixed(1)}%)</li>
+                    <li><strong>Class Balance:</strong> ${classImbalance < 0.1 ? 'Well balanced' : classImbalance < 0.3 ? 'Moderately imbalanced' : 'Highly imbalanced'}</li>
+                </ul>
+                
+                <h4 style="color: #0d9488; margin-top: 20px;">Metric Breakdown:</h4>
+                <div class="metric-comparison">
+                    <div class="comparison-card">
+                        <strong>Precision: ${(precision * 100).toFixed(1)}%</strong><br>
+                        ${precision >= 0.9 ? 'Excellent' : precision >= 0.8 ? 'Good' : precision >= 0.6 ? 'Fair' : 'Poor'}<br>
+                        ${tp} correct out of ${tp + fp} positive predictions
+                    </div>
+                    <div class="comparison-card">
+                        <strong>Recall: ${(recall * 100).toFixed(1)}%</strong><br>
+                        ${recall >= 0.9 ? 'Excellent' : recall >= 0.8 ? 'Good' : recall >= 0.6 ? 'Fair' : 'Poor'}<br>
+                        Found ${tp} out of ${tp + fn} actual positives
+                    </div>
+                </div>
+            `;
+            
+            // Add recommendations based on the metrics
+            if (precision > 0.9 && recall < 0.7) {
+                analysis += `
+                    <div style="background: rgba(245, 158, 11, 0.1); padding: 15px; border-radius: 10px; margin: 20px 0;">
+                        <strong>⚠️ Conservative Model:</strong><br>
+                        High precision but low recall. Consider lowering classification threshold to catch more positive cases.
+                    </div>
+                `;
+            } else if (recall > 0.9 && precision < 0.7) {
+                analysis += `
+                    <div style="background: rgba(245, 158, 11, 0.1); padding: 15px; border-radius: 10px; margin: 20px 0;">
+                        <strong>⚠️ Aggressive Model:</strong><br>
+                        High recall but low precision. Consider raising classification threshold to reduce false alarms.
+                    </div>
+                `;
+            } else if (precision > 0.8 && recall > 0.8) {
+                analysis += `
+                    <div style="background: rgba(16, 185, 129, 0.1); padding: 15px; border-radius: 10px; margin: 20px 0;">
+                        <strong>✅ Well-Balanced Model:</strong><br>
+                        Good balance between precision and recall. This model should work well in production.
+                    </div>
+                `;
+            }
+            
+            return analysis;
+        }
+
+        // Chart drawing functions
+        function updateCharts(precision, recall, specificity, fpr) {
+            drawPrecisionRecallChart(precision, recall);
+            drawROCChart(recall, fpr);
+        }
+
+        function drawPrecisionRecallChart(precision, recall) {
+            const canvas = document.getElementById('precisionRecallChart');
+            const ctx = canvas.getContext('2d');
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const width = canvas.width - 60;
+            const height = canvas.height - 60;
+            const offsetX = 40;
+            const offsetY = 20;
+            
+            // Draw axes
+            ctx.strokeStyle = '#64748b';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(offsetX, offsetY + height);
+            ctx.lineTo(offsetX + width, offsetY + height);
+            ctx.moveTo(offsetX, offsetY);
+            ctx.lineTo(offsetX, offsetY + height);
+            ctx.stroke();
+            
+            // Draw labels
+            ctx.fillStyle = '#64748b';
+            ctx.font = '12px Segoe UI';
+            ctx.textAlign = 'center';
+            ctx.fillText('Recall', offsetX + width/2, offsetY + height + 35);
+            
+            ctx.save();
+            ctx.translate(15, offsetY + height/2);
+            ctx.rotate(-Math.PI/2);
+            ctx.fillText('Precision', 0, 0);
+            ctx.restore();
+            
+            // Draw grid lines
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 1;
+            for (let i = 1; i <= 4; i++) {
+                const x = offsetX + (width * i / 5);
+                const y = offsetY + (height * i / 5);
+                ctx.beginPath();
+                ctx.moveTo(x, offsetY);
+                ctx.lineTo(x, offsetY + height);
+                ctx.moveTo(offsetX, y);
+                ctx.lineTo(offsetX + width, y);
+                ctx.stroke();
+            }
+            
+            // Draw current point
+            const x = offsetX + recall * width;
+            const y = offsetY + height - precision * height;
+            
+            ctx.fillStyle = '#ef4444';
+            ctx.beginPath();
+            ctx.arc(x, y, 8, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Add point label
+            ctx.fillStyle = '#1e293b';
+            ctx.font = '11px Segoe UI';
+            ctx.textAlign = 'left';
+            ctx.fillText(`(${(recall * 100).toFixed(0)}%, ${(precision * 100).toFixed(0)}%)`, x + 12, y - 5);
+        }
+
+        function drawROCChart(recall, fpr) {
+            const canvas = document.getElementById('rocChart');
+            const ctx = canvas.getContext('2d');
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const width = canvas.width - 60;
+            const height = canvas.height - 60;
+            const offsetX = 40;
+            const offsetY = 20;
+            
+            // Draw axes
+            ctx.strokeStyle = '#64748b';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(offsetX, offsetY + height);
+            ctx.lineTo(offsetX + width, offsetY + height);
+            ctx.moveTo(offsetX, offsetY);
+            ctx.lineTo(offsetX, offsetY + height);
+            ctx.stroke();
+            
+            // Draw diagonal line (random classifier)
+            ctx.strokeStyle = '#94a3b8';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(offsetX, offsetY + height);
+            ctx.lineTo(offsetX + width, offsetY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Draw labels
+            ctx.fillStyle = '#64748b';
+            ctx.font = '12px Segoe UI';
+            ctx.textAlign = 'center';
+            ctx.fillText('False Positive Rate', offsetX + width/2, offsetY + height + 35);
+            
+            ctx.save();
+            ctx.translate(15, offsetY + height/2);
+            ctx.rotate(-Math.PI/2);
+            ctx.fillText('True Positive Rate', 0, 0);
+            ctx.restore();
+            
+            // Draw current point
+            const x = offsetX + fpr * width;
+            const y = offsetY + height - recall * height;
+            
+            ctx.fillStyle = '#3b82f6';
+            ctx.beginPath();
+            ctx.arc(x, y, 8, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Add point label
+            ctx.fillStyle = '#1e293b';
+            ctx.font = '11px Segoe UI';
+            ctx.textAlign = 'left';
+            ctx.fillText(`(${(fpr * 100).toFixed(0)}%, ${(recall * 100).toFixed(0)}%)`, x + 12, y - 5);
+        }
+
+        // Initialize with default values
+        calculateMetrics();
+        
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week3_Slide58.html';
+            } else if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week3_Slide60.html';
+            }
+        });
+
+    </script>
+</body>
+</html>

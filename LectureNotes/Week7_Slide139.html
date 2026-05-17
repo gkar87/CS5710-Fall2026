@@ -1,0 +1,1807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Dimensionality Reduction Applications</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .applications-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .application-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,253,250,0.95) 100%);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            animation: slideInFromBottom 1s ease-out both;
+        }
+
+        .application-card:nth-child(1) { animation-delay: 0.1s; }
+        .application-card:nth-child(2) { animation-delay: 0.2s; }
+        .application-card:nth-child(3) { animation-delay: 0.3s; }
+        .application-card:nth-child(4) { animation-delay: 0.4s; }
+        .application-card:nth-child(5) { animation-delay: 0.5s; }
+        .application-card:nth-child(6) { animation-delay: 0.6s; }
+
+        .application-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.1);
+        }
+
+        .app-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .app-title {
+            font-size: 1.4em;
+            color: #0d9488;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .app-description {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .app-stats {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 0.85em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .case-studies-banner {
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,253,250,0.95) 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.7s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .case-study-item {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 4px solid #0d9488;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .case-study-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(13, 148, 136, 0.3);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(13, 148, 136, 0.4);
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff, #f0fdfa);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 900px;
+            max-height: 85vh;
+            overflow-y: auto;
+            position: relative;
+            animation: slideInFromBottom 0.3s ease;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #14b8a6;
+            padding-bottom: 15px;
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: #ef4444;
+            color: white;
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            font-size: 1.5em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background: #dc2626;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            color: #1e293b;
+            line-height: 1.8;
+        }
+
+        .modal-content p {
+            margin-bottom: 15px;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1, #99f6e4);
+            border-left: 4px solid #0d9488;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #14b8a6;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            background: radial-gradient(circle, rgba(13, 148, 136, 0.1), transparent);
+            border-radius: 50%;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) translateX(0) scale(1); }
+            33% { transform: translateY(-30px) translateX(20px) scale(1.1); }
+            66% { transform: translateY(20px) translateX(-20px) scale(0.9); }
+        }
+
+        @keyframes slideInFromTop {
+            from { opacity: 0; transform: translateY(-50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideInFromLeft {
+            from { opacity: 0; transform: translateX(-50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes slideInFromBottom {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <div class="course-info">CS5710 - Week 7</div>
+    <div class="slide-number">Slide 139 of 140</div>
+
+    <div class="slide-container">
+        <h1 class="slide-title">Real-World Applications of Dimensionality Reduction</h1>
+
+        <div class="applications-grid">
+            <div class="application-card" onclick="showModal('genomics')">
+                <div class="app-icon">🧬</div>
+                <div class="app-title">Genomics & Bioinformatics</div>
+                <div class="app-description">
+                    Analyzing gene expression data with thousands of features for disease classification and drug discovery
+                </div>
+                <div class="app-stats">
+                    20,000+ genes → 50 principal components
+                </div>
+            </div>
+
+            <div class="application-card" onclick="showModal('image-compression')">
+                <div class="app-icon">🖼️</div>
+                <div class="app-title">Image Compression</div>
+                <div class="app-description">
+                    Reducing image file sizes while preserving visual quality using PCA and autoencoders
+                </div>
+                <div class="app-stats">
+                    90% size reduction with minimal quality loss
+                </div>
+            </div>
+
+            <div class="application-card" onclick="showModal('nlp')">
+                <div class="app-icon">📝</div>
+                <div class="app-title">Natural Language Processing</div>
+                <div class="app-description">
+                    Word embeddings and document analysis with techniques like LSA and word2vec
+                </div>
+                <div class="app-stats">
+                    1M vocabulary → 300 dimensions
+                </div>
+            </div>
+
+            <div class="application-card" onclick="showModal('finance')">
+                <div class="app-icon">📊</div>
+                <div class="app-title">Financial Modeling</div>
+                <div class="app-description">
+                    Portfolio optimization and risk assessment by identifying key market factors
+                </div>
+                <div class="app-stats">
+                    1000s of stocks → 10-20 risk factors
+                </div>
+            </div>
+
+            <div class="application-card" onclick="showModal('recommender')">
+                <div class="app-icon">🎯</div>
+                <div class="app-title">Recommender Systems</div>
+                <div class="app-description">
+                    Collaborative filtering using matrix factorization for personalized recommendations
+                </div>
+                <div class="app-stats">
+                    Netflix: 100M users × 20K movies → 50 latent factors
+                </div>
+            </div>
+
+            <div class="application-card" onclick="showModal('neuroscience')">
+                <div class="app-icon">🧠</div>
+                <div class="app-title">Neuroscience & fMRI</div>
+                <div class="app-description">
+                    Analyzing brain imaging data to identify neural patterns and connectivity
+                </div>
+                <div class="app-stats">
+                    100K+ voxels → 100 components
+                </div>
+            </div>
+        </div>
+
+        <div class="case-studies-banner">
+            <h2 class="section-title">📚 Industry Case Studies</h2>
+            
+            <div class="case-study-item" onclick="showModal('spotify-case')">
+                <strong>Spotify:</strong> Audio feature extraction for music recommendation
+                <br><em>Result: 30% increase in user engagement</em>
+            </div>
+
+            <div class="case-study-item" onclick="showModal('google-case')">
+                <strong>Google:</strong> Face recognition with Eigenfaces
+                <br><em>Result: 95% accuracy with 150 components from 10,000 pixels</em>
+            </div>
+
+            <div class="case-study-item" onclick="showModal('pharma-case')">
+                <strong>Pharmaceutical:</strong> Drug discovery through molecular fingerprints
+                <br><em>Result: 10x faster screening of drug candidates</em>
+            </div>
+
+            <div class="case-study-item" onclick="showModal('retail-case')">
+                <strong>Retail Analytics:</strong> Customer segmentation and behavior analysis
+                <br><em>Result: 25% improvement in targeted marketing ROI</em>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week7_Slide138.html" class="nav-btn">← Previous</a>
+        <a href="Week7_Slide140.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Modal Title</h3>
+                <button class="modal-close" id="modalClose">&times;</button>
+            </div>
+            <div class="modal-content" id="modalContent">
+                Content will be loaded here...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Modal content definitions
+        const modalContents = {
+            'genomics': {
+                title: 'Genomics & Bioinformatics Applications',
+                content: `
+                    <p><strong>Dimensionality reduction is crucial in genomics where datasets often have more features than samples.</strong></p>
+                    
+                    <div class="modal-highlight">
+                        <strong>The Challenge:</strong><br>
+                        • 20,000+ genes per sample<br>
+                        • Only 100s-1000s of samples<br>
+                        • High noise and redundancy<br>
+                        • Need to identify disease biomarkers
+                    </div>
+                    
+                    <p><strong>Real-World Example: Cancer Classification</strong></p>
+                    <div class="modal-code">
+import numpy as np
+import pandas as pd
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+from sklearn.manifold import TSNE
+import matplotlib.pyplot as plt
+
+class GenomicsAnalysis:
+    """Dimensionality reduction for gene expression data"""
+    
+    def __init__(self, expression_data, cancer_types):
+        """
+        expression_data: samples × genes matrix
+        cancer_types: cancer type labels for each sample
+        """
+        self.X = StandardScaler().fit_transform(expression_data)
+        self.y = cancer_types
+        self.n_samples, self.n_genes = self.X.shape
+        
+    def pca_analysis(self, n_components=50):
+        """PCA for gene expression analysis"""
+        
+        # Fit PCA
+        pca = PCA(n_components=n_components)
+        X_pca = pca.fit_transform(self.X)
+        
+        # Variance explained
+        var_exp = pca.explained_variance_ratio_
+        cum_var = np.cumsum(var_exp)
+        
+        print(f"Original dimensions: {self.n_genes}")
+        print(f"Reduced dimensions: {n_components}")
+        print(f"Variance explained: {cum_var[-1]:.2%}")
+        
+        # Identify top contributing genes for PC1
+        pc1_loadings = pca.components_[0]
+        top_genes_idx = np.argsort(np.abs(pc1_loadings))[-10:]
+        
+        return X_pca, pca
+    
+    def pathway_analysis(self, pca_components):
+        """Map principal components to biological pathways"""
+        
+        # Gene set enrichment analysis (simplified)
+        pathways = {
+            'Cell Cycle': [0, 15, 28, 45, 67],  # Gene indices
+            'Apoptosis': [5, 18, 33, 51, 89],
+            'DNA Repair': [12, 25, 41, 66, 94],
+            'Metabolism': [8, 22, 37, 58, 77]
+        }
+        
+        pathway_scores = {}
+        for pathway, genes in pathways.items():
+            # Average loading of pathway genes on PC1
+            score = np.mean(np.abs(pca_components[0, genes]))
+            pathway_scores[pathway] = score
+            
+        return pathway_scores
+    
+    def visualize_cancer_subtypes(self):
+        """Visualize cancer subtypes in reduced space"""
+        
+        # PCA visualization
+        pca = PCA(n_components=2)
+        X_pca = pca.fit_transform(self.X)
+        
+        # t-SNE visualization
+        tsne = TSNE(n_components=2, perplexity=30)
+        X_tsne = tsne.fit_transform(self.X[:500])  # Subset for speed
+        
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+        
+        # PCA plot
+        for cancer_type in np.unique(self.y):
+            mask = self.y == cancer_type
+            ax1.scatter(X_pca[mask, 0], X_pca[mask, 1], 
+                       label=cancer_type, alpha=0.6, s=50)
+        ax1.set_xlabel(f'PC1 ({pca.explained_variance_ratio_[0]:.1%})')
+        ax1.set_ylabel(f'PC2 ({pca.explained_variance_ratio_[1]:.1%})')
+        ax1.set_title('PCA: Cancer Subtype Clustering')
+        ax1.legend()
+        
+        # t-SNE plot
+        for cancer_type in np.unique(self.y[:500]):
+            mask = self.y[:500] == cancer_type
+            ax2.scatter(X_tsne[mask, 0], X_tsne[mask, 1],
+                       label=cancer_type, alpha=0.6, s=50)
+        ax2.set_xlabel('t-SNE 1')
+        ax2.set_ylabel('t-SNE 2')
+        ax2.set_title('t-SNE: Cancer Subtype Clustering')
+        ax2.legend()
+        
+        plt.tight_layout()
+        plt.show()
+
+# Example with synthetic data
+n_samples, n_genes = 200, 20000
+expression_data = np.random.randn(n_samples, n_genes)
+cancer_types = np.array(['Lung']*50 + ['Breast']*50 + 
+                        ['Colon']*50 + ['Prostate']*50)
+
+analyzer = GenomicsAnalysis(expression_data, cancer_types)
+X_reduced, pca_model = analyzer.pca_analysis(50)
+analyzer.visualize_cancer_subtypes()</div>
+                    
+                    <p><strong>Benefits in Genomics:</strong></p>
+                    <ul>
+                        <li><strong>Biomarker Discovery:</strong> Identify key genes driving disease</li>
+                        <li><strong>Patient Stratification:</strong> Group patients by molecular profiles</li>
+                        <li><strong>Drug Target Identification:</strong> Find druggable pathways</li>
+                        <li><strong>Noise Reduction:</strong> Filter out technical artifacts</li>
+                        <li><strong>Visualization:</strong> Make high-dimensional data interpretable</li>
+                    </ul>
+                    
+                    <p><strong>Success Story: The Cancer Genome Atlas (TCGA)</strong></p>
+                    <div class="modal-highlight">
+                        • 11,000+ tumor samples analyzed<br>
+                        • 33 cancer types classified<br>
+                        • PCA revealed pan-cancer patterns<br>
+                        • Led to new targeted therapies
+                    </div>
+                `
+            },
+            'image-compression': {
+                title: 'Image Compression and Computer Vision',
+                content: `
+                    <p><strong>PCA and autoencoders revolutionized image compression and face recognition.</strong></p>
+                    
+                    <div class="modal-highlight">
+                        <strong>Applications:</strong><br>
+                        • JPEG compression<br>
+                        • Face recognition (Eigenfaces)<br>
+                        • Image denoising<br>
+                        • Video compression
+                    </div>
+                    
+                    <p><strong>Image Compression with PCA:</strong></p>
+                    <div class="modal-code">
+import numpy as np
+from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt
+from PIL import Image
+
+class ImageCompressor:
+    """PCA-based image compression"""
+    
+    def compress_image(self, image_path, n_components=50):
+        """Compress image using PCA"""
+        
+        # Load and preprocess image
+        img = Image.open(image_path).convert('L')  # Grayscale
+        img_array = np.array(img)
+        original_shape = img_array.shape
+        
+        # Flatten image: each row is a row of pixels
+        X = img_array.astype(float)
+        
+        # Apply PCA to rows
+        pca = PCA(n_components=n_components)
+        X_compressed = pca.fit_transform(X)
+        X_reconstructed = pca.inverse_transform(X_compressed)
+        
+        # Calculate compression ratio
+        original_size = X.size
+        compressed_size = (X_compressed.size + 
+                          pca.components_.size + 
+                          pca.mean_.size)
+        compression_ratio = original_size / compressed_size
+        
+        # Calculate reconstruction error
+        mse = np.mean((X - X_reconstructed) ** 2)
+        psnr = 20 * np.log10(255 / np.sqrt(mse))
+        
+        print(f"Compression Results:")
+        print(f"  Original size: {original_size:,} values")
+        print(f"  Compressed size: {compressed_size:,} values")
+        print(f"  Compression ratio: {compression_ratio:.2f}x")
+        print(f"  PSNR: {psnr:.2f} dB")
+        print(f"  Components used: {n_components}")
+        
+        return X_reconstructed, pca
+    
+    def eigenfaces_demo(self, face_dataset):
+        """Face recognition using Eigenfaces"""
+        
+        n_samples, n_pixels = face_dataset.shape
+        
+        # PCA for face recognition
+        n_components = 150  # Number of eigenfaces
+        pca = PCA(n_components=n_components, whiten=True)
+        
+        # Fit PCA (compute eigenfaces)
+        faces_pca = pca.fit_transform(face_dataset)
+        
+        # Eigenfaces are the principal components
+        eigenfaces = pca.components_.reshape((n_components, 64, 64))
+        
+        # Visualize top eigenfaces
+        fig, axes = plt.subplots(3, 5, figsize=(12, 8))
+        for i, ax in enumerate(axes.flat):
+            if i < 15:
+                ax.imshow(eigenfaces[i], cmap='gray')
+                ax.set_title(f'Eigenface {i+1}')
+            ax.axis('off')
+        
+        plt.suptitle('Top 15 Eigenfaces')
+        plt.tight_layout()
+        plt.show()
+        
+        # Face reconstruction
+        test_face = face_dataset[0]
+        test_compressed = pca.transform([test_face])
+        test_reconstructed = pca.inverse_transform(test_compressed)
+        
+        # Visualize reconstruction with different numbers of components
+        fig, axes = plt.subplots(1, 5, figsize=(15, 4))
+        
+        for i, n_comp in enumerate([5, 10, 25, 50, 150]):
+            pca_temp = PCA(n_components=n_comp)
+            compressed = pca_temp.fit_transform(face_dataset)
+            reconstructed = pca_temp.inverse_transform(compressed[0:1])
+            
+            axes[i].imshow(reconstructed.reshape(64, 64), cmap='gray')
+            axes[i].set_title(f'{n_comp} components')
+            axes[i].axis('off')
+        
+        plt.suptitle('Face Reconstruction Quality')
+        plt.tight_layout()
+        plt.show()
+        
+        return eigenfaces, faces_pca
+    
+    def compression_vs_quality_curve(self, image):
+        """Analyze compression vs quality trade-off"""
+        
+        components_range = [1, 5, 10, 20, 50, 100, 200]
+        compression_ratios = []
+        reconstruction_errors = []
+        
+        for n_comp in components_range:
+            pca = PCA(n_components=n_comp)
+            compressed = pca.fit_transform(image)
+            reconstructed = pca.inverse_transform(compressed)
+            
+            # Compression ratio
+            original_size = image.size
+            compressed_size = compressed.size + pca.components_.size
+            compression_ratios.append(original_size / compressed_size)
+            
+            # Reconstruction error
+            mse = np.mean((image - reconstructed) ** 2)
+            reconstruction_errors.append(mse)
+        
+        # Plot trade-off curve
+        plt.figure(figsize=(10, 6))
+        plt.plot(components_range, compression_ratios, 'o-', label='Compression Ratio')
+        plt.xlabel('Number of Components')
+        plt.ylabel('Compression Ratio')
+        plt.title('Compression vs Components')
+        plt.grid(True, alpha=0.3)
+        
+        ax2 = plt.twinx()
+        ax2.plot(components_range, reconstruction_errors, 's-', 
+                color='red', label='Reconstruction Error')
+        ax2.set_ylabel('MSE', color='red')
+        ax2.tick_params(axis='y', labelcolor='red')
+        
+        plt.legend()
+        plt.show()
+
+# Example usage
+from sklearn.datasets import fetch_olivetti_faces
+
+# Load face dataset
+faces = fetch_olivetti_faces()
+compressor = ImageCompressor()
+
+# Eigenfaces demo
+eigenfaces, faces_pca = compressor.eigenfaces_demo(faces.data)
+
+print(f"Original dimensions: {faces.data.shape[1]} pixels")
+print(f"Reduced dimensions: {faces_pca.shape[1]} components")
+print(f"Compression ratio: {faces.data.shape[1] / faces_pca.shape[1]:.1f}x")</div>
+                    
+                    <p><strong>Modern Applications:</strong></p>
+                    <ul>
+                        <li><strong>Netflix:</strong> Video compression saving 50% bandwidth</li>
+                        <li><strong>Facebook:</strong> Face recognition with 97.35% accuracy</li>
+                        <li><strong>Google Photos:</strong> Automatic photo enhancement</li>
+                        <li><strong>Medical Imaging:</strong> MRI/CT scan compression</li>
+                    </ul>
+                `
+            },
+            'nlp': {
+                title: 'Natural Language Processing Applications',
+                content: `
+                    <p><strong>Dimensionality reduction transforms text into meaningful numerical representations.</strong></p>
+                    
+                    <div class="modal-highlight">
+                        <strong>Key Techniques:</strong><br>
+                        • LSA (Latent Semantic Analysis)<br>
+                        • Word2Vec & GloVe embeddings<br>
+                        • Document clustering<br>
+                        • Topic modeling (LDA)
+                    </div>
+                    
+                    <p><strong>Text Analysis Implementation:</strong></p>
+                    <div class="modal-code">
+from sklearn.decomposition import TruncatedSVD, LatentDirichletAllocation
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
+import numpy as np
+
+class TextDimensionalityReduction:
+    """NLP applications of dimensionality reduction"""
+    
+    def __init__(self, documents):
+        self.documents = documents
+        
+    def latent_semantic_analysis(self, n_topics=10):
+        """LSA for document analysis"""
+        
+        # Create TF-IDF matrix
+        vectorizer = TfidfVectorizer(max_features=1000, 
+                                    stop_words='english')
+        X = vectorizer.fit_transform(self.documents)
+        
+        # Apply SVD (LSA)
+        lsa = TruncatedSVD(n_components=n_topics)
+        X_topics = lsa.fit_transform(X)
+        
+        # Get top words for each topic
+        terms = vectorizer.get_feature_names_out()
+        
+        for topic_idx, topic in enumerate(lsa.components_):
+            top_words_idx = topic.argsort()[-10:][::-1]
+            top_words = [terms[i] for i in top_words_idx]
+            print(f"Topic {topic_idx + 1}: {', '.join(top_words[:5])}")
+        
+        return X_topics, lsa
+    
+    def topic_modeling_lda(self, n_topics=10):
+        """Latent Dirichlet Allocation for topic modeling"""
+        
+        # Create document-term matrix
+        vectorizer = CountVectorizer(max_features=1000,
+                                    stop_words='english')
+        X = vectorizer.fit_transform(self.documents)
+        
+        # Fit LDA
+        lda = LatentDirichletAllocation(n_components=n_topics,
+                                       random_state=42)
+        X_topics = lda.fit_transform(X)
+        
+        # Display topics
+        terms = vectorizer.get_feature_names_out()
+        
+        for topic_idx, topic in enumerate(lda.components_):
+            top_words_idx = topic.argsort()[-10:][::-1]
+            top_words = [terms[i] for i in top_words_idx]
+            weights = topic[top_words_idx]
+            
+            print(f"\\nTopic {topic_idx + 1}:")
+            for word, weight in zip(top_words[:5], weights[:5]):
+                print(f"  {word}: {weight:.3f}")
+        
+        return X_topics, lda
+    
+    def word_embeddings_pca(self, word_vectors):
+        """Reduce word embedding dimensions"""
+        
+        from sklearn.decomposition import PCA
+        
+        # Reduce from 300 to 50 dimensions
+        pca = PCA(n_components=50)
+        reduced_embeddings = pca.fit_transform(word_vectors)
+        
+        print(f"Original dimensions: {word_vectors.shape[1]}")
+        print(f"Reduced dimensions: {reduced_embeddings.shape[1]}")
+        print(f"Variance preserved: {pca.explained_variance_ratio_.sum():.2%}")
+        
+        return reduced_embeddings
+    
+    def document_similarity_matrix(self, X_reduced):
+        """Compute document similarities in reduced space"""
+        
+        from sklearn.metrics.pairwise import cosine_similarity
+        
+        similarity_matrix = cosine_similarity(X_reduced)
+        
+        # Find most similar document pairs
+        n_docs = len(similarity_matrix)
+        similarities = []
+        
+        for i in range(n_docs):
+            for j in range(i+1, n_docs):
+                similarities.append((i, j, similarity_matrix[i, j]))
+        
+        # Sort by similarity
+        similarities.sort(key=lambda x: x[2], reverse=True)
+        
+        print("\\nMost similar document pairs:")
+        for i, j, sim in similarities[:5]:
+            print(f"  Doc {i} - Doc {j}: {sim:.3f}")
+        
+        return similarity_matrix
+
+# Example documents
+documents = [
+    "Machine learning is a subset of artificial intelligence.",
+    "Deep learning uses neural networks with multiple layers.",
+    "Natural language processing enables computers to understand text.",
+    "Computer vision allows machines to interpret images.",
+    "Reinforcement learning trains agents through rewards.",
+    "Data science combines statistics and programming.",
+    "Big data requires distributed computing systems.",
+    "Cloud computing provides scalable infrastructure.",
+    "Blockchain enables decentralized applications.",
+    "Quantum computing uses quantum mechanical phenomena."
+]
+
+analyzer = TextDimensionalityReduction(documents)
+
+# LSA analysis
+print("Latent Semantic Analysis Topics:")
+X_lsa, lsa_model = analyzer.latent_semantic_analysis(n_topics=3)
+
+# LDA topic modeling
+print("\\nLDA Topic Modeling:")
+X_lda, lda_model = analyzer.topic_modeling_lda(n_topics=3)
+
+# Document similarities
+print("\\nDocument Similarities:")
+sim_matrix = analyzer.document_similarity_matrix(X_lsa)</div>
+                    
+                    <p><strong>Industry Impact:</strong></p>
+                    <ul>
+                        <li><strong>Google BERT:</strong> 768-dim embeddings for search</li>
+                        <li><strong>OpenAI GPT:</strong> Attention mechanisms with dimensionality reduction</li>
+                        <li><strong>Amazon:</strong> Product recommendation from reviews</li>
+                        <li><strong>Twitter:</strong> Trending topic detection</li>
+                    </ul>
+                `
+            },
+            'finance': {
+                title: 'Financial Modeling and Risk Analysis',
+                content: `
+                    <p><strong>Dimensionality reduction identifies key risk factors in financial markets.</strong></p>
+                    
+                    <div class="modal-highlight">
+                        <strong>Applications:</strong><br>
+                        • Portfolio optimization<br>
+                        • Risk factor modeling<br>
+                        • Market regime detection<br>
+                        • Fraud detection
+                    </div>
+                    
+                    <p><strong>Financial PCA Implementation:</strong></p>
+                    <div class="modal-code">
+import numpy as np
+import pandas as pd
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+
+class FinancialDimensionalityReduction:
+    """Financial applications of dimensionality reduction"""
+    
+    def __init__(self, returns_data):
+        """
+        returns_data: DataFrame with asset returns
+        rows: time periods, columns: assets
+        """
+        self.returns = returns_data
+        self.scaler = StandardScaler()
+        self.returns_scaled = self.scaler.fit_transform(returns_data)
+    
+    def risk_factor_analysis(self, n_factors=5):
+        """Extract principal risk factors"""
+        
+        # Apply PCA to identify risk factors
+        pca = PCA(n_components=n_factors)
+        factor_returns = pca.fit_transform(self.returns_scaled)
+        
+        # Variance explained by each factor
+        var_explained = pca.explained_variance_ratio_
+        
+        print("Risk Factor Analysis:")
+        print("-" * 40)
+        for i, var in enumerate(var_explained):
+            print(f"Factor {i+1}: {var:.2%} of variance")
+        print(f"Total variance explained: {var_explained.sum():.2%}")
+        
+        # Factor loadings (betas)
+        loadings = pd.DataFrame(
+            pca.components_.T,
+            columns=[f'Factor_{i+1}' for i in range(n_factors)],
+            index=self.returns.columns
+        )
+        
+        # Identify assets with highest loadings on Factor 1
+        top_assets = loadings['Factor_1'].abs().nlargest(10)
+        print(f"\\nTop assets loading on Factor 1:")
+        for asset, loading in top_assets.items():
+            print(f"  {asset}: {loading:.3f}")
+        
+        return factor_returns, loadings
+    
+    def portfolio_optimization(self, target_variance=0.95):
+        """Optimize portfolio using principal portfolios"""
+        
+        # Find minimum components for target variance
+        pca_full = PCA()
+        pca_full.fit(self.returns_scaled)
+        
+        cum_var = np.cumsum(pca_full.explained_variance_ratio_)
+        n_components = np.argmax(cum_var >= target_variance) + 1
+        
+        print(f"\\nPortfolio Optimization:")
+        print(f"  Components needed for {target_variance:.0%} variance: {n_components}")
+        
+        # Create principal portfolios
+        pca = PCA(n_components=n_components)
+        principal_returns = pca.fit_transform(self.returns_scaled)
+        
+        # Optimal portfolio weights (simplified)
+        # In practice, would optimize for Sharpe ratio
+        weights = pca.components_[0] / np.sum(np.abs(pca.components_[0]))
+        
+        # Portfolio statistics
+        portfolio_returns = self.returns @ weights
+        portfolio_std = portfolio_returns.std()
+        portfolio_mean = portfolio_returns.mean()
+        sharpe = portfolio_mean / portfolio_std * np.sqrt(252)  # Annualized
+        
+        print(f"  Expected return: {portfolio_mean*252:.2%} (annualized)")
+        print(f"  Volatility: {portfolio_std*np.sqrt(252):.2%} (annualized)")
+        print(f"  Sharpe ratio: {sharpe:.2f}")
+        
+        return weights, principal_returns
+    
+    def market_regime_detection(self, n_regimes=3):
+        """Identify market regimes using clustering in PC space"""
+        
+        from sklearn.cluster import KMeans
+        
+        # Reduce dimensions
+        pca = PCA(n_components=5)
+        X_pca = pca.fit_transform(self.returns_scaled)
+        
+        # Cluster to find regimes
+        kmeans = KMeans(n_clusters=n_regimes, random_state=42)
+        regimes = kmeans.fit_predict(X_pca)
+        
+        # Analyze regime characteristics
+        regime_stats = pd.DataFrame()
+        
+        for regime in range(n_regimes):
+            mask = regimes == regime
+            regime_returns = self.returns[mask]
+            
+            stats = {
+                'Mean Return': regime_returns.mean().mean() * 252,
+                'Volatility': regime_returns.std().mean() * np.sqrt(252),
+                'Correlation': regime_returns.corr().values[np.triu_indices_from(
+                    regime_returns.corr().values, k=1)].mean(),
+                'Duration (days)': mask.sum()
+            }
+            
+            regime_stats[f'Regime {regime+1}'] = stats
+        
+        print("\\nMarket Regime Detection:")
+        print(regime_stats.T.to_string())
+        
+        return regimes, regime_stats
+    
+    def stress_testing(self, n_scenarios=1000):
+        """Generate stress test scenarios using PCA"""
+        
+        # Fit PCA
+        pca = PCA(n_components=10)
+        pca.fit(self.returns_scaled)
+        
+        # Generate stressed scenarios
+        # Amplify first principal component (market factor)
+        stress_multiplier = 3  # 3-sigma event
+        
+        scenarios = []
+        for _ in range(n_scenarios):
+            # Random normal factors
+            factors = np.random.randn(10)
+            
+            # Stress the market factor
+            factors[0] *= stress_multiplier
+            
+            # Transform back to asset space
+            scenario = pca.inverse_transform(factors.reshape(1, -1))
+            scenarios.append(scenario[0])
+        
+        scenarios = np.array(scenarios)
+        
+        # Calculate VaR and CVaR
+        portfolio_weights = np.ones(len(self.returns.columns)) / len(self.returns.columns)
+        portfolio_scenarios = scenarios @ portfolio_weights
+        
+        var_95 = np.percentile(portfolio_scenarios, 5)
+        cvar_95 = portfolio_scenarios[portfolio_scenarios <= var_95].mean()
+        
+        print(f"\\nStress Testing Results:")
+        print(f"  95% VaR: {var_95:.3%}")
+        print(f"  95% CVaR: {cvar_95:.3%}")
+        print(f"  Worst case: {portfolio_scenarios.min():.3%}")
+        
+        return scenarios
+
+# Example with synthetic market data
+np.random.seed(42)
+n_days = 1000
+n_assets = 50
+
+# Generate correlated asset returns
+market_factor = np.random.randn(n_days) * 0.01
+sector_factors = np.random.randn(n_days, 5) * 0.005
+idiosyncratic = np.random.randn(n_days, n_assets) * 0.002
+
+returns = market_factor.reshape(-1, 1) + \
+          sector_factors @ np.random.randn(5, n_assets) * 0.5 + \
+          idiosyncratic
+
+returns_df = pd.DataFrame(returns, 
+                          columns=[f'Asset_{i}' for i in range(n_assets)])
+
+analyzer = FinancialDimensionalityReduction(returns_df)
+
+# Risk factor analysis
+factors, loadings = analyzer.risk_factor_analysis()
+
+# Portfolio optimization
+weights, principal_returns = analyzer.portfolio_optimization()
+
+# Market regime detection
+regimes, regime_stats = analyzer.market_regime_detection()
+
+# Stress testing
+scenarios = analyzer.stress_testing()</div>
+                    
+                    <p><strong>Real-World Impact:</strong></p>
+                    <ul>
+                        <li><strong>BlackRock Aladdin:</strong> Risk management for $21T in assets</li>
+                        <li><strong>JP Morgan:</strong> 15 risk factors explain 90% of portfolio variance</li>
+                        <li><strong>Bridgewater:</strong> All Weather portfolio using PCA</li>
+                        <li><strong>Credit card fraud:</strong> 99.9% detection accuracy</li>
+                    </ul>
+                `
+            },
+            'recommender': {
+                title: 'Recommender Systems',
+                content: `
+                    <p><strong>Matrix factorization powers modern recommendation engines.</strong></p>
+                    
+                    <div class="modal-highlight">
+                        <strong>Netflix Prize Winner:</strong><br>
+                        Matrix factorization with 50 latent factors achieved 10% improvement in recommendations
+                    </div>
+                    
+                    <p><strong>Collaborative Filtering Implementation:</strong></p>
+                    <div class="modal-code">
+import numpy as np
+from sklearn.decomposition import NMF, TruncatedSVD
+from scipy.sparse import csr_matrix
+
+class RecommenderSystem:
+    """Matrix factorization for recommendations"""
+    
+    def __init__(self, ratings_matrix, n_factors=50):
+        """
+        ratings_matrix: users × items sparse matrix
+        """
+        self.R = ratings_matrix  # Original ratings
+        self.n_factors = n_factors
+        self.n_users, self.n_items = ratings_matrix.shape
+        
+    def matrix_factorization_svd(self):
+        """SVD-based collaborative filtering"""
+        
+        # Handle missing values
+        R_filled = self.R.copy()
+        R_filled[R_filled == 0] = self.R[self.R > 0].mean()
+        
+        # Apply SVD
+        svd = TruncatedSVD(n_components=self.n_factors)
+        user_factors = svd.fit_transform(R_filled)
+        item_factors = svd.components_.T
+        
+        # Reconstruct ratings matrix
+        R_pred = user_factors @ item_factors.T
+        
+        print(f"Matrix Factorization Results:")
+        print(f"  Users: {self.n_users}")
+        print(f"  Items: {self.n_items}")
+        print(f"  Latent factors: {self.n_factors}")
+        print(f"  Compression: {self.n_users * self.n_items / (self.n_users * self.n_factors + self.n_items * self.n_factors):.1f}x")
+        
+        return user_factors, item_factors, R_pred
+    
+    def nmf_recommendation(self):
+        """Non-negative Matrix Factorization"""
+        
+        # NMF for interpretable factors
+        nmf = NMF(n_components=self.n_factors, init='random', random_state=42)
+        W = nmf.fit_transform(np.maximum(self.R, 0))  # User factors
+        H = nmf.components_  # Item factors
+        
+        # Reconstruct ratings
+        R_pred = W @ H
+        
+        # Interpret factors (e.g., genres for movies)
+        top_items_per_factor = []
+        for factor_idx in range(self.n_factors):
+            top_items = np.argsort(H[factor_idx])[-5:][::-1]
+            top_items_per_factor.append(top_items)
+        
+        return W, H, R_pred, top_items_per_factor
+    
+    def get_recommendations(self, user_id, R_pred, n_recommendations=10):
+        """Get top recommendations for a user"""
+        
+        # Get user's predicted ratings
+        user_ratings = R_pred[user_id]
+        
+        # Remove already rated items
+        already_rated = self.R[user_id] > 0
+        user_ratings[already_rated] = -1
+        
+        # Get top recommendations
+        top_items = np.argsort(user_ratings)[-n_recommendations:][::-1]
+        
+        return top_items, user_ratings[top_items]
+    
+    def evaluate_recommendations(self, R_pred, test_set):
+        """Evaluate recommendation quality"""
+        
+        mae = 0
+        rmse = 0
+        n_test = 0
+        
+        for user_id, item_id, true_rating in test_set:
+            pred_rating = R_pred[user_id, item_id]
+            error = true_rating - pred_rating
+            
+            mae += abs(error)
+            rmse += error ** 2
+            n_test += 1
+        
+        mae /= n_test
+        rmse = np.sqrt(rmse / n_test)
+        
+        print(f"\\nEvaluation Metrics:")
+        print(f"  MAE: {mae:.3f}")
+        print(f"  RMSE: {rmse:.3f}")
+        
+        return mae, rmse
+    
+    def visualize_latent_factors(self, user_factors, item_factors):
+        """Visualize latent factor space"""
+        
+        from sklearn.manifold import TSNE
+        import matplotlib.pyplot as plt
+        
+        # Reduce to 2D for visualization
+        tsne = TSNE(n_components=2, random_state=42)
+        
+        # Sample for visualization
+        n_sample = min(500, len(user_factors))
+        user_2d = tsne.fit_transform(user_factors[:n_sample])
+        
+        plt.figure(figsize=(10, 6))
+        plt.scatter(user_2d[:, 0], user_2d[:, 1], alpha=0.5, s=10)
+        plt.xlabel('Latent Dimension 1')
+        plt.ylabel('Latent Dimension 2')
+        plt.title('User Embeddings in Latent Space')
+        plt.grid(True, alpha=0.3)
+        plt.show()
+
+# Example: Movie recommendation system
+n_users = 1000
+n_movies = 500
+sparsity = 0.95
+
+# Generate synthetic ratings matrix (sparse)
+ratings = np.random.choice([0, 1, 2, 3, 4, 5], 
+                          size=(n_users, n_movies),
+                          p=[sparsity, 0.02, 0.03, 0.05, 0.08, 0.12])
+
+recommender = RecommenderSystem(ratings, n_factors=20)
+
+# SVD-based recommendations
+user_factors, item_factors, R_pred = recommender.matrix_factorization_svd()
+
+# Get recommendations for user 0
+user_id = 0
+recommendations, scores = recommender.get_recommendations(user_id, R_pred)
+print(f"\\nTop recommendations for User {user_id}:")
+for item, score in zip(recommendations, scores):
+    print(f"  Movie {item}: {score:.2f}")
+
+# NMF for interpretable factors
+W, H, R_nmf, factor_items = recommender.nmf_recommendation()
+print(f"\\nInterpretable factors (e.g., genres):")
+for i, items in enumerate(factor_items[:5]):
+    print(f"  Factor {i+1}: Movies {items}")</div>
+                    
+                    <p><strong>Industry Success Stories:</strong></p>
+                    <ul>
+                        <li><strong>Netflix:</strong> 75% of views from recommendations</li>
+                        <li><strong>Amazon:</strong> 35% of revenue from recommendations</li>
+                        <li><strong>Spotify:</strong> Discover Weekly reaches 40M users</li>
+                        <li><strong>YouTube:</strong> 70% watch time from recommendations</li>
+                    </ul>
+                `
+            },
+            'neuroscience': {
+                title: 'Neuroscience and Brain Imaging',
+                content: `
+                    <p><strong>Dimensionality reduction reveals brain structure and function from high-dimensional imaging data.</strong></p>
+                    
+                    <div class="modal-highlight">
+                        <strong>Challenge:</strong><br>
+                        • fMRI: 100,000+ voxels per scan<br>
+                        • EEG: 256 channels × 1000Hz sampling<br>
+                        • Connectome: 80+ brain regions<br>
+                        • Need to identify neural patterns
+                    </div>
+                    
+                    <p><strong>Brain Imaging Analysis:</strong></p>
+                    <div class="modal-code">
+import numpy as np
+from sklearn.decomposition import PCA, FastICA
+from sklearn.manifold import TSNE
+
+class BrainImagingAnalysis:
+    """Dimensionality reduction for neuroscience"""
+    
+    def __init__(self, fmri_data, labels=None):
+        """
+        fmri_data: timepoints × voxels
+        labels: experimental conditions or tasks
+        """
+        self.data = fmri_data
+        self.labels = labels
+        self.n_timepoints, self.n_voxels = fmri_data.shape
+        
+    def functional_connectivity(self):
+        """Analyze brain network connectivity"""
+        
+        # Compute correlation matrix between brain regions
+        # (simplified: treating voxel groups as regions)
+        n_regions = 90  # Standard brain atlas
+        region_size = self.n_voxels // n_regions
+        
+        # Average voxels within regions
+        regional_signals = []
+        for i in range(n_regions):
+            start = i * region_size
+            end = min((i+1) * region_size, self.n_voxels)
+            regional_signals.append(self.data[:, start:end].mean(axis=1))
+        
+        regional_signals = np.array(regional_signals).T
+        
+        # Compute connectivity matrix
+        connectivity = np.corrcoef(regional_signals.T)
+        
+        # PCA on connectivity matrix
+        pca = PCA(n_components=10)
+        connectivity_components = pca.fit_transform(connectivity)
+        
+        print(f"Functional Connectivity Analysis:")
+        print(f"  Brain regions: {n_regions}")
+        print(f"  Top PC variance: {pca.explained_variance_ratio_[0]:.2%}")
+        print(f"  Network dimensionality: {np.sum(pca.explained_variance_ratio_ > 0.05)}")
+        
+        return connectivity, connectivity_components
+    
+    def ica_brain_networks(self, n_components=20):
+        """Independent Component Analysis for brain networks"""
+        
+        # ICA to find independent brain networks
+        ica = FastICA(n_components=n_components, random_state=42)
+        sources = ica.fit_transform(self.data.T).T  # Components × voxels
+        time_courses = ica.mixing_  # Timepoints × components
+        
+        # Identify task-related components
+        if self.labels is not None:
+            task_correlation = []
+            for comp in range(n_components):
+                corr = np.corrcoef(time_courses[:, comp], self.labels)[0, 1]
+                task_correlation.append(abs(corr))
+            
+            # Top task-related components
+            top_components = np.argsort(task_correlation)[-5:][::-1]
+            
+            print(f"\\nICA Brain Networks:")
+            print(f"  Independent components: {n_components}")
+            print(f"  Top task-related components: {top_components}")
+            for comp in top_components:
+                print(f"    Component {comp}: r={task_correlation[comp]:.3f}")
+        
+        return sources, time_courses
+    
+    def decode_brain_states(self, n_states=5):
+        """Decode cognitive states from brain activity"""
+        
+        from sklearn.cluster import KMeans
+        from sklearn.svm import SVC
+        
+        # Reduce dimensions
+        pca = PCA(n_components=50)
+        X_reduced = pca.fit_transform(self.data)
+        
+        # Cluster to find brain states
+        kmeans = KMeans(n_clusters=n_states, random_state=42)
+        states = kmeans.fit_predict(X_reduced)
+        
+        # If we have task labels, decode them
+        if self.labels is not None:
+            # Train classifier
+            svm = SVC(kernel='linear')
+            svm.fit(X_reduced, self.labels)
+            accuracy = svm.score(X_reduced, self.labels)
+            
+            print(f"\\nBrain State Decoding:")
+            print(f"  Identified states: {n_states}")
+            print(f"  Decoding accuracy: {accuracy:.2%}")
+            
+            # Analyze state transitions
+            transitions = np.zeros((n_states, n_states))
+            for i in range(len(states)-1):
+                transitions[states[i], states[i+1]] += 1
+            
+            # Normalize
+            transitions = transitions / transitions.sum(axis=1, keepdims=True)
+            
+            print(f"  Most stable state: {np.argmax(np.diag(transitions))}")
+        
+        return states, X_reduced
+    
+    def resting_state_networks(self):
+        """Identify resting state networks"""
+        
+        # Common resting state networks
+        networks = {
+            'Default Mode': None,
+            'Attention': None,
+            'Visual': None,
+            'Sensorimotor': None,
+            'Executive': None
+        }
+        
+        # Use ICA to identify networks
+        ica = FastICA(n_components=len(networks), random_state=42)
+        spatial_maps = ica.fit_transform(self.data.T).T
+        
+        # Assign components to networks (simplified)
+        for i, network in enumerate(networks.keys()):
+            networks[network] = spatial_maps[i]
+            
+            # Calculate network strength
+            strength = np.std(spatial_maps[i])
+            print(f"{network} Network: strength={strength:.3f}")
+        
+        return networks
+
+# Example with synthetic fMRI data
+n_timepoints = 500
+n_voxels = 10000
+
+# Generate synthetic fMRI data
+# Simulate task-related activity
+task_signal = np.sin(np.linspace(0, 10*np.pi, n_timepoints))
+noise = np.random.randn(n_timepoints, n_voxels) * 0.1
+
+# Add task effect to some voxels
+task_voxels = np.random.choice(n_voxels, 1000, replace=False)
+fmri_data = noise.copy()
+fmri_data[:, task_voxels] += task_signal.reshape(-1, 1) * 0.5
+
+# Task labels (0=rest, 1=task)
+labels = (task_signal > 0).astype(int)
+
+# Analyze
+analyzer = BrainImagingAnalysis(fmri_data, labels)
+
+# Connectivity analysis
+connectivity, conn_components = analyzer.functional_connectivity()
+
+# ICA for brain networks
+sources, time_courses = analyzer.ica_brain_networks()
+
+# Decode brain states
+states, reduced_data = analyzer.decode_brain_states()
+
+# Resting state networks
+networks = analyzer.resting_state_networks()</div>
+                    
+                    <p><strong>Clinical Applications:</strong></p>
+                    <ul>
+                        <li><strong>Alzheimer's Detection:</strong> 95% accuracy from connectivity patterns</li>
+                        <li><strong>Depression Biomarkers:</strong> Identified from resting state networks</li>
+                        <li><strong>Brain-Computer Interfaces:</strong> Real-time decoding of intentions</li>
+                        <li><strong>Surgical Planning:</strong> Mapping critical brain regions</li>
+                    </ul>
+                `
+            },
+            'spotify-case': {
+                title: 'Spotify: Audio Feature Extraction',
+                content: `
+                    <p><strong>How Spotify uses dimensionality reduction for music recommendations:</strong></p>
+                    
+                    <div class="modal-highlight">
+                        <strong>The Challenge:</strong><br>
+                        • 100 million+ songs<br>
+                        • 500 million+ users<br>
+                        • Real-time recommendations<br>
+                        • Audio features: tempo, key, loudness, etc.
+                    </div>
+                    
+                    <p><strong>Solution Architecture:</strong></p>
+                    <div class="modal-code">
+# Spotify's Approach (Simplified)
+
+1. Audio Feature Extraction:
+   - Mel-frequency cepstral coefficients (MFCCs)
+   - Chroma features
+   - Spectral features
+   → 1000+ raw features per song
+
+2. Dimensionality Reduction:
+   - PCA: 1000 features → 50 principal components
+   - Captures 95% of variance
+   
+3. Collaborative Filtering:
+   - Matrix factorization on user-song interactions
+   - 40 latent factors
+   
+4. Hybrid Model:
+   - Combine audio features + collaborative signals
+   - Deep learning embeddings
+
+Results:
+• 30% increase in user engagement
+• 2 billion+ Discover Weekly streams
+• 40% of users engage with recommendations</div>
+                    
+                    <p><strong>Key Innovations:</strong></p>
+                    <ul>
+                        <li>Real-time audio analysis pipeline</li>
+                        <li>Contextual embeddings (time, location, device)</li>
+                        <li>Playlist continuation using seq2seq models</li>
+                        <li>Artist and genre embeddings in 100-dim space</li>
+                    </ul>
+                `
+            },
+            'google-case': {
+                title: 'Google: Face Recognition with Eigenfaces',
+                content: `
+                    <p><strong>Google's FaceNet achieved 99.63% accuracy on face verification:</strong></p>
+                    
+                    <div class="modal-highlight">
+                        <strong>Evolution:</strong><br>
+                        • 2001: Eigenfaces (PCA) - 85% accuracy<br>
+                        • 2014: DeepFace - 97.35% accuracy<br>
+                        • 2015: FaceNet - 99.63% accuracy<br>
+                        • Today: Near-perfect with 128-dim embeddings
+                    </div>
+                    
+                    <p><strong>Technical Implementation:</strong></p>
+                    <div class="modal-code">
+FaceNet Architecture:
+
+1. Input: Face image (160×160 pixels)
+   = 76,800 dimensions
+
+2. Deep CNN:
+   - 22 layers
+   - 140 million parameters
+   
+3. Embedding Layer:
+   - Output: 128-dimensional vector
+   - L2 normalized
+   
+4. Triplet Loss Training:
+   - Anchor, Positive, Negative samples
+   - Minimize: ||f(anchor) - f(positive)||²
+   - Maximize: ||f(anchor) - f(negative)||²
+
+Dimensionality Reduction:
+• 76,800 pixels → 128 dimensions
+• 600x compression
+• Maintains 99.63% accuracy
+
+Applications:
+• Google Photos clustering
+• Android face unlock
+• YouTube face blurring
+• Identity verification</div>
+                    
+                    <p><strong>Impact:</strong></p>
+                    <ul>
+                        <li>1 billion+ faces organized in Google Photos</li>
+                        <li>Real-time face grouping</li>
+                        <li>Cross-age recognition</li>
+                        <li>Works across ethnicities with equal accuracy</li>
+                    </ul>
+                `
+            },
+            'pharma-case': {
+                title: 'Pharmaceutical: Drug Discovery',
+                content: `
+                    <p><strong>How dimensionality reduction accelerates drug discovery:</strong></p>
+                    
+                    <div class="modal-highlight">
+                        <strong>Traditional Approach:</strong><br>
+                        • 10-15 years development time<br>
+                        • $2.6 billion average cost<br>
+                        • 10,000 compounds → 1 approved drug<br>
+                        <br>
+                        <strong>With ML/Dimensionality Reduction:</strong><br>
+                        • 30% reduction in discovery time<br>
+                        • 50% cost savings in screening
+                    </div>
+                    
+                    <p><strong>Molecular Fingerprinting:</strong></p>
+                    <div class="modal-code">
+Drug Discovery Pipeline:
+
+1. Molecular Representation:
+   - SMILES strings
+   - 2048-bit Morgan fingerprints
+   - 3D conformations
+   → 10,000+ features per molecule
+
+2. Dimensionality Reduction:
+   - PCA: Identify key chemical properties
+   - t-SNE: Visualize chemical space
+   - Autoencoders: Learn molecular embeddings
+
+3. Virtual Screening:
+   Input: 10 million compounds
+   ↓ Dimensionality reduction (10,000 → 100 dims)
+   ↓ Similarity search in reduced space
+   ↓ ML prediction of activity
+   Output: 1,000 candidates for testing
+
+Case Study: COVID-19 Drug Repurposing
+- Analyzed 12,000 existing drugs
+- Reduced to 50 latent features
+- Identified 77 candidates
+- 6 entered clinical trials
+- Time: 3 months vs typical 5 years
+
+Success Metrics:
+• 10x faster initial screening
+• 70% reduction in failed candidates
+• $100M+ saved per drug developed</div>
+                    
+                    <p><strong>Real Impact:</strong></p>
+                    <ul>
+                        <li><strong>Atomwise:</strong> AI-discovered Ebola treatment</li>
+                        <li><strong>Insilico:</strong> 21-day drug discovery for fibrosis</li>
+                        <li><strong>DeepMind:</strong> AlphaFold protein structure prediction</li>
+                        <li><strong>BenevolentAI:</strong> ALS drug candidate in 12 months</li>
+                    </ul>
+                `
+            },
+            'retail-case': {
+                title: 'Retail Analytics: Customer Segmentation',
+                content: `
+                    <p><strong>How retailers use dimensionality reduction for customer insights:</strong></p>
+                    
+                    <div class="modal-highlight">
+                        <strong>Amazon's Approach:</strong><br>
+                        • 300M+ customers<br>
+                        • 350M+ products<br>
+                        • Billions of interactions<br>
+                        • Real-time personalization
+                    </div>
+                    
+                    <p><strong>Customer Segmentation Pipeline:</strong></p>
+                    <div class="modal-code">
+Retail Analytics Implementation:
+
+1. Feature Engineering:
+   - Purchase history (1000s of products)
+   - Browsing behavior
+   - Demographics
+   - Temporal patterns
+   → 5000+ features per customer
+
+2. Dimensionality Reduction:
+   PCA Analysis:
+   - 5000 features → 50 components
+   - Explains 85% variance
+   
+   Customer Embeddings:
+   - Neural collaborative filtering
+   - 64-dimensional customer vectors
+   - 32-dimensional product vectors
+
+3. Segmentation Results:
+   
+   Segment 1: "Price Conscious"
+   - 30% of customers
+   - High price sensitivity
+   - Coupon responsive
+   
+   Segment 2: "Premium Shoppers"
+   - 15% of customers
+   - Low price sensitivity
+   - High lifetime value
+   
+   Segment 3: "Convenience Seekers"
+   - 25% of customers
+   - Fast delivery preference
+   - Mobile app users
+   
+   Segment 4: "Browsers"
+   - 30% of customers
+   - High browse-to-buy ratio
+   - Require nurturing
+
+4. Business Impact:
+   • 25% increase in conversion rate
+   • 35% improvement in email CTR
+   • 20% reduction in customer churn
+   • $2.3B additional revenue
+
+Personalization at Scale:
+- Process 1M customers/second
+- Update embeddings every hour
+- A/B test 1000s of variations
+- Serve 100B recommendations/day</div>
+                    
+                    <p><strong>Industry Leaders:</strong></p>
+                    <ul>
+                        <li><strong>Target:</strong> Pregnancy prediction from 25 products</li>
+                        <li><strong>Walmart:</strong> Hurricane demand forecasting</li>
+                        <li><strong>Stitch Fix:</strong> Style profile in 80 dimensions</li>
+                        <li><strong>Sephora:</strong> Beauty profile from 200 → 15 features</li>
+                    </ul>
+                `
+            }
+        };
+
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Show modal function
+        function showModal(key) {
+            const content = modalContents[key];
+            if (content) {
+                modal.show(content.title, content.content);
+            }
+        }
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 25; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.top = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 20 + 's';
+                element.style.animationDuration = (Math.random() * 15 + 20) + 's';
+                const size = Math.random() * 100 + 30;
+                element.style.width = size + 'px';
+                element.style.height = size + 'px';
+                container.appendChild(element);
+            }
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (!e.target.closest('input, textarea')) {
+                if (e.key === 'ArrowLeft') {
+                    window.location.href = 'Week7_Slide138.html';
+                } else if (e.key === 'ArrowRight') {
+                    window.location.href = 'Week7_Slide140.html';
+                }
+            }
+        });
+
+        // Initialize on load
+        window.addEventListener('load', createFloatingElements);
+    </script>
+</body>
+</html>

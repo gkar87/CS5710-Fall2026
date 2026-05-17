@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Principal Component Analysis (PCA)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+            background: linear-gradient(90deg, #0d9488, #14b8a6, #0d9488);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: slideInFromTop 1.2s ease-out, shimmer 3s linear infinite;
+        }
+
+        @keyframes shimmer {
+            to { background-position: 200% center; }
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .concept-section {
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,253,250,0.95) 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .concept-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(13, 148, 136, 0.05) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .algorithm-section {
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,253,250,0.95) 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+            z-index: 1;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+            animation: expandWidth 1s ease-out 0.5s forwards;
+        }
+
+        @keyframes expandWidth {
+            to { width: 60px; }
+        }
+
+        .pca-text {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+            position: relative;
+            z-index: 1;
+            animation: fadeInScale 0.8s ease-out 0.6s both;
+        }
+
+        @keyframes fadeInScale {
+            from { 
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to { 
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .pca-steps {
+            list-style: none;
+            margin-top: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .pca-steps::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 30px;
+            bottom: 30px;
+            width: 2px;
+            background: linear-gradient(180deg, #0d9488, #14b8a6);
+            opacity: 0.3;
+        }
+
+        .step-item {
+            padding: 20px;
+            margin: 15px 0;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            opacity: 0;
+            transform: translateX(-20px);
+            animation: slideInStagger 0.5s ease-out forwards;
+        }
+
+        .step-item:nth-child(1) { animation-delay: 0.8s; }
+        .step-item:nth-child(2) { animation-delay: 0.95s; }
+        .step-item:nth-child(3) { animation-delay: 1.1s; }
+        .step-item:nth-child(4) { animation-delay: 1.25s; }
+        .step-item:nth-child(5) { animation-delay: 1.4s; }
+
+        @keyframes slideInStagger {
+            to { 
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .step-number {
+            position: absolute;
+            left: -15px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translateY(-50%) scale(1); }
+            50% { transform: translateY(-50%) scale(1.1); }
+        }
+
+        .step-item:hover .step-number {
+            animation: none;
+            transform: translateY(-50%) scale(1.2);
+        }
+
+        .step-item:hover {
+            transform: translateY(-3px) translateX(5px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+            border-left-width: 8px;
+        }
+
+        .step-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+            margin-left: 20px;
+        }
+
+        .step-desc {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.5;
+            margin-left: 20px;
+        }
+
+        /* Interactive PCA Visualization */
+        .visualization-banner {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,253,250,0.95) 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .visualization-title {
+            font-size: 1.6em;
+            color: #0d9488;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .pca-interactive {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .scatter-plot {
+            background: #1e293b;
+            border-radius: 15px;
+            padding: 20px;
+            position: relative;
+            height: 400px;
+            overflow: hidden;
+        }
+
+        .plot-title {
+            color: #5eead4;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .plot-area {
+            position: relative;
+            width: 100%;
+            height: 350px;
+            border: 2px solid #0d9488;
+            border-radius: 10px;
+            background: linear-gradient(0deg, rgba(13, 148, 136, 0.05) 0%, transparent 100%);
+        }
+
+        .axis {
+            position: absolute;
+            background: #0d9488;
+            opacity: 0.3;
+        }
+
+        .axis-x {
+            width: 100%;
+            height: 1px;
+            top: 50%;
+            left: 0;
+        }
+
+        .axis-y {
+            width: 1px;
+            height: 100%;
+            left: 50%;
+            top: 0;
+        }
+
+        .data-point {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #5eead4 0%, #0d9488 100%);
+            cursor: grab;
+            transition: all 0.3s ease;
+            z-index: 10;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .data-point:hover {
+            transform: scale(1.5);
+            box-shadow: 0 4px 20px rgba(94, 234, 212, 0.5);
+        }
+
+        .data-point.dragging {
+            cursor: grabbing;
+            transform: scale(1.8);
+            box-shadow: 0 6px 30px rgba(94, 234, 212, 0.7);
+        }
+
+        .pc-arrow {
+            position: absolute;
+            transform-origin: center;
+            pointer-events: none;
+        }
+
+        .pc1 {
+            stroke: #f59e0b;
+            stroke-width: 3;
+        }
+
+        .pc2 {
+            stroke: #ec4899;
+            stroke-width: 3;
+        }
+
+        .controls-panel {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 15px;
+            padding: 25px;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-label {
+            font-weight: 600;
+            color: #134e4a;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .control-button {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .control-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(13, 148, 136, 0.3);
+        }
+
+        .control-button:active {
+            transform: translateY(0);
+        }
+
+        .info-display {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 15px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        .variance-bar {
+            width: 100%;
+            height: 30px;
+            background: #e2e8f0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-top: 10px;
+            position: relative;
+        }
+
+        .variance-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            transition: width 0.5s ease;
+            position: relative;
+        }
+
+        .variance-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: 600;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .formula-box {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+            font-size: 1.1em;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .formula-box::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #0d9488, #14b8a6, #0d9488);
+            border-radius: 15px;
+            opacity: 0.5;
+            z-index: -1;
+            animation: borderRotate 3s linear infinite;
+        }
+
+        @keyframes borderRotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+            z-index: 100;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: radial-gradient(circle, rgba(13, 148, 136, 0.3) 0%, transparent 70%);
+            transition: all 0.5s ease;
+            transform: translate(-50%, -50%);
+        }
+
+        .nav-btn:hover::before {
+            width: 150%;
+            height: 150%;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .pca-interactive { grid-template-columns: 1fr; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    
+    <div class="course-info">CS5710 - Week 7</div>
+    <div class="slide-number">Slide 123 of 140</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Principal Component Analysis (PCA)</h1>
+        
+        <div class="content-layout">
+            <div class="concept-section">
+                <h2 class="section-title">Core Concept</h2>
+                
+                <div class="pca-text">
+                    <strong>PCA</strong> finds the directions (principal components) along which data varies the most, then projects data onto these new axes.
+                </div>
+                
+                <div style="font-size: 1.1em; line-height: 1.7; color: #1e293b; position: relative; z-index: 1;">
+                    <strong>Key Ideas:</strong>
+                    <br><br>
+                    • Find axes of <em>maximum variance</em>
+                    <br>
+                    • Components are <em>orthogonal</em> (uncorrelated)
+                    <br>
+                    • First PC captures most variance
+                    <br>
+                    • Linear transformation of data
+                </div>
+                
+                <div class="formula-box">
+                    PC₁ = arg max‖w‖=1 Var(Xw)
+                </div>
+            </div>
+
+            <div class="algorithm-section">
+                <h2 class="section-title">How It Works</h2>
+                
+                <ul class="pca-steps">
+                    <li class="step-item" data-step="1">
+                        <span class="step-number">1</span>
+                        <div class="step-title">Center the Data</div>
+                        <div class="step-desc">Subtract mean from each feature</div>
+                    </li>
+                    <li class="step-item" data-step="2">
+                        <span class="step-number">2</span>
+                        <div class="step-title">Compute Covariance Matrix</div>
+                        <div class="step-desc">C = (1/n)X^T X</div>
+                    </li>
+                    <li class="step-item" data-step="3">
+                        <span class="step-number">3</span>
+                        <div class="step-title">Find Eigenvectors</div>
+                        <div class="step-desc">Solve Cv = λv</div>
+                    </li>
+                    <li class="step-item" data-step="4">
+                        <span class="step-number">4</span>
+                        <div class="step-title">Sort by Eigenvalues</div>
+                        <div class="step-desc">Largest eigenvalue = most variance</div>
+                    </li>
+                    <li class="step-item" data-step="5">
+                        <span class="step-number">5</span>
+                        <div class="step-title">Project Data</div>
+                        <div class="step-desc">Y = XW (W = top k eigenvectors)</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="visualization-banner">
+            <div class="visualization-title">🎮 Interactive PCA Visualization</div>
+            
+            <div class="pca-interactive">
+                <div class="scatter-plot">
+                    <div class="plot-title">Original Data Space</div>
+                    <div class="plot-area" id="originalPlot">
+                        <div class="axis axis-x"></div>
+                        <div class="axis axis-y"></div>
+                        <svg style="position: absolute; width: 100%; height: 100%; pointer-events: none;">
+                            <line id="pc1Line" class="pc1" x1="50%" y1="50%" x2="75%" y2="25%" 
+                                  stroke-dasharray="5,5" opacity="0.7"/>
+                            <line id="pc2Line" class="pc2" x1="50%" y1="50%" x2="25%" y2="40%" 
+                                  stroke-dasharray="5,5" opacity="0.7"/>
+                            <text x="75%" y="25%" fill="#f59e0b" font-weight="bold">PC1</text>
+                            <text x="25%" y="40%" fill="#ec4899" font-weight="bold">PC2</text>
+                        </svg>
+                    </div>
+                </div>
+                
+                <div class="scatter-plot">
+                    <div class="plot-title">After PCA Transformation</div>
+                    <div class="plot-area" id="transformedPlot">
+                        <div class="axis axis-x"></div>
+                        <div class="axis axis-y"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="controls-panel">
+                <div class="control-group">
+                    <span class="control-label">🎯 Data Controls:</span>
+                    <button class="control-button" id="addPointBtn">Add Point</button>
+                    <button class="control-button" id="resetDataBtn">Reset Data</button>
+                    <button class="control-button" id="generateClusterBtn">Generate Cluster</button>
+                    <button class="control-button" id="animatePCABtn">Animate PCA</button>
+                </div>
+                
+                <div class="control-group">
+                    <span class="control-label">📊 Variance Explained:</span>
+                    <div class="variance-bar">
+                        <div class="variance-fill" id="pc1Variance" style="width: 75%;">
+                            <span class="variance-text">PC1: 75%</span>
+                        </div>
+                    </div>
+                    <div class="variance-bar">
+                        <div class="variance-fill" id="pc2Variance" style="width: 20%; background: linear-gradient(90deg, #ec4899, #f472b6);">
+                            <span class="variance-text">PC2: 20%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-display" id="infoDisplay">
+                    <strong>Instructions:</strong><br>
+                    • Drag points to see PCA update in real-time<br>
+                    • Click "Add Point" to add new data points<br>
+                    • Watch how principal components change<br>
+                    • Observe variance captured by each PC
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week7_Slide122.html" class="nav-btn">← Previous</a>
+        <a href="Week7_Slide124.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // PCA Visualization System
+        class PCAVisualizer {
+            constructor() {
+                this.originalPlot = document.getElementById('originalPlot');
+                this.transformedPlot = document.getElementById('transformedPlot');
+                this.dataPoints = [];
+                this.isDragging = false;
+                this.currentPoint = null;
+                
+                this.initializeData();
+                this.setupEventListeners();
+                this.updateVisualization();
+            }
+            
+            initializeData() {
+                // Create initial data points with some correlation
+                const initialPoints = [
+                    {x: 150, y: 120},
+                    {x: 200, y: 100},
+                    {x: 250, y: 80},
+                    {x: 180, y: 150},
+                    {x: 220, y: 130},
+                    {x: 160, y: 180},
+                    {x: 280, y: 60},
+                    {x: 120, y: 200}
+                ];
+                
+                initialPoints.forEach(point => this.addDataPoint(point.x, point.y));
+            }
+            
+            addDataPoint(x, y) {
+                const point = document.createElement('div');
+                point.className = 'data-point';
+                point.style.left = x + 'px';
+                point.style.top = y + 'px';
+                point.dataset.id = this.dataPoints.length;
+                
+                // Make points draggable
+                point.addEventListener('mousedown', (e) => this.startDrag(e, point));
+                
+                this.originalPlot.appendChild(point);
+                this.dataPoints.push({x, y, element: point});
+                
+                // Add transformed point
+                const transformedPoint = point.cloneNode(true);
+                transformedPoint.style.background = 'radial-gradient(circle, #f59e0b 0%, #dc2626 100%)';
+                this.transformedPlot.appendChild(transformedPoint);
+            }
+            
+            startDrag(e, point) {
+                this.isDragging = true;
+                this.currentPoint = point;
+                point.classList.add('dragging');
+                e.preventDefault();
+            }
+            
+            setupEventListeners() {
+                document.addEventListener('mousemove', (e) => {
+                    if (this.isDragging && this.currentPoint) {
+                        const rect = this.originalPlot.getBoundingClientRect();
+                        const x = e.clientX - rect.left - 6;
+                        const y = e.clientY - rect.top - 6;
+                        
+                        // Constrain to plot area
+                        const constrainedX = Math.max(0, Math.min(rect.width - 12, x));
+                        const constrainedY = Math.max(0, Math.min(rect.height - 12, y));
+                        
+                        this.currentPoint.style.left = constrainedX + 'px';
+                        this.currentPoint.style.top = constrainedY + 'px';
+                        
+                        // Update data
+                        const pointId = parseInt(this.currentPoint.dataset.id);
+                        this.dataPoints[pointId].x = constrainedX;
+                        this.dataPoints[pointId].y = constrainedY;
+                        
+                        this.updateVisualization();
+                    }
+                });
+                
+                document.addEventListener('mouseup', () => {
+                    if (this.currentPoint) {
+                        this.currentPoint.classList.remove('dragging');
+                    }
+                    this.isDragging = false;
+                    this.currentPoint = null;
+                });
+                
+                // Control buttons
+                document.getElementById('addPointBtn').addEventListener('click', () => {
+                    const x = Math.random() * 300 + 50;
+                    const y = Math.random() * 250 + 50;
+                    this.addDataPoint(x, y);
+                    this.updateVisualization();
+                });
+                
+                document.getElementById('resetDataBtn').addEventListener('click', () => {
+                    this.originalPlot.querySelectorAll('.data-point').forEach(p => p.remove());
+                    this.transformedPlot.querySelectorAll('.data-point').forEach(p => p.remove());
+                    this.dataPoints = [];
+                    this.initializeData();
+                    this.updateVisualization();
+                });
+                
+                document.getElementById('generateClusterBtn').addEventListener('click', () => {
+                    const centerX = Math.random() * 200 + 100;
+                    const centerY = Math.random() * 150 + 75;
+                    for (let i = 0; i < 5; i++) {
+                        const x = centerX + (Math.random() - 0.5) * 80;
+                        const y = centerY + (Math.random() - 0.5) * 80;
+                        this.addDataPoint(x, y);
+                    }
+                    this.updateVisualization();
+                });
+                
+                document.getElementById('animatePCABtn').addEventListener('click', () => {
+                    this.animatePCA();
+                });
+            }
+            
+            updateVisualization() {
+                if (this.dataPoints.length < 2) return;
+                
+                // Calculate PCA
+                const pca = this.calculatePCA();
+                
+                // Update principal component lines
+                this.updatePCLines(pca);
+                
+                // Update transformed points
+                this.updateTransformedPoints(pca);
+                
+                // Update variance bars
+                this.updateVarianceBars(pca);
+            }
+            
+            calculatePCA() {
+                // Calculate mean
+                const meanX = this.dataPoints.reduce((sum, p) => sum + p.x, 0) / this.dataPoints.length;
+                const meanY = this.dataPoints.reduce((sum, p) => sum + p.y, 0) / this.dataPoints.length;
+                
+                // Center the data
+                const centered = this.dataPoints.map(p => ({
+                    x: p.x - meanX,
+                    y: p.y - meanY
+                }));
+                
+                // Calculate covariance matrix
+                const cov = this.covarianceMatrix(centered);
+                
+                // Simple 2D eigenvalue/eigenvector calculation
+                const trace = cov.xx + cov.yy;
+                const det = cov.xx * cov.yy - cov.xy * cov.yx;
+                const discriminant = Math.sqrt(trace * trace - 4 * det);
+                
+                const eigenvalue1 = (trace + discriminant) / 2;
+                const eigenvalue2 = (trace - discriminant) / 2;
+                
+                // Calculate eigenvectors
+                const eigenvector1 = this.normalizeVector({
+                    x: cov.xy,
+                    y: eigenvalue1 - cov.xx
+                });
+                
+                const eigenvector2 = this.normalizeVector({
+                    x: cov.xy,
+                    y: eigenvalue2 - cov.xx
+                });
+                
+                return {
+                    mean: {x: meanX, y: meanY},
+                    eigenvalues: [eigenvalue1, eigenvalue2],
+                    eigenvectors: [eigenvector1, eigenvector2],
+                    centered: centered
+                };
+            }
+            
+            covarianceMatrix(data) {
+                const n = data.length;
+                let xx = 0, yy = 0, xy = 0;
+                
+                data.forEach(p => {
+                    xx += p.x * p.x;
+                    yy += p.y * p.y;
+                    xy += p.x * p.y;
+                });
+                
+                return {
+                    xx: xx / n,
+                    yy: yy / n,
+                    xy: xy / n,
+                    yx: xy / n
+                };
+            }
+            
+            normalizeVector(v) {
+                const magnitude = Math.sqrt(v.x * v.x + v.y * v.y);
+                if (magnitude === 0) return {x: 1, y: 0};
+                return {
+                    x: v.x / magnitude,
+                    y: v.y / magnitude
+                };
+            }
+            
+            updatePCLines(pca) {
+                const pc1Line = document.getElementById('pc1Line');
+                const pc2Line = document.getElementById('pc2Line');
+                
+                const scale = 120;
+                
+                pc1Line.setAttribute('x1', pca.mean.x);
+                pc1Line.setAttribute('y1', pca.mean.y);
+                pc1Line.setAttribute('x2', pca.mean.x + pca.eigenvectors[0].x * scale);
+                pc1Line.setAttribute('y2', pca.mean.y + pca.eigenvectors[0].y * scale);
+                
+                pc2Line.setAttribute('x1', pca.mean.x);
+                pc2Line.setAttribute('y1', pca.mean.y);
+                pc2Line.setAttribute('x2', pca.mean.x + pca.eigenvectors[1].x * scale);
+                pc2Line.setAttribute('y2', pca.mean.y + pca.eigenvectors[1].y * scale);
+            }
+            
+            updateTransformedPoints(pca) {
+                const transformedPoints = this.transformedPlot.querySelectorAll('.data-point');
+                
+                pca.centered.forEach((point, i) => {
+                    // Project onto principal components
+                    const pc1Projection = point.x * pca.eigenvectors[0].x + point.y * pca.eigenvectors[0].y;
+                    const pc2Projection = point.x * pca.eigenvectors[1].x + point.y * pca.eigenvectors[1].y;
+                    
+                    // Map to transformed plot (centered at middle)
+                    const plotWidth = this.transformedPlot.offsetWidth;
+                    const plotHeight = this.transformedPlot.offsetHeight;
+                    
+                    transformedPoints[i].style.left = (plotWidth/2 + pc1Projection) + 'px';
+                    transformedPoints[i].style.top = (plotHeight/2 - pc2Projection) + 'px';
+                });
+            }
+            
+            updateVarianceBars(pca) {
+                const totalVariance = pca.eigenvalues[0] + pca.eigenvalues[1];
+                const pc1Percent = (pca.eigenvalues[0] / totalVariance * 100).toFixed(1);
+                const pc2Percent = (pca.eigenvalues[1] / totalVariance * 100).toFixed(1);
+                
+                const pc1Bar = document.getElementById('pc1Variance');
+                const pc2Bar = document.getElementById('pc2Variance');
+                
+                pc1Bar.style.width = pc1Percent + '%';
+                pc1Bar.querySelector('.variance-text').textContent = `PC1: ${pc1Percent}%`;
+                
+                pc2Bar.style.width = pc2Percent + '%';
+                pc2Bar.querySelector('.variance-text').textContent = `PC2: ${pc2Percent}%`;
+            }
+            
+            animatePCA() {
+                const info = document.getElementById('infoDisplay');
+                info.innerHTML = '<strong>🎬 Animating PCA Transformation...</strong>';
+                
+                // Animate transformation
+                const transformedPoints = this.transformedPlot.querySelectorAll('.data-point');
+                transformedPoints.forEach(point => {
+                    point.style.transition = 'all 2s ease-in-out';
+                });
+                
+                setTimeout(() => {
+                    info.innerHTML = `
+                        <strong>✅ Animation Complete!</strong><br>
+                        • Data projected onto principal components<br>
+                        • Maximum variance preserved<br>
+                        • Dimensionality reduced successfully
+                    `;
+                }, 2000);
+            }
+        }
+
+        // Step items with detailed modals
+        document.querySelectorAll('.step-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const step = this.dataset.step;
+                const title = this.querySelector('.step-title').textContent;
+                const desc = this.querySelector('.step-desc').textContent;
+                
+                const stepDetails = {
+                    '1': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Step 1: Center the Data</strong>
+                            </div>
+                            <p>Centering ensures that the first principal component describes the direction of maximum variance.</p>
+                            <div class="modal-code">
+                                # Python code<br>
+                                X_centered = X - np.mean(X, axis=0)<br><br>
+                                # For each feature:<br>
+                                # new_value = old_value - mean
+                            </div>
+                            <p><strong>Why this matters:</strong> Without centering, the first PC might just point toward the mean, not the direction of spread.</p>
+                            <p><strong>Visual:</strong> Imagine shifting your data cloud so its center is at the origin (0,0).</p>
+                        `
+                    },
+                    '2': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Step 2: Compute Covariance Matrix</strong>
+                            </div>
+                            <p>The covariance matrix captures how features vary together.</p>
+                            <div class="modal-code">
+                                # Covariance matrix<br>
+                                C = np.cov(X.T)<br>
+                                # or<br>
+                                C = (1/n) * X.T @ X<br><br>
+                                # Result: symmetric matrix<br>
+                                # C[i,j] = covariance between feature i and j
+                            </div>
+                            <p><strong>Interpretation:</strong> Diagonal elements show variance of each feature. Off-diagonal elements show correlation between features.</p>
+                        `
+                    },
+                    '3': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Step 3: Find Eigenvectors & Eigenvalues</strong>
+                            </div>
+                            <p>Eigenvectors of the covariance matrix are the principal components.</p>
+                            <div class="modal-code">
+                                # Eigendecomposition<br>
+                                eigenvalues, eigenvectors = np.linalg.eig(C)<br><br>
+                                # Each eigenvector is a PC<br>
+                                # Each eigenvalue = variance along that PC
+                            </div>
+                            <p><strong>Geometric meaning:</strong> Eigenvectors point in directions where data varies independently.</p>
+                        `
+                    },
+                    '4': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Step 4: Sort by Eigenvalues</strong>
+                            </div>
+                            <p>Sort eigenvectors by their eigenvalues in descending order.</p>
+                            <div class="modal-code">
+                                # Sort indices<br>
+                                idx = eigenvalues.argsort()[::-1]<br>
+                                sorted_eigenvalues = eigenvalues[idx]<br>
+                                sorted_eigenvectors = eigenvectors[:, idx]<br><br>
+                                # PC1 = eigenvector with largest eigenvalue
+                            </div>
+                            <p><strong>Result:</strong> PC1 captures most variance, PC2 second most, etc.</p>
+                        `
+                    },
+                    '5': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Step 5: Project Data</strong>
+                            </div>
+                            <p>Transform data to the new coordinate system defined by principal components.</p>
+                            <div class="modal-code">
+                                # Select top k components<br>
+                                W = eigenvectors[:, :k]<br><br>
+                                # Project data<br>
+                                Y = X_centered @ W<br><br>
+                                # Y is now in PC space!
+                            </div>
+                            <p><strong>Result:</strong> Reduced-dimension representation that preserves maximum variance.</p>
+                        `
+                    }
+                };
+                
+                const details = stepDetails[step];
+                if (details) {
+                    modal.show(`PCA ${title}`, details.content);
+                }
+            });
+        });
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Initialize components
+        createFloatingElements();
+        const pcaViz = new PCAVisualizer();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week7_Slide122.html';
+            } else if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week7_Slide124.html';
+            }
+        });
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Maximum Margin Classifier</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .concept-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .visualization-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .definition-box {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .key-principles {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .principle-item {
+            padding: 20px;
+            margin: 15px 0;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .principle-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .principle-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .principle-desc {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .margin-visualization {
+            width: 100%;
+            height: 400px;
+            background: #1e293b;
+            border-radius: 15px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .data-point {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .data-point.class-a {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        .data-point.class-b {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+        }
+
+        .data-point:hover {
+            transform: scale(1.5);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+
+        .decision-boundary {
+            position: absolute;
+            background: #5eead4;
+            height: 2px;
+            transform-origin: center;
+        }
+
+        .margin-line {
+            position: absolute;
+            background: #fbbf24;
+            height: 1px;
+            transform-origin: center;
+            opacity: 0.7;
+        }
+
+        .support-vector {
+            border: 3px solid #fbbf24 !important;
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.6);
+        }
+
+        .comparison-banner {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .comparison-title {
+            font-size: 1.6em;
+            color: #0d9488;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .comparison-card {
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border: 2px solid #14b8a6;
+        }
+
+        .comparison-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .comparison-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+
+        .comparison-aspect {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #0d9488;
+        }
+
+        .comparison-desc {
+            font-size: 0.9em;
+            color: #475569;
+            line-height: 1.4;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .comparison-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    
+    <div class="course-info">CS5710 - Week 4</div>
+    <div class="slide-number">Slide 72 of 80</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Maximum Margin Classifier</h1>
+        
+        <div class="content-layout">
+            <div class="concept-section">
+                <h2 class="section-title">Margin Maximization</h2>
+                
+                <div class="definition-box">
+                    The <strong>Maximum Margin Classifier</strong> finds the decision boundary that maximizes the distance to the closest data points from either class, creating the largest possible "safety zone."
+                </div>
+                
+                <ul class="key-principles">
+                    <li class="principle-item">
+                        <div class="principle-title">📏 Margin Definition</div>
+                        <div class="principle-desc">Distance from decision boundary to nearest data points</div>
+                    </li>
+                    <li class="principle-item">
+                        <div class="principle-title">🎯 Optimal Boundary</div>
+                        <div class="principle-desc">Boundary that maximizes the margin width</div>
+                    </li>
+                    <li class="principle-item">
+                        <div class="principle-title">⚖️ Generalization</div>
+                        <div class="principle-desc">Larger margins typically lead to better generalization</div>
+                    </li>
+                    <li class="principle-item">
+                        <div class="principle-title">🔍 Support Vectors</div>
+                        <div class="principle-desc">Critical points that define the margin boundaries</div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="visualization-section">
+                <h2 class="section-title">Interactive Margin Visualization</h2>
+                
+                <div class="margin-visualization" id="marginViz">
+                    <!-- Decision boundary -->
+                    <div class="decision-boundary" style="width: 300px; top: 200px; left: 50px; transform: rotate(45deg);"></div>
+                    
+                    <!-- Margin lines -->
+                    <div class="margin-line" style="width: 300px; top: 170px; left: 50px; transform: rotate(45deg);"></div>
+                    <div class="margin-line" style="width: 300px; top: 230px; left: 50px; transform: rotate(45deg);"></div>
+                    
+                    <!-- Class A points (red) -->
+                    <div class="data-point class-a" style="top: 80px; left: 80px;"></div>
+                    <div class="data-point class-a" style="top: 120px; left: 120px;"></div>
+                    <div class="data-point class-a support-vector" style="top: 150px; left: 100px;"></div>
+                    <div class="data-point class-a" style="top: 180px; left: 140px;"></div>
+                    <div class="data-point class-a" style="top: 100px; left: 160px;"></div>
+                    
+                    <!-- Class B points (blue) -->
+                    <div class="data-point class-b" style="top: 260px; left: 200px;"></div>
+                    <div class="data-point class-b" style="top: 300px; left: 240px;"></div>
+                    <div class="data-point class-b support-vector" style="top: 250px; left: 180px;"></div>
+                    <div class="data-point class-b" style="top: 320px; left: 280px;"></div>
+                    <div class="data-point class-b" style="top: 280px; left: 320px;"></div>
+                </div>
+                
+                <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                    <strong>Legend:</strong><br>
+                    🔴 <span style="color: #ef4444;">Red</span> = Class A<br>
+                    🔵 <span style="color: #3b82f6;">Blue</span> = Class B<br>
+                    💛 <span style="color: #fbbf24;">Yellow Border</span> = Support Vectors<br>
+                    <span style="color: #5eead4;">Teal</span> = Decision Boundary
+                </div>
+            </div>
+        </div>
+
+        <div class="comparison-banner">
+            <div class="comparison-title">
+                ⚖️ Maximum Margin vs Other Classifiers
+            </div>
+            
+            <div class="comparison-grid">
+                <div class="comparison-card">
+                    <div class="comparison-icon">📐</div>
+                    <div class="comparison-aspect">Geometry</div>
+                    <div class="comparison-desc">Uses geometric intuition: find the "widest street" separating classes</div>
+                </div>
+                
+                <div class="comparison-card">
+                    <div class="comparison-icon">🛡️</div>
+                    <div class="comparison-aspect">Robustness</div>
+                    <div class="comparison-desc">Less sensitive to outliers due to margin maximization principle</div>
+                </div>
+                
+                <div class="comparison-card">
+                    <div class="comparison-icon">🎯</div>
+                    <div class="comparison-aspect">Uniqueness</div>
+                    <div class="comparison-desc">Produces unique optimal solution (convex optimization)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week4_Slide71.html" class="nav-btn">← Previous</a>
+        <a href="Week4_Slide73.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive principle items
+        document.querySelectorAll('.principle-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const title = this.querySelector('.principle-title').textContent;
+                const desc = this.querySelector('.principle-desc').textContent;
+                
+                const details = {
+                    '📏 Margin Definition': {
+                        detail: 'The margin is the perpendicular distance from the decision boundary to the nearest data point of either class.',
+                        formula: 'margin = 2 / ||w|| where w is the weight vector',
+                        importance: 'Larger margins indicate more confident classifications and better generalization to new data.'
+                    },
+                    '🎯 Optimal Boundary': {
+                        detail: 'Among all possible decision boundaries that correctly separate the classes, choose the one with maximum margin.',
+                        formula: 'argmax margin = argmin ||w||² subject to correct classification',
+                        importance: 'This is a convex optimization problem with a unique global optimum.'
+                    },
+                    '⚖️ Generalization': {
+                        detail: 'Maximum margin principle provides better generalization by creating the most robust decision boundary.',
+                        formula: 'Error bound decreases as margin increases (VC theory)',
+                        importance: 'Helps prevent overfitting by choosing the simplest boundary that separates classes.'
+                    },
+                    '🔍 Support Vectors': {
+                        detail: 'Data points that lie exactly on the margin boundaries and determine the decision boundary.',
+                        formula: 'yi(w·xi + b) = 1 for support vectors',
+                        importance: 'Only support vectors affect the final model - all other points can be removed!'
+                    }
+                };
+                
+                const info = details[title];
+                modal.show(title, `
+                    <div class="modal-highlight">
+                        <strong>${desc}</strong>
+                    </div>
+                    <p>${info.detail}</p>
+                    <div class="modal-code">
+                        <strong>Mathematical Formulation:</strong><br>
+                        ${info.formula}
+                    </div>
+                    <p><strong>Why it matters:</strong> ${info.importance}</p>
+                `);
+            });
+        });
+
+        // Interactive data points
+        document.querySelectorAll('.data-point').forEach(point => {
+            point.addEventListener('click', function() {
+                const isSupport = this.classList.contains('support-vector');
+                const className = this.classList.contains('class-a') ? 'Class A (Red)' : 'Class B (Blue)';
+                
+                if (isSupport) {
+                    modal.show('Support Vector', `
+                        <div class="modal-highlight">
+                            <strong>${className} - Support Vector</strong>
+                        </div>
+                        <p>This is a <strong>support vector</strong> - a critical data point that defines the margin boundary.</p>
+                        <p><strong>Key Properties:</strong></p>
+                        <ul>
+                            <li>Lies exactly on the margin boundary</li>
+                            <li>Distance to decision boundary = margin width</li>
+                            <li>If removed, the decision boundary would change</li>
+                            <li>Has non-zero Lagrange multiplier (α > 0)</li>
+                        </ul>
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(251, 191, 36, 0.1); border-radius: 10px;">
+                            <strong>💡 Fun Fact:</strong><br>
+                            Only support vectors matter for the final model! You could remove all other training points and get the same result.
+                        </div>
+                    `);
+                } else {
+                    modal.show('Regular Data Point', `
+                        <div class="modal-highlight">
+                            <strong>${className} - Regular Point</strong>
+                        </div>
+                        <p>This is a regular training point that lies outside the margin boundaries.</p>
+                        <p><strong>Characteristics:</strong></p>
+                        <ul>
+                            <li>Distance to boundary > margin width</li>
+                            <li>Correctly classified with high confidence</li>
+                            <li>Could be removed without changing the model</li>
+                            <li>Has zero Lagrange multiplier (α = 0)</li>
+                        </ul>
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                            <strong>🎯 Insight:</strong><br>
+                            These points don't influence the decision boundary, showing SVM's focus on the most challenging examples.
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Interactive comparison cards
+        document.querySelectorAll('.comparison-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const aspect = this.querySelector('.comparison-aspect').textContent;
+                
+                const comparisons = {
+                    'Geometry': {
+                        explanation: 'Maximum margin classifier uses geometric intuition to find the optimal separating boundary.',
+                        advantage: 'Creates the "widest street" between classes, maximizing the safety zone for classification.',
+                        example: 'Think of parking a car: you want maximum distance from obstacles on both sides for safety.',
+                        contrast: 'Unlike logistic regression which focuses on probability, SVM focuses on geometric separation.'
+                    },
+                    'Robustness': {
+                        explanation: 'The margin maximization principle provides inherent robustness against outliers and noise.',
+                        advantage: 'Small changes in non-support vector points don\'t affect the decision boundary.',
+                        example: 'If you move a point that\'s far from the boundary, the SVM decision doesn\'t change.',
+                        contrast: 'Perceptron can be very sensitive to outliers, constantly adjusting its boundary.'
+                    },
+                    'Uniqueness': {
+                        explanation: 'The maximum margin optimization is a convex problem with a unique global optimum.',
+                        advantage: 'Always finds the same optimal solution regardless of initialization.',
+                        example: 'Unlike neural networks with multiple local minima, SVM always converges to the same answer.',
+                        contrast: 'Provides theoretical guarantees that other methods like neural networks cannot offer.'
+                    }
+                };
+                
+                const comp = comparisons[aspect];
+                modal.show(`Maximum Margin: ${aspect}`, `
+                    <div class="modal-highlight">
+                        <p>${comp.explanation}</p>
+                    </div>
+                    <p><strong>🎯 Key Advantage:</strong><br>${comp.advantage}</p>
+                    <p><strong>📝 Example:</strong><br>${comp.example}</p>
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                        <strong>🔍 Comparison:</strong><br>${comp.contrast}
+                    </div>
+                `);
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week4_Slide71.html';
+            } else if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week4_Slide73.html';
+            }
+        });
+    </script>
+</body>
+</html>

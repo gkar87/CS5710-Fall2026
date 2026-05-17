@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Temporal Difference Learning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .td-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .comparison-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .key-concept {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .td-features {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .feature-item {
+            padding: 20px;
+            margin: 15px 0;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .feature-item:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .feature-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .feature-desc {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .formula-box {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 25px;
+            border-radius: 15px;
+            font-family: 'Courier New', monospace;
+            margin: 20px 0;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .formula-box:hover {
+            transform: scale(1.02);
+            box-shadow: 0 15px 35px rgba(13, 148, 136, 0.3);
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .comparison-table th {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .comparison-table td {
+            padding: 15px;
+            border-bottom: 1px solid rgba(13, 148, 136, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .comparison-table tr:hover td {
+            background: rgba(13, 148, 136, 0.05);
+        }
+
+        .algorithm-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: float 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 11</div>
+    <div class="slide-number">Slide 211 of 220</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Temporal Difference Learning</h1>
+        
+        <div class="content-layout">
+            <div class="td-section">
+                <h2 class="section-title">What is TD Learning?</h2>
+                
+                <div class="key-concept">
+                    <strong>Temporal Difference (TD)</strong> learning combines ideas from Monte Carlo and Dynamic Programming to learn directly from experience without a model.
+                </div>
+                
+                <ul class="td-features">
+                    <li class="feature-item">
+                        <div class="feature-title">🔄 Bootstrapping</div>
+                        <div class="feature-desc">Updates estimates based on other estimates</div>
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-title">⚡ Online Learning</div>
+                        <div class="feature-desc">Can learn before episode ends</div>
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-title">📊 Model-Free</div>
+                        <div class="feature-desc">No need for environment dynamics</div>
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-title">🎯 TD(0)</div>
+                        <div class="feature-desc">One-step lookahead version</div>
+                    </li>
+                </ul>
+
+                <div class="formula-box" onclick="showTDFormula()">
+                    V(Sₜ) ← V(Sₜ) + α[Rₜ₊₁ + γV(Sₜ₊₁) - V(Sₜ)]
+                </div>
+            </div>
+
+            <div class="comparison-section">
+                <h2 class="section-title">TD vs MC vs DP</h2>
+                
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Aspect</th>
+                            <th>TD</th>
+                            <th>Monte Carlo</th>
+                            <th>Dynamic Prog</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr onclick="showComparisonDetail('bootstrap')">
+                            <td>Bootstrap</td>
+                            <td>✅ Yes</td>
+                            <td>❌ No</td>
+                            <td>✅ Yes</td>
+                        </tr>
+                        <tr onclick="showComparisonDetail('model')">
+                            <td>Model-Free</td>
+                            <td>✅ Yes</td>
+                            <td>✅ Yes</td>
+                            <td>❌ No</td>
+                        </tr>
+                        <tr onclick="showComparisonDetail('online')">
+                            <td>Online</td>
+                            <td>✅ Yes</td>
+                            <td>❌ No</td>
+                            <td>✅ Yes</td>
+                        </tr>
+                        <tr onclick="showComparisonDetail('episodes')">
+                            <td>Needs Episodes</td>
+                            <td>❌ No</td>
+                            <td>✅ Yes</td>
+                            <td>❌ No</td>
+                        </tr>
+                        <tr onclick="showComparisonDetail('variance')">
+                            <td>Variance</td>
+                            <td>Low</td>
+                            <td>High</td>
+                            <td>None</td>
+                        </tr>
+                        <tr onclick="showComparisonDetail('bias')">
+                            <td>Bias</td>
+                            <td>Some</td>
+                            <td>None</td>
+                            <td>None</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="algorithm-section">
+            <h2 class="section-title">TD(0) Algorithm</h2>
+            <div style="background: #1e293b; color: #5eead4; padding: 25px; border-radius: 15px; font-family: 'Courier New', monospace;">
+                <strong>TD(0) Prediction:</strong><br><br>
+                Initialize V(s) arbitrarily<br>
+                Repeat for each episode:<br>
+                &nbsp;&nbsp;Initialize S<br>
+                &nbsp;&nbsp;Repeat for each step:<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;A ← action from π for S<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;Take action A, observe R, S'<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #fbbf24;">V(S) ← V(S) + α[R + γV(S') - V(S)]</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;S ← S'<br>
+                &nbsp;&nbsp;until S is terminal
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week11_Slide210.html" class="nav-btn">← Previous</a>
+        <a href="Week11_Slide212.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 30; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive feature items with modal
+        document.querySelectorAll('.feature-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const title = this.querySelector('.feature-title').textContent;
+                const desc = this.querySelector('.feature-desc').textContent;
+                
+                const details = {
+                    '🔄 Bootstrapping': {
+                        detail: 'TD methods update value estimates based on other value estimates, without waiting for the final outcome.',
+                        example: `Instead of waiting for episode end:
+V(s) uses estimate V(s') immediately
+
+TD: V(s) ← V(s) + α[r + γV(s') - V(s)]
+MC: V(s) ← V(s) + α[G - V(s)]`,
+                        advantage: 'Can learn continuously without waiting for termination',
+                        comparison: 'MC uses actual return G, TD uses estimate r + γV(s')'
+                    },
+                    '⚡ Online Learning': {
+                        detail: 'TD can update values after every step, enabling continuous learning during an episode.',
+                        example: `Step 1: State A → State B, reward = 2
+Immediately update: V(A) using V(B)
+
+No need to wait for episode completion`,
+                        advantage: 'Faster learning, especially in long episodes',
+                        comparison: 'MC must wait for episode end, TD updates immediately'
+                    },
+                    '📊 Model-Free': {
+                        detail: 'TD learning doesn\'t require knowledge of transition probabilities or reward function.',
+                        example: `Only needs experience tuples:
+(state, action, reward, next_state)
+
+No need for P(s'|s,a) or R(s,a)`,
+                        advantage: 'Works in unknown or complex environments',
+                        comparison: 'DP needs full model, TD learns from samples'
+                    },
+                    '🎯 TD(0)': {
+                        detail: 'TD(0) is the simplest TD method, using one-step lookahead for updates.',
+                        example: `TD(0): Uses immediate reward + next state
+TD(1): Uses 2-step lookahead
+TD(n): Uses n-step lookahead
+TD(λ): Weighted average of all n-steps`,
+                        advantage: 'Simple, efficient, low variance',
+                        comparison: 'TD(0) has lowest variance but some bias'
+                    }
+                };
+                
+                const info = details[title];
+                modal.show(title, `
+                    <div class="modal-highlight">
+                        <strong>${desc}</strong>
+                    </div>
+                    <p>${info.detail}</p>
+                    <div class="modal-code">
+                        <strong>Example:</strong><br>
+                        <pre>${info.example}</pre>
+                    </div>
+                    <p><strong>Key Advantage:</strong> ${info.advantage}</p>
+                    <p><strong>Comparison:</strong> ${info.comparison}</p>
+                `);
+            });
+        });
+
+        function showTDFormula() {
+            modal.show('TD Learning Update Rule', `
+                <div class="modal-highlight">
+                    <strong>V(Sₜ) ← V(Sₜ) + α[Rₜ₊₁ + γV(Sₜ₊₁) - V(Sₜ)]</strong>
+                </div>
+                <h4>Components:</h4>
+                <ul>
+                    <li><strong>V(Sₜ):</strong> Current value estimate of state Sₜ</li>
+                    <li><strong>α:</strong> Learning rate (step size)</li>
+                    <li><strong>Rₜ₊₁:</strong> Immediate reward received</li>
+                    <li><strong>γ:</strong> Discount factor</li>
+                    <li><strong>V(Sₜ₊₁):</strong> Value estimate of next state</li>
+                </ul>
+                <div class="modal-code">
+                    TD Error = Rₜ₊₁ + γV(Sₜ₊₁) - V(Sₜ)
+                    
+                    This represents the difference between:
+                    - What we expected: V(Sₜ)
+                    - What we observed: Rₜ₊₁ + γV(Sₜ₊₁)
+                </div>
+                <p><strong>Intuition:</strong> We update our estimate based on the error between our prediction and a better estimate using the observed reward and next state value.</p>
+            `);
+        }
+
+        function showComparisonDetail(aspect) {
+            const comparisons = {
+                'bootstrap': {
+                    title: 'Bootstrapping Comparison',
+                    content: `
+                        <h4>What is Bootstrapping?</h4>
+                        <p>Using estimates to update other estimates.</p>
+                        <div class="modal-code">
+                            TD: V(s) ← V(s) + α[r + γV(s') - V(s)]
+                                Uses V(s') estimate
+                            
+                            MC: V(s) ← V(s) + α[G - V(s)]
+                                Uses actual return G
+                            
+                            DP: V(s) ← Σ π(a|s)Σ p(s'|s,a)[r + γV(s')]
+                                Uses V(s') estimates
+                        </div>
+                        <p><strong>Advantage:</strong> Can learn before seeing final outcomes</p>
+                        <p><strong>Disadvantage:</strong> Can propagate errors in estimates</p>
+                    `
+                },
+                'model': {
+                    title: 'Model Requirements',
+                    content: `
+                        <h4>Model-Free vs Model-Based</h4>
+                        <div class="modal-highlight">
+                            Model = Knowledge of P(s'|s,a) and R(s,a)
+                        </div>
+                        <p><strong>TD & MC:</strong> Learn from experience samples</p>
+                        <p><strong>DP:</strong> Requires complete model of environment</p>
+                        <div class="modal-code">
+                            Model-Free: Learn from (s, a, r, s') tuples
+                            Model-Based: Need P(s'|s,a) for all transitions
+                        </div>
+                        <p>Model-free methods are more practical for complex real-world problems.</p>
+                    `
+                },
+                'online': {
+                    title: 'Online vs Offline Learning',
+                    content: `
+                        <h4>When Can We Learn?</h4>
+                        <p><strong>Online (TD, DP):</strong> Update after each step</p>
+                        <p><strong>Offline (MC):</strong> Update after episode ends</p>
+                        <div class="modal-code">
+                            Online:  S₁ → S₂ [update V(S₁)] → S₃ [update V(S₂)] ...
+                            Offline: S₁ → S₂ → ... → Sₜ [then update all]
+                        </div>
+                        <p><strong>Advantage of Online:</strong> Faster learning, works for continuing tasks</p>
+                        <p><strong>Advantage of Offline:</strong> Uses actual returns, unbiased</p>
+                    `
+                },
+                'episodes': {
+                    title: 'Episode Requirements',
+                    content: `
+                        <h4>Do We Need Complete Episodes?</h4>
+                        <p><strong>TD:</strong> Can learn from incomplete episodes</p>
+                        <p><strong>MC:</strong> Requires complete episodes to compute returns</p>
+                        <p><strong>DP:</strong> Doesn't use episodes, uses model</p>
+                        <div class="modal-highlight">
+                            TD is ideal for:
+                            - Continuing tasks (no clear end)
+                            - Long episodes
+                            - Online learning scenarios
+                        </div>
+                    `
+                },
+                'variance': {
+                    title: 'Variance Analysis',
+                    content: `
+                        <h4>Variance in Updates</h4>
+                        <p><strong>TD:</strong> Low variance (one-step, less randomness)</p>
+                        <p><strong>MC:</strong> High variance (full trajectory, more randomness)</p>
+                        <p><strong>DP:</strong> No variance (uses exact model)</p>
+                        <div class="modal-code">
+                            TD:  Depends on one transition
+                            MC:  Depends on entire episode
+                            DP:  Deterministic computation
+                        </div>
+                        <p>Lower variance means more stable learning but potentially slower convergence to optimal values.</p>
+                    `
+                },
+                'bias': {
+                    title: 'Bias Analysis',
+                    content: `
+                        <h4>Bias in Value Estimates</h4>
+                        <p><strong>TD:</strong> Biased (uses bootstrap estimates)</p>
+                        <p><strong>MC:</strong> Unbiased (uses actual returns)</p>
+                        <p><strong>DP:</strong> Unbiased (if model is correct)</p>
+                        <div class="modal-highlight">
+                            Bias-Variance Tradeoff:
+                            TD: Some bias, low variance
+                            MC: No bias, high variance
+                        </div>
+                        <p>TD bias decreases as value estimates improve.</p>
+                    `
+                }
+            };
+            
+            const data = comparisons[aspect];
+            if (data) {
+                modal.show(data.title, data.content);
+            }
+        }
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (!modal.overlay.classList.contains('active')) {
+                if (e.key === 'ArrowRight' || e.key === ' ') {
+                    window.location.href = 'Week11_Slide212.html';
+                } else if (e.key === 'ArrowLeft') {
+                    window.location.href = 'Week11_Slide210.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

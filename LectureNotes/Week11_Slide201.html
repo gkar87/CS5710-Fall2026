@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Reinforcement Learning Introduction</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .intro-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .paradigm-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .definition-text {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .rl-components {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .component-item {
+            margin: 15px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .component-item:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.2);
+            border-color: #0d9488;
+        }
+
+        .component-title {
+            font-size: 1.3em;
+            color: #0d9488;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .component-desc {
+            font-size: 1em;
+            color: #475569;
+            line-height: 1.6;
+        }
+
+        .examples-banner {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            margin: 40px 0;
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+        }
+
+        .rl-examples {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .example-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .example-card:hover {
+            transform: translateY(-10px) scale(1.05);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.3);
+        }
+
+        .example-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+
+        .example-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 10px;
+        }
+
+        .example-desc {
+            font-size: 0.95em;
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            color: #0d9488;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 1em;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.4);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .nav-btn.special {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(240,253,250,0.95));
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            font-weight: 600;
+            color: #0d9488;
+            z-index: 100;
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(240,253,250,0.95));
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            font-weight: 600;
+            color: #0d9488;
+            z-index: 100;
+        }
+
+        .floating-elements {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .floating-element {
+            position: absolute;
+            font-size: 20px;
+            opacity: 0.1;
+            animation: mlFloat 20s infinite;
+            color: #0d9488;
+        }
+
+        .floating-element::before {
+            content: '🤖';
+        }
+
+        .floating-element:nth-child(3n)::before {
+            content: '🎮';
+        }
+
+        .floating-element:nth-child(3n+1)::before {
+            content: '🎯';
+        }
+
+        .floating-element:nth-child(3n+2)::before {
+            content: '🏆';
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.3s ease;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 2em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .modal-close:hover {
+            background: #f1f5f9;
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            color: #1e293b;
+            line-height: 1.8;
+        }
+
+        .modal-content p {
+            margin: 15px 0;
+            font-size: 1.05em;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-left: 4px solid #0d9488;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+
+        .modal-formula {
+            background: #f8fafc;
+            border: 2px solid #cbd5e1;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+            font-family: 'Times New Roman', serif;
+            font-size: 1.2em;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.1; }
+            90% { opacity: 0.1; }
+            100% { transform: translateY(-100px) translateX(100px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .rl-examples { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 11</div>
+    <div class="slide-number">Slide 201 of 220</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Reinforcement Learning Introduction</h1>
+        
+        <div class="content-layout">
+            <div class="intro-section">
+                <h2 class="section-title">What is Reinforcement Learning?</h2>
+                
+                <div class="definition-text">
+                    <strong>Reinforcement Learning (RL)</strong> is a paradigm where an agent learns to make decisions by taking actions in an environment to maximize cumulative reward.
+                </div>
+                
+                <div style="font-size: 1.1em; line-height: 1.7; color: #1e293b;">
+                    Unlike supervised learning:
+                    <br><br>
+                    • No labeled examples
+                    <br>
+                    • Learn from interaction
+                    <br>
+                    • Delayed rewards
+                    <br>
+                    • Sequential decision making
+                    <br>
+                    • Exploration vs Exploitation
+                </div>
+            </div>
+
+            <div class="paradigm-section">
+                <h2 class="section-title">Key Components</h2>
+                
+                <ul class="rl-components">
+                    <li class="component-item">
+                        <div class="component-title">🤖 Agent</div>
+                        <div class="component-desc">The learner and decision maker</div>
+                    </li>
+                    <li class="component-item">
+                        <div class="component-title">🌍 Environment</div>
+                        <div class="component-desc">Everything the agent interacts with</div>
+                    </li>
+                    <li class="component-item">
+                        <div class="component-title">🎯 State</div>
+                        <div class="component-desc">Current situation of the agent</div>
+                    </li>
+                    <li class="component-item">
+                        <div class="component-title">⚡ Action</div>
+                        <div class="component-desc">What the agent can do</div>
+                    </li>
+                    <li class="component-item">
+                        <div class="component-title">🏆 Reward</div>
+                        <div class="component-desc">Feedback from the environment</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="examples-banner">
+            <div style="font-size: 1.3em; font-weight: 600; color: #0d9488; text-align: center; margin-bottom: 20px;">
+                Real-World Applications of Reinforcement Learning
+            </div>
+            
+            <div class="rl-examples">
+                <div class="example-card">
+                    <div class="example-icon">🎮</div>
+                    <div class="example-title">Game Playing</div>
+                    <div class="example-desc">AlphaGo, Chess, Atari games</div>
+                </div>
+                
+                <div class="example-card">
+                    <div class="example-icon">🤖</div>
+                    <div class="example-title">Robotics</div>
+                    <div class="example-desc">Robot control and navigation</div>
+                </div>
+                
+                <div class="example-card">
+                    <div class="example-icon">🚗</div>
+                    <div class="example-title">Autonomous Driving</div>
+                    <div class="example-desc">Decision making in traffic</div>
+                </div>
+                
+                <div class="example-card">
+                    <div class="example-icon">💰</div>
+                    <div class="example-title">Trading</div>
+                    <div class="example-desc">Portfolio optimization</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week10_Slide200.html" class="nav-btn">← Previous</a>
+        <a href="Week11_Slide202.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 20; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 20 + 's';
+                element.style.animationDuration = (Math.random() * 15 + 20) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive component items with modal
+        document.querySelectorAll('.component-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const title = this.querySelector('.component-title').textContent;
+                
+                const details = {
+                    '🤖 Agent': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>The Decision Maker</strong>
+                            </div>
+                            <p>The agent is the learner and decision maker in RL. It observes the environment, selects actions, and learns from the consequences.</p>
+                            
+                            <div class="modal-code">
+class Agent:
+    def __init__(self):
+        self.policy = initialize_policy()
+        self.value_function = initialize_values()
+    
+    def select_action(self, state):
+        return self.policy(state)
+    
+    def update(self, state, action, reward, next_state):
+        # Learn from experience
+        self.value_function.update(state, reward)
+                            </div>
+                            
+                            <p><strong>Key Characteristics:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>• Observes states from the environment</li>
+                                <li>• Selects actions based on policy</li>
+                                <li>• Learns from rewards and penalties</li>
+                                <li>• Improves behavior over time</li>
+                            </ul>
+                            
+                            <p><strong>Examples:</strong> Game AI, Robot controller, Trading algorithm, Recommendation system</p>
+                        `
+                    },
+                    '🌍 Environment': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>The World the Agent Interacts With</strong>
+                            </div>
+                            <p>The environment encompasses everything outside the agent. It receives actions from the agent and returns observations and rewards.</p>
+                            
+                            <div class="modal-code">
+class Environment:
+    def __init__(self):
+        self.state = self.reset()
+    
+    def step(self, action):
+        # Execute action
+        next_state = self.transition(self.state, action)
+        reward = self.reward_function(self.state, action, next_state)
+        done = self.is_terminal(next_state)
+        
+        self.state = next_state
+        return next_state, reward, done
+                            </div>
+                            
+                            <p><strong>Environment Types:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>• <strong>Deterministic vs Stochastic:</strong> Fixed vs random outcomes</li>
+                                <li>• <strong>Fully vs Partially Observable:</strong> Complete vs limited information</li>
+                                <li>• <strong>Discrete vs Continuous:</strong> Finite vs infinite states/actions</li>
+                                <li>• <strong>Episodic vs Continuing:</strong> Fixed vs ongoing tasks</li>
+                            </ul>
+                            
+                            <p><strong>Examples:</strong> Chess board, Stock market, Robotic workspace, Video game world</p>
+                        `
+                    },
+                    '🎯 State': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>The Current Situation</strong>
+                            </div>
+                            <p>A state represents the current configuration of the environment that the agent observes. It contains all relevant information needed for decision making.</p>
+                            
+                            <div class="modal-formula">
+                                s ∈ S (state space)
+                            </div>
+                            
+                            <div class="modal-code">
+# Chess state example
+state = {
+    'board': [[piece_positions]],
+    'turn': 'white',
+    'castling_rights': {...},
+    'en_passant': None,
+    'move_count': 15
+}
+
+# Robot state example
+state = {
+    'position': [x, y, z],
+    'velocity': [vx, vy, vz],
+    'sensor_readings': [...],
+    'battery_level': 0.85
+}
+                            </div>
+                            
+                            <p><strong>State Representation:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>• <strong>Tabular:</strong> Discrete, enumerable states</li>
+                                <li>• <strong>Feature Vector:</strong> Continuous values</li>
+                                <li>• <strong>Image:</strong> Pixel arrays (e.g., Atari games)</li>
+                                <li>• <strong>Graph:</strong> Structured relationships</li>
+                            </ul>
+                            
+                            <p><strong>Markov Property:</strong> The future depends only on the current state, not the history.</p>
+                        `
+                    },
+                    '⚡ Action': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Decisions the Agent Can Make</strong>
+                            </div>
+                            <p>Actions are the choices available to the agent at each state. The action space defines all possible actions.</p>
+                            
+                            <div class="modal-formula">
+                                a ∈ A (action space)
+                            </div>
+                            
+                            <div class="modal-code">
+# Discrete action space (e.g., game)
+actions = ['up', 'down', 'left', 'right', 'jump']
+
+# Continuous action space (e.g., robot)
+action = {
+    'steering_angle': 0.15,  # radians
+    'acceleration': 2.5       # m/s²
+}
+
+# Multi-dimensional actions
+action = np.array([0.3, -0.2, 0.8])  # 3D control
+                            </div>
+                            
+                            <p><strong>Action Selection Strategies:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>• <strong>Greedy:</strong> Always choose best known action</li>
+                                <li>• <strong>ε-greedy:</strong> Explore with probability ε</li>
+                                <li>• <strong>Softmax:</strong> Probabilistic based on values</li>
+                                <li>• <strong>UCB:</strong> Upper Confidence Bound</li>
+                            </ul>
+                            
+                            <p><strong>Examples:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>• Chess: Move piece from A to B</li>
+                                <li>• Trading: Buy, sell, or hold</li>
+                                <li>• Robot: Set motor torques</li>
+                            </ul>
+                        `
+                    },
+                    '🏆 Reward': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Feedback Signal from the Environment</strong>
+                            </div>
+                            <p>Rewards are scalar feedback signals that indicate how good or bad an action was. The goal is to maximize cumulative reward.</p>
+                            
+                            <div class="modal-formula">
+                                R(s, a, s') → ℝ
+                            </div>
+                            
+                            <div class="modal-code">
+def reward_function(state, action, next_state):
+    # Game example
+    if next_state.is_goal():
+        return +100  # Reached goal
+    elif next_state.is_trap():
+        return -100  # Fell into trap
+    else:
+        return -1    # Step cost
+    
+    # Trading example
+    profit = portfolio_value(next_state) - portfolio_value(state)
+    risk_penalty = -0.1 * calculate_volatility(action)
+    return profit + risk_penalty
+                            </div>
+                            
+                            <p><strong>Reward Design Principles:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>• <strong>Sparse vs Dense:</strong> Occasional vs frequent feedback</li>
+                                <li>• <strong>Delayed Rewards:</strong> Long-term consequences</li>
+                                <li>• <strong>Reward Shaping:</strong> Guide learning with intermediate rewards</li>
+                                <li>• <strong>Discount Factor (γ):</strong> Value future rewards less</li>
+                            </ul>
+                            
+                            <div class="modal-formula">
+                                Return = R₀ + γR₁ + γ²R₂ + ... = Σ γᵗRₜ
+                            </div>
+                            
+                            <p><strong>Common Pitfalls:</strong> Reward hacking, sparse rewards making learning difficult, conflicting objectives</p>
+                        `
+                    }
+                };
+                
+                const info = details[title];
+                if (info) {
+                    modal.show(title, info.content);
+                }
+            });
+        });
+
+        // Interactive example cards with modal
+        document.querySelectorAll('.example-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('.example-title').textContent;
+                
+                const exampleDetails = {
+                    'Game Playing': {
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>RL in Game Playing</h4>
+                            </div>
+                            
+                            <p><strong>Why Games are Perfect for RL:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>• Clear rules and objectives</li>
+                                <li>• Well-defined state and action spaces</li>
+                                <li>• Easy to simulate millions of games</li>
+                                <li>• Immediate and delayed rewards</li>
+                            </ul>
+                            
+                            <div class="modal-code">
+# AlphaGo/AlphaZero approach
+1. Self-play: Agent plays against itself
+2. Monte Carlo Tree Search for exploration
+3. Deep neural networks for evaluation
+4. Policy network: P(action|state)
+5. Value network: V(state)
+
+Results:
+- AlphaGo: Defeated world champion Lee Sedol
+- AlphaZero: Mastered Chess, Go, Shogi
+- OpenAI Five: Dota 2 at professional level
+                            </div>
+                            
+                            <p><strong>Atari Games (DQN):</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>• Input: Raw pixels (84×84×4 frames)</li>
+                                <li>• Output: Game actions (up, down, fire, etc.)</li>
+                                <li>• Reward: Game score</li>
+                                <li>• Achievement: Superhuman performance in 57 games</li>
+                            </ul>
+                            
+                            <p><strong>Key Techniques:</strong> Deep Q-Networks, Policy Gradients, Monte Carlo Tree Search, Self-play</p>
+                        `
+                    },
+                    'Robotics': {
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>RL in Robotics</h4>
+                            </div>
+                            
+                            <p><strong>Challenges in Robotic RL:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>• High-dimensional continuous control</li>
+                                <li>• Safety constraints (can't damage robot)</li>
+                                <li>• Sample efficiency (real-world interaction is expensive)</li>
+                                <li>• Sim-to-real transfer gap</li>
+                            </ul>
+                            
+                            <div class="modal-code">
+# Robot Manipulation Task
+state = {
+    'joint_positions': [θ₁, θ₂, ..., θₙ],
+    'joint_velocities': [ω₁, ω₂, ..., ωₙ],
+    'end_effector_pose': [x, y, z, roll, pitch, yaw],
+    'object_position': [x_obj, y_obj, z_obj],
+    'force_torque_sensor': [fx, fy, fz, τx, τy, τz]
+}
+
+action = {
+    'joint_torques': [τ₁, τ₂, ..., τₙ]
+}
+
+reward = -distance_to_target - 0.01 * energy_used
+                            </div>
+                            
+                            <p><strong>Applications:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>• <strong>Manipulation:</strong> Grasping, assembly, tool use</li>
+                                <li>• <strong>Locomotion:</strong> Walking, running, jumping</li>
+                                <li>• <strong>Navigation:</strong> Path planning, obstacle avoidance</li>
+                                <li>• <strong>Human-Robot Interaction:</strong> Collaborative tasks</li>
+                            </ul>
+                            
+                            <p><strong>Success Stories:</strong> Boston Dynamics parkour, Dexterous hand manipulation, Warehouse automation</p>
+                        `
+                    },
+                    'Autonomous Driving': {
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>RL in Autonomous Vehicles</h4>
+                            </div>
+                            
+                            <p><strong>Decision Making Challenges:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>• Complex multi-agent environment</li>
+                                <li>• Safety-critical decisions</li>
+                                <li>• Uncertain human behavior</li>
+                                <li>• Real-time constraints</li>
+                            </ul>
+                            
+                            <div class="modal-code">
+# Autonomous Driving State
+state = {
+    'ego_vehicle': {
+        'position': [x, y],
+        'velocity': [vx, vy],
+        'heading': θ
+    },
+    'other_vehicles': [...],
+    'traffic_lights': [...],
+    'lane_info': {...},
+    'weather': 'rainy',
+    'road_conditions': 'wet'
+}
+
+# High-level actions
+actions = ['maintain_lane', 'change_left', 'change_right', 
+           'accelerate', 'brake', 'emergency_stop']
+
+# Reward function
+reward = (
+    + progress_toward_destination
+    - collision_penalty * 1000
+    - hard_braking_penalty
+    - unsafe_distance_penalty
+    + smooth_driving_bonus
+)
+                            </div>
+                            
+                            <p><strong>RL Applications:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>• <strong>Lane changing:</strong> Optimal merge decisions</li>
+                                <li>• <strong>Intersection navigation:</strong> Right-of-way decisions</li>
+                                <li>• <strong>Speed control:</strong> Adaptive cruise control</li>
+                                <li>• <strong>Parking:</strong> Parallel and perpendicular parking</li>
+                            </ul>
+                            
+                            <p><strong>Training Approach:</strong> Simulation (CARLA, SUMO) → Closed track → Public roads with safety driver</p>
+                        `
+                    },
+                    'Trading': {
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>RL in Financial Trading</h4>
+                            </div>
+                            
+                            <p><strong>Portfolio Management with RL:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>• Dynamic asset allocation</li>
+                                <li>• Risk-adjusted returns</li>
+                                <li>• Transaction cost optimization</li>
+                                <li>• Market regime adaptation</li>
+                            </ul>
+                            
+                            <div class="modal-code">
+# Trading Environment
+state = {
+    'prices': price_history[-lookback:],
+    'volumes': volume_history[-lookback:],
+    'technical_indicators': {
+        'RSI': 65.2,
+        'MACD': 0.15,
+        'moving_averages': [MA_20, MA_50, MA_200]
+    },
+    'portfolio': {
+        'cash': 10000,
+        'holdings': {'AAPL': 10, 'GOOGL': 5}
+    },
+    'market_sentiment': 0.7
+}
+
+# Actions (portfolio weights)
+action = {
+    'AAPL': 0.3,  # 30% in Apple
+    'GOOGL': 0.2, # 20% in Google
+    'CASH': 0.5   # 50% cash
+}
+
+# Sharpe Ratio as reward
+returns = portfolio_return(action)
+risk = portfolio_volatility(action)
+reward = (returns - risk_free_rate) / risk
+                            </div>
+                            
+                            <p><strong>Strategies Learned:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>• Mean reversion trading</li>
+                                <li>• Momentum strategies</li>
+                                <li>• Pairs trading</li>
+                                <li>• Market making</li>
+                            </ul>
+                            
+                            <p><strong>Challenges:</strong> Non-stationary markets, Overfitting to historical data, Black swan events, Regulatory constraints</p>
+                        `
+                    }
+                };
+                
+                const details = exampleDetails[title];
+                if (details) {
+                    modal.show(`RL Application: ${title}`, details.content);
+                }
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week11_Slide202.html';
+            } else if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week10_Slide200.html';
+            }
+        });
+    </script>
+</body>
+</html>

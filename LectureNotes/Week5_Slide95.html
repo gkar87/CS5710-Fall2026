@@ -1,0 +1,1629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Hyperparameter Optimization</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .overview-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .challenges-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .overview-description {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .challenge-list {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .challenge-item {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #ef4444;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .challenge-item:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 30px rgba(239, 68, 68, 0.2);
+        }
+
+        .challenge-title {
+            font-size: 1.2em;
+            color: #dc2626;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .challenge-desc {
+            color: #475569;
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+
+        .methods-comparison {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .comparison-title {
+            font-size: 2em;
+            color: #0d9488;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .methods-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .method-card {
+            background: linear-gradient(135deg, #1e293b, #334155);
+            color: white;
+            border-radius: 15px;
+            padding: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .method-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(13, 148, 136, 0.3);
+        }
+
+        .method-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(13, 148, 136, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .method-card:hover::before {
+            left: 100%;
+        }
+
+        .method-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .method-name {
+            font-size: 1.4em;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #5eead4;
+        }
+
+        .method-description {
+            font-size: 0.95em;
+            line-height: 1.5;
+            opacity: 0.9;
+            margin-bottom: 15px;
+        }
+
+        .method-pros {
+            font-size: 0.85em;
+            color: #86efac;
+            margin-bottom: 10px;
+        }
+
+        .method-cons {
+            font-size: 0.85em;
+            color: #fca5a5;
+        }
+
+        .optimization-process {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.9s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            margin-top: 30px;
+        }
+
+        .process-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+
+        .process-flow {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .process-step {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            min-width: 150px;
+            flex: 1;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .process-step:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .step-number {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+
+        .step-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .step-description {
+            font-size: 0.85em;
+            opacity: 0.9;
+        }
+
+        .arrow {
+            font-size: 1.5em;
+            color: #0d9488;
+            align-self: center;
+        }
+
+        .best-practices {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 1.2s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            margin-top: 30px;
+        }
+
+        .practices-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .practice-card {
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .practice-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .practice-title {
+            font-size: 1.3em;
+            color: #0d9488;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .practice-desc {
+            color: #475569;
+            line-height: 1.6;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .methods-grid { grid-template-columns: 1fr; }
+            .practices-grid { grid-template-columns: 1fr; }
+            .process-flow { flex-direction: column; }
+            .arrow { transform: rotate(90deg); }
+            .slide-title { font-size: 2.5em; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 5</div>
+    <div class="slide-number">Slide 95 of 100</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">🎯 Hyperparameter Optimization</h1>
+        
+        <div class="content-layout">
+            <div class="overview-section">
+                <h2 class="section-title">The Challenge</h2>
+                
+                <div class="overview-description">
+                    <strong>Hyperparameter tuning</strong> is often the difference between a mediocre model and a championship-winning ensemble. Finding optimal settings is crucial for performance.
+                </div>
+                
+                <div style="font-size: 1.1em; line-height: 1.7; color: #1e293b;">
+                    <strong>🎯 Goal:</strong><br>
+                    Find hyperparameter combinations that maximize model performance on unseen data.
+                    <br><br>
+                    <strong>📈 Impact:</strong><br>
+                    Good tuning can improve accuracy by 5-15% or more.
+                    <br><br>
+                    <strong>⚠️ Reality:</strong><br>
+                    Manual tuning doesn't scale - we need systematic approaches!
+                </div>
+            </div>
+
+            <div class="challenges-section">
+                <h2 class="section-title">Key Challenges</h2>
+                
+                <div class="challenge-list">
+                    <div class="challenge-item" data-challenge="curse">
+                        <div class="challenge-title">📊 Curse of Dimensionality</div>
+                        <div class="challenge-desc">Exponential growth in search space with parameters</div>
+                    </div>
+                    
+                    <div class="challenge-item" data-challenge="expensive">
+                        <div class="challenge-title">💰 Expensive Evaluations</div>
+                        <div class="challenge-desc">Each hyperparameter combination requires full model training</div>
+                    </div>
+                    
+                    <div class="challenge-item" data-challenge="interactions">
+                        <div class="challenge-title">🔗 Parameter Interactions</div>
+                        <div class="challenge-desc">Hyperparameters often interact in complex, non-linear ways</div>
+                    </div>
+                    
+                    <div class="challenge-item" data-challenge="overfitting">
+                        <div class="challenge-title">🎯 Validation Overfitting</div>
+                        <div class="challenge-desc">Risk of overfitting to validation set during optimization</div>
+                    </div>
+                    
+                    <div class="challenge-item" data-challenge="noisy">
+                        <div class="challenge-title">📈 Noisy Objective</div>
+                        <div class="challenge-desc">Performance metrics can be noisy and non-convex</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="methods-comparison">
+            <h2 class="comparison-title">⚔️ Optimization Methods Comparison</h2>
+            <p style="text-align: center; color: #475569; margin-bottom: 20px;">
+                Click each method to explore detailed strategies and implementations
+            </p>
+            
+            <div class="methods-grid">
+                <div class="method-card" data-method="manual">
+                    <span class="method-icon">🔧</span>
+                    <div class="method-name">Manual Tuning</div>
+                    <div class="method-description">Human expertise and intuition-based parameter selection</div>
+                    <div class="method-pros">✅ Incorporates domain knowledge</div>
+                    <div class="method-cons">❌ Time-consuming, doesn't scale</div>
+                </div>
+                
+                <div class="method-card" data-method="grid">
+                    <span class="method-icon">🎯</span>
+                    <div class="method-name">Grid Search</div>
+                    <div class="method-description">Exhaustive search over predefined parameter grid</div>
+                    <div class="method-pros">✅ Comprehensive, reproducible</div>
+                    <div class="method-cons">❌ Exponentially expensive</div>
+                </div>
+                
+                <div class="method-card" data-method="random">
+                    <span class="method-icon">🎲</span>
+                    <div class="method-name">Random Search</div>
+                    <div class="method-description">Random sampling from parameter distributions</div>
+                    <div class="method-pros">✅ Better than grid for high dimensions</div>
+                    <div class="method-cons">❌ No learning from previous trials</div>
+                </div>
+                
+                <div class="method-card" data-method="bayesian">
+                    <span class="method-icon">🧠</span>
+                    <div class="method-name">Bayesian Optimization</div>
+                    <div class="method-description">Smart search using probabilistic models</div>
+                    <div class="method-pros">✅ Sample efficient, learns patterns</div>
+                    <div class="method-cons">❌ Complex setup, slower iterations</div>
+                </div>
+                
+                <div class="method-card" data-method="evolutionary">
+                    <span class="method-icon">🧬</span>
+                    <div class="method-name">Evolutionary Methods</div>
+                    <div class="method-description">Genetic algorithms and population-based search</div>
+                    <div class="method-pros">✅ Global optimization, parallel</div>
+                    <div class="method-cons">❌ Many hyperparameters of its own</div>
+                </div>
+                
+                <div class="method-card" data-method="gradient">
+                    <span class="method-icon">📈</span>
+                    <div class="method-name">Gradient-Based</div>
+                    <div class="method-description">Differentiable optimization when possible</div>
+                    <div class="method-pros">✅ Fast convergence if applicable</div>
+                    <div class="method-cons">❌ Limited to differentiable parameters</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="optimization-process">
+            <h2 class="process-title">🔄 Optimization Process</h2>
+            
+            <div class="process-flow">
+                <div class="process-step" data-step="define">
+                    <div class="step-number">Step 1</div>
+                    <div class="step-title">Define Search Space</div>
+                    <div class="step-description">Identify parameters and ranges</div>
+                </div>
+                
+                <div class="arrow">→</div>
+                
+                <div class="process-step" data-step="choose">
+                    <div class="step-number">Step 2</div>
+                    <div class="step-title">Choose Method</div>
+                    <div class="step-description">Select optimization strategy</div>
+                </div>
+                
+                <div class="arrow">→</div>
+                
+                <div class="process-step" data-step="validate">
+                    <div class="step-number">Step 3</div>
+                    <div class="step-title">Setup Validation</div>
+                    <div class="step-description">Configure cross-validation</div>
+                </div>
+                
+                <div class="arrow">→</div>
+                
+                <div class="process-step" data-step="optimize">
+                    <div class="step-number">Step 4</div>
+                    <div class="step-title">Run Optimization</div>
+                    <div class="step-description">Execute parameter search</div>
+                </div>
+                
+                <div class="arrow">→</div>
+                
+                <div class="process-step" data-step="evaluate">
+                    <div class="step-number">Step 5</div>
+                    <div class="step-title">Final Evaluation</div>
+                    <div class="step-description">Test on holdout set</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="best-practices">
+            <h2 class="section-title">💡 Best Practices & Tips</h2>
+            
+            <div class="practices-grid">
+                <div class="practice-card" data-practice="early">
+                    <div class="practice-title">⚡ Early Stopping</div>
+                    <div class="practice-desc">Use early stopping during hyperparameter search to save computation time</div>
+                </div>
+                
+                <div class="practice-card" data-practice="coarse">
+                    <div class="practice-title">🎯 Coarse-to-Fine</div>
+                    <div class="practice-desc">Start with wide ranges, then zoom in on promising regions</div>
+                </div>
+                
+                <div class="practice-card" data-practice="parallel">
+                    <div class="practice-title">⚡ Parallelization</div>
+                    <div class="practice-desc">Run multiple hyperparameter evaluations in parallel to speed up search</div>
+                </div>
+                
+                <div class="practice-card" data-practice="budget">
+                    <div class="practice-title">💰 Resource Budgeting</div>
+                    <div class="practice-desc">Set time/compute budgets and allocate resources efficiently</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week5_Slide94.html" class="nav-btn">← Previous</a>
+        <a href="Week5_Slide96.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Challenge details
+        const challengeDetails = {
+            'curse': {
+                title: 'Curse of Dimensionality',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>The Problem:</strong> Search space grows exponentially with parameters
+                    </div>
+                    <p><strong>Example:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>5 parameters, 10 values each = 100,000 combinations</li>
+                        <li>10 parameters, 10 values each = 10 billion combinations!</li>
+                        <li>Grid search becomes intractable very quickly</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# XGBoost hyperparameters (simplified)
+params = {
+    'n_estimators': [100, 300, 500, 1000],      # 4 values
+    'max_depth': [3, 5, 7, 10],                # 4 values  
+    'learning_rate': [0.01, 0.1, 0.2, 0.3],   # 4 values
+    'subsample': [0.8, 0.9, 1.0],             # 3 values
+    'colsample_bytree': [0.8, 0.9, 1.0]       # 3 values
+}
+# Total combinations: 4 × 4 × 4 × 3 × 3 = 576 combinations
+                    </div>
+                    
+                    <p><strong>Solutions:</strong> Use smarter search strategies like Random Search or Bayesian Optimization that don't require exhaustive evaluation.</p>
+                `
+            },
+            'expensive': {
+                title: 'Expensive Evaluations',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Time is Money:</strong> Each evaluation requires full model training
+                    </div>
+                    <p><strong>Cost Factors:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>Dataset size: More data = longer training</li>
+                        <li>Model complexity: Deep networks, ensemble methods</li>
+                        <li>Cross-validation: 5-fold CV = 5× training time</li>
+                        <li>Multiple trials: Need statistical significance</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Typical cost calculation
+dataset_size = 1_000_000  # samples
+cv_folds = 5
+hyperparameter_trials = 100
+training_time_per_fold = 10  # minutes
+
+total_time = (training_time_per_fold * cv_folds * hyperparameter_trials) / 60
+print(f"Total optimization time: {total_time} hours")
+# Output: Total optimization time: 83.3 hours!
+                    </div>
+                    
+                    <p><strong>Mitigation Strategies:</strong> Early stopping, smaller validation sets for initial screening, progressive resource allocation.</p>
+                `
+            },
+            'interactions': {
+                title: 'Parameter Interactions',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Complex Dependencies:</strong> Parameters don't work in isolation
+                    </div>
+                    <p><strong>Examples of Interactions:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Learning Rate × Epochs:</strong> Low LR needs more epochs</li>
+                        <li><strong>Regularization × Model Capacity:</strong> Complex models need more regularization</li>
+                        <li><strong>Batch Size × Learning Rate:</strong> Large batches may need higher LR</li>
+                    </ul>
+                    
+                    <p><strong>Why Grid Search Fails:</strong> It assumes parameters are independent, missing optimal combinations that lie "between" grid points.</p>
+                    
+                    <p><strong>Better Approaches:</strong> Bayesian optimization and evolutionary methods can model these interactions and find better combinations.</p>
+                `
+            },
+            'overfitting': {
+                title: 'Validation Overfitting',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Hidden Danger:</strong> Overfitting to the validation set during search
+                    </div>
+                    <p><strong>How It Happens:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>Try many hyperparameter combinations</li>
+                        <li>Select best performer on validation set</li>
+                        <li>Validation performance becomes overly optimistic</li>
+                        <li>Test performance is disappointing</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Nested cross-validation to prevent overfitting
+from sklearn.model_selection import cross_val_score, GridSearchCV
+
+# Outer loop for unbiased evaluation
+outer_cv = KFold(n_splits=5, shuffle=True, random_state=42)
+inner_cv = KFold(n_splits=3, shuffle=True, random_state=42)
+
+nested_scores = []
+for train_idx, test_idx in outer_cv.split(X):
+    X_train, X_test = X[train_idx], X[test_idx]
+    y_train, y_test = y[train_idx], y[test_idx]
+    
+    # Inner loop for hyperparameter optimization
+    grid_search = GridSearchCV(model, param_grid, cv=inner_cv)
+    grid_search.fit(X_train, y_train)
+    
+    # Evaluate on outer test set
+    score = grid_search.score(X_test, y_test)
+    nested_scores.append(score)
+
+print(f"Unbiased performance: {np.mean(nested_scores):.3f}")
+                    </div>
+                    
+                    <p><strong>Solution:</strong> Use nested cross-validation or hold out a separate test set that's never used during optimization.</p>
+                `
+            },
+            'noisy': {
+                title: 'Noisy Objective Functions',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Uncertainty:</strong> Performance metrics have inherent noise
+                    </div>
+                    <p><strong>Sources of Noise:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>Random data splits in cross-validation</li>
+                        <li>Stochastic training algorithms (SGD, dropout)</li>
+                        <li>Random weight initialization</li>
+                        <li>Small validation sets</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Measuring noise in hyperparameter evaluation
+scores = []
+for seed in range(10):
+    # Same hyperparameters, different random seed
+    model = XGBClassifier(n_estimators=100, random_state=seed)
+    score = cross_val_score(model, X, y, cv=5).mean()
+    scores.append(score)
+
+print(f"Mean: {np.mean(scores):.3f}")
+print(f"Std:  {np.std(scores):.3f}")
+# Output might be:
+# Mean: 0.847
+# Std:  0.012  # Significant noise!
+                    </div>
+                    
+                    <p><strong>Handling Noise:</strong> Multiple runs with different seeds, statistical significance testing, robust optimization methods.</p>
+                `
+            }
+        };
+
+        // Method details
+        const methodDetails = {
+            'manual': {
+                title: 'Manual Hyperparameter Tuning',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Human-in-the-Loop:</strong> Leverage domain expertise and intuition
+                    </div>
+                    <p><strong>When to Use:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>Small parameter spaces</li>
+                        <li>When you have strong domain knowledge</li>
+                        <li>For initial exploration and understanding</li>
+                        <li>When compute resources are very limited</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Manual tuning strategy
+def manual_tune_xgboost(X, y):
+    # Start with reasonable defaults
+    base_params = {
+        'objective': 'binary:logistic',
+        'eval_metric': 'auc',
+        'random_state': 42
+    }
+    
+    # Step 1: Tune number of estimators
+    for n_est in [100, 300, 500, 1000]:
+        model = XGBClassifier(n_estimators=n_est, **base_params)
+        score = cross_val_score(model, X, y, cv=5).mean()
+        print(f"n_estimators={n_est}: {score:.3f}")
+    
+    # Step 2: Tune max_depth (based on best n_estimators)
+    # Step 3: Tune learning_rate
+    # etc...
+                    </div>
+                    
+                    <p><strong>Advantages:</strong> Incorporates human insight, interpretable process, good for learning.</p>
+                    <p><strong>Disadvantages:</strong> Time-consuming, doesn't scale, may miss optimal combinations.</p>
+                `
+            },
+            'grid': {
+                title: 'Grid Search',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Systematic Exploration:</strong> Try every combination in the grid
+                    </div>
+                    <p><strong>How It Works:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>Define discrete values for each parameter</li>
+                        <li>Try every possible combination</li>
+                        <li>Select combination with best performance</li>
+                        <li>Guaranteed to find best combination in grid</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+from sklearn.model_selection import GridSearchCV
+
+# Define parameter grid
+param_grid = {
+    'n_estimators': [100, 300, 500],
+    'max_depth': [3, 5, 7],
+    'learning_rate': [0.01, 0.1, 0.2],
+    'subsample': [0.8, 1.0]
+}
+
+# Setup grid search
+grid_search = GridSearchCV(
+    XGBClassifier(random_state=42),
+    param_grid,
+    cv=5,
+    scoring='roc_auc',
+    n_jobs=-1,  # Use all CPU cores
+    verbose=1
+)
+
+# Run search
+grid_search.fit(X_train, y_train)
+
+print("Best parameters:", grid_search.best_params_)
+print("Best score:", grid_search.best_score_)
+                    </div>
+                    
+                    <p><strong>When to Use:</strong> Small parameter spaces, when you need the absolute best in your grid, for baseline comparisons.</p>
+                    <p><strong>Limitations:</strong> Exponentially expensive, assumes good parameter ranges, may miss optimal values between grid points.</p>
+                `
+            },
+            'random': {
+                title: 'Random Search',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Surprisingly Effective:</strong> Random sampling often outperforms grid search
+                    </div>
+                    <p><strong>Key Insight:</strong> In high dimensions, most parameters don't matter much. Random search explores more promising dimensions.</p>
+                    
+                    <div class="modal-code">
+from sklearn.model_selection import RandomizedSearchCV
+from scipy.stats import uniform, randint
+
+# Define parameter distributions
+param_distributions = {
+    'n_estimators': randint(100, 1000),
+    'max_depth': randint(3, 10),
+    'learning_rate': uniform(0.01, 0.3),
+    'subsample': uniform(0.6, 0.4),  # 0.6 to 1.0
+    'colsample_bytree': uniform(0.6, 0.4)
+}
+
+# Setup random search
+random_search = RandomizedSearchCV(
+    XGBClassifier(random_state=42),
+    param_distributions,
+    n_iter=100,  # Number of parameter settings sampled
+    cv=5,
+    scoring='roc_auc',
+    n_jobs=-1,
+    random_state=42
+)
+
+random_search.fit(X_train, y_train)
+                    </div>
+                    
+                    <p><strong>Advantages:</strong> Scales to high dimensions, can find values between grid points, easy parallelization.</p>
+                    <p><strong>When to Use:</strong> High-dimensional spaces, limited compute budget, as a baseline before more sophisticated methods.</p>
+                `
+            },
+            'bayesian': {
+                title: 'Bayesian Optimization',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Smart Search:</strong> Use previous results to guide future evaluations
+                    </div>
+                    <p><strong>Core Idea:</strong> Build a probabilistic model of the objective function and use it to make intelligent decisions about where to search next.</p>
+                    
+                    <div class="modal-code">
+from skopt import BayesSearchCV
+from skopt.space import Real, Integer
+
+# Define search space with distributions
+search_spaces = {
+    'n_estimators': Integer(100, 1000),
+    'max_depth': Integer(3, 10),
+    'learning_rate': Real(0.01, 0.3, prior='log-uniform'),
+    'subsample': Real(0.6, 1.0),
+    'colsample_bytree': Real(0.6, 1.0)
+}
+
+# Setup Bayesian search
+bayes_search = BayesSearchCV(
+    XGBClassifier(random_state=42),
+    search_spaces,
+    n_iter=50,  # Usually much fewer iterations needed
+    cv=5,
+    scoring='roc_auc',
+    n_jobs=1,  # Sequential for learning
+    random_state=42
+)
+
+bayes_search.fit(X_train, y_train)
+                    </div>
+                    
+                    <p><strong>Advantages:</strong> Sample efficient, handles noise well, can model parameter interactions.</p>
+                    <p><strong>Best For:</strong> Expensive evaluations, continuous parameters, when you want the best performance with limited budget.</p>
+                `
+            },
+            'evolutionary': {
+                title: 'Evolutionary Optimization',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Nature-Inspired:</strong> Evolve populations of parameter settings
+                    </div>
+                    <p><strong>Process:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>Initialize population of parameter settings</li>
+                        <li>Evaluate fitness (model performance)</li>
+                        <li>Select best individuals for reproduction</li>
+                        <li>Create offspring with mutations and crossover</li>
+                        <li>Repeat until convergence</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+from evolutionary_search import EvolutionaryAlgorithmSearchCV
+
+# Parameter ranges for evolution
+param_grid = {
+    'n_estimators': range(100, 1000),
+    'max_depth': range(3, 10),
+    'learning_rate': np.linspace(0.01, 0.3, 30),
+    'subsample': np.linspace(0.6, 1.0, 20)
+}
+
+# Setup evolutionary search
+evo_search = EvolutionaryAlgorithmSearchCV(
+    XGBClassifier(random_state=42),
+    params=param_grid,
+    scoring="roc_auc",
+    cv=5,
+    verbose=1,
+    population_size=50,
+    gene_mutation_prob=0.10,
+    tournament_size=3,
+    generations_number=20
+)
+
+evo_search.fit(X_train, y_train)
+                    </div>
+                    
+                    <p><strong>Advantages:</strong> Global optimization, naturally parallel, can escape local optima.</p>
+                    <p><strong>Challenges:</strong> Many hyperparameters to tune, can be slow to converge, requires careful setup.</p>
+                `
+            },
+            'gradient': {
+                title: 'Gradient-Based Optimization',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>When Possible:</strong> Use gradients for fast, precise optimization
+                    </div>
+                    <p><strong>Applications:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>Neural network learning rates and regularization</li>
+                        <li>Differentiable NAS (Neural Architecture Search)</li>
+                        <li>Continuous hyperparameters in differentiable models</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+import torch
+import torch.optim as optim
+
+# Example: Optimizing regularization strength
+class HyperNet(torch.nn.Module):
+    def __init__(self, base_model):
+        super().__init__()
+        self.base_model = base_model
+        # Learnable hyperparameter
+        self.log_weight_decay = torch.nn.Parameter(torch.tensor(-3.0))
+    
+    def forward(self, x):
+        # Apply regularization with learnable strength
+        weight_decay = torch.exp(self.log_weight_decay)
+        # ... model forward pass with regularization
+        return output
+
+# Optimize both model weights and hyperparameters
+hypernet = HyperNet(model)
+optimizer = optim.Adam(hypernet.parameters(), lr=0.01)
+
+# Training loop optimizes both model and hyperparameters
+for epoch in range(num_epochs):
+    # ... training code
+    loss.backward()
+    optimizer.step()
+                    </div>
+                    
+                    <p><strong>Advantages:</strong> Very fast convergence, precise optimization, can be integrated into training.</p>
+                    <p><strong>Limitations:</strong> Only works for differentiable hyperparameters, requires careful implementation.</p>
+                `
+            }
+        };
+
+        // Process step details
+        const processDetails = {
+            'define': {
+                title: 'Defining the Search Space',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Foundation:</strong> Good search space definition is crucial for success
+                    </div>
+                    <p><strong>Key Considerations:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Parameter Importance:</strong> Focus on parameters with highest impact</li>
+                        <li><strong>Reasonable Ranges:</strong> Use domain knowledge to set bounds</li>
+                        <li><strong>Scale Considerations:</strong> Use log scale for parameters spanning orders of magnitude</li>
+                        <li><strong>Dependencies:</strong> Consider conditional parameters</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Example: Well-designed search space for XGBoost
+search_space = {
+    # Most important parameters first
+    'n_estimators': Integer(50, 1000),
+    'max_depth': Integer(3, 12),
+    
+    # Use log scale for learning rate
+    'learning_rate': Real(1e-3, 1, prior='log-uniform'),
+    
+    # Regularization parameters
+    'reg_alpha': Real(1e-8, 10, prior='log-uniform'),
+    'reg_lambda': Real(1e-8, 10, prior='log-uniform'),
+    
+    # Sampling parameters
+    'subsample': Real(0.5, 1.0),
+    'colsample_bytree': Real(0.5, 1.0)
+}
+                    </div>
+                    
+                    <p><strong>Pro Tips:</strong> Start wide, then narrow based on results. Use parameter importance studies to prioritize.</p>
+                `
+            },
+            'choose': {
+                title: 'Choosing Optimization Method',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Decision Matrix:</strong> Match method to your constraints and requirements
+                    </div>
+                    <p><strong>Decision Factors:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Budget:</strong> How many evaluations can you afford?</li>
+                        <li><strong>Dimensionality:</strong> How many parameters to tune?</li>
+                        <li><strong>Evaluation Cost:</strong> Minutes or hours per evaluation?</li>
+                        <li><strong>Noise Level:</strong> How noisy is your objective?</li>
+                    </ul>
+                    
+                    <p><strong>Quick Guide:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>< 5 parameters, cheap evaluation:</strong> Grid Search</li>
+                        <li><strong>5-10 parameters, moderate cost:</strong> Random Search</li>
+                        <li><strong>> 10 parameters, expensive evaluation:</strong> Bayesian Optimization</li>
+                        <li><strong>Very high dimensions:</strong> Evolutionary or specialized methods</li>
+                    </ul>
+                `
+            },
+            'validate': {
+                title: 'Setting Up Validation',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Critical:</strong> Proper validation prevents overfitting and ensures generalization
+                    </div>
+                    <p><strong>Validation Strategies:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>K-Fold CV:</strong> Standard choice for most problems</li>
+                        <li><strong>Stratified CV:</strong> For imbalanced classification</li>
+                        <li><strong>Time Series CV:</strong> For temporal data</li>
+                        <li><strong>Group CV:</strong> When samples are grouped</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Proper validation setup
+from sklearn.model_selection import StratifiedKFold, TimeSeriesSplit
+
+# For classification with class imbalance
+cv_strategy = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+
+# For time series data
+cv_strategy = TimeSeriesSplit(n_splits=5)
+
+# Always use consistent CV across all methods
+grid_search = GridSearchCV(model, param_grid, cv=cv_strategy, scoring='roc_auc')
+random_search = RandomizedSearchCV(model, param_dist, cv=cv_strategy, scoring='roc_auc')
+bayes_search = BayesSearchCV(model, search_space, cv=cv_strategy, scoring='roc_auc')
+                    </div>
+                    
+                    <p><strong>Important:</strong> Use the same validation strategy across all optimization methods for fair comparison.</p>
+                `
+            },
+            'optimize': {
+                title: 'Running the Optimization',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Execution:</strong> Monitor progress and be prepared to adapt
+                    </div>
+                    <p><strong>Best Practices:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Save Everything:</strong> Log all parameters and results</li>
+                        <li><strong>Monitor Progress:</strong> Track best scores over time</li>
+                        <li><strong>Resource Management:</strong> Use parallel processing wisely</li>
+                        <li><strong>Early Stopping:</strong> Stop unpromising evaluations early</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Comprehensive optimization with logging
+import pandas as pd
+from datetime import datetime
+
+results = []
+
+def log_result(params, score, method, duration):
+    results.append({
+        'timestamp': datetime.now(),
+        'method': method,
+        'params': params,
+        'score': score,
+        'duration': duration
+    })
+
+# Run optimization with logging
+start_time = time.time()
+bayes_search.fit(X_train, y_train)
+duration = time.time() - start_time
+
+log_result(bayes_search.best_params_, 
+          bayes_search.best_score_, 
+          'bayesian', duration)
+
+# Save results for analysis
+results_df = pd.DataFrame(results)
+results_df.to_csv('hyperparameter_optimization_results.csv')
+                    </div>
+                `
+            },
+            'evaluate': {
+                title: 'Final Evaluation',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Truth Test:</strong> Evaluate optimized model on truly unseen data
+                    </div>
+                    <p><strong>Evaluation Protocol:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Hold-out Test Set:</strong> Never used during optimization</li>
+                        <li><strong>Multiple Metrics:</strong> Don't rely on single metric</li>
+                        <li><strong>Statistical Testing:</strong> Assess significance of improvements</li>
+                        <li><strong>Error Analysis:</strong> Understand where model fails</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Comprehensive final evaluation
+from sklearn.metrics import classification_report, roc_auc_score
+
+# Train final model with best parameters
+final_model = XGBClassifier(**bayes_search.best_params_, random_state=42)
+final_model.fit(X_train, y_train)
+
+# Evaluate on test set
+y_pred = final_model.predict(X_test)
+y_pred_proba = final_model.predict_proba(X_test)[:, 1]
+
+# Multiple metrics
+test_auc = roc_auc_score(y_test, y_pred_proba)
+print(f"Test AUC: {test_auc:.3f}")
+print("\nDetailed Results:")
+print(classification_report(y_test, y_pred))
+
+# Compare with baseline
+baseline_score = 0.75  # Your baseline performance
+improvement = test_auc - baseline_score
+print(f"\nImprovement over baseline: {improvement:.3f}")
+                    </div>
+                    
+                    <p><strong>Success Criteria:</strong> Performance should be better than validation performance suggests (no overfitting) and significantly better than baseline.</p>
+                `
+            }
+        };
+
+        // Best practices details
+        const practiceDetails = {
+            'early': {
+                title: 'Early Stopping in Hyperparameter Search',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Save Time:</strong> Stop unpromising evaluations early
+                    </div>
+                    <p><strong>Techniques:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Successive Halving:</strong> Progressively eliminate poor performers</li>
+                        <li><strong>Bandit-based:</strong> Allocate more resources to promising configurations</li>
+                        <li><strong>Learning Curves:</strong> Stop if improvement plateau is reached</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Successive Halving example
+from sklearn.model_selection import HalvingRandomSearchCV
+
+# Start with many configurations, few resources
+halving_search = HalvingRandomSearchCV(
+    XGBClassifier(random_state=42),
+    param_distributions,
+    factor=3,  # Eliminate 2/3 of candidates each round
+    min_resources='exhaust',  # Use minimum resources initially
+    max_resources='auto',     # Scale up to full dataset
+    cv=5,
+    random_state=42
+)
+
+halving_search.fit(X_train, y_train)
+                    </div>
+                    
+                    <p><strong>Benefits:</strong> 2-10x speedup while maintaining similar performance to full search.</p>
+                `
+            },
+            'coarse': {
+                title: 'Coarse-to-Fine Search Strategy',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Smart Exploration:</strong> Start wide, then zoom in on promising regions
+                    </div>
+                    <p><strong>Multi-Stage Process:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Stage 1:</strong> Wide search with coarse grid/random</li>
+                        <li><strong>Stage 2:</strong> Narrow ranges around best performers</li>
+                        <li><strong>Stage 3:</strong> Fine-grained search in optimal region</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Stage 1: Coarse search
+coarse_params = {
+    'n_estimators': [100, 500, 1000],
+    'max_depth': [3, 6, 10],
+    'learning_rate': [0.01, 0.1, 0.3]
+}
+
+coarse_search = GridSearchCV(model, coarse_params, cv=5)
+coarse_search.fit(X_train, y_train)
+
+# Stage 2: Fine-tune around best result
+best_lr = coarse_search.best_params_['learning_rate']
+fine_params = {
+    'n_estimators': [400, 500, 600],
+    'max_depth': [5, 6, 7],
+    'learning_rate': [best_lr*0.8, best_lr, best_lr*1.2]
+}
+
+fine_search = GridSearchCV(model, fine_params, cv=5)
+fine_search.fit(X_train, y_train)
+                    </div>
+                    
+                    <p><strong>Advantage:</strong> Efficient exploration that doesn't miss promising regions while focusing compute on optimization.</p>
+                `
+            },
+            'parallel': {
+                title: 'Parallel Hyperparameter Search',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Speed Up:</strong> Use all available compute resources efficiently
+                    </div>
+                    <p><strong>Parallelization Strategies:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Embarrassingly Parallel:</strong> Independent parameter evaluations</li>
+                        <li><strong>Nested Parallelism:</strong> Parallel CV within parallel parameter search</li>
+                        <li><strong>Distributed:</strong> Scale across multiple machines</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+import joblib
+from joblib import parallel_backend
+
+# Configure parallel execution
+with parallel_backend('threading', n_jobs=8):  # 8 CPU cores
+    # This will run 8 parameter combinations simultaneously
+    grid_search = GridSearchCV(
+        model, param_grid, 
+        cv=5, 
+        n_jobs=8,  # Parallel parameter evaluation
+        verbose=1
+    )
+    grid_search.fit(X_train, y_train)
+
+# For even more parallelism (if you have many cores)
+with parallel_backend('threading', n_jobs=16):
+    # Nested parallelism: 4 param combos × 4 CV folds = 16 jobs
+    grid_search = GridSearchCV(
+        model, param_grid, 
+        cv=KFold(n_splits=5),
+        n_jobs=4,  # 4 parameter combinations in parallel
+        pre_dispatch=16  # Allow 16 simultaneous jobs
+    )
+                    </div>
+                    
+                    <p><strong>Caution:</strong> Balance parallelism with memory usage. Too many parallel jobs can cause memory issues.</p>
+                `
+            },
+            'budget': {
+                title: 'Resource Budget Management',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Optimize the Optimizer:</strong> Get the most from your computational budget
+                    </div>
+                    <p><strong>Budget Allocation Strategies:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Time Budget:</strong> Stop after fixed time limit</li>
+                        <li><strong>Evaluation Budget:</strong> Fixed number of parameter trials</li>
+                        <li><strong>Performance Budget:</strong> Stop when improvement plateaus</li>
+                        <li><strong>Progressive:</strong> Start simple, add complexity if needed</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Time-budgeted optimization
+import time
+from threading import Timer
+
+class TimeBudgetedSearch:
+    def __init__(self, searcher, time_limit_hours):
+        self.searcher = searcher
+        self.time_limit = time_limit_hours * 3600
+        self.start_time = None
+        
+    def fit(self, X, y):
+        self.start_time = time.time()
+        
+        # Set timer to interrupt search
+        timer = Timer(self.time_limit, self.timeout)
+        timer.start()
+        
+        try:
+            self.searcher.fit(X, y)
+        except TimeoutError:
+            print("Time budget exceeded, stopping search")
+        finally:
+            timer.cancel()
+        
+        return self
+    
+    def timeout(self):
+        # Force stop the search
+        raise TimeoutError("Search time budget exceeded")
+
+# Usage
+budgeted_search = TimeBudgetedSearch(
+    BayesSearchCV(model, search_space, n_iter=1000), 
+    time_limit_hours=2
+)
+budgeted_search.fit(X_train, y_train)
+                    </div>
+                    
+                    <p><strong>Smart Budgeting:</strong> Allocate more resources to methods that show promising early results.</p>
+                `
+            }
+        };
+
+        // Make challenge items clickable
+        document.querySelectorAll('.challenge-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const challenge = this.dataset.challenge;
+                const details = challengeDetails[challenge];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        // Make method cards clickable
+        document.querySelectorAll('.method-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const method = this.dataset.method;
+                const details = methodDetails[method];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        // Make process steps clickable
+        document.querySelectorAll('.process-step').forEach(step => {
+            step.addEventListener('click', function() {
+                const stepType = this.dataset.step;
+                const details = processDetails[stepType];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        // Make practice cards clickable
+        document.querySelectorAll('.practice-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const practice = this.dataset.practice;
+                const details = practiceDetails[practice];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week5_Slide94.html';
+            } else if ((e.key === 'ArrowRight' || e.key === ' ') && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week5_Slide96.html';
+            }
+        });
+
+    </script>
+</body>
+</html>

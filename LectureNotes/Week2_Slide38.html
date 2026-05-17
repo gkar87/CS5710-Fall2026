@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Regression Evaluation Metrics</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%); min-height: 100vh; display: flex; flex-direction: column; color: #134e4a; overflow-x: hidden; }
+        .slide-container { flex: 1; padding: 40px; max-width: 1400px; margin: 0 auto; position: relative; }
+        .slide-title { font-size: 3.2em; text-align: center; margin-bottom: 45px; color: #0d9488; text-shadow: 2px 2px 4px rgba(0,0,0,0.1); animation: slideInFromTop 1.2s ease-out; font-weight: 700; }
+        .metrics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 40px; margin-bottom: 40px; }
+        .metric-card { background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%); border-radius: 20px; padding: 35px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); border: 1px solid rgba(13, 148, 136, 0.1); transition: all 0.3s ease; cursor: pointer; }
+        .metric-card:hover { transform: translateY(-5px); box-shadow: 0 25px 50px rgba(0,0,0,0.12); }
+        .metric-card:nth-child(1) { animation: slideInFromLeft 1s ease-out 0.3s both; }
+        .metric-card:nth-child(2) { animation: slideInFromRight 1s ease-out 0.3s both; }
+        .metric-card:nth-child(3) { animation: slideInFromLeft 1s ease-out 0.5s both; }
+        .metric-card:nth-child(4) { animation: slideInFromRight 1s ease-out 0.5s both; }
+        .metric-title { font-size: 1.8em; color: #0d9488; margin-bottom: 20px; font-weight: 700; display: flex; align-items: center; gap: 15px; }
+        .metric-formula { background: #1e293b; color: #5eead4; padding: 20px; border-radius: 12px; margin: 20px 0; font-family: 'Courier New', monospace; font-size: 1.1em; text-align: center; box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+        .metric-description { font-size: 1.05em; line-height: 1.6; color: #1e293b; margin-bottom: 20px; }
+        .metric-range { background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%); padding: 15px; border-radius: 10px; margin: 15px 0; border-left: 4px solid #0d9488; }
+        .range-text { font-weight: 600; color: #047857; }
+        .comparison-section { grid-column: 1 / -1; background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%); border-radius: 20px; padding: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); animation: slideInFromBottom 1s ease-out 0.7s both; border: 1px solid rgba(13, 148, 136, 0.1); margin-top: 30px; }
+        .section-title { font-size: 1.8em; color: #0d9488; margin-bottom: 25px; font-weight: 600; text-align: center; }
+        .comparison-table { width: 100%; border-collapse: collapse; margin-top: 25px; background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
+        .comparison-table th { background: linear-gradient(135deg, #0d9488, #14b8a6); color: white; padding: 18px; text-align: left; font-weight: 600; font-size: 1.05em; }
+        .comparison-table td { padding: 15px 18px; border-bottom: 1px solid #e2e8f0; color: #475569; line-height: 1.5; }
+        .comparison-table tr:hover { background: rgba(13, 148, 136, 0.05); }
+        .good { background: linear-gradient(135deg, #dcfdf7, #a7f3d0) !important; color: #065f46 !important; font-weight: 600; }
+        .bad { background: linear-gradient(135deg, #fef2f2, #fecaca) !important; color: #7f1d1d !important; font-weight: 600; }
+        .floating-elements { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; z-index: -1; }
+        .floating-element { position: absolute; width: 5px; height: 5px; background: linear-gradient(135deg, #0d9488, #14b8a6); border-radius: 50%; opacity: 0.5; animation: mlFloat 18s linear infinite; }
+        .navigation { position: fixed; bottom: 30px; right: 30px; display: flex; gap: 15px; }
+        .nav-btn { padding: 15px 25px; background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9)); border: 2px solid rgba(13, 148, 136, 0.2); border-radius: 30px; color: #134e4a; text-decoration: none; transition: all 0.3s ease; backdrop-filter: blur(20px); font-weight: 600; }
+        .nav-btn:hover { background: linear-gradient(135deg, #0d9488, #14b8a6); color: white; transform: translateY(-3px); box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4); }
+        .slide-number, .course-info { position: fixed; top: 30px; background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9)); padding: 12px 20px; border-radius: 25px; backdrop-filter: blur(20px); border: 1px solid rgba(13, 148, 136, 0.2); color: #134e4a; font-weight: 600; }
+        .slide-number { right: 30px; } .course-info { left: 30px; }
+        @keyframes slideInFromTop { from { transform: translateY(-80px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes slideInFromLeft { from { transform: translateX(-60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideInFromRight { from { transform: translateX(60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideInFromBottom { from { transform: translateY(60px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes mlFloat { 0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; } 10% { opacity: 0.5; } 90% { opacity: 0.5; } 100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; } }
+        @media (max-width: 768px) { .metrics-grid { grid-template-columns: 1fr; } .slide-title { font-size: 2.5em; } .comparison-table { font-size: 0.9em; } .comparison-table th, .comparison-table td { padding: 12px; } }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    <div class="course-info">CS5710 - Week 2</div>
+    <div class="slide-number">Slide 38 of 40</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Regression Evaluation Metrics</h1>
+        
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <h2 class="metric-title">🎯 R² (R-Squared)</h2>
+                <div class="metric-formula">R² = 1 - (SS_res / SS_tot)</div>
+                <div class="metric-description">
+                    <strong>Coefficient of Determination</strong> - Measures the proportion of variance in the dependent variable explained by the model.
+                </div>
+                <div class="metric-range">
+                    <div class="range-text">Range: (-∞, 1] | Perfect: 1.0 | Baseline: 0.0</div>
+                </div>
+                <div style="font-size: 0.95em; color: #475569;">
+                    ✓ Easy to interpret<br>
+                    ✓ Scale-independent<br>
+                    ✗ Can be negative for poor models
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <h2 class="metric-title">📊 MSE (Mean Squared Error)</h2>
+                <div class="metric-formula">MSE = (1/n)∑(yᵢ - ŷᵢ)²</div>
+                <div class="metric-description">
+                    <strong>Mean Squared Error</strong> - Average of squared differences between predicted and actual values. Heavily penalizes large errors.
+                </div>
+                <div class="metric-range">
+                    <div class="range-text">Range: [0, +∞) | Perfect: 0.0 | Lower is better</div>
+                </div>
+                <div style="font-size: 0.95em; color: #475569;">
+                    ✓ Differentiable (good for optimization)<br>
+                    ✓ Penalizes large errors heavily<br>
+                    ✗ Same units as y² (hard to interpret)
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <h2 class="metric-title">📈 MAE (Mean Absolute Error)</h2>
+                <div class="metric-formula">MAE = (1/n)∑|yᵢ - ŷᵢ|</div>
+                <div class="metric-description">
+                    <strong>Mean Absolute Error</strong> - Average of absolute differences. More robust to outliers than MSE.
+                </div>
+                <div class="metric-range">
+                    <div class="range-text">Range: [0, +∞) | Perfect: 0.0 | Lower is better</div>
+                </div>
+                <div style="font-size: 0.95em; color: #475569;">
+                    ✓ Same units as y (interpretable)<br>
+                    ✓ Robust to outliers<br>
+                    ✗ Not differentiable at zero
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <h2 class="metric-title">📎 RMSE (Root Mean Squared Error)</h2>
+                <div class="metric-formula">RMSE = √[(1/n)∑(yᵢ - ŷᵢ)²]</div>
+                <div class="metric-description">
+                    <strong>Root Mean Squared Error</strong> - Square root of MSE. Returns error to original scale, making it more interpretable.
+                </div>
+                <div class="metric-range">
+                    <div class="range-text">Range: [0, +∞) | Perfect: 0.0 | Lower is better</div>
+                </div>
+                <div style="font-size: 0.95em; color: #475569;">
+                    ✓ Same units as y (interpretable)<br>
+                    ✓ Penalizes large errors<br>
+                    ✗ Sensitive to outliers
+                </div>
+            </div>
+        </div>
+
+        <div class="comparison-section">
+            <h2 class="section-title">🔄 Metric Comparison Guide</h2>
+            
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Scenario</th>
+                        <th>Best Metric</th>
+                        <th>Why?</th>
+                        <th>Interpretation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Model Comparison</strong></td>
+                        <td class="good">R²</td>
+                        <td>Scale-independent, easy to compare across different datasets</td>
+                        <td>Higher R² = better model fit</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Business Reporting</strong></td>
+                        <td class="good">RMSE or MAE</td>
+                        <td>Same units as target variable, easier for stakeholders to understand</td>
+                        <td>"Model is off by ±X units on average"</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Outlier-Heavy Data</strong></td>
+                        <td class="good">MAE</td>
+                        <td>Robust to outliers, doesn't get skewed by extreme values</td>
+                        <td>Typical absolute deviation</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Large Errors are Critical</strong></td>
+                        <td class="good">MSE or RMSE</td>
+                        <td>Squares heavily penalize large prediction errors</td>
+                        <td>Emphasizes minimizing worst-case errors</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Model Optimization</strong></td>
+                        <td class="good">MSE</td>
+                        <td>Differentiable everywhere, works well with gradient-based methods</td>
+                        <td>Standard loss function for regression</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Poor Model Performance</strong></td>
+                        <td class="bad">R² (can be negative!)</td>
+                        <td>R² can be misleading when model performs worse than baseline</td>
+                        <td>Use MSE/RMSE/MAE instead</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 30px;">
+                <div style="background: linear-gradient(135deg, #dcfdf7, #a7f3d0); padding: 25px; border-radius: 15px; border-left: 4px solid #10b981;">
+                    <h4 style="color: #047857; margin-bottom: 15px;">💡 Pro Tips</h4>
+                    <ul style="color: #065f46; line-height: 1.6;">
+                        <li>Always use <strong>multiple metrics</strong> for comprehensive evaluation</li>
+                        <li>Consider the <strong>business context</strong> when choosing primary metric</li>
+                        <li>Cross-validate your evaluation to ensure robustness</li>
+                        <li>Plot residuals to check for patterns your metrics might miss</li>
+                    </ul>
+                </div>
+                <div style="background: linear-gradient(135deg, #fef3c7, #fde68a); padding: 25px; border-radius: 15px; border-left: 4px solid #f59e0b;">
+                    <h4 style="color: #92400e; margin-bottom: 15px;">⚠️ Common Pitfalls</h4>
+                    <ul style="color: #78350f; line-height: 1.6;">
+                        <li>Don't rely on a single metric</li>
+                        <li>R² can be negative for very poor models</li>
+                        <li>MSE units are squared (harder to interpret directly)</li>
+                        <li>Metrics can be misleading with skewed target distributions</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week2_Slide37.html" class="nav-btn">← Previous</a>
+        <a href="Week2_Slide39.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive metric cards with modal
+        document.querySelectorAll('.metric-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('.metric-title').textContent.trim();
+                const description = this.querySelector('.metric-description').textContent.trim();
+                
+                const metricDetails = {
+                    '🎯 R² (R-Squared)': {
+                        detail: 'R² measures how much of the variance in your target variable is explained by your model. It\'s the proportion of "predictable" variance.',
+                        example: 'House price prediction:<br>• R² = 0.85: Model explains 85% of price variation<br>• R² = 0.12: Model explains only 12% (poor model)<br>• R² = -0.5: Model worse than just using mean price!',
+                        interpretation: 'Range: (-∞, 1] | Perfect = 1.0 | Useless = 0.0 | Terrible < 0.0',
+                        when: 'Best for comparing models across different datasets and scales'
+                    },
+                    '📊 MSE (Mean Squared Error)': {
+                        detail: 'MSE squares all prediction errors and averages them. This heavily penalizes large errors, making it sensitive to outliers.',
+                        example: 'Predictions: [100, 102, 95] | Actual: [98, 105, 100]<br>Errors: [2, -3, -5] → Squared: [4, 9, 25]<br>MSE = (4+9+25)/3 = 12.67',
+                        interpretation: 'Units: (target variable)² | Lower is better | Zero = perfect',
+                        when: 'Great for optimization (differentiable) and when large errors are very costly'
+                    },
+                    '📈 MAE (Mean Absolute Error)': {
+                        detail: 'MAE takes absolute value of errors and averages them. More robust to outliers than MSE since it doesn\'t square errors.',
+                        example: 'Same predictions: [100, 102, 95] | Actual: [98, 105, 100]<br>Errors: [2, -3, -5] → Absolute: [2, 3, 5]<br>MAE = (2+3+5)/3 = 3.33',
+                        interpretation: 'Units: same as target variable | Lower is better | Easy to interpret',
+                        when: 'When you have outliers or want a metric that\'s easy to explain to stakeholders'
+                    },
+                    '📎 RMSE (Root Mean Squared Error)': {
+                        detail: 'RMSE is the square root of MSE, bringing the error back to the original scale while preserving the sensitivity to large errors.',
+                        example: 'Same example: MSE = 12.67<br>RMSE = √12.67 = 3.56<br>"Model is typically off by about 3.56 units"',
+                        interpretation: 'Units: same as target variable | Lower is better | Emphasizes large errors',
+                        when: 'When large errors are problematic and you want interpretable units'
+                    }
+                };
+                
+                const info = metricDetails[title];
+                if (info) {
+                    modal.show(title, `
+                        <div class="modal-highlight">
+                            <strong>${description}</strong>
+                        </div>
+                        <p>${info.detail}</p>
+                        <div class="modal-code">
+                            <strong>Example:</strong><br>
+                            ${info.example}
+                        </div>
+                        <p><strong>📊 Interpretation:</strong><br>${info.interpretation}</p>
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                            <strong>💡 When to Use:</strong><br>
+                            ${info.when}
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week2_Slide37.html';
+            } else if ((e.key === 'ArrowRight' || e.key === ' ') && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week2_Slide39.html';
+            }
+        });
+    </script>
+</body>
+</html>

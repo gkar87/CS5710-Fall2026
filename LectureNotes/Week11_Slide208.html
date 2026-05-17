@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Dynamic Programming in RL</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .dp-intro {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            margin-bottom: 40px;
+            animation: slideInFromTop 1s ease-out 0.3s both;
+            text-align: center;
+        }
+
+        .intro-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-left: 4px solid #0d9488;
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 15px;
+            font-size: 1.2em;
+            line-height: 1.8;
+        }
+
+        .algorithms-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .algorithm-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .algorithm-card:nth-child(2) {
+            animation: slideInFromRight 1s ease-out 0.6s both;
+        }
+
+        .algorithm-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px rgba(13, 148, 136, 0.2);
+            border-color: #0d9488;
+        }
+
+        .algorithm-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .algorithm-icon {
+            font-size: 1.2em;
+        }
+
+        .algorithm-steps {
+            list-style: none;
+            margin: 20px 0;
+        }
+
+        .algorithm-step {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #0d9488;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+
+        .algorithm-step:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(13, 148, 136, 0.2);
+        }
+
+        .step-number {
+            display: inline-block;
+            width: 25px;
+            height: 25px;
+            background: #0d9488;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 25px;
+            font-weight: bold;
+            margin-right: 10px;
+            font-size: 0.9em;
+        }
+
+        .convergence-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            margin-bottom: 40px;
+            animation: slideInFromBottom 1s ease-out 0.9s both;
+        }
+
+        .convergence-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .convergence-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .convergence-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .convergence-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.3);
+        }
+
+        .convergence-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+
+        .convergence-concept {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 10px;
+        }
+
+        .convergence-desc {
+            font-size: 0.95em;
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 900px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.3s ease;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 2em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .modal-close:hover {
+            background: #f1f5f9;
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            color: #1e293b;
+            line-height: 1.8;
+        }
+
+        .modal-content p {
+            margin: 15px 0;
+            font-size: 1.05em;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-left: 4px solid #0d9488;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+
+        .modal-formula {
+            background: #f8fafc;
+            border: 2px solid #cbd5e1;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+            font-family: 'Times New Roman', serif;
+            font-size: 1.3em;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            color: #0d9488;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 1em;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.4);
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(240,253,250,0.95));
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            font-weight: 600;
+            color: #0d9488;
+            z-index: 100;
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(240,253,250,0.95));
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            font-weight: 600;
+            color: #0d9488;
+            z-index: 100;
+        }
+
+        .floating-elements {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .floating-element {
+            position: absolute;
+            font-size: 20px;
+            opacity: 0.1;
+            animation: mlFloat 20s infinite;
+            color: #0d9488;
+        }
+
+        .floating-element::before {
+            content: '🔄';
+        }
+
+        .floating-element:nth-child(3n)::before {
+            content: '⚡';
+        }
+
+        .floating-element:nth-child(3n+1)::before {
+            content: '🎯';
+        }
+
+        .floating-element:nth-child(3n+2)::before {
+            content: '📊';
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.1; }
+            90% { opacity: 0.1; }
+            100% { transform: translateY(-100px) translateX(100px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .algorithms-container { grid-template-columns: 1fr; }
+            .convergence-grid { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 11</div>
+    <div class="slide-number">Slide 208 of 220</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Dynamic Programming in RL</h1>
+        
+        <div class="dp-intro">
+            <div class="intro-highlight">
+                <strong>Dynamic Programming (DP)</strong> methods solve reinforcement learning problems by iteratively applying the Bellman equations when we have perfect knowledge of the environment dynamics.
+            </div>
+        </div>
+
+        <div class="algorithms-container">
+            <div class="algorithm-card">
+                <div class="algorithm-title">
+                    <span class="algorithm-icon">📊</span>
+                    Value Iteration
+                </div>
+                
+                <ol class="algorithm-steps">
+                    <li class="algorithm-step">
+                        <span class="step-number">1</span>
+                        Initialize V(s) for all states
+                    </li>
+                    <li class="algorithm-step">
+                        <span class="step-number">2</span>
+                        For each state, update V(s) using Bellman optimality equation
+                    </li>
+                    <li class="algorithm-step">
+                        <span class="step-number">3</span>
+                        Repeat until convergence
+                    </li>
+                    <li class="algorithm-step">
+                        <span class="step-number">4</span>
+                        Extract optimal policy from V*
+                    </li>
+                </ol>
+            </div>
+
+            <div class="algorithm-card">
+                <div class="algorithm-title">
+                    <span class="algorithm-icon">🎯</span>
+                    Policy Iteration
+                </div>
+                
+                <ol class="algorithm-steps">
+                    <li class="algorithm-step">
+                        <span class="step-number">1</span>
+                        Initialize policy π randomly
+                    </li>
+                    <li class="algorithm-step">
+                        <span class="step-number">2</span>
+                        Evaluate policy: compute V^π
+                    </li>
+                    <li class="algorithm-step">
+                        <span class="step-number">3</span>
+                        Improve policy: π' = greedy(V^π)
+                    </li>
+                    <li class="algorithm-step">
+                        <span class="step-number">4</span>
+                        Repeat until policy stable
+                    </li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="convergence-section">
+            <div class="convergence-title">Key Properties of Dynamic Programming</div>
+            
+            <div class="convergence-grid">
+                <div class="convergence-card">
+                    <div class="convergence-icon">✅</div>
+                    <div class="convergence-concept">Guaranteed Convergence</div>
+                    <div class="convergence-desc">Always finds optimal solution</div>
+                </div>
+                
+                <div class="convergence-card">
+                    <div class="convergence-icon">🔄</div>
+                    <div class="convergence-concept">Iterative Improvement</div>
+                    <div class="convergence-desc">Each iteration improves the solution</div>
+                </div>
+                
+                <div class="convergence-card">
+                    <div class="convergence-icon">📋</div>
+                    <div class="convergence-concept">Model Required</div>
+                    <div class="convergence-desc">Needs full environment knowledge</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week11_Slide207.html" class="nav-btn">← Previous</a>
+        <a href="Week11_Slide209.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 20; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 20 + 's';
+                element.style.animationDuration = (Math.random() * 15 + 20) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive algorithm cards
+        document.querySelectorAll('.algorithm-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('.algorithm-title').textContent.trim();
+                
+                const algorithmDetails = {
+                    '📊 Value Iteration': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Finding Optimal Values Directly</strong>
+                            </div>
+                            
+                            <p>Value iteration repeatedly applies the Bellman optimality equation to converge to the optimal value function V*.</p>
+                            
+                            <div class="modal-formula">
+                                V<sub>k+1</sub>(s) = max<sub>a</sub> Σ<sub>s'</sub> P(s'|s,a)[R(s,a,s') + γV<sub>k</sub>(s')]
+                            </div>
+                            
+                            <div class="modal-code">
+# Value Iteration Algorithm
+def value_iteration(env, gamma=0.9, theta=1e-6):
+    """
+    Find optimal value function using value iteration
+    """
+    # Initialize value function
+    V = {state: 0.0 for state in env.states}
+    
+    iteration = 0
+    while True:
+        delta = 0
+        V_new = V.copy()
+        
+        # Update each state
+        for state in env.states:
+            if env.is_terminal(state):
+                continue
+                
+            # Compute value using Bellman optimality equation
+            action_values = []
+            for action in env.get_actions(state):
+                action_value = 0
+                for next_state in env.states:
+                    prob = env.transition_prob(state, action, next_state)
+                    reward = env.reward(state, action, next_state)
+                    action_value += prob * (reward + gamma * V[next_state])
+                action_values.append(action_value)
+            
+            V_new[state] = max(action_values)
+            delta = max(delta, abs(V_new[state] - V[state]))
+        
+        V = V_new
+        iteration += 1
+        
+        # Check convergence
+        if delta < theta:
+            print(f"Converged after {iteration} iterations")
+            break
+    
+    # Extract optimal policy
+    policy = extract_policy(V, env, gamma)
+    return V, policy
+
+def extract_policy(V, env, gamma):
+    """Extract greedy policy from value function"""
+    policy = {}
+    
+    for state in env.states:
+        if env.is_terminal(state):
+            continue
+            
+        best_action = None
+        best_value = float('-inf')
+        
+        for action in env.get_actions(state):
+            action_value = 0
+            for next_state in env.states:
+                prob = env.transition_prob(state, action, next_state)
+                reward = env.reward(state, action, next_state)
+                action_value += prob * (reward + gamma * V[next_state])
+            
+            if action_value > best_value:
+                best_value = action_value
+                best_action = action
+        
+        policy[state] = best_action
+    
+    return policy
+
+# GridWorld example
+class GridWorld:
+    def __init__(self, size=4):
+        self.size = size
+        self.states = [(i, j) for i in range(size) for j in range(size)]
+        self.actions = ['up', 'down', 'left', 'right']
+        self.goal = (size-1, size-1)
+    
+    def transition_prob(self, state, action, next_state):
+        # Deterministic transitions
+        expected_next = self.get_next_state(state, action)
+        return 1.0 if next_state == expected_next else 0.0
+    
+    def reward(self, state, action, next_state):
+        if next_state == self.goal:
+            return 1.0
+        return -0.01  # Small step cost
+                            </div>
+                            
+                            <p><strong>Algorithm Properties:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Convergence:</strong> Guaranteed to find V* in finite iterations</li>
+                                <li><strong>Rate:</strong> Linear convergence with rate γ</li>
+                                <li><strong>Memory:</strong> O(|S|) for storing values</li>
+                                <li><strong>Computation:</strong> O(|S|²|A|) per iteration</li>
+                            </ul>
+                            
+                            <p><strong>When to Use:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Known environment dynamics</li>
+                                <li>Moderate state space size</li>
+                                <li>Need optimal policy quickly</li>
+                                <li>One-shot planning problems</li>
+                            </ul>
+                            
+                            <p><strong>Advantages:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Simple and intuitive</li>
+                                <li>Guaranteed optimality</li>
+                                <li>No initial policy needed</li>
+                                <li>Can stop early for approximate solutions</li>
+                            </ul>
+                        `
+                    },
+                    '🎯 Policy Iteration': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Alternating Policy Evaluation and Improvement</strong>
+                            </div>
+                            
+                            <p>Policy iteration alternates between evaluating the current policy and improving it, guaranteed to converge to the optimal policy.</p>
+                            
+                            <div class="modal-formula">
+                                Policy Evaluation: V<sup>π</sup>(s) = Σ<sub>a</sub> π(a|s) Σ<sub>s'</sub> P(s'|s,a)[R + γV<sup>π</sup>(s')]<br>
+                                Policy Improvement: π'(s) = argmax<sub>a</sub> Σ<sub>s'</sub> P(s'|s,a)[R + γV<sup>π</sup>(s')]
+                            </div>
+                            
+                            <div class="modal-code">
+# Policy Iteration Algorithm
+def policy_iteration(env, gamma=0.9, theta=1e-6):
+    """
+    Find optimal policy using policy iteration
+    """
+    # Initialize random policy
+    policy = initialize_random_policy(env)
+    
+    iteration = 0
+    while True:
+        # Policy Evaluation
+        V = policy_evaluation(policy, env, gamma, theta)
+        
+        # Policy Improvement
+        policy_stable = True
+        new_policy = {}
+        
+        for state in env.states:
+            if env.is_terminal(state):
+                continue
+                
+            # Current action
+            old_action = policy[state]
+            
+            # Find best action
+            best_action = None
+            best_value = float('-inf')
+            
+            for action in env.get_actions(state):
+                action_value = 0
+                for next_state in env.states:
+                    prob = env.transition_prob(state, action, next_state)
+                    reward = env.reward(state, action, next_state)
+                    action_value += prob * (reward + gamma * V[next_state])
+                
+                if action_value > best_value:
+                    best_value = action_value
+                    best_action = action
+            
+            new_policy[state] = best_action
+            
+            # Check if policy changed
+            if old_action != best_action:
+                policy_stable = False
+        
+        policy = new_policy
+        iteration += 1
+        
+        if policy_stable:
+            print(f"Policy stable after {iteration} iterations")
+            break
+    
+    return policy, V
+
+def policy_evaluation(policy, env, gamma, theta):
+    """Evaluate given policy to compute V^π"""
+    V = {state: 0.0 for state in env.states}
+    
+    while True:
+        delta = 0
+        V_new = V.copy()
+        
+        for state in env.states:
+            if env.is_terminal(state):
+                continue
+            
+            # Apply Bellman equation for current policy
+            action = policy[state]
+            value = 0
+            
+            for next_state in env.states:
+                prob = env.transition_prob(state, action, next_state)
+                reward = env.reward(state, action, next_state)
+                value += prob * (reward + gamma * V[next_state])
+            
+            V_new[state] = value
+            delta = max(delta, abs(V_new[state] - V[state]))
+        
+        V = V_new
+        
+        if delta < theta:
+            break
+    
+    return V
+
+def initialize_random_policy(env):
+    """Initialize random deterministic policy"""
+    policy = {}
+    for state in env.states:
+        if not env.is_terminal(state):
+            actions = env.get_actions(state)
+            policy[state] = random.choice(actions)
+    return policy
+
+# Modified Policy Iteration (more efficient)
+def modified_policy_iteration(env, gamma=0.9, k=10):
+    """
+    Policy iteration with limited policy evaluation steps
+    """
+    policy = initialize_random_policy(env)
+    
+    while True:
+        # Limited policy evaluation (k steps instead of convergence)
+        V = limited_policy_evaluation(policy, env, gamma, k)
+        
+        # Policy improvement
+        new_policy = greedy_policy(V, env, gamma)
+        
+        if policies_equal(policy, new_policy):
+            break
+            
+        policy = new_policy
+    
+    return policy, V
+                            </div>
+                            
+                            <p><strong>Two-Phase Algorithm:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Policy Evaluation:</strong> Compute V<sup>π</sup> for current policy π</li>
+                                <li><strong>Policy Improvement:</strong> Update policy to be greedy w.r.t. V<sup>π</sup></li>
+                            </ul>
+                            
+                            <p><strong>Convergence Properties:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Finite convergence (finite number of policies)</li>
+                                <li>Each policy improvement step increases value</li>
+                                <li>Usually faster than value iteration</li>
+                                <li>Exact evaluation in each step</li>
+                            </ul>
+                            
+                            <p><strong>Variants:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Modified PI:</strong> Limited evaluation steps</li>
+                                <li><strong>Asynchronous PI:</strong> Update states in any order</li>
+                                <li><strong>Approximate PI:</strong> Use function approximation</li>
+                            </ul>
+                            
+                            <p><strong>Comparison with Value Iteration:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Often fewer iterations needed</li>
+                                <li>Each iteration more expensive</li>
+                                <li>Better for problems where good initial policy exists</li>
+                                <li>More interpretable intermediate results</li>
+                            </ul>
+                        `
+                    }
+                };
+                
+                const details = algorithmDetails[title];
+                if (details) {
+                    modal.show(title, details.content);
+                }
+            });
+        });
+
+        // Interactive convergence cards
+        document.querySelectorAll('.convergence-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const concept = this.querySelector('.convergence-concept').textContent;
+                
+                const convergenceDetails = {
+                    'Guaranteed Convergence': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Mathematical Guarantee of Optimality</strong>
+                            </div>
+                            
+                            <p>Dynamic programming methods are guaranteed to find the optimal solution under the right conditions.</p>
+                            
+                            <div class="modal-code">
+# Convergence conditions for DP
+def check_convergence_conditions(env, gamma):
+    """
+    Check if DP is guaranteed to converge
+    """
+    conditions = {
+                'finite_states': len(env.states) < float('inf'),
+        'finite_actions': all(len(env.get_actions(s)) < float('inf') 
+                             for s in env.states),
+        'valid_discount': 0 <= gamma < 1,
+        'bounded_rewards': all(abs(r) < float('inf') 
+                              for r in env.all_rewards())
+    }
+    
+    all_satisfied = all(conditions.values())
+    
+    if all_satisfied:
+        print("✅ All convergence conditions satisfied")
+        print("   Dynamic Programming will find optimal solution")
+    else:
+        print("❌ Some conditions not met:")
+        for condition, satisfied in conditions.items():
+            if not satisfied:
+                print(f"   - {condition}: {satisfied}")
+    
+    return all_satisfied
+
+# Convergence proof outline
+def convergence_intuition():
+    """
+    Why DP converges - intuitive explanation
+    """
+    reasons = [
+        "Bellman operator is a contraction mapping",
+        "Contraction mappings have unique fixed points",
+        "Fixed point of Bellman operator = optimal value function",
+        "Repeated application converges to fixed point",
+        "Convergence rate is geometric with rate γ"
+    ]
+    
+    for i, reason in enumerate(reasons, 1):
+        print(f"{i}. {reason}")
+
+# Practical convergence criteria
+def check_convergence(V_old, V_new, threshold=1e-6):
+    """Check if value function has converged"""
+    max_change = max(abs(V_new[s] - V_old[s]) for s in V_new.keys())
+    
+    if max_change < threshold:
+        print(f"✅ Converged! Max change: {max_change:.8f}")
+        return True
+    else:
+        print(f"⏳ Not converged. Max change: {max_change:.8f}")
+        return False
+
+# Error bounds
+def compute_error_bound(delta, gamma):
+    """
+    Compute upper bound on distance from optimal
+    """
+    error_bound = (2 * gamma * delta) / (1 - gamma)
+    print(f"Max error from optimal: ≤ {error_bound:.6f}")
+    return error_bound
+                            </div>
+                            
+                            <p><strong>Theoretical Guarantees:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Existence:</strong> Optimal solution always exists</li>
+                                <li><strong>Uniqueness:</strong> Optimal value function is unique</li>
+                                <li><strong>Convergence:</strong> Algorithms converge in finite time</li>
+                                <li><strong>Optimality:</strong> Solution is provably optimal</li>
+                            </ul>
+                            
+                            <p><strong>Conditions Required:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Finite state and action spaces</li>
+                                <li>Discount factor γ < 1 (or finite horizon)</li>
+                                <li>Bounded rewards</li>
+                                <li>Well-defined transition probabilities</li>
+                            </ul>
+                            
+                            <p><strong>Convergence Rate:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Linear convergence with rate γ</li>
+                                <li>Error decreases by factor γ each iteration</li>
+                                <li>Faster convergence when γ is smaller</li>
+                                <li>Can compute error bounds</li>
+                            </ul>
+                        `
+                    },
+                    'Iterative Improvement': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Monotonic Progress Toward Optimality</strong>
+                            </div>
+                            
+                            <p>Both value iteration and policy iteration make monotonic progress - each iteration brings us closer to the optimal solution.</p>
+                            
+                            <div class="modal-code">
+# Track improvement over iterations
+def track_improvement(env, gamma=0.9):
+    """
+    Demonstrate monotonic improvement in DP
+    """
+    # Value iteration with tracking
+    V = {state: 0.0 for state in env.states}
+    values_history = []
+    policies_history = []
+    
+    for iteration in range(20):
+        # Store current values
+        values_history.append(V.copy())
+        
+        # Extract current policy
+        current_policy = extract_policy(V, env, gamma)
+        policies_history.append(current_policy)
+        
+        # Compute policy value
+        policy_value = evaluate_policy(current_policy, env, gamma)
+        print(f"Iteration {iteration}: Policy value = {policy_value:.4f}")
+        
+        # Value iteration update
+        V_new = {}
+        for state in env.states:
+            if env.is_terminal(state):
+                V_new[state] = 0.0
+                continue
+            
+            # Bellman optimality update
+            action_values = []
+            for action in env.get_actions(state):
+                value = 0
+                for next_state in env.states:
+                    prob = env.transition_prob(state, action, next_state)
+                    reward = env.reward(state, action, next_state)
+                    value += prob * (reward + gamma * V[next_state])
+                action_values.append(value)
+            
+            V_new[state] = max(action_values)
+        
+        V = V_new
+    
+    return values_history, policies_history
+
+def demonstrate_policy_improvement():
+    """
+    Show that policy improvement always helps
+    """
+    # Start with random policy
+    policy = random_policy(env)
+    V_old = evaluate_policy(policy, env, gamma)
+    
+    # Improve policy
+    improved_policy = greedy_policy(V_old, env, gamma)
+    V_new = evaluate_policy(improved_policy, env, gamma)
+    
+    # Check improvement
+    for state in env.states:
+        if not env.is_terminal(state):
+            improvement = V_new[state] - V_old[state]
+            assert improvement >= 0, f"Policy got worse at state {state}!"
+            if improvement > 0:
+                print(f"State {state}: improved by {improvement:.4f}")
+
+# Visualize convergence
+def plot_convergence(values_history):
+    """
+    Plot how values converge over iterations
+    """
+    import matplotlib.pyplot as plt
+    
+    # Track max value change per iteration
+    max_changes = []
+    for i in range(1, len(values_history)):
+        V_old = values_history[i-1]
+        V_new = values_history[i]
+        max_change = max(abs(V_new[s] - V_old[s]) for s in V_new.keys())
+        max_changes.append(max_change)
+    
+    plt.semilogy(max_changes)
+    plt.xlabel('Iteration')
+    plt.ylabel('Max Value Change (log scale)')
+    plt.title('Value Iteration Convergence')
+    plt.grid(True)
+    plt.show()
+                            </div>
+                            
+                            <p><strong>Value Iteration Improvement:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>V<sub>k+1</sub>(s) ≥ V<sub>k</sub>(s) for all states s</li>
+                                <li>Monotonically approaches V*(s) from below</li>
+                                <li>Each update uses best possible action</li>
+                                <li>Guaranteed progress at each step</li>
+                            </ul>
+                            
+                            <p><strong>Policy Iteration Improvement:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>V<sup>π'</sup>(s) ≥ V<sup>π</sup>(s) for all states s</li>
+                                <li>Policy improvement theorem guarantees this</li>
+                                <li>Finite number of policies → finite convergence</li>
+                                <li>Each policy is strictly better (unless optimal)</li>
+                            </ul>
+                            
+                            <p><strong>Practical Benefits:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Can stop early for approximate solutions</li>
+                                <li>Progress is predictable and measurable</li>
+                                <li>Intermediate results are meaningful</li>
+                                <li>Easy to debug and validate</li>
+                            </ul>
+                        `
+                    },
+                    'Model Required': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Complete Environment Knowledge Needed</strong>
+                            </div>
+                            
+                            <p>Dynamic programming requires full knowledge of the environment: transition probabilities and reward function.</p>
+                            
+                            <div class="modal-code">
+# What DP needs to know about the environment
+class EnvironmentModel:
+    def __init__(self):
+        self.states = []           # All possible states
+        self.actions = {}          # Actions available in each state
+        self.transitions = {}      # P(s'|s,a) for all s,a,s'
+        self.rewards = {}          # R(s,a,s') for all s,a,s'
+        
+    def transition_probability(self, state, action, next_state):
+        """P(s'|s,a) - probability of transitioning to next_state"""
+        return self.transitions.get((state, action, next_state), 0.0)
+    
+    def reward_function(self, state, action, next_state):
+        """R(s,a,s') - reward for this transition"""
+        return self.rewards.get((state, action, next_state), 0.0)
+    
+    def is_complete(self):
+        """Check if model has all required information"""
+        checks = []
+        
+        # All transition probabilities sum to 1
+        for state in self.states:
+            for action in self.actions.get(state, []):
+                total_prob = sum(
+                    self.transition_probability(state, action, next_state)
+                    for next_state in self.states
+                )
+                if abs(total_prob - 1.0) > 1e-6:
+                    checks.append(f"Invalid transition probs for {state}, {action}")
+        
+        # All rewards are defined
+        for state in self.states:
+            for action in self.actions.get(state, []):
+                for next_state in self.states:
+                    if self.transition_probability(state, action, next_state) > 0:
+                        if (state, action, next_state) not in self.rewards:
+                            checks.append(f"Missing reward for {state}, {action}, {next_state}")
+        
+        return len(checks) == 0, checks
+
+# Building a model from data
+def learn_model_from_data(transitions_data, rewards_data):
+    """
+    Learn environment model from observed data
+    """
+    model = EnvironmentModel()
+    
+    # Count transitions
+    transition_counts = {}
+    for (state, action, next_state) in transitions_data:
+        key = (state, action)
+        if key not in transition_counts:
+            transition_counts[key] = {}
+        
+        if next_state not in transition_counts[key]:
+            transition_counts[key][next_state] = 0
+        transition_counts[key][next_state] += 1
+    
+    # Estimate probabilities
+    for (state, action), next_states in transition_counts.items():
+        total = sum(next_states.values())
+        for next_state, count in next_states.items():
+            prob = count / total
+            model.transitions[(state, action, next_state)] = prob
+    
+    # Estimate rewards (average observed rewards)
+    reward_sums = {}
+    reward_counts = {}
+    
+    for (state, action, next_state, reward) in rewards_data:
+        key = (state, action, next_state)
+        if key not in reward_sums:
+            reward_sums[key] = 0
+            reward_counts[key] = 0
+        
+        reward_sums[key] += reward
+        reward_counts[key] += 1
+    
+    for key, total_reward in reward_sums.items():
+        count = reward_counts[key]
+        model.rewards[key] = total_reward / count
+    
+    return model
+
+# When you don't have a perfect model
+class ApproximateModel:
+    """Use approximate or learned model for DP"""
+    
+    def __init__(self, true_env):
+        self.true_env = true_env
+        self.estimated_transitions = {}
+        self.estimated_rewards = {}
+        self.confidence = {}
+    
+    def update_from_experience(self, state, action, next_state, reward):
+        """Update model from single experience"""
+        # Update transition estimates
+        key = (state, action)
+        if key not in self.estimated_transitions:
+            self.estimated_transitions[key] = {}
+        
+        # Running average update
+        if next_state not in self.estimated_transitions[key]:
+            self.estimated_transitions[key][next_state] = 0
+        
+        # Simple update rule (could use more sophisticated methods)
+        alpha = 0.1
+        old_prob = self.estimated_transitions[key].get(next_state, 0)
+        self.estimated_transitions[key][next_state] = (
+            (1 - alpha) * old_prob + alpha * 1.0
+        )
+        
+        # Normalize probabilities
+        total = sum(self.estimated_transitions[key].values())
+        for ns in self.estimated_transitions[key]:
+            self.estimated_transitions[key][ns] /= total
+    
+    def planning_with_uncertainty(self):
+        """Account for model uncertainty in planning"""
+        # Could use robust DP, confidence intervals, etc.
+        pass
+                            </div>
+                            
+                            <p><strong>Required Knowledge:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>States:</strong> Complete state space S</li>
+                                <li><strong>Actions:</strong> Available actions A(s) for each state</li>
+                                <li><strong>Transitions:</strong> P(s'|s,a) for all transitions</li>
+                                <li><strong>Rewards:</strong> R(s,a,s') for all transitions</li>
+                            </ul>
+                            
+                            <p><strong>When Model is Available:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Simulators and games (rules are known)</li>
+                                <li>Engineering systems (physics-based models)</li>
+                                <li>Financial models (known market dynamics)</li>
+                                <li>Inventory management (known demand patterns)</li>
+                            </ul>
+                            
+                            <p><strong>When Model is Not Available:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Real-world robotics (complex dynamics)</li>
+                                <li>Human behavior modeling (unpredictable)</li>
+                                <li>Stock market trading (unknown patterns)</li>
+                                <li>Medical treatment (individual variations)</li>
+                            </ul>
+                            
+                            <p><strong>Solutions for Unknown Models:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Model-free RL:</strong> Q-learning, SARSA, Policy Gradients</li>
+                                <li><strong>Model learning:</strong> Learn model from data, then use DP</li>
+                                <li><strong>Dyna-Q:</strong> Combine model learning with model-free updates</li>
+                                <li><strong>Robust DP:</strong> Account for model uncertainty</li>
+                            </ul>
+                        `
+                    }
+                };
+                
+                const details = convergenceDetails[concept];
+                if (details) {
+                    modal.show(concept, details.content);
+                }
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week11_Slide209.html';
+            } else if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week11_Slide207.html';
+            }
+        });
+    </script>
+</body>
+</html>

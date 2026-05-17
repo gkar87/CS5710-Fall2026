@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - CatBoost for Categorical Features</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .catboost-intro {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .features-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .catboost-description {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .features-list {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .feature-item {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #14b8a6;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .feature-item:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 30px rgba(13, 148, 136, 0.2);
+        }
+
+        .feature-title {
+            font-size: 1.2em;
+            color: #0d9488;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .feature-desc {
+            color: #475569;
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+
+        .comparison-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .comparison-title {
+            font-size: 2em;
+            color: #0d9488;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .algorithm-card {
+            background: linear-gradient(135deg, #1e293b, #334155);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            color: white;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .algorithm-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.2);
+        }
+
+        .algorithm-card.catboost {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+        }
+
+        .algorithm-name {
+            font-size: 1.4em;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .algorithm-metric {
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .algorithm-score {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #5eead4;
+        }
+
+        .catboost .algorithm-score {
+            color: #ffffff;
+        }
+
+        .categorical-demo {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.9s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            margin-top: 30px;
+        }
+
+        .demo-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .data-table th {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            padding: 15px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .data-table td {
+            padding: 12px 15px;
+            text-align: center;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .data-table tr:hover {
+            background: rgba(13, 148, 136, 0.05);
+        }
+
+        .categorical {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            font-weight: 600;
+            color: #0d9488;
+        }
+
+        .numerical {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: #92400e;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .comparison-grid { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 5</div>
+    <div class="slide-number">Slide 91 of 100</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">🐱 CatBoost for Categorical Features</h1>
+        
+        <div class="content-layout">
+            <div class="catboost-intro">
+                <h2 class="section-title">What is CatBoost?</h2>
+                
+                <div class="catboost-description">
+                    <strong>CatBoost</strong> (Categorical Boosting) is Yandex's gradient boosting framework designed to handle <strong>categorical features</strong> naturally without manual preprocessing.
+                </div>
+                
+                <div style="font-size: 1.1em; line-height: 1.7; color: #1e293b;">
+                    <strong>🔑 Key Innovation:</strong><br>
+                    Built-in categorical feature processing with advanced encoding techniques.
+                    <br><br>
+                    <strong>📈 Performance:</strong><br>
+                    Often outperforms XGBoost and LightGBM on categorical-heavy datasets.
+                    <br><br>
+                    <strong>🚀 Ease of Use:</strong><br>
+                    No need for manual label encoding or one-hot encoding!
+                </div>
+            </div>
+
+            <div class="features-section">
+                <h2 class="section-title">Key Features</h2>
+                
+                <div class="features-list">
+                    <div class="feature-item" data-feature="categorical">
+                        <div class="feature-title">🎯 Native Categorical Support</div>
+                        <div class="feature-desc">Automatic optimal encoding without preprocessing</div>
+                    </div>
+                    
+                    <div class="feature-item" data-feature="overfitting">
+                        <div class="feature-title">🛡️ Overfitting Protection</div>
+                        <div class="feature-desc">Ordered boosting prevents target leakage</div>
+                    </div>
+                    
+                    <div class="feature-item" data-feature="gpu">
+                        <div class="feature-title">⚡ GPU Acceleration</div>
+                        <div class="feature-desc">Fast training on both CPU and GPU</div>
+                    </div>
+                    
+                    <div class="feature-item" data-feature="robust">
+                        <div class="feature-title">🎲 Robust Defaults</div>
+                        <div class="feature-desc">Works well out-of-the-box with minimal tuning</div>
+                    </div>
+                    
+                    <div class="feature-item" data-feature="interpretable">
+                        <div class="feature-title">🔍 Model Interpretability</div>
+                        <div class="feature-desc">Built-in feature importance and SHAP values</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="comparison-section">
+            <h2 class="comparison-title">🏆 CatBoost vs Competition</h2>
+            <p style="text-align: center; color: #475569; margin-bottom: 20px;">
+                Performance on Categorical-Heavy Dataset (Amazon Product Reviews)
+            </p>
+            
+            <div class="comparison-grid">
+                <div class="algorithm-card catboost">
+                    <div class="algorithm-name">CatBoost</div>
+                    <div class="algorithm-metric">Cross-Validation Accuracy</div>
+                    <div class="algorithm-score">94.2%</div>
+                    <div class="algorithm-metric">Training Time: 15 min</div>
+                </div>
+                
+                <div class="algorithm-card">
+                    <div class="algorithm-name">XGBoost</div>
+                    <div class="algorithm-metric">Cross-Validation Accuracy</div>
+                    <div class="algorithm-score">91.8%</div>
+                    <div class="algorithm-metric">Training Time: 22 min</div>
+                </div>
+                
+                <div class="algorithm-card">
+                    <div class="algorithm-name">LightGBM</div>
+                    <div class="algorithm-metric">Cross-Validation Accuracy</div>
+                    <div class="algorithm-score">90.5%</div>
+                    <div class="algorithm-metric">Training Time: 18 min</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="categorical-demo">
+            <h2 class="demo-title">📊 Categorical Feature Handling Demo</h2>
+            <p style="text-align: center; color: #475569; margin-bottom: 20px;">
+                See how CatBoost handles different data types automatically
+            </p>
+            
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Customer ID</th>
+                        <th>City</th>
+                        <th>Product Category</th>
+                        <th>Brand</th>
+                        <th>Age</th>
+                        <th>Income</th>
+                        <th>Purchase</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1001</td>
+                        <td class="categorical">New York</td>
+                        <td class="categorical">Electronics</td>
+                        <td class="categorical">Apple</td>
+                        <td class="numerical">28</td>
+                        <td class="numerical">$65,000</td>
+                        <td style="background: #10b981; color: white; font-weight: bold;">YES</td>
+                    </tr>
+                    <tr>
+                        <td>1002</td>
+                        <td class="categorical">San Francisco</td>
+                        <td class="categorical">Clothing</td>
+                        <td class="categorical">Nike</td>
+                        <td class="numerical">34</td>
+                        <td class="numerical">$85,000</td>
+                        <td style="background: #ef4444; color: white; font-weight: bold;">NO</td>
+                    </tr>
+                    <tr>
+                        <td>1003</td>
+                        <td class="categorical">Chicago</td>
+                        <td class="categorical">Home & Garden</td>
+                        <td class="categorical">IKEA</td>
+                        <td class="numerical">41</td>
+                        <td class="numerical">$72,000</td>
+                        <td style="background: #10b981; color: white; font-weight: bold;">YES</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div style="margin-top: 20px; padding: 20px; background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%); border-radius: 15px;">
+                <strong style="color: #0d9488;">✨ CatBoost Magic:</strong><br>
+                No need to encode City, Product Category, or Brand - CatBoost handles them automatically with optimal encodings!
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week5_Slide90.html" class="nav-btn">← Previous</a>
+        <a href="Week5_Slide92.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Feature details
+        const featureDetails = {
+            'categorical': {
+                title: 'Native Categorical Support',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Revolutionary Approach:</strong> No manual encoding needed!
+                    </div>
+                    <p><strong>Traditional Approach:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>Label Encoding: Risk of ordinal relationships</li>
+                        <li>One-Hot Encoding: High-dimensional sparse vectors</li>
+                        <li>Target Encoding: Risk of overfitting</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Traditional XGBoost
+from sklearn.preprocessing import LabelEncoder
+le = LabelEncoder()
+X['city'] = le.fit_transform(X['city'])
+X['category'] = le.fit_transform(X['category'])
+
+# CatBoost - No preprocessing!
+import catboost as cb
+model = cb.CatBoostClassifier(
+    cat_features=['city', 'category']
+)
+model.fit(X, y)
+                    </div>
+                    
+                    <p><strong>CatBoost's Secret:</strong> Uses combinations of categorical features and optimal statistics-based encoding with target statistics.</p>
+                `
+            },
+            'overfitting': {
+                title: 'Overfitting Protection',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Ordered Boosting:</strong> Prevents target leakage during training
+                    </div>
+                    <p><strong>The Problem:</strong></p>
+                    <p>Traditional boosting can cause overfitting when computing gradients and Hessians on the same data used for learning.</p>
+                    
+                    <p><strong>CatBoost's Solution:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>Uses different data subsets for computing residuals</li>
+                        <li>Ordered boosting scheme maintains proper validation</li>
+                        <li>Prevents conditional shift between training and testing</li>
+                    </ul>
+                    
+                    <p><strong>Result:</strong> Better generalization and more robust predictions on unseen data.</p>
+                `
+            },
+            'gpu': {
+                title: 'GPU Acceleration',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Speed Boost:</strong> Up to 40x faster training on GPU!
+                    </div>
+                    <p><strong>GPU Features:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>Multi-GPU support for large datasets</li>
+                        <li>Optimized CUDA kernels</li>
+                        <li>Automatic CPU/GPU switching</li>
+                        <li>Memory-efficient implementations</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Enable GPU training
+model = cb.CatBoostClassifier(
+    iterations=1000,
+    task_type="GPU",
+    devices='0:1'  # Use GPUs 0 and 1
+)
+                    </div>
+                    
+                    <p><strong>Performance:</strong> Ideal for large-scale datasets with millions of samples and thousands of features.</p>
+                `
+            },
+            'robust': {
+                title: 'Robust Defaults',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Philosophy:</strong> Great performance out-of-the-box
+                    </div>
+                    <p><strong>Smart Defaults:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>Automatic learning rate selection</li>
+                        <li>Optimal tree depth based on dataset size</li>
+                        <li>Built-in regularization parameters</li>
+                        <li>Intelligent feature sampling</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Minimal configuration needed
+model = cb.CatBoostClassifier(
+    cat_features=['city', 'category', 'brand'],
+    verbose=False
+)
+model.fit(X_train, y_train)
+
+# Often outperforms heavily-tuned XGBoost/LightGBM!
+                    </div>
+                    
+                    <p><strong>Benefits:</strong> Reduces hyperparameter tuning time while achieving competitive results.</p>
+                `
+            },
+            'interpretable': {
+                title: 'Model Interpretability',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Explainable AI:</strong> Built-in interpretability tools
+                    </div>
+                    <p><strong>Interpretability Features:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>Feature importance scores</li>
+                        <li>SHAP values integration</li>
+                        <li>Prediction explanations</li>
+                        <li>Feature interaction analysis</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Get feature importance
+feature_importance = model.get_feature_importance()
+
+# Get SHAP values
+shap_values = model.get_feature_importance(
+    type='ShapValues', 
+    data=X_test
+)
+
+# Plot explanations
+model.plot_tree(tree_idx=0)  # Visualize individual trees
+                    </div>
+                    
+                    <p><strong>Business Value:</strong> Helps stakeholders understand why the model makes specific predictions.</p>
+                `
+            }
+        };
+
+        // Make feature items clickable
+        document.querySelectorAll('.feature-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const feature = this.dataset.feature;
+                const details = featureDetails[feature];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        // Algorithm card details
+        document.querySelectorAll('.algorithm-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const algorithm = this.querySelector('.algorithm-name').textContent;
+                
+                const algorithmDetails = {
+                    'CatBoost': {
+                        title: 'CatBoost Performance Analysis',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Why CatBoost Won:</strong> Superior categorical handling
+                            </div>
+                            <p><strong>Dataset Characteristics:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>15 categorical features (high cardinality)</li>
+                                <li>2M samples with product reviews</li>
+                                <li>Categories: Brand, Product Type, Reviewer Location</li>
+                            </ul>
+                            
+                            <p><strong>CatBoost Advantages:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>No preprocessing overhead</li>
+                                <li>Optimal categorical encodings</li>
+                                <li>Better handling of rare categories</li>
+                                <li>Robust to categorical overfitting</li>
+                            </ul>
+                            
+                            <p><strong>Pro Tip:</strong> CatBoost shines when you have high-cardinality categorical features!</p>
+                        `
+                    },
+                    'XGBoost': {
+                        title: 'XGBoost Analysis',
+                        content: `
+                            <p><strong>XGBoost Performance:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Required extensive preprocessing</li>
+                                <li>Label encoding created artificial ordinal relationships</li>
+                                <li>One-hot encoding led to feature explosion</li>
+                                <li>More hyperparameter tuning needed</li>
+                            </ul>
+                            
+                            <p><strong>Still Excellent For:</strong> Numerical features, structured data, competitions</p>
+                        `
+                    },
+                    'LightGBM': {
+                        title: 'LightGBM Analysis',
+                        content: `
+                            <p><strong>LightGBM Performance:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Fast training speed</li>
+                                <li>Good with numerical features</li>
+                                <li>Categorical support limited compared to CatBoost</li>
+                                <li>Required manual categorical encoding</li>
+                            </ul>
+                            
+                            <p><strong>Best Use Cases:</strong> Large datasets, speed-critical applications, numerical data</p>
+                        `
+                    }
+                };
+                
+                const details = algorithmDetails[algorithm];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week5_Slide90.html';
+            } else if ((e.key === 'ArrowRight' || e.key === ' ') && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week5_Slide92.html';
+            }
+        });
+
+    </script>
+</body>
+</html>

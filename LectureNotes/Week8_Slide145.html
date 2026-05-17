@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Activation Functions</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .activation-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .activation-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out;
+            animation-fill-mode: both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .activation-card:nth-child(1) { animation-delay: 0.2s; }
+        .activation-card:nth-child(2) { animation-delay: 0.3s; }
+        .activation-card:nth-child(3) { animation-delay: 0.4s; }
+
+        .activation-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px rgba(13, 148, 136, 0.15);
+        }
+
+        .activation-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 20px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .activation-graph {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .graph-canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .activation-formula {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 15px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .activation-props {
+            list-style: none;
+        }
+
+        .prop-item {
+            padding: 10px;
+            margin: 8px 0;
+            background: rgba(13, 148, 136, 0.1);
+            border-radius: 8px;
+            border-left: 3px solid #0d9488;
+            font-size: 0.95em;
+            color: #475569;
+        }
+
+        .comparison-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .comparison-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .comparison-table th {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .comparison-table td {
+            padding: 15px;
+            border-bottom: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .comparison-table tr:hover {
+            background: rgba(13, 148, 136, 0.05);
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .activation-grid { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 8</div>
+    <div class="slide-number">Slide 145 of 160</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Activation Functions (Sigmoid, Tanh, ReLU)</h1>
+        
+        <div class="activation-grid">
+            <div class="activation-card" data-function="sigmoid">
+                <h2 class="activation-title">Sigmoid</h2>
+                <div class="activation-graph">
+                    <canvas id="sigmoidCanvas" class="graph-canvas"></canvas>
+                </div>
+                <div class="activation-formula">σ(x) = 1 / (1 + e^(-x))</div>
+                <ul class="activation-props">
+                    <li class="prop-item">Range: (0, 1)</li>
+                    <li class="prop-item">Smooth gradient</li>
+                    <li class="prop-item">Vanishing gradient problem</li>
+                </ul>
+            </div>
+
+            <div class="activation-card" data-function="tanh">
+                <h2 class="activation-title">Tanh</h2>
+                <div class="activation-graph">
+                    <canvas id="tanhCanvas" class="graph-canvas"></canvas>
+                </div>
+                <div class="activation-formula">tanh(x) = (e^x - e^(-x)) / (e^x + e^(-x))</div>
+                <ul class="activation-props">
+                    <li class="prop-item">Range: (-1, 1)</li>
+                    <li class="prop-item">Zero-centered</li>
+                    <li class="prop-item">Stronger gradients than sigmoid</li>
+                </ul>
+            </div>
+
+            <div class="activation-card" data-function="relu">
+                <h2 class="activation-title">ReLU</h2>
+                <div class="activation-graph">
+                    <canvas id="reluCanvas" class="graph-canvas"></canvas>
+                </div>
+                <div class="activation-formula">ReLU(x) = max(0, x)</div>
+                <ul class="activation-props">
+                    <li class="prop-item">Range: [0, ∞)</li>
+                    <li class="prop-item">No vanishing gradient</li>
+                    <li class="prop-item">Dead neuron problem</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="comparison-section">
+            <h2 class="comparison-title">When to Use Each Activation Function</h2>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Function</th>
+                        <th>Best For</th>
+                        <th>Advantages</th>
+                        <th>Disadvantages</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Sigmoid</strong></td>
+                        <td>Output layer (binary classification)</td>
+                        <td>Probability interpretation</td>
+                        <td>Vanishing gradient</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Tanh</strong></td>
+                        <td>Hidden layers in RNNs</td>
+                        <td>Zero-centered output</td>
+                        <td>Still has vanishing gradient</td>
+                    </tr>
+                    <tr>
+                        <td><strong>ReLU</strong></td>
+                        <td>Hidden layers in deep networks</td>
+                        <td>Fast computation, no saturation</td>
+                        <td>Dead neurons, not zero-centered</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week8_Slide144.html" class="nav-btn">← Previous</a>
+        <a href="Week8_Slide146.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Draw activation functions
+        function drawFunction(canvasId, func, color = '#0d9488') {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            
+            const width = canvas.width;
+            const height = canvas.height;
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const scale = 30;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, width, height);
+            
+            // Draw axes
+            ctx.strokeStyle = '#64748b';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, centerY);
+            ctx.lineTo(width, centerY);
+            ctx.moveTo(centerX, 0);
+            ctx.lineTo(centerX, height);
+            ctx.stroke();
+            
+            // Draw function
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            
+            for (let px = 0; px < width; px++) {
+                const x = (px - centerX) / scale;
+                const y = func(x);
+                const py = centerY - y * scale;
+                
+                if (px === 0) {
+                    ctx.moveTo(px, py);
+                } else {
+                    ctx.lineTo(px, py);
+                }
+            }
+            
+            ctx.stroke();
+        }
+
+        // Activation functions
+        const sigmoid = x => 1 / (1 + Math.exp(-x));
+        const tanh = x => Math.tanh(x);
+        const relu = x => Math.max(0, x);
+
+        // Draw all graphs
+        drawFunction('sigmoidCanvas', sigmoid, '#0d9488');
+        drawFunction('tanhCanvas', tanh, '#14b8a6');
+        drawFunction('reluCanvas', relu, '#0f766e');
+
+        // Add click handlers to activation cards
+        document.querySelectorAll('.activation-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const funcType = this.dataset.function;
+                
+                const details = {
+                    sigmoid: {
+                        title: 'Sigmoid Activation Function',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Mathematical Definition:</strong><br>
+                                σ(x) = 1 / (1 + e^(-x))
+                            </div>
+                            
+                            <h4>Detailed Properties:</h4>
+                            <ul style="line-height: 1.8;">
+                                <li><strong>Output Range:</strong> (0, 1) - Always positive</li>
+                                <li><strong>Derivative:</strong> σ'(x) = σ(x) × (1 - σ(x))</li>
+                                <li><strong>Saturation:</strong> Saturates for large positive and negative values</li>
+                                <li><strong>Gradient:</strong> Maximum gradient = 0.25 at x = 0</li>
+                            </ul>
+                            
+                            <div class="modal-code">
+import numpy as np
+
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+def sigmoid_derivative(x):
+    s = sigmoid(x)
+    return s * (1 - s)
+
+# Example usage
+x = np.array([-2, -1, 0, 1, 2])
+print(f"Input: {x}")
+print(f"Output: {sigmoid(x)}")
+print(f"Gradient: {sigmoid_derivative(x)}")
+                            </div>
+                            
+                            <h4>When to Use Sigmoid:</h4>
+                            <ul>
+                                <li>✅ Binary classification output layer</li>
+                                <li>✅ When you need probability interpretation</li>
+                                <li>✅ Gates in LSTM/GRU cells</li>
+                                <li>❌ Hidden layers in deep networks (vanishing gradient)</li>
+                            </ul>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                                <strong>⚠️ Vanishing Gradient Problem:</strong><br>
+                                For |x| > 4, the gradient becomes nearly zero, making learning very slow or stopping it entirely in deep networks.
+                            </div>
+                        `
+                    },
+                    tanh: {
+                        title: 'Hyperbolic Tangent (Tanh) Function',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Mathematical Definition:</strong><br>
+                                tanh(x) = (e^x - e^(-x)) / (e^x + e^(-x))<br>
+                                Or: tanh(x) = 2σ(2x) - 1
+                            </div>
+                            
+                            <h4>Detailed Properties:</h4>
+                            <ul style="line-height: 1.8;">
+                                <li><strong>Output Range:</strong> (-1, 1) - Zero-centered</li>
+                                <li><strong>Derivative:</strong> tanh'(x) = 1 - tanh²(x)</li>
+                                <li><strong>Zero-crossing:</strong> Passes through origin (0, 0)</li>
+                                <li><strong>Gradient:</strong> Maximum gradient = 1 at x = 0</li>
+                            </ul>
+                            
+                            <div class="modal-code">
+import numpy as np
+
+def tanh(x):
+    return np.tanh(x)
+
+def tanh_derivative(x):
+    t = np.tanh(x)
+    return 1 - t**2
+
+# Example usage
+x = np.array([-2, -1, 0, 1, 2])
+print(f"Input: {x}")
+print(f"Output: {tanh(x)}")
+print(f"Gradient: {tanh_derivative(x)}")
+
+# Comparison with sigmoid
+print(f"\\nTanh is zero-centered: mean = {np.mean(tanh(x)):.3f}")
+print(f"Sigmoid is not: mean = {np.mean(1/(1+np.exp(-x))):.3f}")
+                            </div>
+                            
+                            <h4>Advantages over Sigmoid:</h4>
+                            <ul>
+                                <li>✅ Zero-centered output (easier optimization)</li>
+                                <li>✅ Stronger gradients (max = 1 vs 0.25)</li>
+                                <li>✅ Symmetric around origin</li>
+                            </ul>
+                            
+                            <h4>Best Use Cases:</h4>
+                            <ul>
+                                <li>Hidden layers in shallow networks</li>
+                                <li>Recurrent Neural Networks (RNNs)</li>
+                                <li>When outputs can be negative</li>
+                            </ul>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                                <strong>💡 Fun Fact:</strong><br>
+                                Tanh is just a scaled and shifted sigmoid: tanh(x) = 2×sigmoid(2x) - 1
+                            </div>
+                        `
+                    },
+                    relu: {
+                        title: 'Rectified Linear Unit (ReLU)',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Mathematical Definition:</strong><br>
+                                ReLU(x) = max(0, x) = { x if x > 0; 0 if x ≤ 0 }
+                            </div>
+                            
+                            <h4>Detailed Properties:</h4>
+                            <ul style="line-height: 1.8;">
+                                <li><strong>Output Range:</strong> [0, ∞) - Non-negative</li>
+                                <li><strong>Derivative:</strong> ReLU'(x) = { 1 if x > 0; 0 if x ≤ 0 }</li>
+                                <li><strong>Linearity:</strong> Linear for positive inputs</li>
+                                <li><strong>Sparsity:</strong> Creates sparse representations</li>
+                            </ul>
+                            
+                            <div class="modal-code">
+import numpy as np
+
+def relu(x):
+    return np.maximum(0, x)
+
+def relu_derivative(x):
+    return (x > 0).astype(float)
+
+# Example usage
+x = np.array([-2, -1, 0, 1, 2])
+print(f"Input: {x}")
+print(f"Output: {relu(x)}")
+print(f"Gradient: {relu_derivative(x)}")
+
+# Variants
+def leaky_relu(x, alpha=0.01):
+    return np.where(x > 0, x, alpha * x)
+
+def elu(x, alpha=1.0):
+    return np.where(x > 0, x, alpha * (np.exp(x) - 1))
+
+print(f"\\nLeaky ReLU: {leaky_relu(x)}")
+print(f"ELU: {elu(x)}")
+                            </div>
+                            
+                            <h4>Why ReLU Dominates Deep Learning:</h4>
+                            <ul>
+                                <li>✅ No vanishing gradient for positive values</li>
+                                <li>✅ Computationally efficient (just max operation)</li>
+                                <li>✅ Promotes sparse representations</li>
+                                <li>✅ Allows deeper networks</li>
+                            </ul>
+                            
+                            <h4>Common Variants:</h4>
+                            <ul>
+                                <li><strong>Leaky ReLU:</strong> f(x) = max(0.01x, x)</li>
+                                <li><strong>Parametric ReLU:</strong> f(x) = max(αx, x)</li>
+                                <li><strong>ELU:</strong> Exponential Linear Unit</li>
+                                <li><strong>GELU:</strong> Gaussian Error Linear Unit</li>
+                            </ul>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                                <strong>⚠️ Dead ReLU Problem:</strong><br>
+                                If a neuron's output is always negative, its gradient will always be zero, and it will stop learning. This can be mitigated with Leaky ReLU or proper weight initialization.
+                            </div>
+                        `
+                    }
+                };
+                
+                const detail = details[funcType];
+                if (detail) {
+                    modal.show(detail.title, detail.content);
+                }
+            });
+        });
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (!modal.overlay.classList.contains('active')) {
+                if (e.key === 'ArrowRight') {
+                    window.location.href = 'Week8_Slide146.html';
+                } else if (e.key === 'ArrowLeft') {
+                    window.location.href = 'Week8_Slide144.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

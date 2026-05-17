@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Week 12 Summary & Week 13 Preview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .summary-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .preview-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .topic-item {
+            padding: 20px;
+            margin: 15px 0;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .topic-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .topic-icon {
+            font-size: 1.5em;
+            min-width: 40px;
+        }
+
+        .topic-content {
+            flex: 1;
+        }
+
+        .topic-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 5px;
+            font-size: 1.1em;
+        }
+
+        .topic-desc {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.4;
+        }
+
+        .milestone-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            text-align: center;
+        }
+
+        .milestone-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .milestone-card {
+            padding: 30px;
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .milestone-card:hover {
+            border-color: #0d9488;
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.2);
+        }
+
+        .milestone-number {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: #0d9488;
+            margin-bottom: 15px;
+        }
+
+        .milestone-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 10px;
+        }
+
+        .milestone-desc {
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        .celebration-banner {
+            margin-top: 40px;
+            padding: 30px;
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border-radius: 20px;
+            border: 2px solid #f59e0b;
+            text-align: center;
+        }
+
+        .celebration-text {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: #92400e;
+            margin-bottom: 15px;
+        }
+
+        .celebration-desc {
+            color: #92400e;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .milestone-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 12</div>
+    <div class="slide-number">Slide 240 of 240</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Week 12 Summary & Week 13 Preview</h1>
+        
+        <div class="content-layout">
+            <div class="summary-section">
+                <h2 class="section-title">🎯 Week 12 Achievements</h2>
+                
+                <div class="topic-item">
+                    <div class="topic-icon">📊</div>
+                    <div class="topic-content">
+                        <div class="topic-title">Model Evaluation Mastery</div>
+                        <div class="topic-desc">Confusion matrices, ROC curves, PR curves, and multi-class metrics</div>
+                    </div>
+                </div>
+
+                <div class="topic-item">
+                    <div class="topic-icon">🔍</div>
+                    <div class="topic-content">
+                        <div class="topic-title">Model Interpretability</div>
+                        <div class="topic-desc">SHAP values, LIME explanations, and feature importance analysis</div>
+                    </div>
+                </div>
+
+                <div class="topic-item">
+                    <div class="topic-icon">🚀</div>
+                    <div class="topic-content">
+                        <div class="topic-title">Production Deployment</div>
+                        <div class="topic-desc">REST APIs, containerization, and deployment architectures</div>
+                    </div>
+                </div>
+
+                <div class="topic-item">
+                    <div class="topic-icon">📈</div>
+                    <div class="topic-content">
+                        <div class="topic-title">MLOps Practices</div>
+                        <div class="topic-desc">Model versioning, A/B testing, and production monitoring</div>
+                    </div>
+                </div>
+
+                <div class="topic-item">
+                    <div class="topic-icon">⚡</div>
+                    <div class="topic-content">
+                        <div class="topic-title">Production Monitoring</div>
+                        <div class="topic-desc">Data drift detection, performance alerts, and observability</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="preview-section">
+                <h2 class="section-title">🔮 Week 13 Preview: Advanced Topics</h2>
+                
+                <div class="topic-item">
+                    <div class="topic-icon">🎨</div>
+                    <div class="topic-content">
+                        <div class="topic-title">Generative Adversarial Networks</div>
+                        <div class="topic-desc">GANs, generator vs discriminator, and creative AI applications</div>
+                    </div>
+                </div>
+
+                <div class="topic-item">
+                    <div class="topic-icon">🧬</div>
+                    <div class="topic-content">
+                        <div class="topic-title">Variational Autoencoders</div>
+                        <div class="topic-desc">VAEs, latent space modeling, and generative modeling</div>
+                    </div>
+                </div>
+
+                <div class="topic-item">
+                    <div class="topic-icon">🕸️</div>
+                    <div class="topic-content">
+                        <div class="topic-title">Graph Neural Networks</div>
+                        <div class="topic-desc">GNNs, graph convolutions, and network analysis</div>
+                    </div>
+                </div>
+
+                <div class="topic-item">
+                    <div class="topic-icon">🔬</div>
+                    <div class="topic-content">
+                        <div class="topic-title">Meta-Learning</div>
+                        <div class="topic-desc">Learning to learn, few-shot learning, and model-agnostic approaches</div>
+                    </div>
+                </div>
+
+                <div class="topic-item">
+                    <div class="topic-icon">🎯</div>
+                    <div class="topic-content">
+                        <div class="topic-title">Anomaly Detection</div>
+                        <div class="topic-desc">Outlier detection, novelty detection, and real-world applications</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="milestone-section">
+            <h2 class="section-title">🏆 Course Progress Milestones</h2>
+            
+            <div class="milestone-grid">
+                <div class="milestone-card">
+                    <div class="milestone-number">12/14</div>
+                    <div class="milestone-title">Weeks Completed</div>
+                    <div class="milestone-desc">You've mastered the fundamentals and advanced ML concepts!</div>
+                </div>
+                
+                <div class="milestone-card">
+                    <div class="milestone-number">240/280</div>
+                    <div class="milestone-title">Slides Covered</div>
+                    <div class="milestone-desc">Deep dive into evaluation, interpretability, and deployment</div>
+                </div>
+                
+                <div class="milestone-card">
+                    <div class="milestone-number">85%</div>
+                    <div class="milestone-title">Course Progress</div>
+                    <div class="milestone-desc">Almost there! Two more weeks of cutting-edge topics</div>
+                </div>
+            </div>
+
+            <div class="celebration-banner">
+                <div class="celebration-text">🎉 Congratulations on Reaching Production ML!</div>
+                <div class="celebration-desc">
+                    You now understand the complete ML pipeline from data to deployment. 
+                    Next week, we'll explore the frontiers of machine learning with advanced topics 
+                    that are shaping the future of AI!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week12_Slide239.html" class="nav-btn">← Previous</a>
+        <a href="Week13_Slide241.html" class="nav-btn">Start Week 13 →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Topic item click handlers
+        document.querySelectorAll('.topic-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const title = this.querySelector('.topic-title').textContent;
+                const desc = this.querySelector('.topic-desc').textContent;
+                
+                const summaryTopics = {
+                    'Model Evaluation Mastery': {
+                        key_concepts: 'Confusion matrices, ROC/PR curves, multi-class metrics, imbalanced datasets',
+                        practical_skills: 'Choosing appropriate metrics, interpreting evaluation results, handling class imbalance',
+                        real_world: 'Medical diagnosis evaluation, fraud detection metrics, A/B testing analysis',
+                        next_steps: 'Apply these concepts in your final project and professional work'
+                    },
+                    'Model Interpretability': {
+                        key_concepts: 'SHAP values, LIME explanations, feature importance, model transparency',
+                        practical_skills: 'Explaining model decisions, identifying bias, building trust with stakeholders',
+                        real_world: 'Regulatory compliance, medical AI explanations, financial model auditing',
+                        next_steps: 'Implement interpretability in your models from the start of development'
+                    },
+                    'Production Deployment': {
+                        key_concepts: 'REST APIs, containerization, cloud deployment, scalability considerations',
+                        practical_skills: 'Building ML APIs, Docker containerization, cloud platform deployment',
+                        real_world: 'Microservices architecture, auto-scaling, load balancing, CDN integration',
+                        next_steps: 'Practice deploying models to major cloud platforms (AWS, GCP, Azure)'
+                    },
+                    'MLOps Practices': {
+                        key_concepts: 'Model versioning, CI/CD pipelines, A/B testing, automated retraining',
+                        practical_skills: 'Git for ML, automated testing, experiment management, deployment automation',
+                        real_world: 'Production ML teams, enterprise ML platforms, continuous model improvement',
+                        next_steps: 'Learn MLflow, Kubeflow, or similar MLOps platforms in depth'
+                    },
+                    'Production Monitoring': {
+                        key_concepts: 'Data drift detection, performance monitoring, alerting systems, observability',
+                        practical_skills: 'Setting up monitoring dashboards, configuring alerts, incident response',
+                        real_world: 'SLA compliance, system reliability, proactive maintenance, cost optimization',
+                        next_steps: 'Build comprehensive monitoring for any ML system you deploy'
+                    }
+                };
+
+                const previewTopics = {
+                    'Generative Adversarial Networks': {
+                        key_concepts: 'Generator networks, discriminator networks, adversarial training, Nash equilibrium',
+                        applications: 'Image generation, style transfer, data augmentation, synthetic data creation',
+                        challenges: 'Mode collapse, training stability, evaluation metrics, computational requirements',
+                        future: 'Foundation models, creative AI, content generation, scientific simulation'
+                    },
+                    'Variational Autoencoders': {
+                        key_concepts: 'Latent space modeling, variational inference, encoder-decoder architecture',
+                        applications: 'Dimensionality reduction, anomaly detection, generative modeling, representation learning',
+                        challenges: 'Posterior collapse, reconstruction quality, latent space interpretability',
+                        future: 'Hierarchical VAEs, conditional generation, scientific discovery applications'
+                    },
+                    'Graph Neural Networks': {
+                        key_concepts: 'Graph convolutions, message passing, node embeddings, graph-level predictions',
+                        applications: 'Social networks, molecular analysis, recommendation systems, knowledge graphs',
+                        challenges: 'Scalability to large graphs, over-smoothing, graph construction',
+                        future: 'Graph transformers, molecular property prediction, social media analysis'
+                    },
+                    'Meta-Learning': {
+                        key_concepts: 'Learning to learn, few-shot learning, model-agnostic meta-learning (MAML)',
+                        applications: 'Few-shot classification, rapid adaptation, personalization, robotics',
+                        challenges: 'Computational complexity, task distribution, generalization across domains',
+                        future: 'Foundation models, personalized AI, efficient adaptation, continual learning'
+                    },
+                    'Anomaly Detection': {
+                        key_concepts: 'Outlier detection, novelty detection, one-class classification, statistical methods',
+                        applications: 'Fraud detection, network security, quality control, predictive maintenance',
+                        challenges: 'Imbalanced data, concept drift, false positive rates, interpretability',
+                        future: 'Real-time anomaly detection, multimodal analysis, AI-powered cybersecurity'
+                    }
+                };
+                
+                const isSummary = this.closest('.summary-section') !== null;
+                const topicInfo = isSummary ? summaryTopics[title] : previewTopics[title];
+                
+                if (topicInfo) {
+                    let content = `<div class="modal-highlight"><strong>${title}</strong><br>${desc}</div>`;
+                    
+                    if (isSummary) {
+                        content += `
+                            <p><strong>Key Concepts Mastered:</strong> ${topicInfo.key_concepts}</p>
+                            <p><strong>Practical Skills:</strong> ${topicInfo.practical_skills}</p>
+                            <p><strong>Real-World Applications:</strong> ${topicInfo.real_world}</p>
+                            <div class="modal-code">
+                                Next Steps: ${topicInfo.next_steps}
+                            </div>
+                        `;
+                    } else {
+                        content += `
+                            <p><strong>Core Concepts:</strong> ${topicInfo.key_concepts}</p>
+                            <p><strong>Applications:</strong> ${topicInfo.applications}</p>
+                            <p><strong>Current Challenges:</strong> ${topicInfo.challenges}</p>
+                            <div class="modal-code">
+                                Future Directions: ${topicInfo.future}
+                            </div>
+                        `;
+                    }
+                    
+                    content += `
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                            <strong>💡 Why This Matters:</strong><br>
+                            ${isSummary ? 'These skills form the foundation of professional ML practice and are essential for building reliable, interpretable, and scalable ML systems.' : 'These advanced topics represent the cutting edge of ML research and will shape the future of AI applications across industries.'}
+                        </div>
+                    `;
+                    
+                    modal.show(title, content);
+                }
+            });
+        });
+
+        // Milestone card click handlers
+        document.querySelectorAll('.milestone-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('.milestone-title').textContent;
+                const number = this.querySelector('.milestone-number').textContent;
+                
+                const milestones = {
+                    'Weeks Completed': {
+                        achievement: 'You have successfully completed 12 out of 14 weeks of intensive ML education',
+                        journey: 'From basic concepts to advanced production systems, you\'ve built a comprehensive foundation',
+                        skills: 'Supervised learning, unsupervised learning, neural networks, deep learning, evaluation, deployment',
+                        remaining: 'Advanced topics (Week 13) and ML ethics & career guidance (Week 14)',
+                        impact: 'You now have the knowledge to tackle real-world ML problems professionally'
+                    },
+                    'Slides Covered': {
+                        achievement: `You've engaged with 240 interactive slides covering the complete ML pipeline`,
+                        journey: 'Each slide built upon previous concepts, creating a comprehensive learning experience',
+                        skills: 'Theoretical understanding, practical implementation, real-world applications, production considerations',
+                        remaining: '40 more slides covering cutting-edge topics and career preparation',
+                        impact: 'Deep technical knowledge across all aspects of machine learning'
+                    },
+                    'Course Progress': {
+                        achievement: '85% completion represents mastery of core ML concepts and practices',
+                        journey: 'From theory to practice, from algorithms to production systems',
+                        skills: 'Complete ML workflow: data → models → evaluation → deployment → monitoring',
+                        remaining: 'Advanced topics and professional development guidance',
+                        impact: 'Ready to contribute to ML teams and lead ML projects'
+                    }
+                };
+                
+                const info = milestones[title];
+                if (info) {
+                    modal.show(`Milestone: ${title}`, `
+                        <div class="modal-highlight">
+                            <strong>Achievement: ${number}</strong><br>
+                            ${info.achievement}
+                        </div>
+                        <p><strong>Your Learning Journey:</strong> ${info.journey}</p>
+                        <p><strong>Skills Acquired:</strong> ${info.skills}</p>
+                        <p><strong>What's Remaining:</strong> ${info.remaining}</p>
+                        <div class="modal-code">
+                            Career Impact:
+                            ${info.impact}
+                        </div>
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(250, 176, 5, 0.1); border-radius: 10px;">
+                            <strong>🎯 Keep Going!</strong><br>
+                            You're in the final stretch. The advanced topics in Week 13 will set you apart as an ML practitioner who understands both fundamentals and cutting-edge developments.
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week12_Slide239.html';
+            } else if (e.key === 'ArrowRight' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week13_Slide241.html';
+            }
+        });
+    </script>
+</body>
+</html>

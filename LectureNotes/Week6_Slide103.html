@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - K-Means Clustering</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .concept-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .algorithm-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .definition-text {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .key-points {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .point-item {
+            padding: 20px;
+            margin: 15px 0;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .point-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .point-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .point-desc {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .visualization-banner {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .viz-title {
+            font-size: 1.6em;
+            color: #0d9488;
+            margin-bottom: 30px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .kmeans-demo {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            min-height: 250px;
+        }
+
+        .cluster-stage {
+            text-align: center;
+            padding: 20px;
+            flex: 1;
+            transition: all 0.3s ease;
+        }
+
+        .cluster-stage:hover {
+            transform: scale(1.05);
+        }
+
+        .stage-icon {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 20px;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3em;
+            border: 2px solid #14b8a6;
+            position: relative;
+        }
+
+        .stage-label {
+            font-size: 1.1em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .arrow {
+            font-size: 2em;
+            color: #14b8a6;
+            animation: pulse 2s infinite;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .kmeans-demo { flex-direction: column; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    
+    <div class="course-info">CS5710 - Week 6</div>
+    <div class="slide-number">Slide 103 of 120</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">K-Means Clustering</h1>
+        
+        <div class="content-layout">
+            <div class="concept-section">
+                <h2 class="section-title">What is K-Means?</h2>
+                
+                <div class="definition-text">
+                    <strong>K-Means</strong> is one of the simplest and most popular unsupervised learning algorithms that partitions data into K distinct, non-overlapping clusters.
+                </div>
+                
+                <div style="font-size: 1.1em; line-height: 1.7; color: #1e293b;">
+                    <strong>Core Idea:</strong> Group similar data points together
+                    <br><br>
+                    • Partition n observations into k clusters
+                    <br>
+                    • Each observation belongs to the cluster with the nearest mean
+                    <br>
+                    • Minimizes within-cluster variance
+                    <br>
+                    • Creates spherical clusters
+                </div>
+            </div>
+
+            <div class="algorithm-section">
+                <h2 class="section-title">Key Characteristics</h2>
+                
+                <ul class="key-points">
+                    <li class="point-item">
+                        <div class="point-title">🎯 Objective</div>
+                        <div class="point-desc">Minimize the sum of squared distances between points and their cluster centers</div>
+                    </li>
+                    <li class="point-item">
+                        <div class="point-title">📊 Input</div>
+                        <div class="point-desc">Dataset and number of clusters K (must be specified)</div>
+                    </li>
+                    <li class="point-item">
+                        <div class="point-title">🔄 Iterative</div>
+                        <div class="point-desc">Alternates between assigning points and updating centroids</div>
+                    </li>
+                    <li class="point-item">
+                        <div class="point-title">⚡ Efficient</div>
+                        <div class="point-desc">O(n × k × i × d) complexity where i is iterations, d is dimensions</div>
+                    </li>
+                    <li class="point-item">
+                        <div class="point-title">🎲 Sensitive</div>
+                        <div class="point-desc">Results depend on initial centroid placement</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="visualization-banner">
+            <div class="viz-title">K-Means Clustering Process</div>
+            
+            <div class="kmeans-demo">
+                <div class="cluster-stage">
+                    <div class="stage-icon">📍</div>
+                    <div class="stage-label">Initialize K Centroids</div>
+                </div>
+                
+                <div class="arrow">→</div>
+                
+                <div class="cluster-stage">
+                    <div class="stage-icon">🎯</div>
+                    <div class="stage-label">Assign Points to Nearest</div>
+                </div>
+                
+                <div class="arrow">→</div>
+                
+                <div class="cluster-stage">
+                    <div class="stage-icon">📊</div>
+                    <div class="stage-label">Update Centroids</div>
+                </div>
+                
+                <div class="arrow">→</div>
+                
+                <div class="cluster-stage">
+                    <div class="stage-icon">✅</div>
+                    <div class="stage-label">Converged Clusters</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week6_Slide102.html" class="nav-btn">← Previous</a>
+        <a href="Week6_Slide104.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive point items with modal
+        document.querySelectorAll('.point-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const title = this.querySelector('.point-title').textContent;
+                const desc = this.querySelector('.point-desc').textContent;
+                
+                const details = {
+                    '🎯 Objective': {
+                        detail: 'The K-means objective function, also called inertia or within-cluster sum-of-squares (WCSS), measures cluster cohesion.',
+                        example: 'WCSS = Σ Σ ||x - μᵢ||²<br>where x ∈ cluster i, μᵢ is centroid of cluster i',
+                        importance: 'Lower WCSS means tighter, more cohesive clusters. This is what K-means tries to minimize.'
+                    },
+                    '📊 Input': {
+                        detail: 'K-means requires the number of clusters K to be specified beforehand, which can be challenging.',
+                        example: 'from sklearn.cluster import KMeans<br>kmeans = KMeans(n_clusters=3)<br>kmeans.fit(X)',
+                        importance: 'Choosing the wrong K can lead to poor clustering. Use elbow method or silhouette analysis to find optimal K.'
+                    },
+                    '🔄 Iterative': {
+                        detail: 'K-means uses an Expectation-Maximization approach, iterating until convergence.',
+                        example: 'E-step: Assign points to nearest centroid<br>M-step: Recalculate centroids as mean of assigned points',
+                        importance: 'Usually converges quickly (10-20 iterations) but can get stuck in local minima.'
+                    },
+                    '⚡ Efficient': {
+                        detail: 'K-means is computationally efficient, making it suitable for large datasets.',
+                        example: 'Time: O(n × k × i × d)<br>Space: O(n × d + k × d)<br>where n=points, k=clusters, i=iterations, d=dimensions',
+                        importance: 'Can cluster millions of points in seconds, but struggles with high-dimensional data.'
+                    },
+                    '🎲 Sensitive': {
+                        detail: 'Different initializations can lead to different final clusters.',
+                        example: 'Random init: Variable results<br>K-means++: Better initialization<br>Multiple runs: Take best result',
+                        importance: 'Always run K-means multiple times with different seeds and choose the best result.'
+                    }
+                };
+                
+                const info = details[title];
+                if (info) {
+                    modal.show(title, `
+                        <div class="modal-highlight">
+                            <strong>${desc}</strong>
+                        </div>
+                        <p>${info.detail}</p>
+                        <div class="modal-code">
+                            ${info.example}
+                        </div>
+                        <p><strong>Why it matters:</strong> ${info.importance}</p>
+                    `);
+                }
+            });
+        });
+
+        // Interactive cluster stages
+        document.querySelectorAll('.cluster-stage').forEach(stage => {
+            stage.addEventListener('click', function() {
+                const label = this.querySelector('.stage-label').textContent;
+                
+                const stageDetails = {
+                    'Initialize K Centroids': {
+                        description: 'Randomly select K points as initial cluster centers.',
+                        code: 'centroids = X[np.random.choice(n_samples, K, replace=False)]',
+                        note: 'Poor initialization can lead to suboptimal clustering. K-means++ provides smarter initialization.'
+                    },
+                    'Assign Points to Nearest': {
+                        description: 'Each point is assigned to the cluster with the nearest centroid.',
+                        code: 'distances = cdist(X, centroids, \'euclidean\')<br>labels = np.argmin(distances, axis=1)',
+                        note: 'Uses Euclidean distance by default. Works best with spherical clusters.'
+                    },
+                    'Update Centroids': {
+                        description: 'Recalculate each centroid as the mean of all points assigned to it.',
+                        code: 'for k in range(K):<br>    centroids[k] = X[labels == k].mean(axis=0)',
+                        note: 'If a cluster becomes empty, various strategies exist: reinitialize, split largest cluster, or remove.'
+                    },
+                    'Converged Clusters': {
+                        description: 'Algorithm stops when centroids no longer move significantly.',
+                        code: 'if np.allclose(old_centroids, new_centroids, rtol=1e-4):<br>    break',
+                        note: 'Convergence is guaranteed but may be to a local minimum. Quality depends on initialization.'
+                    }
+                };
+                
+                const details = stageDetails[label];
+                if (details) {
+                    modal.show(`K-Means Stage: ${label}`, `
+                        <div class="modal-highlight">
+                            ${details.description}
+                        </div>
+                        <div class="modal-code">
+                            ${details.code}
+                        </div>
+                        <p><strong>💡 Important Note:</strong> ${details.note}</p>
+                    `);
+                }
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (!modal.overlay.classList.contains('active')) {
+                if (e.key === 'ArrowLeft') {
+                    window.location.href = 'Week6_Slide102.html';
+                } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                    window.location.href = 'Week6_Slide104.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

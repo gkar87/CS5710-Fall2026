@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - CNN Architecture Overview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px 25px;
+            border-radius: 25px;
+            font-weight: 600;
+            color: #0d9488;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            font-size: 1.1em;
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px 25px;
+            border-radius: 25px;
+            font-weight: 600;
+            color: #0d9488;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            font-size: 1.1em;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.2em;
+            text-align: center;
+            margin-bottom: 40px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        @keyframes slideInFromTop {
+            0% { transform: translateY(-50px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        .pipeline-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            padding: 30px;
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(13, 148, 136, 0.1);
+            border: 2px solid rgba(13, 148, 136, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            text-align: center;
+            border-bottom: 3px solid #0d9488;
+            padding-bottom: 10px;
+        }
+
+        .cnn-pipeline {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 40px 0;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .pipeline-stage {
+            background: linear-gradient(135deg, #e6fffa 0%, #99f6e4 100%);
+            border-radius: 15px;
+            padding: 25px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            min-width: 140px;
+            flex: 1;
+        }
+
+        .pipeline-stage:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 15px 35px rgba(13, 148, 136, 0.2);
+            border-color: #0d9488;
+        }
+
+        .stage-visual {
+            width: 80px;
+            height: 60px;
+            background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+            border-radius: 10px;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .stage-title {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: #0d9488;
+            margin-bottom: 10px;
+        }
+
+        .stage-description {
+            font-size: 0.9em;
+            color: #1e293b;
+            line-height: 1.4;
+        }
+
+        .arrow {
+            font-size: 36px;
+            color: #0d9488;
+            margin: 0 10px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 30px 0;
+        }
+
+        .content-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            padding: 30px;
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(13, 148, 136, 0.1);
+            border: 2px solid rgba(13, 148, 136, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .content-section:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 40px rgba(13, 148, 136, 0.15);
+            border-color: rgba(13, 148, 136, 0.3);
+        }
+
+        .content-section h3 {
+            color: #0d9488;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            font-weight: 600;
+            border-bottom: 2px solid #0d9488;
+            padding-bottom: 8px;
+        }
+
+        .content-section ul {
+            color: #1e293b;
+            line-height: 1.6;
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .content-section li {
+            margin-bottom: 8px;
+            font-size: 1em;
+        }
+
+        .architecture-grid {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            padding: 30px;
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(13, 148, 136, 0.1);
+            border: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(13, 148, 136, 0.3);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(13, 148, 136, 0.4);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            margin: 5% auto;
+            padding: 40px;
+            border-radius: 25px;
+            width: 80%;
+            max-width: 900px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            border: 2px solid #0d9488;
+        }
+
+        .close {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 32px;
+            font-weight: bold;
+            color: #0d9488;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close:hover {
+            color: #14b8a6;
+        }
+
+        .modal h2 {
+            color: #0d9488;
+            font-size: 2em;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #0d9488;
+            padding-bottom: 10px;
+        }
+
+        .modal-text {
+            font-size: 1.1em;
+            line-height: 1.6;
+            color: #1e293b;
+            margin-bottom: 20px;
+        }
+
+        .modal-text ul {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+
+        .modal-text li {
+            margin-bottom: 10px;
+        }
+
+        canvas {
+            border: 2px solid #0d9488;
+            border-radius: 10px;
+            background: white;
+            margin: 20px 0;
+            max-width: 100%;
+        }
+
+        .animation-controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 0 10px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(13, 148, 136, 0.3);
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(13, 148, 136, 0.4);
+        }
+
+        .design-principles {
+            background: #ccfbf1;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 5px solid #0d9488;
+        }
+
+        .design-principles h3 {
+            color: #0d9488;
+            margin-bottom: 15px;
+            border: none;
+            padding: 0;
+        }
+
+        .design-principles ul {
+            color: #1e293b;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="course-info">CS5710 - Week 9</div>
+    <div class="slide-number">Slide 167 of 180</div>
+
+    <div class="slide-container">
+        <h1 class="slide-title">🏗️ CNN Architecture Overview</h1>
+        
+        <div class="pipeline-section">
+            <h2 class="section-title">🔄 Complete CNN Pipeline</h2>
+            
+            <div class="cnn-pipeline">
+                <div class="pipeline-stage" onclick="showModal('inputModal')">
+                    <div class="stage-visual">32×32×3</div>
+                    <div class="stage-title">Input Layer</div>
+                    <div class="stage-description">Raw image data with spatial dimensions</div>
+                </div>
+                
+                <div class="arrow">→</div>
+                
+                <div class="pipeline-stage" onclick="showModal('convModal')">
+                    <div class="stage-visual">CONV</div>
+                    <div class="stage-title">Convolution</div>
+                    <div class="stage-description">Feature extraction with learnable filters</div>
+                </div>
+                
+                <div class="arrow">→</div>
+                
+                <div class="pipeline-stage" onclick="showModal('activationModal')">
+                    <div class="stage-visual">ReLU</div>
+                    <div class="stage-title">Activation</div>
+                    <div class="stage-description">Non-linear transformation</div>
+                </div>
+                
+                <div class="arrow">→</div>
+                
+                <div class="pipeline-stage" onclick="showModal('poolModal')">
+                    <div class="stage-visual">POOL</div>
+                    <div class="stage-title">Pooling</div>
+                    <div class="stage-description">Spatial downsampling</div>
+                </div>
+                
+                <div class="arrow">→</div>
+                
+                <div class="pipeline-stage" onclick="showModal('fcModal')">
+                    <div class="stage-visual">FC</div>
+                    <div class="stage-title">Classification</div>
+                    <div class="stage-description">Final decision making</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="content-section" onclick="showModal('convDetailsModal')">
+                <h3>🎯 Convolutional Layers</h3>
+                <ul>
+                    <li><strong>Local Connectivity:</strong> Each neuron connects to local region</li>
+                    <li><strong>Parameter Sharing:</strong> Same filter applied across input</li>
+                    <li><strong>Translation Equivariance:</strong> Output shifts with input</li>
+                    <li><strong>Hierarchical Features:</strong> Low to high level patterns</li>
+                    <li><strong>Multiple Filters:</strong> Detect different features simultaneously</li>
+                </ul>
+            </div>
+            
+            <div class="content-section" onclick="showModal('poolDetailsModal')">
+                <h3>🏊 Pooling Layers</h3>
+                <ul>
+                    <li><strong>Spatial Reduction:</strong> Reduces feature map dimensions</li>
+                    <li><strong>Translation Invariance:</strong> Small shifts don't affect output</li>
+                    <li><strong>Computational Efficiency:</strong> Fewer parameters to process</li>
+                    <li><strong>Overfitting Control:</strong> Acts as regularization</li>
+                    <li><strong>Receptive Field:</strong> Increases effective field of view</li>
+                </ul>
+            </div>
+            
+            <div class="content-section" onclick="showModal('fcDetailsModal')">
+                <h3>🔗 Fully Connected Layers</h3>
+                <ul>
+                    <li><strong>Global Integration:</strong> Combines all spatial features</li>
+                    <li><strong>Classification:</strong> Maps features to class probabilities</li>
+                    <li><strong>High Parameters:</strong> Most parameters often here</li>
+                    <li><strong>Flatten Operation:</strong> Converts 3D to 1D representation</li>
+                    <li><strong>Dropout:</strong> Often used to prevent overfitting</li>
+                </ul>
+            </div>
+            
+            <div class="content-section" onclick="showModal('designModal')">
+                <h3>⚡ Design Principles</h3>
+                <ul>
+                    <li><strong>Depth vs Width:</strong> Balance network depth and filter count</li>
+                    <li><strong>Receptive Field:</strong> Ensure adequate spatial coverage</li>
+                    <li><strong>Skip Connections:</strong> Help gradient flow in deep networks</li>
+                    <li><strong>Batch Normalization:</strong> Stabilize training process</li>
+                    <li><strong>Data Augmentation:</strong> Improve generalization</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="architecture-grid">
+            <h2 class="section-title">🎬 Interactive Architecture Visualization</h2>
+            <div style="text-align: center;">
+                <canvas id="architectureCanvas" width="800" height="300"></canvas>
+                <div class="animation-controls">
+                    <button class="control-btn" onclick="animateArchitecture()">▶ Show Data Flow</button>
+                    <button class="control-btn" onclick="resetArchitecture()">🔄 Reset</button>
+                </div>
+            </div>
+            
+            <div class="design-principles">
+                <h3>💡 Key Architecture Insights</h3>
+                <ul>
+                    <li><strong>Feature Hierarchy:</strong> Early layers detect edges/textures, deeper layers detect objects/concepts</li>
+                    <li><strong>Spatial Resolution:</strong> Decreases through pooling while feature complexity increases</li>
+                    <li><strong>Parameter Efficiency:</strong> Convolution uses far fewer parameters than fully connected layers</li>
+                    <li><strong>Translation Invariance:</strong> CNNs can recognize objects regardless of position in image</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Input Layer Modal -->
+    <div id="inputModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('inputModal')">&times;</span>
+            <h2>📥 Input Layer Details</h2>
+            <div class="modal-text">
+                <p><strong>Input Layer</strong> represents the raw image data entering the CNN:</p>
+                <ul>
+                    <li><strong>Dimensions:</strong> Height × Width × Channels</li>
+                    <li><strong>Grayscale:</strong> H × W × 1 (single channel)</li>
+                    <li><strong>RGB Images:</strong> H × W × 3 (red, green, blue channels)</li>
+                    <li><strong>Preprocessing:</strong> Normalization, mean subtraction, data augmentation</li>
+                </ul>
+                
+                <div style="text-align: center;">
+                    <h3>🎨 Input Representation</h3>
+                    <canvas id="inputCanvas" width="600" height="250"></canvas>
+                </div>
+                
+                <div class="design-principles">
+                    <h3>📊 Common Input Sizes</h3>
+                    <ul>
+                        <li><strong>CIFAR-10:</strong> 32×32×3 (small natural images)</li>
+                        <li><strong>ImageNet:</strong> 224×224×3 (standard benchmark)</li>
+                        <li><strong>High Resolution:</strong> 512×512×3 or larger for detailed tasks</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Convolution Modal -->
+    <div id="convModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('convModal')">&times;</span>
+            <h2>🎯 Convolutional Layers Deep Dive</h2>
+            <div class="modal-text">
+                <p><strong>Convolutional layers</strong> are the heart of CNNs, performing feature extraction:</p>
+                
+                <div style="text-align: center;">
+                    <h3>🎬 Convolution Animation</h3>
+                    <canvas id="convCanvas" width="700" height="300"></canvas>
+                    <div class="animation-controls">
+                        <button class="control-btn" onclick="animateConvolution()">▶ Animate</button>
+                        <button class="control-btn" onclick="resetConvolution()">🔄 Reset</button>
+                    </div>
+                </div>
+                
+                <div class="design-principles">
+                    <h3>🔧 Key Hyperparameters</h3>
+                    <ul>
+                        <li><strong>Filter Size:</strong> Usually 3×3, 5×5, or 7×7 (3×3 most common)</li>
+                        <li><strong>Stride:</strong> Step size of filter movement (usually 1)</li>
+                        <li><strong>Padding:</strong> Zero-padding to control output size</li>
+                        <li><strong>Number of Filters:</strong> Determines output depth/channels</li>
+                    </ul>
+                </div>
+                
+                <h3>✨ Core Properties</h3>
+                <ul>
+                    <li><strong>Local Connectivity:</strong> Each neuron only connects to a small spatial region</li>
+                    <li><strong>Parameter Sharing:</strong> Same filter weights used across entire input</li>
+                    <li><strong>Translation Equivariance:</strong> If input shifts, output shifts correspondingly</li>
+                    <li><strong>Feature Detection:</strong> Learn to detect edges, textures, patterns automatically</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Design Principles Modal -->
+    <div id="designModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('designModal')">&times;</span>
+            <h2>⚡ CNN Design Principles</h2>
+            <div class="modal-text">
+                <div style="text-align: center;">
+                    <h3>🏗️ Complete Architecture Flow</h3>
+                    <canvas id="fullArchCanvas" width="800" height="350"></canvas>
+                    <div class="animation-controls">
+                        <button class="control-btn" onclick="animateFullArch()">▶ Show Complete Flow</button>
+                        <button class="control-btn" onclick="resetFullArch()">🔄 Reset</button>
+                    </div>
+                </div>
+                
+                <div class="design-principles">
+                    <h3>🎯 Architectural Guidelines</h3>
+                    <ul>
+                        <li><strong>Depth Strategy:</strong> Deeper networks learn more complex representations</li>
+                        <li><strong>Width Considerations:</strong> More filters per layer capture diverse features</li>
+                        <li><strong>Receptive Field:</strong> Should cover relevant spatial context for the task</li>
+                        <li><strong>Skip Connections:</strong> Help gradients flow in very deep networks (ResNet)</li>
+                    </ul>
+                </div>
+                
+                <div class="design-principles">
+                    <h3>🚀 Modern Improvements</h3>
+                    <ul>
+                        <li><strong>Batch Normalization:</strong> Stabilizes training and speeds convergence</li>
+                        <li><strong>Dropout:</strong> Prevents overfitting by randomly zeroing neurons</li>
+                        <li><strong>Global Average Pooling:</strong> Reduces parameters vs fully connected</li>
+                        <li><strong>Depthwise Convolutions:</strong> More efficient parameter usage</li>
+                    </ul>
+                </div>
+                
+                <h3>📈 Feature Learning Hierarchy</h3>
+                <ul>
+                    <li><strong>Layer 1-2:</strong> Edges, corners, basic geometric shapes</li>
+                    <li><strong>Layer 3-4:</strong> Textures, simple patterns, basic shapes</li>
+                    <li><strong>Layer 5+:</strong> Complex objects, scenes, high-level concepts</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Simplified modals for other stages -->
+    <div id="activationModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('activationModal')">&times;</span>
+            <h2>⚡ Activation Functions</h2>
+            <div class="modal-text">
+                <p>Activation functions introduce non-linearity, enabling networks to learn complex patterns:</p>
+                <ul>
+                    <li><strong>ReLU:</strong> f(x) = max(0, x) - Most popular, simple and effective</li>
+                    <li><strong>Leaky ReLU:</strong> f(x) = max(0.01x, x) - Handles negative values better</li>
+                    <li><strong>ELU:</strong> Exponential Linear Unit with smooth negative part</li>
+                    <li><strong>Swish/SiLU:</strong> f(x) = x × sigmoid(x) - Self-gated activation</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="poolModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('poolModal')">&times;</span>
+            <h2>🏊 Pooling Operations</h2>
+            <div class="modal-text">
+                <p>Pooling reduces spatial dimensions while preserving important information:</p>
+                <ul>
+                    <li><strong>Max Pooling:</strong> Takes maximum value in pooling window</li>
+                    <li><strong>Average Pooling:</strong> Takes average value in pooling window</li>
+                    <li><strong>Global Pooling:</strong> Reduces entire feature map to single value</li>
+                    <li><strong>Typical Size:</strong> 2×2 window with stride 2 (non-overlapping)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="fcModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('fcModal')">&times;</span>
+            <h2>🔗 Fully Connected Layers</h2>
+            <div class="modal-text">
+                <p>Fully connected layers perform the final classification step:</p>
+                <ul>
+                    <li><strong>Flattening:</strong> Convert 3D feature maps to 1D vector</li>
+                    <li><strong>Dense Connections:</strong> Every input connected to every output</li>
+                    <li><strong>High Parameters:</strong> Often contains most network parameters</li>
+                    <li><strong>Softmax Output:</strong> Converts raw scores to class probabilities</li>
+                    <li><strong>Modern Alternative:</strong> Global Average Pooling + small FC layer</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week9_Slide166.html" class="nav-btn">← Previous</a>
+        <a href="Week9_Slide168.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        function showModal(modalId) {
+            document.getElementById(modalId).style.display = "block";
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = "none";
+        }
+
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = "none";
+            }
+        }
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                var modals = document.getElementsByClassName('modal');
+                for (var i = 0; i < modals.length; i++) {
+                    modals[i].style.display = 'none';
+                }
+            } else if (event.key === 'ArrowLeft') {
+                window.location.href = 'Week9_Slide166.html';
+            } else if (event.key === 'ArrowRight') {
+                window.location.href = 'Week9_Slide168.html';
+            }
+        });
+
+        // Input visualization
+        function drawInputVisualization() {
+            const canvas = document.getElementById('inputCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw RGB channels
+            const channels = ['R', 'G', 'B'];
+            const colors = ['#ff9999', '#99ff99', '#9999ff'];
+            
+            for (let c = 0; c < 3; c++) {
+                for (let i = 0; i < 8; i++) {
+                    for (let j = 0; j < 8; j++) {
+                        const x = 80 + c * 150 + j * 12;
+                        const y = 50 + i * 12;
+                        
+                        ctx.fillStyle = colors[c];
+                        ctx.fillRect(x, y, 10, 10);
+                        ctx.strokeStyle = '#333';
+                        ctx.lineWidth = 0.5;
+                        ctx.strokeRect(x, y, 10, 10);
+                    }
+                }
+                
+                // Channel label
+                ctx.fillStyle = '#0d9488';
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(channels[c], 80 + c * 150 + 48, 200);
+            }
+            
+            // Dimension label
+            ctx.fillStyle = '#0d9488';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Height × Width × Channels', 300, 230);
+        }
+
+        // Architecture visualization
+        function animateArchitecture() {
+            const canvas = document.getElementById('architectureCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            
+            let step = 0;
+            const stages = ['Input', 'Conv1', 'Pool1', 'Conv2', 'Pool2', 'FC', 'Output'];
+            const widths = [60, 45, 22, 30, 15, 8, 4];
+            const heights = [60, 45, 22, 30, 15, 4, 4];
+            
+            function drawFrame() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                for (let i = 0; i < stages.length; i++) {
+                    const x = 50 + i * 100;
+                    const y = 150;
+                    const w = widths[i];
+                    const h = heights[i];
+                    
+                    // Highlight current stage
+                    if (step >= i) {
+                        ctx.fillStyle = step === i ? '#0d9488' : '#99f6e4';
+                    } else {
+                        ctx.fillStyle = '#e6fffa';
+                    }
+                    
+                    ctx.fillRect(x, y - h/2, w, h);
+                    ctx.strokeStyle = '#0d9488';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(x, y - h/2, w, h);
+                    
+                    // Stage label
+                    ctx.fillStyle = '#0d9488';
+                    ctx.font = '12px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(stages[i], x + w/2, y + h/2 + 20);
+                    
+                    // Dimension label
+                    if (i < 5) {
+                        ctx.font = '10px Arial';
+                        ctx.fillText(`${widths[i]}×${heights[i]}`, x + w/2, y + h/2 + 35);
+                    }
+                    
+                    // Arrow
+                    if (i < stages.length - 1) {
+                        ctx.fillStyle = step > i ? '#0d9488' : '#ccc';
+                        ctx.beginPath();
+                        ctx.moveTo(x + w + 5, y);
+                        ctx.lineTo(x + w + 35, y);
+                        ctx.moveTo(x + w + 25, y - 5);
+                        ctx.lineTo(x + w + 35, y);
+                        ctx.lineTo(x + w + 25, y + 5);
+                        ctx.stroke();
+                    }
+                }
+                
+                step++;
+                if (step <= stages.length) {
+                    setTimeout(drawFrame, 800);
+                }
+            }
+            
+            drawFrame();
+        }
+
+        function resetArchitecture() {
+            const canvas = document.getElementById('architectureCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const stages = ['Input', 'Conv1', 'Pool1', 'Conv2', 'Pool2', 'FC', 'Output'];
+            const widths = [60, 45, 22, 30, 15, 8, 4];
+            const heights = [60, 45, 22, 30, 15, 4, 4];
+            
+            for (let i = 0; i < stages.length; i++) {
+                const x = 50 + i * 100;
+                const y = 150;
+                const w = widths[i];
+                const h = heights[i];
+                
+                ctx.fillStyle = '#e6fffa';
+                ctx.fillRect(x, y - h/2, w, h);
+                ctx.strokeStyle = '#0d9488';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(x, y - h/2, w, h);
+                
+                ctx.fillStyle = '#0d9488';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(stages[i], x + w/2, y + h/2 + 20);
+                
+                if (i < 5) {
+                    ctx.font = '10px Arial';
+                    ctx.fillText(`${widths[i]}×${heights[i]}`, x + w/2, y + h/2 + 35);
+                }
+                
+                if (i < stages.length - 1) {
+                    ctx.fillStyle = '#ccc';
+                    ctx.beginPath();
+                    ctx.moveTo(x + w + 5, y);
+                    ctx.lineTo(x + w + 35, y);
+                    ctx.moveTo(x + w + 25, y - 5);
+                    ctx.lineTo(x + w + 35, y);
+                    ctx.lineTo(x + w + 25, y + 5);
+                    ctx.stroke();
+                }
+            }
+        }
+
+        // Convolution animation (simplified)
+        function animateConvolution() {
+            const canvas = document.getElementById('convCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            
+            let step = 0;
+            function drawFrame() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw simplified convolution demo
+                ctx.fillStyle = '#0d9488';
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('5×5 Input', 100, 30);
+                ctx.fillText('3×3 Filter', 300, 30);
+                ctx.fillText('3×3 Output', 500, 30);
+                
+                // Animate sliding window
+                const positions = [[0,0], [0,1], [0,2], [1,0], [1,1], [1,2], [2,0], [2,1], [2,2]];
+                if (step < positions.length) {
+                    const [row, col] = positions[step];
+                    ctx.fillStyle = 'rgba(13, 148, 136, 0.3)';
+                    ctx.fillRect(50 + col * 20, 50 + row * 20, 60, 60);
+                }
+                
+                step++;
+                if (step <= positions.length) {
+                    setTimeout(drawFrame, 500);
+                }
+            }
+            drawFrame();
+        }
+
+        function resetConvolution() {
+            const canvas = document.getElementById('convCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = '#0d9488';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('5×5 Input', 100, 30);
+            ctx.fillText('3×3 Filter', 300, 30);
+            ctx.fillText('3×3 Output', 500, 30);
+        }
+
+        // Initialize visualizations
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                drawInputVisualization();
+                resetArchitecture();
+                resetConvolution();
+            }, 100);
+        });
+    </script>
+</body>
+</html>

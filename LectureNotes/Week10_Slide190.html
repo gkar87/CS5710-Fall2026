@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Interactive RNN Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .demo-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .rnn-visualizer {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .controls-panel {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.6em;
+            color: #0d9488;
+            margin-bottom: 20px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .rnn-canvas {
+            width: 100%;
+            height: 300px;
+            border: 2px solid #14b8a6;
+            border-radius: 15px;
+            background: #ffffff;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .rnn-node {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(13, 148, 136, 0.3);
+        }
+
+        .rnn-node.active {
+            transform: scale(1.2);
+            box-shadow: 0 8px 25px rgba(13, 148, 136, 0.5);
+            background: linear-gradient(135deg, #059669, #0d9488);
+        }
+
+        .rnn-connection {
+            position: absolute;
+            height: 3px;
+            background: linear-gradient(90deg, #14b8a6, #0d9488);
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .rnn-connection.active {
+            height: 5px;
+            box-shadow: 0 2px 10px rgba(13, 148, 136, 0.4);
+        }
+
+        .input-sequence {
+            margin: 20px 0;
+        }
+
+        .sequence-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #14b8a6;
+            border-radius: 10px;
+            font-size: 1.1em;
+            background: rgba(240, 253, 250, 0.8);
+            color: #134e4a;
+            margin-bottom: 15px;
+        }
+
+        .sequence-input:focus {
+            outline: none;
+            border-color: #0d9488;
+            box-shadow: 0 0 20px rgba(13, 148, 136, 0.2);
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .demo-btn {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #14b8a6, #0d9488);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95em;
+        }
+
+        .demo-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(13, 148, 136, 0.3);
+        }
+
+        .demo-btn:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .stats-panel {
+            margin-top: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.95em;
+        }
+
+        .stat-label {
+            font-weight: 600;
+            color: #134e4a;
+        }
+
+        .stat-value {
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .interactive-demos {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .demos-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-top: 25px;
+        }
+
+        .demo-card {
+            padding: 25px;
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 15px;
+            border: 2px solid #14b8a6;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .demo-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .demo-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .demo-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 10px;
+        }
+
+        .demo-desc {
+            font-size: 0.9em;
+            color: #475569;
+            line-height: 1.4;
+        }
+
+        .output-display {
+            margin-top: 20px;
+            padding: 15px;
+            background: #1e293b;
+            color: #5eead4;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            min-height: 60px;
+            overflow-y: auto;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .pulse {
+            animation: pulse 0.5s ease-in-out;
+        }
+
+        @media (max-width: 768px) {
+            .demo-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .demos-grid { grid-template-columns: 1fr; }
+            .control-buttons { justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    
+    <div class="course-info">CS5710 - Week 10</div>
+    <div class="slide-number">Slide 190 of 200</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Interactive RNN Demo</h1>
+        
+        <div class="demo-layout">
+            <div class="rnn-visualizer">
+                <h2 class="section-title">🧠 RNN Visualization</h2>
+                
+                <div class="rnn-canvas" id="rnnCanvas">
+                    <!-- RNN nodes and connections will be created dynamically -->
+                </div>
+                
+                <div class="stats-panel">
+                    <div class="stat-item">
+                        <span class="stat-label">Current Step:</span>
+                        <span class="stat-value" id="currentStep">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Hidden State Size:</span>
+                        <span class="stat-value" id="hiddenSize">64</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Total Parameters:</span>
+                        <span class="stat-value" id="totalParams">8,256</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Processing Time:</span>
+                        <span class="stat-value" id="processingTime">0ms</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls-panel">
+                <h2 class="section-title">🎮 Interactive Controls</h2>
+                
+                <div class="input-sequence">
+                    <label for="sequenceInput" style="font-weight: 600; color: #134e4a; margin-bottom: 10px; display: block;">
+                        Input Sequence:
+                    </label>
+                    <input type="text" id="sequenceInput" class="sequence-input" 
+                           placeholder="Enter text (e.g., 'Hello world')" value="Hello world">
+                </div>
+
+                <div class="control-buttons">
+                    <button class="demo-btn" id="startBtn">▶️ Start</button>
+                    <button class="demo-btn" id="stepBtn">👆 Step</button>
+                    <button class="demo-btn" id="resetBtn">🔄 Reset</button>
+                    <button class="demo-btn" id="speedBtn">⚡ Speed: 1x</button>
+                </div>
+
+                <div style="margin: 20px 0;">
+                    <label style="font-weight: 600; color: #134e4a; margin-bottom: 10px; display: block;">
+                        RNN Type:
+                    </label>
+                    <select id="rnnType" style="width: 100%; padding: 10px; border: 2px solid #14b8a6; border-radius: 8px; background: rgba(240, 253, 250, 0.8);">
+                        <option value="vanilla">Vanilla RNN</option>
+                        <option value="lstm">LSTM</option>
+                        <option value="gru">GRU</option>
+                        <option value="bidirectional">Bidirectional RNN</option>
+                    </select>
+                </div>
+
+                <div class="output-display" id="outputDisplay">
+                    Ready to process sequence...
+                    Click "Start" to begin RNN forward pass simulation.
+                </div>
+            </div>
+        </div>
+
+        <div class="interactive-demos">
+            <h2 class="section-title" style="text-align: center; margin-bottom: 30px;">🔍 Explore RNN Concepts</h2>
+            
+            <div class="demos-grid">
+                <div class="demo-card" data-demo="training">
+                    <span class="demo-icon">🎯</span>
+                    <div class="demo-title">Training Process</div>
+                    <div class="demo-desc">See how RNNs learn through backpropagation through time</div>
+                </div>
+                
+                <div class="demo-card" data-demo="memory">
+                    <span class="demo-icon">🧠</span>
+                    <div class="demo-title">Memory & Gradients</div>
+                    <div class="demo-desc">Understand vanishing gradients and LSTM solutions</div>
+                </div>
+                
+                <div class="demo-card" data-demo="applications">
+                    <span class="demo-icon">🚀</span>
+                    <div class="demo-title">Real Applications</div>
+                    <div class="demo-desc">Explore text generation, translation, and more</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week10_Slide189.html" class="nav-btn">← Previous</a>
+        <a href="Week10_Slide191.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        // RNN Visualizer Class
+        class RNNVisualizer {
+            constructor() {
+                this.canvas = document.getElementById('rnnCanvas');
+                this.sequenceInput = document.getElementById('sequenceInput');
+                this.outputDisplay = document.getElementById('outputDisplay');
+                this.currentStepDisplay = document.getElementById('currentStep');
+                this.processingTimeDisplay = document.getElementById('processingTime');
+                
+                this.currentStep = 0;
+                this.sequence = [];
+                this.isRunning = false;
+                this.speed = 1000; // milliseconds
+                this.nodes = [];
+                this.connections = [];
+                
+                this.initializeVisualization();
+                this.setupControls();
+            }
+            
+            initializeVisualization() {
+                this.canvas.innerHTML = '';
+                this.nodes = [];
+                this.connections = [];
+                
+                // Create RNN nodes
+                for (let i = 0; i < 5; i++) {
+                    const node = document.createElement('div');
+                    node.className = 'rnn-node';
+                    node.textContent = `h${i}`;
+                    node.style.left = `${50 + i * 80}px`;
+                    node.style.top = '120px';
+                    node.style.transform = 'translate(-50%, -50%)';
+                    
+                    // Add click handler for node details
+                    node.addEventListener('click', () => this.showNodeDetails(i));
+                    
+                    this.canvas.appendChild(node);
+                    this.nodes.push(node);
+                    
+                    // Create connections (except for last node)
+                    if (i < 4) {
+                        const connection = document.createElement('div');
+                        connection.className = 'rnn-connection';
+                        connection.style.left = `${90 + i * 80}px`;
+                        connection.style.top = '120px';
+                        connection.style.width = '40px';
+                        connection.style.transform = 'translateY(-50%)';
+                        
+                        this.canvas.appendChild(connection);
+                        this.connections.push(connection);
+                    }
+                }
+                
+                // Input nodes
+                for (let i = 0; i < 5; i++) {
+                    const inputNode = document.createElement('div');
+                    inputNode.className = 'rnn-node';
+                    inputNode.textContent = 'x';
+                    inputNode.style.left = `${50 + i * 80}px`;
+                    inputNode.style.top = '50px';
+                    inputNode.style.transform = 'translate(-50%, -50%)';
+                    inputNode.style.background = 'linear-gradient(135deg, #14b8a6, #06b6d4)';
+                    
+                    this.canvas.appendChild(inputNode);
+                    
+                    // Vertical connection from input to hidden
+                    const vertConnection = document.createElement('div');
+                    vertConnection.className = 'rnn-connection';
+                    vertConnection.style.left = `${50 + i * 80}px`;
+                    vertConnection.style.top = '80px';
+                    vertConnection.style.width = '3px';
+                    vertConnection.style.height = '40px';
+                    vertConnection.style.transform = 'translateX(-50%)';
+                    
+                    this.canvas.appendChild(vertConnection);
+                }
+                
+                // Output nodes
+                for (let i = 0; i < 5; i++) {
+                    const outputNode = document.createElement('div');
+                    outputNode.className = 'rnn-node';
+                    outputNode.textContent = 'y';
+                    outputNode.style.left = `${50 + i * 80}px`;
+                    outputNode.style.top = '200px';
+                    outputNode.style.transform = 'translate(-50%, -50%)';
+                    outputNode.style.background = 'linear-gradient(135deg, #dc2626, #ea580c)';
+                    
+                    this.canvas.appendChild(outputNode);
+                    
+                    // Vertical connection from hidden to output
+                    const vertConnection = document.createElement('div');
+                    vertConnection.className = 'rnn-connection';
+                    vertConnection.style.left = `${50 + i * 80}px`;
+                    vertConnection.style.top = '150px';
+                    vertConnection.style.width = '3px';
+                    vertConnection.style.height = '40px';
+                    vertConnection.style.transform = 'translateX(-50%)';
+                    
+                    this.canvas.appendChild(vertConnection);
+                }
+            }
+            
+            setupControls() {
+                document.getElementById('startBtn').addEventListener('click', () => this.start());
+                document.getElementById('stepBtn').addEventListener('click', () => this.step());
+                document.getElementById('resetBtn').addEventListener('click', () => this.reset());
+                document.getElementById('speedBtn').addEventListener('click', () => this.toggleSpeed());
+                document.getElementById('rnnType').addEventListener('change', () => this.updateRNNType());
+            }
+            
+            start() {
+                if (this.isRunning) return;
+                
+                this.sequence = this.sequenceInput.value.trim().split('');
+                if (this.sequence.length === 0) return;
+                
+                this.isRunning = true;
+                this.currentStep = 0;
+                this.outputDisplay.textContent = 'Starting RNN forward pass...\n';
+                
+                this.processSequence();
+            }
+            
+            async processSequence() {
+                const startTime = Date.now();
+                
+                for (let i = 0; i < Math.min(this.sequence.length, 5); i++) {
+                    if (!this.isRunning) break;
+                    
+                    await this.processStep(i);
+                    await this.delay(this.speed);
+                }
+                
+                const endTime = Date.now();
+                this.processingTimeDisplay.textContent = `${endTime - startTime}ms`;
+                this.isRunning = false;
+                
+                this.outputDisplay.textContent += '\nRNN forward pass completed!';
+            }
+            
+            async processStep(stepIndex) {
+                this.currentStep = stepIndex + 1;
+                this.currentStepDisplay.textContent = this.currentStep;
+                
+                // Reset all nodes
+                this.nodes.forEach(node => node.classList.remove('active'));
+                this.connections.forEach(conn => conn.classList.remove('active'));
+                
+                // Activate current step
+                if (stepIndex < this.nodes.length) {
+                    this.nodes[stepIndex].classList.add('active');
+                    this.nodes[stepIndex].classList.add('pulse');
+                    
+                    // Remove pulse after animation
+                    setTimeout(() => {
+                        this.nodes[stepIndex].classList.remove('pulse');
+                    }, 500);
+                    
+                    if (stepIndex > 0 && stepIndex - 1 < this.connections.length) {
+                        this.connections[stepIndex - 1].classList.add('active');
+                    }
+                }
+                
+                // Update output display
+                const char = this.sequence[stepIndex] || '';
+                this.outputDisplay.textContent += `Step ${stepIndex + 1}: Processing '${char}'\n`;
+                this.outputDisplay.textContent += `Hidden state h${stepIndex} updated\n`;
+                
+                // Scroll output to bottom
+                this.outputDisplay.scrollTop = this.outputDisplay.scrollHeight;
+            }
+            
+            step() {
+                if (this.isRunning) return;
+                
+                this.sequence = this.sequenceInput.value.trim().split('');
+                if (this.currentStep >= Math.min(this.sequence.length, 5)) return;
+                
+                this.processStep(this.currentStep);
+                this.currentStep++;
+            }
+            
+            reset() {
+                this.isRunning = false;
+                this.currentStep = 0;
+                this.currentStepDisplay.textContent = '0';
+                this.processingTimeDisplay.textContent = '0ms';
+                
+                // Reset visualization
+                this.nodes.forEach(node => {
+                    node.classList.remove('active', 'pulse');
+                });
+                this.connections.forEach(conn => {
+                    conn.classList.remove('active');
+                });
+                
+                this.outputDisplay.textContent = 'Ready to process sequence...\nClick "Start" to begin RNN forward pass simulation.';
+            }
+            
+            toggleSpeed() {
+                const speedBtn = document.getElementById('speedBtn');
+                if (this.speed === 1000) {
+                    this.speed = 500;
+                    speedBtn.textContent = '⚡ Speed: 2x';
+                } else if (this.speed === 500) {
+                    this.speed = 250;
+                    speedBtn.textContent = '⚡ Speed: 4x';
+                } else {
+                    this.speed = 1000;
+                    speedBtn.textContent = '⚡ Speed: 1x';
+                }
+            }
+            
+            updateRNNType() {
+                const type = document.getElementById('rnnType').value;
+                const hiddenSizeEl = document.getElementById('hiddenSize');
+                const totalParamsEl = document.getElementById('totalParams');
+                
+                const configs = {
+                    'vanilla': { hiddenSize: 64, params: '8,256' },
+                    'lstm': { hiddenSize: 64, params: '33,024' },
+                    'gru': { hiddenSize: 64, params: '24,768' },
+                    'bidirectional': { hiddenSize: 128, params: '16,512' }
+                };
+                
+                const config = configs[type];
+                hiddenSizeEl.textContent = config.hiddenSize;
+                totalParamsEl.textContent = config.params;
+                
+                this.reset();
+            }
+            
+            showNodeDetails(nodeIndex) {
+                const modal = new ModalSystem();
+                const nodeDetails = {
+                    title: `RNN Node h${nodeIndex}`,
+                    content: `
+                        <div class="modal-highlight">
+                            <strong>Hidden State ${nodeIndex}</strong>
+                        </div>
+                        <p>This node represents the hidden state at time step ${nodeIndex}. It contains information from all previous time steps.</p>
+                        
+                        <div class="modal-code">
+                            <strong>Computation:</strong><br>
+                            h${nodeIndex} = tanh(W_hh * h${nodeIndex-1} + W_xh * x${nodeIndex} + b_h)<br><br>
+                            <strong>Components:</strong><br>
+                            • W_hh: Hidden-to-hidden weight matrix<br>
+                            • W_xh: Input-to-hidden weight matrix<br>
+                            • b_h: Hidden bias vector<br>
+                            • tanh: Activation function
+                        </div>
+                        
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                            <strong>💡 Key Points:</strong><br>
+                            • Hidden state carries information from previous time steps<br>
+                            • Enables RNN to have "memory" of past inputs<br>
+                            • Same weights used across all time steps (parameter sharing)
+                        </div>
+                    `
+                };
+                
+                modal.show(nodeDetails.title, nodeDetails.content);
+            }
+            
+            delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive demo cards
+        document.querySelectorAll('.demo-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const demoType = this.dataset.demo;
+                
+                const demoContent = {
+                    'training': {
+                        title: '🎯 RNN Training Process',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Backpropagation Through Time (BPTT)</strong>
+                            </div>
+                            <p>RNNs are trained using backpropagation through time, where gradients are computed backward through the sequence.</p>
+                            
+                            <div class="modal-code">
+                                <strong>Training Steps:</strong><br>
+                                1. Forward pass: Compute outputs for entire sequence<br>
+                                2. Loss computation: Calculate error for each time step<br>
+                                3. Backward pass: Propagate gradients backward through time<br>
+                                4. Weight update: Update parameters using computed gradients<br><br>
+                                
+                                <strong>Gradient Flow:</strong><br>
+                                ∂L/∂W = Σ(t=1 to T) ∂L_t/∂W_t<br>
+                                where L_t is loss at time step t
+                            </div>
+                            
+                            <div class="modal-highlight">
+                                <strong>Training Challenges:</strong><br>
+                                • <strong>Vanishing Gradients:</strong> Gradients become very small for early time steps<br>
+                                • <strong>Exploding Gradients:</strong> Gradients can grow exponentially<br>
+                                • <strong>Long Dependencies:</strong> Difficulty learning long-term relationships<br><br>
+                                
+                                <strong>Solutions:</strong><br>
+                                • Gradient clipping for exploding gradients<br>
+                                • LSTM/GRU architectures for vanishing gradients<br>
+                                • Careful weight initialization<br>
+                                • Skip connections and residual learning
+                            </div>
+                        `
+                    },
+                    'memory': {
+                        title: '🧠 Memory & Gradient Problems',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>The Vanishing Gradient Problem</strong>
+                            </div>
+                            <p>In traditional RNNs, gradients become exponentially smaller as they propagate backward through time, making it difficult to learn long-term dependencies.</p>
+                            
+                            <div class="modal-code">
+                                <strong>Mathematical Explanation:</strong><br>
+                                ∂h_t/∂h_{t-k} = Π(i=1 to k) ∂h_{t-i+1}/∂h_{t-i}<br>
+                                ≈ Π(i=1 to k) W_hh * σ'(net_{t-i+1})<br><br>
+                                
+                                If |W_hh| < 1 and |σ'| < 1, then:<br>
+                                ∂h_t/∂h_{t-k} → 0 as k increases<br><br>
+                                
+                                This means early time steps have minimal influence on later outputs.
+                            </div>
+                            
+                            <div class="modal-highlight">
+                                <strong>LSTM Solution:</strong><br>
+                                LSTMs solve this with:<br>
+                                • <strong>Cell State:</strong> Highway for information flow<br>
+                                • <strong>Forget Gate:</strong> Controls what to forget<br>
+                                • <strong>Input Gate:</strong> Controls what new info to store<br>
+                                • <strong>Output Gate:</strong> Controls what to output<br><br>
+                                
+                                The cell state allows gradients to flow more easily across time steps, enabling learning of long-term dependencies.
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(59, 130, 246, 0.1); border-radius: 10px; border-left: 4px solid #3b82f6;">
+                                <strong>🔬 Experimental Evidence:</strong><br>
+                                • Vanilla RNN: Can learn dependencies ~5-10 steps<br>
+                                • LSTM: Can learn dependencies 100+ steps<br>
+                                • Transformer: Can handle 1000+ token dependencies
+                            </div>
+                        `
+                    },
+                    'applications': {
+                        title: '🚀 Real-World RNN Applications',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Production RNN Systems</strong>
+                            </div>
+                            <p>RNNs power many real-world applications across different industries and domains.</p>
+                            
+                            <div class="modal-code">
+                                <strong>🎯 Language Models & Text Generation:</strong><br>
+                                • GPT-2/GPT-3 (Transformer-based, evolved from RNNs)<br>
+                                • Character-level text generation<br>
+                                • Code generation (GitHub Copilot)<br>
+                                • Creative writing assistance<br><br>
+                                
+                                <strong>🌐 Machine Translation:</strong><br>
+                                • Google Translate (hybrid RNN/Transformer)<br>
+                                • Facebook's M2M-100 multilingual model<br>
+                                • Real-time conversation translation<br>
+                                • Document translation services
+                            </div>
+                            
+                            <div class="modal-highlight">
+                                <strong>🎤 Speech & Audio Processing:</strong><br>
+                                • Speech Recognition: Google Assistant, Siri, Alexa<br>
+                                • Speech Synthesis: WaveNet, Tacotron<br>
+                                • Music Generation: OpenAI Jukebox<br>
+                                • Audio Classification: YouTube content filtering<br><br>
+                                
+                                <strong>📈 Time Series & Finance:</strong><br>
+                                • Stock price prediction (quantitative trading)<br>
+                                • Cryptocurrency market analysis<br>
+                                • Weather forecasting models<br>
+                                • IoT sensor data processing<br>
+                                • Predictive maintenance
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(16, 185, 129, 0.1); border-radius: 10px; border-left: 4px solid #10b981;">
+                                <strong>💡 Success Stories:</strong><br>
+                                • <strong>Netflix:</strong> RNNs for recommendation sequences<br>
+                                • <strong>Uber:</strong> ETA prediction using RNNs with traffic data<br>
+                                • <strong>Spotify:</strong> Music recommendation based on listening history<br>
+                                • <strong>Tesla:</strong> Autopilot uses RNN variants for sequential decision making<br>
+                                • <strong>DeepMind:</strong> AlphaStar uses LSTMs for StarCraft II strategy
+                            </div>
+                        `
+                    }
+                };
+                
+                const content = demoContent[demoType];
+                if (content) {
+                    modal.show(content.title, content.content);
+                }
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+        const rnnVisualizer = new RNNVisualizer();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week10_Slide191.html';
+            } else if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week10_Slide189.html';
+            }
+        });
+
+    </script>
+</body>
+</html>

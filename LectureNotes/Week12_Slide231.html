@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Model Interpretability</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .model-types-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .techniques-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .model-type-card {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid #0d9488;
+        }
+
+        .model-type-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.2);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .card-icon {
+            font-size: 2.5em;
+            margin-right: 20px;
+        }
+
+        .card-title {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: #0d9488;
+        }
+
+        .card-description {
+            color: #475569;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .card-examples {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 0.9em;
+            color: #64748b;
+        }
+
+        .technique-item {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .technique-item:hover {
+            transform: translateX(10px);
+            border-color: #0d9488;
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .technique-name {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+        }
+
+        .technique-desc {
+            color: #64748b;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .spectrum-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .spectrum-visual {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+            position: relative;
+        }
+
+        .spectrum-line {
+            height: 6px;
+            background: linear-gradient(90deg, #0d9488 0%, #14b8a6 30%, #fbbf24 70%, #ef4444 100%);
+            border-radius: 3px;
+            margin: 30px 0;
+            position: relative;
+        }
+
+        .spectrum-point {
+            position: absolute;
+            top: -15px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border: 3px solid #0d9488;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .spectrum-point:hover {
+            transform: scale(1.3);
+            box-shadow: 0 5px 15px rgba(13, 148, 136, 0.3);
+        }
+
+        .spectrum-label {
+            position: absolute;
+            top: 25px;
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #475569;
+            transform: translateX(-50%);
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .spectrum-endpoints {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 50px;
+            font-weight: 600;
+        }
+
+        .interpretability-high {
+            color: #0d9488;
+        }
+
+        .interpretability-low {
+            color: #ef4444;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .spectrum-endpoints { font-size: 0.9em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 12</div>
+    <div class="slide-number">Slide 231 of 240</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Model Interpretability</h1>
+        
+        <div class="content-layout">
+            <div class="model-types-section">
+                <h2 class="section-title">Model Categories</h2>
+                
+                <div class="model-type-card">
+                    <div class="card-header">
+                        <div class="card-icon">🔍</div>
+                        <div class="card-title">White Box Models</div>
+                    </div>
+                    <div class="card-description">
+                        Inherently interpretable models where decision-making process is transparent and understandable.
+                    </div>
+                    <div class="card-examples">
+                        Examples: Linear Regression, Decision Trees, Logistic Regression, Rule-based Systems
+                    </div>
+                </div>
+
+                <div class="model-type-card">
+                    <div class="card-header">
+                        <div class="card-icon">⚫</div>
+                        <div class="card-title">Black Box Models</div>
+                    </div>
+                    <div class="card-description">
+                        Complex models with opaque decision-making processes that require external explanation techniques.
+                    </div>
+                    <div class="card-examples">
+                        Examples: Deep Neural Networks, Random Forests, SVM with RBF kernel, Ensemble methods
+                    </div>
+                </div>
+
+                <div class="model-type-card">
+                    <div class="card-header">
+                        <div class="card-icon">🔘</div>
+                        <div class="card-title">Gray Box Models</div>
+                    </div>
+                    <div class="card-description">
+                        Models with partial interpretability - some components are transparent while others are opaque.
+                    </div>
+                    <div class="card-examples">
+                        Examples: Attention mechanisms, Gradient Boosting (feature importance), GAMs
+                    </div>
+                </div>
+            </div>
+
+            <div class="techniques-section">
+                <h2 class="section-title">Interpretation Techniques</h2>
+                
+                <div class="technique-item">
+                    <div class="technique-name">Global Explanations</div>
+                    <div class="technique-desc">
+                        Understand overall model behavior and feature importance across the entire dataset
+                    </div>
+                </div>
+
+                <div class="technique-item">
+                    <div class="technique-name">Local Explanations</div>
+                    <div class="technique-desc">
+                        Explain individual predictions and why the model made specific decisions
+                    </div>
+                </div>
+
+                <div class="technique-item">
+                    <div class="technique-name">Feature Attribution</div>
+                    <div class="technique-desc">
+                        Determine which features contribute most to predictions and by how much
+                    </div>
+                </div>
+
+                <div class="technique-item">
+                    <div class="technique-name">Counterfactual Analysis</div>
+                    <div class="technique-desc">
+                        "What would need to change for a different prediction?" - alternative scenarios
+                    </div>
+                </div>
+
+                <div class="technique-item">
+                    <div class="technique-name">Model Visualization</div>
+                    <div class="technique-desc">
+                        Visual representations of model structure, weights, and decision boundaries
+                    </div>
+                </div>
+
+                <div class="technique-item">
+                    <div class="technique-name">Sensitivity Analysis</div>
+                    <div class="technique-desc">
+                        How sensitive are predictions to changes in input features?
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="spectrum-section">
+            <h2 class="section-title">Interpretability-Performance Trade-off Spectrum</h2>
+            
+            <div class="spectrum-visual">
+                <div class="spectrum-line">
+                    <div class="spectrum-point" style="left: 5%;" data-model="Linear Regression">
+                        <div class="spectrum-label">Linear<br>Regression</div>
+                    </div>
+                    <div class="spectrum-point" style="left: 15%;" data-model="Decision Tree">
+                        <div class="spectrum-label">Decision<br>Tree</div>
+                    </div>
+                    <div class="spectrum-point" style="left: 35%;" data-model="Random Forest">
+                        <div class="spectrum-label">Random<br>Forest</div>
+                    </div>
+                    <div class="spectrum-point" style="left: 55%;" data-model="SVM">
+                        <div class="spectrum-label">SVM</div>
+                    </div>
+                    <div class="spectrum-point" style="left: 75%;" data-model="Neural Networks">
+                        <div class="spectrum-label">Neural<br>Networks</div>
+                    </div>
+                    <div class="spectrum-point" style="left: 92%;" data-model="Deep Learning">
+                        <div class="spectrum-label">Deep<br>Learning</div>
+                    </div>
+                </div>
+                
+                <div class="spectrum-endpoints">
+                    <div class="interpretability-high">High Interpretability<br>Lower Performance</div>
+                    <div class="interpretability-low">Low Interpretability<br>Higher Performance</div>
+                </div>
+            </div>
+
+            <div style="margin-top: 30px; padding: 25px; background: linear-gradient(135deg, #f0fdfa, #ccfbf1); border-radius: 15px; text-align: center;">
+                <strong style="color: #0d9488; font-size: 1.2em;">Key Insight:</strong><br>
+                <span style="color: #475569;">
+                    The choice between interpretable and high-performance models depends on your domain requirements. 
+                    Healthcare and finance often prioritize interpretability, while image recognition may prioritize performance.
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week12_Slide230.html" class="nav-btn">← Previous</a>
+        <a href="Week12_Slide232.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Model type card click handlers
+        document.querySelectorAll('.model-type-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('.card-title').textContent;
+                
+                const modelInfo = {
+                    'White Box Models': {
+                        characteristics: 'Decision process is transparent and human-understandable',
+                        advantages: 'Easy to debug, regulatory compliance, trust building, domain knowledge integration',
+                        disadvantages: 'Often limited in handling complex patterns, may underperform on complex data',
+                        when_to_use: 'Healthcare diagnosis, financial lending, legal applications, scientific research',
+                        interpretation_methods: 'Direct coefficient inspection, rule examination, feature importance analysis'
+                    },
+                    'Black Box Models': {
+                        characteristics: 'Complex internal representations that are difficult to interpret directly',
+                        advantages: 'Superior performance on complex tasks, automatic feature learning, handles non-linear patterns',
+                        disadvantages: 'Lack of transparency, difficult to debug, regulatory challenges, trust issues',
+                        when_to_use: 'Image recognition, NLP, recommendation systems, when performance is paramount',
+                        interpretation_methods: 'SHAP, LIME, attention visualization, saliency maps, gradient-based methods'
+                    },
+                    'Gray Box Models': {
+                        characteristics: 'Partial interpretability with some transparent and some opaque components',
+                        advantages: 'Balance between performance and interpretability, domain flexibility',
+                        disadvantages: 'Still require explanation techniques for opaque parts, complexity varies',
+                        when_to_use: 'When you need both good performance and some level of interpretability',
+                        interpretation_methods: 'Hybrid approaches combining direct interpretation with post-hoc explanations'
+                    }
+                };
+                
+                const info = modelInfo[title];
+                modal.show(title, `
+                    <div class="modal-highlight">
+                        <strong>Model Type: ${title}</strong>
+                    </div>
+                    <p><strong>Characteristics:</strong> ${info.characteristics}</p>
+                    <p><strong>Advantages:</strong> ${info.advantages}</p>
+                    <p><strong>Disadvantages:</strong> ${info.disadvantages}</p>
+                    <p><strong>When to use:</strong> ${info.when_to_use}</p>
+                    
+                    <div class="modal-code">
+                        Interpretation Methods:
+                        ${info.interpretation_methods}
+                    </div>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                        <strong>💡 Decision Framework:</strong><br>
+                        1. What's the cost of wrong decisions?<br>
+                        2. Are there regulatory requirements?<br>
+                        3. How important is stakeholder trust?<br>
+                        4. What's the complexity of your data?<br>
+                        5. Do you need to explain individual predictions?
+                    </div>
+                `);
+            });
+        });
+
+        // Technique item click handlers
+        document.querySelectorAll('.technique-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const name = this.querySelector('.technique-name').textContent;
+                
+                const techniqueInfo = {
+                    'Global Explanations': {
+                        purpose: 'Understand how the model works overall across all predictions',
+                        methods: 'Feature importance, partial dependence plots, global surrogate models',
+                        example: 'Feature importance showing that "age" and "income" are most important for loan approval',
+                        tools: 'SHAP summary plots, permutation importance, model-agnostic methods',
+                        use_cases: 'Model debugging, feature selection, compliance reporting, stakeholder communication'
+                    },
+                    'Local Explanations': {
+                        purpose: 'Explain why the model made a specific prediction for an individual instance',
+                        methods: 'LIME, SHAP values, counterfactuals, attention maps',
+                        example: 'This loan was rejected because applicant\'s debt-to-income ratio (0.8) exceeded threshold',
+                        tools: 'LIME, SHAP, Anchors, Counterfactual explanations',
+                        use_cases: 'Individual decision justification, appeals process, personalized feedback'
+                    },
+                    'Feature Attribution': {
+                        purpose: 'Quantify how much each feature contributes to a specific prediction',
+                        methods: 'Shapley values, integrated gradients, DeepLIFT, attention weights',
+                        example: 'Credit score (+0.3), Income (+0.2), Age (-0.1) → Final prediction: 0.4',
+                        tools: 'SHAP, Integrated Gradients, DeepLIFT, GradCAM',
+                        use_cases: 'Understanding feature contributions, model debugging, fairness analysis'
+                    },
+                    'Counterfactual Analysis': {
+                        purpose: 'Find minimal changes needed to flip the model\'s decision',
+                        methods: 'Optimization-based approaches, nearest neighbor methods, generative models',
+                        example: 'If income increased by $5000, the loan would be approved',
+                        tools: 'DiCE, Counterfactual explanations, What-If Tool',
+                        use_cases: 'Actionable recommendations, appeals guidance, fairness assessment'
+                    },
+                    'Model Visualization': {
+                        purpose: 'Visual representations of model internals and decision processes',
+                        methods: 'Decision boundaries, activation maps, attention heatmaps, layer visualizations',
+                        example: 'Heatmap showing which parts of medical image influenced cancer detection',
+                        tools: 'TensorBoard, GradCAM, Attention visualization, t-SNE plots',
+                        use_cases: 'Model debugging, architecture optimization, presentation to stakeholders'
+                    },
+                    'Sensitivity Analysis': {
+                        purpose: 'Measure how model predictions change with input perturbations',
+                        methods: 'Gradients, finite differences, adversarial examples, robustness testing',
+                        example: 'Model prediction changes by 10% when temperature increases by 1°C',
+                        tools: 'Gradient analysis, Adversarial toolbox, Robustness metrics',
+                        use_cases: 'Robustness testing, feature importance validation, model debugging'
+                    }
+                };
+                
+                const info = techniqueInfo[name];
+                modal.show(name, `
+                    <div class="modal-highlight">
+                        <strong>Technique: ${name}</strong>
+                    </div>
+                    <p><strong>Purpose:</strong> ${info.purpose}</p>
+                    <p><strong>Common methods:</strong> ${info.methods}</p>
+                    <p><strong>Example:</strong> ${info.example}</p>
+                    <p><strong>Popular tools:</strong> ${info.tools}</p>
+                    <p><strong>Use cases:</strong> ${info.use_cases}</p>
+                    
+                    <div class="modal-code">
+                        Implementation Example:
+                        
+                        # For feature attribution with SHAP
+                        import shap
+                        explainer = shap.TreeExplainer(model)
+                        shap_values = explainer.shap_values(X_test)
+                        shap.summary_plot(shap_values, X_test)
+                        
+                        # For local explanations with LIME
+                        import lime.lime_tabular
+                        explainer = lime.lime_tabular.LimeTabularExplainer(
+                            X_train, feature_names=features, class_names=classes)
+                        explanation = explainer.explain_instance(instance, model.predict_proba)
+                    </div>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(239, 68, 68, 0.1); border-radius: 10px;">
+                        <strong>⚠️ Important:</strong><br>
+                        Different explanation techniques may give different insights. Use multiple methods to get a comprehensive understanding of your model!
+                    </div>
+                `);
+            });
+        });
+
+        // Spectrum point click handlers
+        document.querySelectorAll('.spectrum-point').forEach(point => {
+            point.addEventListener('click', function() {
+                const model = this.dataset.model;
+                
+                const modelDetails = {
+                    'Linear Regression': {
+                        interpretability: 'Very High - Direct coefficient interpretation',
+                        performance: 'Limited - Only linear relationships',
+                        pros: 'Coefficients show feature importance and direction, statistical significance testing',
+                        cons: 'Cannot capture complex non-linear patterns, interactions',
+                        best_for: 'Simple relationships, baseline models, regulatory environments'
+                    },
+                    'Decision Tree': {
+                        interpretability: 'Very High - Clear decision rules',
+                        performance: 'Moderate - Can overfit easily',
+                        pros: 'Easy to visualize, handles non-linearity, automatic feature selection',
+                        cons: 'Unstable, prone to overfitting, biased toward features with many levels',
+                        best_for: 'Rule extraction, initial data exploration, explainable predictions'
+                    },
+                    'Random Forest': {
+                        interpretability: 'Moderate - Feature importance available',
+                        performance: 'High - Robust ensemble method',
+                        pros: 'Feature importance, handles missing values, reduces overfitting',
+                        cons: 'Black box individual trees, biased importance measures',
+                        best_for: 'Balanced performance/interpretability, feature selection, structured data'
+                    },
+                    'SVM': {
+                        interpretability: 'Low - Support vectors and kernel functions',
+                        performance: 'High - Strong generalization',
+                        pros: 'Good generalization, works with high dimensions, memory efficient',
+                        cons: 'Kernel choice affects interpretability, difficult to explain non-linear kernels',
+                        best_for: 'High-dimensional data, when performance matters more than interpretability'
+                    },
+                    'Neural Networks': {
+                        interpretability: 'Very Low - Complex weight interactions',
+                        performance: 'Very High - Universal approximators',
+                        pros: 'Can learn complex patterns, automatic feature engineering, flexible architecture',
+                        cons: 'Complete black box, millions of parameters, requires large datasets',
+                        best_for: 'Complex patterns, unstructured data, when explanation techniques are available'
+                    },
+                    'Deep Learning': {
+                        interpretability: 'Extremely Low - Deep hierarchical features',
+                        performance: 'Excellent - State-of-the-art on many tasks',
+                        pros: 'Automatic feature learning, handles complex data types, transfer learning',
+                        cons: 'Requires specialized explanation techniques, computational intensive, data hungry',
+                        best_for: 'Images, text, speech, when performance is critical and explanation tools exist'
+                    }
+                };
+                
+                const info = modelDetails[model];
+                modal.show(`Model: ${model}`, `
+                    <div class="modal-highlight">
+                        <strong>${model} - Position on Spectrum</strong>
+                    </div>
+                    <p><strong>Interpretability level:</strong> ${info.interpretability}</p>
+                    <p><strong>Performance characteristics:</strong> ${info.performance}</p>
+                    <p><strong>Advantages:</strong> ${info.pros}</p>
+                    <p><strong>Limitations:</strong> ${info.cons}</p>
+                    <p><strong>Best suited for:</strong> ${info.best_for}</p>
+                    
+                    <div class="modal-code">
+                        Trade-off Considerations:
+                        
+                        Interpretability ← → Performance
+                        
+                        • Regulatory requirements favor left side
+                        • Mission-critical accuracy favors right side  
+                        • Domain expertise can help bridge the gap
+                        • Explanation techniques can make right side more interpretable
+                        • Ensemble of simple models can balance both
+                    </div>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                        <strong>💡 Strategic Advice:</strong><br>
+                        Start with simpler models to understand your data and problem. Then move right on the spectrum only if the performance gain justifies the interpretability loss for your specific use case.
+                    </div>
+                `);
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week12_Slide230.html';
+            } else if (e.key === 'ArrowRight' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week12_Slide232.html';
+            }
+        });
+    </script>
+</body>
+</html>

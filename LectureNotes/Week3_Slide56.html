@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Bayes' Theorem Review</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .theorem-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .intuition-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .theorem-formula {
+            font-size: 1.8em;
+            text-align: center;
+            background: #1e293b;
+            color: #5eead4;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 25px 0;
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .theorem-formula:hover {
+            background: #334155;
+            transform: scale(1.02);
+        }
+
+        .formula-parts {
+            margin-top: 25px;
+            padding: 20px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .part {
+            margin: 15px 0;
+            padding: 12px;
+            background: white;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .part:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(13, 148, 136, 0.2);
+        }
+
+        .part-symbol {
+            font-size: 1.4em;
+            font-family: 'Courier New', monospace;
+            color: #0d9488;
+            margin-right: 15px;
+            min-width: 60px;
+            font-weight: 600;
+        }
+
+        .part-description {
+            flex: 1;
+            line-height: 1.5;
+        }
+
+        .intuition-text {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 25px;
+        }
+
+        .medical-example {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .medical-example:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .example-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .calculator-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .calculator-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+
+        .calculator-inputs {
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            border-radius: 15px;
+            padding: 30px;
+        }
+
+        .calculator-results {
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            border-radius: 15px;
+            padding: 30px;
+        }
+
+        .input-group {
+            margin: 15px 0;
+        }
+
+        .input-label {
+            display: block;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #cbd5e1;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #0d9488;
+        }
+
+        .calculate-button {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .calculate-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(13, 148, 136, 0.3);
+        }
+
+        .result-display {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 25px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            min-height: 300px;
+            margin-top: 15px;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .calculator-grid { grid-template-columns: 1fr; }
+            .theorem-formula { font-size: 1.4em; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 3</div>
+    <div class="slide-number">Slide 56 of 60</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Bayes' Theorem Review</h1>
+        
+        <div class="content-layout">
+            <div class="theorem-section">
+                <h2 class="section-title">The Fundamental Formula</h2>
+                
+                <div class="theorem-formula">
+                    P(A|B) = P(B|A) × P(A) / P(B)
+                </div>
+                
+                <div class="formula-parts">
+                    <div class="part" data-part="posterior">
+                        <div class="part-symbol">P(A|B)</div>
+                        <div class="part-description">
+                            <strong>Posterior Probability</strong><br>
+                            What we want to find - probability of A given evidence B
+                        </div>
+                    </div>
+                    
+                    <div class="part" data-part="likelihood">
+                        <div class="part-symbol">P(B|A)</div>
+                        <div class="part-description">
+                            <strong>Likelihood</strong><br>
+                            How likely is evidence B if A is true?
+                        </div>
+                    </div>
+                    
+                    <div class="part" data-part="prior">
+                        <div class="part-symbol">P(A)</div>
+                        <div class="part-description">
+                            <strong>Prior Probability</strong><br>
+                            What we knew about A before seeing evidence B
+                        </div>
+                    </div>
+                    
+                    <div class="part" data-part="evidence">
+                        <div class="part-symbol">P(B)</div>
+                        <div class="part-description">
+                            <strong>Evidence/Marginal</strong><br>
+                            Total probability of observing evidence B
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="intuition-section">
+                <h2 class="section-title">Intuitive Understanding</h2>
+                
+                <div class="intuition-text">
+                    Bayes' theorem is about <strong>updating beliefs with evidence</strong>:
+                    <br><br>
+                    🎯 <strong>Start</strong> with prior knowledge<br>
+                    📊 <strong>Observe</strong> new evidence<br>
+                    🔄 <strong>Update</strong> your beliefs<br>
+                    ✅ <strong>Get</strong> posterior probability
+                </div>
+                
+                <div class="medical-example" data-example="medical">
+                    <div class="example-title">🏥 Medical Diagnosis Example</div>
+                    <div>
+                        A rare disease affects 1% of population. A test is 99% accurate.<br>
+                        <strong>Question:</strong> If you test positive, what's the probability you have the disease?
+                    </div>
+                </div>
+                
+                <div class="medical-example" data-example="spam">
+                    <div class="example-title">📧 Spam Filter Example</div>
+                    <div>
+                        40% of emails are spam. An email contains "FREE".<br>
+                        <strong>Question:</strong> What's the probability this email is spam?
+                    </div>
+                </div>
+                
+                <div class="medical-example" data-example="ml">
+                    <div class="example-title">🤖 ML Classification Example</div>
+                    <div>
+                        In a dataset, 60% are Class A. A new sample has feature X.<br>
+                        <strong>Question:</strong> What's the probability it belongs to Class A?
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="calculator-section">
+            <h2 class="calculator-title">🧮 Interactive Bayes Calculator</h2>
+            <p style="text-align: center; color: #475569; margin-bottom: 30px;">
+                Enter probabilities and see Bayes' theorem in action
+            </p>
+            
+            <div class="calculator-grid">
+                <div class="calculator-inputs">
+                    <h4 style="color: #0d9488; margin-bottom: 20px; text-align: center;">Input Values</h4>
+                    
+                    <div class="input-group">
+                        <label class="input-label">Prior Probability P(A):</label>
+                        <input type="number" class="input-field" id="priorA" step="0.01" min="0" max="1" value="0.01" placeholder="e.g., 0.01">
+                        <small style="color: #64748b;">Base rate of event A</small>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label class="input-label">Likelihood P(B|A):</label>
+                        <input type="number" class="input-field" id="likelihoodBA" step="0.01" min="0" max="1" value="0.99" placeholder="e.g., 0.99">
+                        <small style="color: #64748b;">Probability of evidence B given A is true</small>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label class="input-label">P(B|¬A) - False Positive Rate:</label>
+                        <input type="number" class="input-field" id="likelihoodBNotA" step="0.01" min="0" max="1" value="0.01" placeholder="e.g., 0.01">
+                        <small style="color: #64748b;">Probability of evidence B given A is false</small>
+                    </div>
+                    
+                    <button class="calculate-button" onclick="calculateBayes()">Calculate P(A|B)</button>
+                </div>
+                
+                <div class="calculator-results">
+                    <h4 style="color: #0d9488; margin-bottom: 20px; text-align: center;">Calculation Results</h4>
+                    <div class="result-display" id="resultsDisplay">
+                        Enter values and click "Calculate P(A|B)" to see the step-by-step Bayes' theorem calculation
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week3_Slide55.html" class="nav-btn">← Previous</a>
+        <a href="Week3_Slide57.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Formula part explanations
+        const partDetails = {
+            'posterior': {
+                title: 'Posterior Probability P(A|B)',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>What it represents:</strong><br>
+                        The updated probability of A after observing evidence B
+                    </div>
+                    
+                    <p><strong>In Machine Learning:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>• P(spam|email) - Probability email is spam given its content</li>
+                        <li>• P(disease|symptoms) - Probability of disease given symptoms</li>
+                        <li>• P(class|features) - Probability of class given features</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+                        Example: P(spam|"FREE") = ?
+                        
+                        This is what we want to calculate - how likely is 
+                        an email to be spam if it contains the word "FREE"
+                    </div>
+                    
+                    <p><strong>Key Insight:</strong> This is our final answer - the probability we actually care about after updating our beliefs with new evidence.</p>
+                `
+            },
+            'likelihood': {
+                title: 'Likelihood P(B|A)',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>What it represents:</strong><br>
+                        How likely is the evidence if our hypothesis is true?
+                    </div>
+                    
+                    <p><strong>Examples:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>• P("FREE"|spam) - How often do spam emails contain "FREE"?</li>
+                        <li>• P(positive test|disease) - Test sensitivity</li>
+                        <li>• P(feature|class) - Feature probability given class</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+                        If 80% of spam emails contain "FREE":
+                        P("FREE"|spam) = 0.8
+                        
+                        This means spam emails are quite likely to contain "FREE"
+                    </div>
+                    
+                    <p><strong>Think of it as:</strong> "If my hypothesis is correct, how expected is this evidence?"</p>
+                    <p><strong>High likelihood = Strong evidence FOR the hypothesis</strong></p>
+                `
+            },
+            'prior': {
+                title: 'Prior Probability P(A)',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>What it represents:</strong><br>
+                        Your initial belief about A before seeing any evidence
+                    </div>
+                    
+                    <p><strong>Sources of priors:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>• Historical data: "40% of emails are spam"</li>
+                        <li>• Domain knowledge: "Rare disease affects 0.1% of population"</li>
+                        <li>• Class frequencies in training data</li>
+                        <li>• Expert judgment</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+                        Example: P(spam) = 0.4
+                        
+                        Before reading any email content, we expect 
+                        40% chance it's spam based on historical data
+                    </div>
+                    
+                    <p><strong>Impact:</strong> Strong priors can override weak evidence, while weak priors let evidence dominate.</p>
+                    <p><strong>Controversy:</strong> How to choose priors is often debated in Bayesian statistics!</p>
+                `
+            },
+            'evidence': {
+                title: 'Evidence/Marginal P(B)',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>What it represents:</strong><br>
+                        Total probability of observing the evidence across all possibilities
+                    </div>
+                    
+                    <p><strong>Calculation:</strong></p>
+                    <div class="modal-code">
+                        P(B) = P(B|A) × P(A) + P(B|¬A) × P(¬A)
+                        
+                        = P(B|spam) × P(spam) + P(B|ham) × P(ham)
+                    </div>
+                    
+                    <p><strong>Example with "FREE":</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>• P("FREE"|spam) = 0.8, P(spam) = 0.4</li>
+                        <li>• P("FREE"|ham) = 0.05, P(ham) = 0.6</li>
+                        <li>• P("FREE") = 0.8×0.4 + 0.05×0.6 = 0.35</li>
+                    </ul>
+                    
+                    <p><strong>Role:</strong> Acts as a normalizing constant - ensures all posterior probabilities sum to 1.</p>
+                    <p><strong>ML Trick:</strong> Often ignored in classification since we only need relative probabilities!</p>
+                `
+            }
+        };
+
+        // Make formula parts clickable
+        document.querySelectorAll('.part').forEach(part => {
+            part.addEventListener('click', function() {
+                const partName = this.getAttribute('data-part');
+                const detail = partDetails[partName];
+                if (detail) {
+                    modal.show(detail.title, detail.content);
+                }
+            });
+        });
+
+        // Example details
+        const exampleDetails = {
+            'medical': {
+                title: 'Medical Diagnosis: The Base Rate Fallacy',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Problem Setup:</strong><br>
+                        • Disease affects 1% of population: P(disease) = 0.01<br>
+                        • Test is 99% accurate: P(+|disease) = 0.99, P(-|healthy) = 0.99
+                    </div>
+                    
+                    <h4 style="color: #0d9488; margin-top: 20px;">Step-by-Step Calculation:</h4>
+                    
+                    <div class="modal-code">
+                        Given:
+                        • P(disease) = 0.01
+                        • P(+|disease) = 0.99  (sensitivity)
+                        • P(+|healthy) = 0.01  (false positive rate)
+                        
+                        Calculate P(disease|+):
+                        
+                        P(+) = P(+|disease)×P(disease) + P(+|healthy)×P(healthy)
+                             = 0.99×0.01 + 0.01×0.99
+                             = 0.0099 + 0.0099 = 0.0198
+                        
+                        P(disease|+) = P(+|disease) × P(disease) / P(+)
+                                     = 0.99 × 0.01 / 0.0198
+                                     = 0.5 = 50%
+                    </div>
+                    
+                    <div style="background: rgba(239, 68, 68, 0.1); padding: 15px; border-radius: 10px; margin: 20px 0;">
+                        <strong>🤯 Surprising Result:</strong><br>
+                        Even with a 99% accurate test, a positive result only means 50% chance of having the disease!
+                    </div>
+                    
+                    <p><strong>Why?</strong> The disease is so rare that most positive tests are false positives. This is the <strong>base rate fallacy</strong> - ignoring prior probabilities leads to wrong conclusions!</p>
+                `
+            },
+            'spam': {
+                title: 'Spam Filter: Text Classification',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Problem Setup:</strong><br>
+                        • 40% of emails are spam: P(spam) = 0.4<br>
+                        • "FREE" appears in 80% of spam, 5% of ham emails
+                    </div>
+                    
+                    <div class="modal-code">
+                        Given:
+                        • P(spam) = 0.4, P(ham) = 0.6
+                        • P("FREE"|spam) = 0.8
+                        • P("FREE"|ham) = 0.05
+                        
+                        Calculate P(spam|"FREE"):
+                        
+                        P("FREE") = P("FREE"|spam)×P(spam) + P("FREE"|ham)×P(ham)
+                                  = 0.8×0.4 + 0.05×0.6
+                                  = 0.32 + 0.03 = 0.35
+                        
+                        P(spam|"FREE") = P("FREE"|spam) × P(spam) / P("FREE")
+                                       = 0.8 × 0.4 / 0.35
+                                       = 0.914 = 91.4%
+                    </div>
+                    
+                    <div style="background: rgba(13, 148, 136, 0.1); padding: 15px; border-radius: 10px; margin: 20px 0;">
+                        <strong>📧 Result:</strong><br>
+                        An email containing "FREE" has a 91.4% probability of being spam!
+                    </div>
+                    
+                    <p><strong>ML Insight:</strong> This is exactly how Naive Bayes classifiers work - they calculate P(class|features) for each class and pick the highest probability.</p>
+                `
+            },
+            'ml': {
+                title: 'ML Classification: General Framework',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>General ML Classification Problem:</strong><br>
+                        Given features X, what's the probability of each class C?
+                    </div>
+                    
+                    <div class="modal-code">
+                        Bayes' theorem for classification:
+                        
+                        P(class|features) = P(features|class) × P(class) / P(features)
+                        
+                        For multiple classes:
+                        • Calculate P(class_i|features) for each class i
+                        • Choose class with highest probability
+                        • P(features) cancels out in comparison
+                    </div>
+                    
+                    <p><strong>Why Bayes is powerful for ML:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>• <strong>Probabilistic:</strong> Gives confidence scores, not just labels</li>
+                        <li>• <strong>Handles uncertainty:</strong> Works with noisy, incomplete data</li>
+                        <li>• <strong>Incorporates priors:</strong> Uses domain knowledge</li>
+                        <li>• <strong>Updatable:</strong> Can update beliefs with new evidence</li>
+                        <li>• <strong>Interpretable:</strong> Shows reasoning process</li>
+                    </ul>
+                    
+                    <div style="background: rgba(13, 148, 136, 0.1); padding: 15px; border-radius: 10px; margin: 20px 0;">
+                        <strong>🧠 Deep Connection:</strong><br>
+                        All probabilistic classifiers are essentially applying Bayes' theorem. Understanding Bayes gives you insight into logistic regression, neural networks, and more!
+                    </div>
+                `
+            }
+        };
+
+        // Make examples clickable
+        document.querySelectorAll('[data-example]').forEach(example => {
+            example.addEventListener('click', function() {
+                const exampleName = this.getAttribute('data-example');
+                const detail = exampleDetails[exampleName];
+                if (detail) {
+                    modal.show(detail.title, detail.content);
+                }
+            });
+        });
+
+        // Bayes calculator
+        function calculateBayes() {
+            const priorA = parseFloat(document.getElementById('priorA').value);
+            const likelihoodBA = parseFloat(document.getElementById('likelihoodBA').value);
+            const likelihoodBNotA = parseFloat(document.getElementById('likelihoodBNotA').value);
+            
+            // Validation
+            if (isNaN(priorA) || isNaN(likelihoodBA) || isNaN(likelihoodBNotA)) {
+                document.getElementById('resultsDisplay').textContent = 'Please enter valid numbers for all fields.';
+                return;
+            }
+            
+            if (priorA < 0 || priorA > 1 || likelihoodBA < 0 || likelihoodBA > 1 || likelihoodBNotA < 0 || likelihoodBNotA > 1) {
+                document.getElementById('resultsDisplay').textContent = 'All probabilities must be between 0 and 1.';
+                return;
+            }
+            
+            // Calculate P(¬A)
+            const priorNotA = 1 - priorA;
+            
+            // Calculate P(B) - total probability of evidence
+            const evidenceB = (likelihoodBA * priorA) + (likelihoodBNotA * priorNotA);
+            
+            // Calculate P(A|B) - posterior
+            const posteriorAB = (likelihoodBA * priorA) / evidenceB;
+            
+            // Calculate P(¬A|B) for completeness
+            const posteriorNotAB = (likelihoodBNotA * priorNotA) / evidenceB;
+            
+            // Display results
+            const results = `BAYES' THEOREM CALCULATION
+=============================
+
+Given inputs:
+• P(A) = ${priorA.toFixed(4)}
+• P(B|A) = ${likelihoodBA.toFixed(4)}
+• P(B|¬A) = ${likelihoodBNotA.toFixed(4)}
+
+Step 1: Calculate P(¬A)
+P(¬A) = 1 - P(A) = 1 - ${priorA.toFixed(4)} = ${priorNotA.toFixed(4)}
+
+Step 2: Calculate P(B) [Law of Total Probability]
+P(B) = P(B|A)×P(A) + P(B|¬A)×P(¬A)
+     = ${likelihoodBA.toFixed(4)}×${priorA.toFixed(4)} + ${likelihoodBNotA.toFixed(4)}×${priorNotA.toFixed(4)}
+     = ${(likelihoodBA * priorA).toFixed(4)} + ${(likelihoodBNotA * priorNotA).toFixed(4)}
+     = ${evidenceB.toFixed(4)}
+
+Step 3: Apply Bayes' Theorem
+P(A|B) = P(B|A) × P(A) / P(B)
+       = ${likelihoodBA.toFixed(4)} × ${priorA.toFixed(4)} / ${evidenceB.toFixed(4)}
+       = ${(likelihoodBA * priorA).toFixed(4)} / ${evidenceB.toFixed(4)}
+       = ${posteriorAB.toFixed(4)}
+
+FINAL ANSWER:
+============
+P(A|B) = ${posteriorAB.toFixed(4)} = ${(posteriorAB * 100).toFixed(2)}%
+P(¬A|B) = ${posteriorNotAB.toFixed(4)} = ${(posteriorNotAB * 100).toFixed(2)}%
+
+Verification: ${(posteriorAB + posteriorNotAB).toFixed(4)} ≈ 1.0000 ✓`;
+
+            document.getElementById('resultsDisplay').textContent = results;
+            
+            // Show interpretation
+            setTimeout(() => {
+                const interpretation = posteriorAB > 0.5 ? 
+                    `Strong evidence FOR hypothesis A (${(posteriorAB * 100).toFixed(1)}% probability)` :
+                    `Evidence AGAINST hypothesis A (only ${(posteriorAB * 100).toFixed(1)}% probability)`;
+                    
+                const strength = posteriorAB > 0.9 ? 'Very Strong' :
+                               posteriorAB > 0.7 ? 'Strong' :
+                               posteriorAB > 0.5 ? 'Moderate' :
+                               posteriorAB > 0.3 ? 'Weak' : 'Very Weak';
+                
+                modal.show('Calculation Complete!', `
+                    <div class="modal-highlight">
+                        <strong>Result:</strong> P(A|B) = ${(posteriorAB * 100).toFixed(2)}%
+                    </div>
+                    
+                    <p><strong>Interpretation:</strong> ${interpretation}</p>
+                    <p><strong>Evidence Strength:</strong> ${strength}</p>
+                    
+                    <h4 style="color: #0d9488; margin-top: 20px;">Key Insights:</h4>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>• Prior P(A) was ${(priorA * 100).toFixed(1)}%</li>
+                        <li>• After evidence B, posterior is ${(posteriorAB * 100).toFixed(1)}%</li>
+                        <li>• Evidence ${posteriorAB > priorA ? 'increased' : 'decreased'} our belief by ${Math.abs((posteriorAB - priorA) * 100).toFixed(1)} percentage points</li>
+                        <li>• Likelihood ratio: ${(likelihoodBA/likelihoodBNotA).toFixed(2)} (higher = stronger evidence)</li>
+                    </ul>
+                    
+                    <div style="background: rgba(13, 148, 136, 0.1); padding: 15px; border-radius: 10px; margin: 20px 0;">
+                        <strong>🎯 This is exactly how Naive Bayes classifiers work!</strong><br>
+                        They calculate P(class|features) using Bayes' theorem and pick the class with highest probability.
+                    </div>
+                `);
+            }, 500);
+        }
+
+        // Make main formula clickable
+        document.querySelector('.theorem-formula').addEventListener('click', function() {
+            modal.show('Understanding Bayes\' Theorem', `
+                <div class="modal-highlight">
+                    <strong>The Most Important Formula in Machine Learning</strong>
+                </div>
+                
+                <div class="modal-code">
+                    P(A|B) = P(B|A) × P(A) / P(B)
+                    
+                    In words:
+                    Posterior = (Likelihood × Prior) / Evidence
+                </div>
+                
+                <p><strong>What makes it powerful:</strong></p>
+                <ul style="line-height: 1.8; margin-left: 20px;">
+                    <li>• <strong>Inverts conditional probabilities:</strong> From P(B|A) to P(A|B)</li>
+                    <li>• <strong>Updates beliefs rationally:</strong> Combines prior knowledge with new evidence</li>
+                    <li>• <strong>Quantifies uncertainty:</strong> Gives probabilities, not just yes/no answers</li>
+                    <li>• <strong>Foundation of ML:</strong> Basis for many algorithms</li>
+                </ul>
+                
+                <p><strong>Why it's "naive" in Naive Bayes:</strong></p>
+                <p>The classifier assumes features are independent given the class, which is usually unrealistic but often works well in practice!</p>
+                
+                <div style="background: rgba(13, 148, 136, 0.1); padding: 15px; border-radius: 10px; margin: 20px 0;">
+                    <strong>💡 Fun Fact:</strong><br>
+                    Bayes' theorem was discovered by Reverend Thomas Bayes in the 1740s but wasn't published until after his death in 1763. It started a whole philosophical debate about probability that continues today!
+                </div>
+            `);
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week3_Slide55.html';
+            } else if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week3_Slide57.html';
+            }
+        });
+
+    </script>
+</body>
+</html>

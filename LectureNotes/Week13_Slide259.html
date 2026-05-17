@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - ML in Autonomous Vehicles</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .av-systems-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .av-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInRotate 0.8s ease-out;
+            animation-fill-mode: both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .av-card:nth-child(1) { animation-delay: 0.2s; }
+        .av-card:nth-child(2) { animation-delay: 0.3s; }
+        .av-card:nth-child(3) { animation-delay: 0.4s; }
+        .av-card:nth-child(4) { animation-delay: 0.5s; }
+
+        .av-card:hover {
+            transform: translateY(-5px) rotateX(5deg);
+            box-shadow: 0 25px 50px rgba(13, 148, 136, 0.2);
+        }
+
+        .av-card::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #0d9488, #14b8a6, #0d9488);
+            border-radius: 20px;
+            opacity: 0;
+            z-index: -1;
+            transition: opacity 0.3s ease;
+        }
+
+        .av-card:hover::before {
+            opacity: 0.3;
+        }
+
+        .av-icon {
+            font-size: 3em;
+            margin-bottom: 20px;
+            display: inline-block;
+            animation: drive 3s ease-in-out infinite;
+        }
+
+        .av-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .av-description {
+            font-size: 1.1em;
+            line-height: 1.6;
+            color: #1e293b;
+            margin-bottom: 20px;
+        }
+
+        .av-features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .feature-badge {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #0d9488;
+        }
+
+        .discover-more {
+            margin-top: 20px;
+            color: #14b8a6;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .autonomy-levels {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            margin-top: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .autonomy-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .autonomy-stats {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 20px;
+            text-align: center;
+        }
+
+        .autonomy-item {
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            padding: 15px;
+            border-radius: 15px;
+            background: linear-gradient(135deg, rgba(204, 251, 241, 0.3), rgba(153, 246, 228, 0.3));
+        }
+
+        .autonomy-item:hover {
+            transform: scale(1.1);
+            background: linear-gradient(135deg, #ccfbf1, #99f6e4);
+        }
+
+        .level-number {
+            font-size: 2em;
+            font-weight: 700;
+            color: #0d9488;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .level-name {
+            font-size: 0.9em;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        .tech-list {
+            list-style: none;
+            margin: 20px 0;
+        }
+
+        .tech-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .tech-list li:last-child {
+            border-bottom: none;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInRotate {
+            from { transform: rotateY(90deg); opacity: 0; }
+            to { transform: rotateY(0); opacity: 1; }
+        }
+
+        @keyframes drive {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .av-systems-grid { grid-template-columns: 1fr; }
+            .autonomy-stats { grid-template-columns: repeat(2, 1fr); }
+            .slide-title { font-size: 2.5em; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 13</div>
+    <div class="slide-number">Slide 259 of 260</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">🚗 ML in Autonomous Vehicles</h1>
+        
+        <div class="av-systems-grid">
+            <div class="av-card" data-system="perception">
+                <div class="av-icon">👁️</div>
+                <h3 class="av-title">Computer Vision & Perception</h3>
+                <p class="av-description">
+                    Deep neural networks process camera, LiDAR, and radar data to create 
+                    a 360° understanding of the vehicle's environment in real-time.
+                </p>
+                <div class="av-features">
+                    <span class="feature-badge">Object Detection</span>
+                    <span class="feature-badge">Lane Recognition</span>
+                    <span class="feature-badge">3D Mapping</span>
+                </div>
+                <div class="discover-more">Click to discover →</div>
+            </div>
+
+            <div class="av-card" data-system="prediction">
+                <div class="av-icon">🔮</div>
+                <h3 class="av-title">Behavior Prediction</h3>
+                <p class="av-description">
+                    ML models predict the future movements of pedestrians, cyclists, and 
+                    other vehicles to enable safe navigation through complex scenarios.
+                </p>
+                <div class="av-features">
+                    <span class="feature-badge">Trajectory Forecasting</span>
+                    <span class="feature-badge">Intent Recognition</span>
+                    <span class="feature-badge">Risk Assessment</span>
+                </div>
+                <div class="discover-more">Click to discover →</div>
+            </div>
+
+            <div class="av-card" data-system="planning">
+                <div class="av-icon">🗺️</div>
+                <h3 class="av-title">Path Planning & Decision Making</h3>
+                <p class="av-description">
+                    Reinforcement learning algorithms determine optimal routes and make 
+                    split-second decisions balancing safety, efficiency, and comfort.
+                </p>
+                <div class="av-features">
+                    <span class="feature-badge">Route Optimization</span>
+                    <span class="feature-badge">Collision Avoidance</span>
+                    <span class="feature-badge">Traffic Navigation</span>
+                </div>
+                <div class="discover-more">Click to discover →</div>
+            </div>
+
+            <div class="av-card" data-system="control">
+                <div class="av-icon">🎮</div>
+                <h3 class="av-title">Vehicle Control Systems</h3>
+                <p class="av-description">
+                    Neural networks translate high-level decisions into precise control 
+                    commands for steering, acceleration, and braking with millisecond precision.
+                </p>
+                <div class="av-features">
+                    <span class="feature-badge">Adaptive Control</span>
+                    <span class="feature-badge">Sensor Fusion</span>
+                    <span class="feature-badge">Safety Systems</span>
+                </div>
+                <div class="discover-more">Click to discover →</div>
+            </div>
+        </div>
+
+        <div class="autonomy-levels">
+            <h2 class="autonomy-title">SAE Levels of Driving Automation</h2>
+            <div class="autonomy-stats">
+                <div class="autonomy-item" data-level="0">
+                    <span class="level-number">L0</span>
+                    <span class="level-name">No Automation</span>
+                </div>
+                <div class="autonomy-item" data-level="1">
+                    <span class="level-number">L1</span>
+                    <span class="level-name">Driver Assistance</span>
+                </div>
+                <div class="autonomy-item" data-level="2">
+                    <span class="level-number">L2</span>
+                    <span class="level-name">Partial Automation</span>
+                </div>
+                <div class="autonomy-item" data-level="3">
+                    <span class="level-number">L3</span>
+                    <span class="level-name">Conditional</span>
+                </div>
+                <div class="autonomy-item" data-level="4">
+                    <span class="level-number">L4</span>
+                    <span class="level-name">High Automation</span>
+                </div>
+                <div class="autonomy-item" data-level="5">
+                    <span class="level-number">L5</span>
+                    <span class="level-name">Full Automation</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week13_Slide258.html" class="nav-btn">← Previous</a>
+        <a href="Week13_Slide260.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.body;
+            for (let i = 0; i < 15; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (18 + Math.random() * 10) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // AV system details
+        const systemDetails = {
+            'perception': {
+                title: 'Computer Vision & Perception',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>👁️ The Eyes of Autonomous Vehicles</strong>
+                    </div>
+                    
+                    <h4>Sensor Fusion Technology:</h4>
+                    <p>Multiple sensor types work together to create a comprehensive understanding 
+                    of the environment. Deep learning models process terabytes of data per hour 
+                    to identify and track objects with centimeter-level precision.</p>
+                    
+                    <div class="modal-code">
+# Multi-Sensor Perception Pipeline
+import tensorflow as tf
+
+class PerceptionNetwork:
+    def __init__(self):
+        self.camera_cnn = self.build_vision_model()
+        self.lidar_pointnet = self.build_3d_model()
+        self.fusion_network = self.build_fusion_model()
+    
+    def perceive(self, camera_data, lidar_data, radar_data):
+        # Object detection from cameras
+        visual_objects = self.camera_cnn(camera_data)
+        # 3D point cloud processing
+        spatial_objects = self.lidar_pointnet(lidar_data)
+        # Sensor fusion for final perception
+        fused_perception = self.fusion_network(
+            [visual_objects, spatial_objects, radar_data]
+        )
+        return fused_perception  # 360° environment model
+                    </div>
+                    
+                    <h4>Key Technologies:</h4>
+                    <ul class="tech-list">
+                        <li><strong>📷 Camera Systems:</strong> 8-12 cameras provide 360° vision, detecting objects up to 250m away</li>
+                        <li><strong>🔦 LiDAR:</strong> Creates 3D point clouds with 2M+ points/second, accurate to 2cm</li>
+                        <li><strong>📡 Radar:</strong> Detects objects through fog/rain, measures velocity directly</li>
+                        <li><strong>🔀 Sensor Fusion:</strong> Kalman filters combine all sensor data for robust perception</li>
+                    </ul>
+                    
+                    <div class="modal-highlight">
+                        <strong>Performance:</strong> Tesla's FSD computer processes 36 trillion operations per second, 
+                        analyzing 8 camera feeds simultaneously to detect objects with 99.9% accuracy.
+                    </div>
+                `
+            },
+            'prediction': {
+                title: 'Behavior Prediction',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>🔮 Anticipating the Future on the Road</strong>
+                    </div>
+                    
+                    <h4>Predictive AI Models:</h4>
+                    <p>Recurrent neural networks and transformers analyze historical movement patterns 
+                    to predict future trajectories of all road users. These predictions update 10 times 
+                    per second to account for changing behaviors.</p>
+                    
+                    <div class="modal-code">
+# Trajectory Prediction using LSTM
+import torch
+import torch.nn as nn
+
+class TrajectoryPredictor(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.lstm = nn.LSTM(input_size=6, hidden_size=256, 
+                           num_layers=3, batch_first=True)
+        self.attention = nn.MultiheadAttention(256, 8)
+        self.decoder = nn.Linear(256, 60)  # 6 seconds @ 10Hz
+        
+    def forward(self, past_trajectory, scene_context):
+        # Encode past movement
+        lstm_out, _ = self.lstm(past_trajectory)
+        # Apply attention to scene context
+        attended, _ = self.attention(lstm_out, scene_context)
+        # Predict future trajectory
+        future_trajectory = self.decoder(attended)
+        return future_trajectory.reshape(-1, 10, 6)  # 10 timesteps
+                    </div>
+                    
+                    <h4>Prediction Capabilities:</h4>
+                    <ul class="tech-list">
+                        <li><strong>🚶 Pedestrian Intent:</strong> Predicts crossing behavior 3 seconds in advance</li>
+                        <li><strong>🚗 Vehicle Trajectories:</strong> Forecasts lane changes and turns up to 8 seconds ahead</li>
+                        <li><strong>🚴 Cyclist Behavior:</strong> Models erratic movements with 95% accuracy</li>
+                        <li><strong>🚦 Traffic Flow:</strong> Anticipates traffic light changes and congestion patterns</li>
+                    </ul>
+                    
+                    <div class="modal-highlight">
+                        <strong>Innovation:</strong> Waymo's behavior prediction models analyze 1000+ possible 
+                        futures for each detected object, selecting the most likely scenarios to plan safe maneuvers.
+                    </div>
+                `
+            },
+            'planning': {
+                title: 'Path Planning & Decision Making',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>🗺️ Intelligent Navigation Through Complex Environments</strong>
+                    </div>
+                    
+                    <h4>Reinforcement Learning for Driving:</h4>
+                    <p>Advanced RL algorithms learn optimal driving policies through millions of simulated 
+                    scenarios. These models balance multiple objectives: safety, efficiency, passenger comfort, 
+                    and traffic laws compliance.</p>
+                    
+                    <div class="modal-code">
+# Path Planning with A* and RL
+import numpy as np
+from collections import deque
+
+class AutonomousPlanner:
+    def __init__(self):
+        self.rl_policy = load_trained_policy('driving_policy.h5')
+        self.safety_checker = SafetyVerification()
+        
+    def plan_trajectory(self, current_state, goal, obstacles):
+        # Generate multiple candidate paths
+        paths = self.generate_paths(current_state, goal)
+        
+        # Evaluate each path using RL policy
+        scores = []
+        for path in paths:
+            safety_score = self.safety_checker.evaluate(path, obstacles)
+            comfort_score = self.evaluate_comfort(path)
+            efficiency_score = self.evaluate_efficiency(path)
+            
+            # RL policy combines all factors
+            total_score = self.rl_policy.evaluate(
+                [safety_score, comfort_score, efficiency_score]
+            )
+            scores.append(total_score)
+        
+        # Select optimal path
+        best_path = paths[np.argmax(scores)]
+        return self.smooth_trajectory(best_path)
+                    </div>
+                    
+                    <h4>Planning Capabilities:</h4>
+                    <ul class="tech-list">
+                        <li><strong>🛣️ Highway Merging:</strong> Calculates optimal merge points considering traffic flow</li>
+                        <li><strong>🔄 Intersection Navigation:</strong> Handles complex 4-way intersections with 99% success</li>
+                        <li><strong>🚧 Construction Zones:</strong> Dynamically reroutes around unexpected obstacles</li>
+                        <li><strong>🚨 Emergency Response:</strong> Yields to emergency vehicles detected 200m away</li>
+                    </ul>
+                    
+                    <div class="modal-highlight">
+                        <strong>Achievement:</strong> Cruise's vehicles navigate San Francisco's complex streets, 
+                        making 2000+ unprotected left turns daily with zero accidents in fully autonomous mode.
+                    </div>
+                `
+            },
+            'control': {
+                title: 'Vehicle Control Systems',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>🎮 Precision Control at Machine Speed</strong>
+                    </div>
+                    
+                    <h4>Neural Network Control:</h4>
+                    <p>End-to-end deep learning models translate high-level navigation commands into 
+                    precise control signals. These systems operate at 100Hz, adjusting steering, 
+                    throttle, and braking with superhuman precision.</p>
+                    
+                    <div class="modal-code">
+# Model Predictive Control with Neural Networks
+import control
+import torch
+
+class NeuralVehicleController:
+    def __init__(self):
+        self.dynamics_model = self.load_vehicle_dynamics()
+        self.control_network = self.build_control_network()
+        self.mpc_horizon = 20  # 2 seconds at 10Hz
+        
+    def control_step(self, current_state, desired_trajectory):
+        # Predict future states
+        predicted_states = []
+        for t in range(self.mpc_horizon):
+            control_input = self.control_network(
+                current_state, desired_trajectory[t]
+            )
+            next_state = self.dynamics_model(
+                current_state, control_input
+            )
+            predicted_states.append(next_state)
+            current_state = next_state
+        
+        # Optimize control sequence
+        optimal_controls = self.optimize_controls(
+            predicted_states, desired_trajectory
+        )
+        
+        # Apply first control with safety constraints
+        return self.apply_safety_limits(optimal_controls[0])
+                    </div>
+                    
+                    <h4>Control Features:</h4>
+                    <ul class="tech-list">
+                        <li><strong>⚡ Reaction Time:</strong> 10ms response time vs 250ms for human drivers</li>
+                        <li><strong>🎯 Precision:</strong> Maintains lane position within 5cm accuracy</li>
+                        <li><strong>🌧️ Weather Adaptation:</strong> Adjusts control parameters for rain/snow/ice</li>
+                        <li><strong>🛡️ Redundancy:</strong> Triple-redundant systems ensure fail-safe operation</li>
+                    </ul>
+                    
+                    <div class="modal-highlight">
+                        <strong>Safety Record:</strong> Waymo's vehicles have driven 20M+ autonomous miles 
+                        with 85% fewer injury-causing crashes than human drivers per mile.
+                    </div>
+                `
+            }
+        };
+
+        // Autonomy level details
+        const levelDetails = {
+            '0': {
+                title: 'Level 0: No Automation',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Traditional Driving - Full Human Control</strong>
+                    </div>
+                    
+                    <p>The human driver performs all driving tasks including steering, acceleration, 
+                    braking, and monitoring the environment. No automation assistance.</p>
+                    
+                    <h4>Examples:</h4>
+                    <ul class="tech-list">
+                        <li>Most vehicles manufactured before 2010</li>
+                        <li>Basic cars without cruise control</li>
+                        <li>Classic and vintage vehicles</li>
+                    </ul>
+                `
+            },
+            '1': {
+                title: 'Level 1: Driver Assistance',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Single Automated System Assists Driver</strong>
+                    </div>
+                    
+                    <p>Vehicle can assist with either steering OR acceleration/braking, but not both 
+                    simultaneously. Driver must remain engaged and monitor the environment.</p>
+                    
+                    <h4>Examples:</h4>
+                    <ul class="tech-list">
+                        <li><strong>Adaptive Cruise Control:</strong> Maintains speed and following distance</li>
+                        <li><strong>Lane Keeping Assist:</strong> Helps maintain lane position</li>
+                        <li><strong>Automatic Emergency Braking:</strong> Prevents collisions</li>
+                    </ul>
+                    
+                    <p><strong>Market Presence:</strong> 65% of new vehicles sold in 2024</p>
+                `
+            },
+            '2': {
+                title: 'Level 2: Partial Automation',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Multiple Systems Work Together</strong>
+                    </div>
+                    
+                    <p>Vehicle can control both steering AND acceleration/braking simultaneously under 
+                    specific conditions. Driver must supervise and be ready to take control immediately.</p>
+                    
+                    <h4>Current Systems:</h4>
+                    <ul class="tech-list">
+                        <li><strong>Tesla Autopilot:</strong> Highway driving with lane changes</li>
+                        <li><strong>GM Super Cruise:</strong> Hands-free highway driving</li>
+                        <li><strong>Mercedes Drive Pilot:</strong> Traffic jam assistance</li>
+                    </ul>
+                    
+                    <p><strong>Limitations:</strong> Driver must keep hands on wheel and eyes on road</p>
+                    <p><strong>Market Presence:</strong> 30% of new vehicles in 2024</p>
+                `
+            },
+            '3': {
+                title: 'Level 3: Conditional Automation',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Vehicle Drives Itself Under Certain Conditions</strong>
+                    </div>
+                    
+                    <p>Vehicle handles all driving tasks in specific conditions (like highway traffic), 
+                    but driver must be ready to take over when requested by the system.</p>
+                    
+                    <h4>Available Systems:</h4>
+                    <ul class="tech-list">
+                        <li><strong>Mercedes Drive Pilot L3:</strong> Approved in Germany for speeds up to 60 km/h</li>
+                        <li><strong>Honda SENSING Elite:</strong> Available in Japan for highway congestion</li>
+                        <li><strong>BMW Personal Pilot L3:</strong> Coming 2025 for highway driving</li>
+                    </ul>
+                    
+                    <p><strong>Key Feature:</strong> Driver can legally take eyes off road in approved conditions</p>
+                    <p><strong>Challenge:</strong> 10-second handover time when system requests control</p>
+                `
+            },
+            '4': {
+                title: 'Level 4: High Automation',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Fully Autonomous in Specific Domains</strong>
+                    </div>
+                    
+                    <p>Vehicle performs all driving tasks within a specific operational domain 
+                    (geofenced area, weather conditions). No human intervention required.</p>
+                    
+                    <h4>Current Deployments:</h4>
+                    <ul class="tech-list">
+                        <li><strong>Waymo One:</strong> Robotaxi service in Phoenix, San Francisco</li>
+                        <li><strong>Cruise Origin:</strong> Autonomous shuttle in San Francisco</li>
+                        <li><strong>Baidu Apollo:</strong> Robotaxis in Beijing and other Chinese cities</li>
+                        <li><strong>Zoox:</strong> Purpose-built robotaxi (launching 2025)</li>
+                    </ul>
+                    
+                    <p><strong>No Steering Wheel Required:</strong> Vehicles may lack manual controls</p>
+                    <p><strong>Current Scale:</strong> 1000+ L4 vehicles operating globally</p>
+                `
+            },
+            '5': {
+                title: 'Level 5: Full Automation',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Complete Autonomy Everywhere</strong>
+                    </div>
+                    
+                    <p>Vehicle can drive itself anywhere, anytime, in any conditions that a human 
+                    could drive. No steering wheel or human controls needed.</p>
+                    
+                    <h4>Technical Requirements:</h4>
+                    <ul class="tech-list">
+                        <li><strong>AGI-Level AI:</strong> Human-level reasoning and adaptation</li>
+                        <li><strong>Perfect Perception:</strong> Handle all weather and lighting conditions</li>
+                        <li><strong>Global Navigation:</strong> Drive on any road worldwide</li>
+                        <li><strong>Social Intelligence:</strong> Understand human gestures and intentions</li>
+                    </ul>
+                    
+                    <p><strong>Timeline:</strong> Experts predict 2035-2045 for commercial deployment</p>
+                    <p><strong>Challenges:</strong> Requires solving general AI, edge cases, and regulatory frameworks</p>
+                    
+                    <div class="modal-highlight">
+                        <strong>Impact:</strong> Would revolutionize transportation, eliminate traffic deaths, 
+                        and transform urban planning.
+                    </div>
+                `
+            }
+        };
+
+        // Add click handlers for AV system cards
+        document.querySelectorAll('.av-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const system = this.dataset.system;
+                const details = systemDetails[system];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        // Add click handlers for autonomy levels
+        document.querySelectorAll('.autonomy-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const level = this.dataset.level;
+                const details = levelDetails[level];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        // Initialize floating elements
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week13_Slide258.html';
+            } else if (e.key === 'ArrowRight' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week13_Slide260.html';
+            }
+        });
+    </script>
+</body>
+</html>

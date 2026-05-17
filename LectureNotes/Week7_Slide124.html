@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Eigenvectors and Eigenvalues</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .theory-section {
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,253,250,0.95) 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .visualization-section {
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,253,250,0.95) 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .definition-box {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .equation-card {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 15px 0;
+            text-align: center;
+            font-size: 1.3em;
+            color: #134e4a;
+            border: 1px solid #14b8a6;
+            transition: transform 0.3s ease;
+        }
+
+        .equation-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(13, 148, 136, 0.2);
+        }
+
+        .property-item {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            border-left: 3px solid #14b8a6;
+            transition: all 0.3s ease;
+        }
+
+        .property-item:hover {
+            transform: translateX(5px);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .vector-diagram {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            border-radius: 15px;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #14b8a6;
+        }
+
+        .interactive-demo {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,253,250,0.95) 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.5s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .demo-title {
+            font-size: 2em;
+            color: #0d9488;
+            margin-bottom: 30px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .matrix-input {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            max-width: 200px;
+            margin: 20px auto;
+        }
+
+        .matrix-input input {
+            padding: 10px;
+            border: 2px solid #14b8a6;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1.1em;
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s ease;
+        }
+
+        .matrix-input input:focus {
+            outline: none;
+            border-color: #0d9488;
+            transform: scale(1.05);
+        }
+
+        .calculate-btn {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin: 20px auto;
+            display: block;
+            transition: all 0.3s ease;
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(13, 148, 136, 0.3);
+        }
+
+        .result-display {
+            background: linear-gradient(135deg, #ccfbf1, #99f6e4);
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: center;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #14b8a6;
+        }
+
+        .key-concepts {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,253,250,0.95) 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.7s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .concepts-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .concept-card {
+            background: linear-gradient(135deg, #ffffff, #f0fdfa);
+            padding: 25px;
+            border-radius: 15px;
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .concept-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.2);
+        }
+
+        .concept-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+            color: #14b8a6;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number, .course-info {
+            position: fixed;
+            top: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .slide-number { right: 30px; }
+        .course-info { left: 30px; }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #334155;
+        }
+
+        /* Tooltip styles */
+        .tooltip {
+            position: relative;
+            cursor: help;
+            border-bottom: 2px dotted #14b8a6;
+        }
+
+        .tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(19, 78, 74, 0.95);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            white-space: nowrap;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .arrow-svg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .eigen-arrow {
+            stroke: #0d9488;
+            stroke-width: 3;
+            fill: none;
+            marker-end: url(#arrowhead);
+            animation: drawArrow 2s ease-out forwards;
+            stroke-dasharray: 200;
+            stroke-dashoffset: 200;
+        }
+
+        @keyframes drawArrow {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .concepts-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 768px) {
+            .slide-title { font-size: 2.5em; }
+            .concepts-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 7</div>
+    <div class="slide-number">Slide 124 of 140</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">🔮 Eigenvectors and Eigenvalues</h1>
+        
+        <div class="content-layout">
+            <div class="theory-section">
+                <h2 class="section-title">📐 Mathematical Foundation</h2>
+                
+                <div class="definition-box">
+                    <strong>Definition:</strong> For a square matrix A, an eigenvector v is a non-zero vector that, when A is applied to it, only changes by a scalar factor λ (eigenvalue).
+                </div>
+                
+                <div class="equation-card" onclick="showModal('equation-detail')">
+                    <strong>Fundamental Equation:</strong><br>
+                    Av = λv
+                </div>
+                
+                <div class="property-item">
+                    <strong>🎯 Eigenvalue (λ):</strong> The scalar by which the eigenvector is scaled
+                </div>
+                
+                <div class="property-item">
+                    <strong>📊 Eigenvector (v):</strong> Direction that remains unchanged (except for scaling)
+                </div>
+                
+                <div class="property-item">
+                    <strong>🔄 Transformation:</strong> Eigenvectors define the principal axes of transformation
+                </div>
+
+                <div class="equation-card" style="margin-top: 20px;">
+                    <strong>Characteristic Equation:</strong><br>
+                    det(A - λI) = 0
+                </div>
+            </div>
+
+            <div class="visualization-section">
+                <h2 class="section-title">🎨 Geometric Interpretation</h2>
+                
+                <div class="vector-diagram">
+                    <svg class="arrow-svg" viewBox="0 0 400 300">
+                        <defs>
+                            <marker id="arrowhead" markerWidth="10" markerHeight="7" 
+                             refX="9" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="#0d9488" />
+                            </marker>
+                        </defs>
+                        <!-- Original axes -->
+                        <line x1="200" y1="150" x2="350" y2="150" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="5,5"/>
+                        <line x1="200" y1="150" x2="200" y2="50" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="5,5"/>
+                        
+                        <!-- Eigenvector 1 -->
+                        <line x1="200" y1="150" x2="320" y2="90" class="eigen-arrow" />
+                        <text x="330" y="85" fill="#0d9488" font-weight="bold">v₁ (λ₁=3)</text>
+                        
+                        <!-- Eigenvector 2 -->
+                        <line x1="200" y1="150" x2="120" y2="120" class="eigen-arrow" />
+                        <text x="70" y="115" fill="#0d9488" font-weight="bold">v₂ (λ₂=1)</text>
+                        
+                        <!-- Center point -->
+                        <circle cx="200" cy="150" r="5" fill="#14b8a6"/>
+                        <text x="180" y="170" fill="#134e4a" font-size="14">Origin</text>
+                    </svg>
+                </div>
+                
+                <h3 style="color: #0d9488; margin: 20px 0;">Why They Matter in PCA:</h3>
+                
+                <div class="property-item">
+                    <strong>📈 Variance Direction:</strong> Eigenvectors of covariance matrix point in directions of maximum variance
+                </div>
+                
+                <div class="property-item">
+                    <strong>📉 Magnitude:</strong> Eigenvalues represent the amount of variance in each direction
+                </div>
+                
+                <div class="property-item">
+                    <strong>🎯 Principal Components:</strong> Eigenvectors become the new axes (principal components)
+                </div>
+            </div>
+        </div>
+
+        <div class="interactive-demo">
+            <h2 class="demo-title">🔬 Interactive Eigenvalue Calculator</h2>
+            
+            <div style="text-align: center;">
+                <p style="color: #134e4a; margin-bottom: 20px;">Enter a 2×2 matrix to calculate its eigenvalues and eigenvectors:</p>
+                
+                <div class="matrix-input">
+                    <input type="number" id="a11" value="3" step="0.1">
+                    <input type="number" id="a12" value="1" step="0.1">
+                    <input type="number" id="a21" value="1" step="0.1">
+                    <input type="number" id="a22" value="3" step="0.1">
+                </div>
+                
+                <button class="calculate-btn" onclick="calculateEigen()">Calculate Eigenvalues</button>
+                
+                <div class="result-display" id="resultDisplay">
+                    Click "Calculate" to see the eigenvalues and eigenvectors
+                </div>
+            </div>
+        </div>
+
+        <div class="key-concepts">
+            <h2 class="demo-title">💡 Key Concepts for Dimensionality Reduction</h2>
+            
+            <div class="concepts-grid">
+                <div class="concept-card" onclick="showModal('covariance-eigen')">
+                    <div class="concept-icon">📊</div>
+                    <h3 style="color: #0d9488; margin-bottom: 10px;">Covariance Matrix</h3>
+                    <p style="color: #134e4a;">Eigenvectors of covariance matrix reveal data structure</p>
+                </div>
+                
+                <div class="concept-card" onclick="showModal('variance-explained')">
+                    <div class="concept-icon">📈</div>
+                    <h3 style="color: #0d9488; margin-bottom: 10px;">Variance Explained</h3>
+                    <p style="color: #134e4a;">Eigenvalues quantify variance along each principal component</p>
+                </div>
+                
+                <div class="concept-card" onclick="showModal('orthogonality')">
+                    <div class="concept-icon">⊥</div>
+                    <h3 style="color: #0d9488; margin-bottom: 10px;">Orthogonality</h3>
+                    <p style="color: #134e4a;">Eigenvectors are orthogonal, providing uncorrelated features</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week7_Slide123.html" class="nav-btn">← Previous</a>
+        <a href="Week7_Slide125.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Modal content database
+        const modalContent = {
+            'equation-detail': {
+                title: 'Understanding the Eigenvalue Equation',
+                content: `
+                    <div style="background: linear-gradient(135deg, #ccfbf1, #99f6e4); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                        <h3 style="color: #0d9488;">Av = λv</h3>
+                        <p style="margin-top: 10px;">This equation tells us that when matrix A acts on eigenvector v, it simply scales v by factor λ.</p>
+                    </div>
+                    
+                    <h4 style="color: #0d9488; margin: 20px 0;">Breaking it down:</h4>
+                    <ul style="line-height: 2;">
+                        <li><strong>A:</strong> Your transformation matrix (e.g., covariance matrix in PCA)</li>
+                        <li><strong>v:</strong> Special direction that doesn't change under transformation</li>
+                        <li><strong>λ:</strong> How much v gets stretched or compressed</li>
+                    </ul>
+                    
+                    <h4 style="color: #0d9488; margin: 20px 0;">Finding Eigenvalues:</h4>
+                    <ol style="line-height: 2;">
+                        <li>Rearrange: Av - λv = 0</li>
+                        <li>Factor: (A - λI)v = 0</li>
+                        <li>For non-trivial solution: det(A - λI) = 0</li>
+                        <li>Solve characteristic polynomial for λ</li>
+                    </ol>
+                `
+            },
+            'covariance-eigen': {
+                title: 'Covariance Matrix Eigenvectors',
+                content: `
+                    <div style="background: linear-gradient(135deg, #ccfbf1, #99f6e4); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                        <h3 style="color: #0d9488;">Why Covariance Matrix?</h3>
+                        <p style="margin-top: 10px;">The covariance matrix captures how features vary together in your dataset.</p>
+                    </div>
+                    
+                    <h4 style="color: #0d9488; margin: 20px 0;">Key Insights:</h4>
+                    <ul style="line-height: 2;">
+                        <li><strong>Structure:</strong> Symmetric matrix containing variances and covariances</li>
+                        <li><strong>Eigenvectors:</strong> Point in directions of maximum variance</li>
+                        <li><strong>Eigenvalues:</strong> Amount of variance in each direction</li>
+                        <li><strong>Ordering:</strong> Largest eigenvalue = direction of most variance</li>
+                    </ul>
+                    
+                    <h4 style="color: #0d9488; margin: 20px 0;">In PCA:</h4>
+                    <p>We use eigenvectors as new axes (principal components) to transform data into a space where features are uncorrelated and ordered by importance.</p>
+                `
+            },
+            'variance-explained': {
+                title: 'Variance Explained by Eigenvalues',
+                content: `
+                    <div style="background: linear-gradient(135deg, #ccfbf1, #99f6e4); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                        <h3 style="color: #0d9488;">Eigenvalues = Variance</h3>
+                        <p style="margin-top: 10px;">Each eigenvalue represents the variance captured by its corresponding eigenvector.</p>
+                    </div>
+                    
+                    <h4 style="color: #0d9488; margin: 20px 0;">Calculating Explained Variance:</h4>
+                    <div style="background: #f0fdfa; padding: 15px; border-radius: 8px; font-family: monospace;">
+                        Explained Variance Ratio = λᵢ / Σλ
+                    </div>
+                    
+                    <h4 style="color: #0d9488; margin: 20px 0 10px;">Example:</h4>
+                    <ul style="line-height: 2;">
+                        <li>λ₁ = 5.0 → 50% variance</li>
+                        <li>λ₂ = 3.0 → 30% variance</li>
+                        <li>λ₃ = 1.5 → 15% variance</li>
+                        <li>λ₄ = 0.5 → 5% variance</li>
+                    </ul>
+                    
+                    <p style="margin-top: 20px; color: #0d9488;"><strong>Key Decision:</strong> Keep components until cumulative variance ≥ 95%</p>
+                `
+            },
+            'orthogonality': {
+                title: 'Orthogonality of Eigenvectors',
+                content: `
+                    <div style="background: linear-gradient(135deg, #ccfbf1, #99f6e4); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                        <h3 style="color: #0d9488;">Perpendicular Directions</h3>
+                        <p style="margin-top: 10px;">Eigenvectors of symmetric matrices (like covariance) are orthogonal.</p>
+                    </div>
+                    
+                    <h4 style="color: #0d9488; margin: 20px 0;">Why This Matters:</h4>
+                    <ul style="line-height: 2;">
+                        <li><strong>No Redundancy:</strong> Each component captures unique information</li>
+                        <li><strong>Uncorrelated:</strong> Principal components are statistically independent</li>
+                        <li><strong>Optimal Basis:</strong> Most efficient representation of data</li>
+                        <li><strong>Easy Projection:</strong> Simple dot product for transformation</li>
+                    </ul>
+                    
+                    <h4 style="color: #0d9488; margin: 20px 0;">Mathematical Property:</h4>
+                    <div style="background: #f0fdfa; padding: 15px; border-radius: 8px; font-family: monospace;">
+                        vᵢ · vⱼ = 0 (for i ≠ j)<br>
+                        vᵢ · vᵢ = 1 (normalized)
+                    </div>
+                `
+            }
+        };
+
+        function showModal(key) {
+            const content = modalContent[key];
+            if (content) {
+                modal.show(content.title, content.content);
+            }
+        }
+
+        function calculateEigen() {
+            const a = parseFloat(document.getElementById('a11').value);
+            const b = parseFloat(document.getElementById('a12').value);
+            const c = parseFloat(document.getElementById('a21').value);
+            const d = parseFloat(document.getElementById('a22').value);
+            
+            // Calculate eigenvalues for 2x2 matrix
+            // Characteristic equation: λ² - (a+d)λ + (ad-bc) = 0
+            const trace = a + d;
+            const det = a * d - b * c;
+            
+            const discriminant = trace * trace - 4 * det;
+            
+            let result = '';
+            
+            if (discriminant >= 0) {
+                const lambda1 = (trace + Math.sqrt(discriminant)) / 2;
+                const lambda2 = (trace - Math.sqrt(discriminant)) / 2;
+                
+                result = `
+                    <div>
+                        <h3 style="color: #0d9488; margin-bottom: 15px;">Eigenvalues:</h3>
+                        <p style="font-size: 1.2em;">λ₁ = ${lambda1.toFixed(3)}</p>
+                        <p style="font-size: 1.2em;">λ₂ = ${lambda2.toFixed(3)}</p>
+                        <p style="margin-top: 15px; color: #134e4a;">
+                            Trace = ${trace.toFixed(3)}, Determinant = ${det.toFixed(3)}
+                        </p>
+                    </div>
+                `;
+            } else {
+                result = `
+                    <div>
+                        <h3 style="color: #0d9488; margin-bottom: 15px;">Complex Eigenvalues:</h3>
+                        <p style="font-size: 1.2em;">λ = ${(trace/2).toFixed(3)} ± ${(Math.sqrt(-discriminant)/2).toFixed(3)}i</p>
+                        <p style="margin-top: 15px; color: #134e4a;">
+                            Matrix has complex eigenvalues (rotation transformation)
+                        </p>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('resultDisplay').innerHTML = result;
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (modal.overlay.classList.contains('active')) return;
+            
+            if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week7_Slide123.html';
+            } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                window.location.href = 'Week7_Slide125.html';
+            }
+        });
+
+        // Initialize with example calculation
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate arrows on load
+            setTimeout(() => {
+                document.querySelectorAll('.eigen-arrow').forEach((arrow, index) => {
+                    arrow.style.animationDelay = `${index * 0.5}s`;
+                });
+            }, 500);
+        });
+    </script>
+</body>
+</html>

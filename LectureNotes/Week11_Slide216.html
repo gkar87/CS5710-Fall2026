@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Policy Gradient Methods</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .concept-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .advantages-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .key-concept {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .gradient-formula {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 25px;
+            border-radius: 15px;
+            font-family: 'Courier New', monospace;
+            margin: 20px 0;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .gradient-formula:hover {
+            transform: scale(1.02);
+            box-shadow: 0 15px 35px rgba(13, 148, 136, 0.3);
+        }
+
+        .advantage-list {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .advantage-item {
+            padding: 20px;
+            margin: 15px 0;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .advantage-item:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .advantage-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .advantage-desc {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .algorithms-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .algorithm-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-top: 25px;
+        }
+
+        .algorithm-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+            text-align: center;
+        }
+
+        .algorithm-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.2);
+            border-color: #0d9488;
+        }
+
+        .algorithm-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .algorithm-name {
+            font-size: 1.2em;
+            color: #0d9488;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .algorithm-desc {
+            font-size: 0.9em;
+            color: #64748b;
+            line-height: 1.4;
+        }
+
+        .comparison-box {
+            background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.3);
+        }
+
+        .comparison-title {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .comparison-table {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .comparison-table th {
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            font-weight: 600;
+        }
+
+        .comparison-table td {
+            padding: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .comparison-table tr:hover td {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: float 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .algorithm-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 11</div>
+    <div class="slide-number">Slide 216 of 220</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Policy Gradient Methods</h1>
+        
+        <div class="content-layout">
+            <div class="concept-section">
+                <h2 class="section-title">Core Idea</h2>
+                
+                <div class="key-concept">
+                    <strong>Policy Gradient methods</strong> directly optimize the policy π(a|s;θ) by gradient ascent on expected reward, without learning a value function.
+                </div>
+                
+                <div style="font-size: 1.1em; line-height: 1.7; color: #1e293b;">
+                    <strong>Key Insight:</strong><br>
+                    • Parameterize policy directly<br>
+                    • Optimize policy parameters via gradient ascent<br>
+                    • Works for continuous action spaces<br>
+                    • Stochastic policies naturally explore
+                </div>
+
+                <div class="gradient-formula" onclick="showGradientFormula()">
+                    ∇θ J(θ) = E[∇θ log π(a|s;θ) · Q(s,a)]
+                </div>
+
+                <div style="margin-top: 20px; padding: 20px; background: rgba(13, 148, 136, 0.05); border-radius: 10px;">
+                    <strong>REINFORCE Algorithm:</strong><br>
+                    θ ← θ + α∇θ log π(aₜ|sₜ;θ) · Gₜ
+                </div>
+            </div>
+
+            <div class="advantages-section">
+                <h2 class="section-title">Why Policy Gradients?</h2>
+                
+                <ul class="advantage-list">
+                    <li class="advantage-item">
+                        <div class="advantage-title">🎯 Direct Optimization</div>
+                        <div class="advantage-desc">Directly optimize what we care about: policy performance</div>
+                    </li>
+                    <li class="advantage-item">
+                        <div class="advantage-title">🔄 Continuous Actions</div>
+                        <div class="advantage-desc">Natural for continuous action spaces (robotics, control)</div>
+                    </li>
+                    <li class="advantage-item">
+                        <div class="advantage-title">🎲 Stochastic Policies</div>
+                        <div class="advantage-desc">Can learn stochastic policies (rock-paper-scissors)</div>
+                    </li>
+                    <li class="advantage-item">
+                        <div class="advantage-title">📈 Convergence</div>
+                        <div class="advantage-desc">Guaranteed convergence to local optimum</div>
+                    </li>
+                    <li class="advantage-item">
+                        <div class="advantage-title">🧩 Differentiable</div>
+                        <div class="advantage-desc">End-to-end differentiable for complex architectures</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="algorithms-section">
+            <h2 class="section-title">Popular Policy Gradient Algorithms</h2>
+            
+            <div class="algorithm-grid">
+                <div class="algorithm-card" onclick="showAlgorithm('reinforce')">
+                    <span class="algorithm-icon">🎲</span>
+                    <div class="algorithm-name">REINFORCE</div>
+                    <div class="algorithm-desc">Monte Carlo policy gradient with full episode returns</div>
+                </div>
+                
+                <div class="algorithm-card" onclick="showAlgorithm('a2c')">
+                    <span class="algorithm-icon">🎭</span>
+                    <div class="algorithm-name">A2C / A3C</div>
+                    <div class="algorithm-desc">Advantage Actor-Critic with parallel actors</div>
+                </div>
+                
+                <div class="algorithm-card" onclick="showAlgorithm('ppo')">
+                    <span class="algorithm-icon">🛡️</span>
+                    <div class="algorithm-name">PPO</div>
+                    <div class="algorithm-desc">Proximal Policy Optimization with clipped objective</div>
+                </div>
+                
+                <div class="algorithm-card" onclick="showAlgorithm('trpo')">
+                    <span class="algorithm-icon">🔒</span>
+                    <div class="algorithm-name">TRPO</div>
+                    <div class="algorithm-desc">Trust Region Policy Optimization with KL constraint</div>
+                </div>
+                
+                <div class="algorithm-card" onclick="showAlgorithm('ddpg')">
+                    <span class="algorithm-icon">🎯</span>
+                    <div class="algorithm-name">DDPG</div>
+                    <div class="algorithm-desc">Deep Deterministic Policy Gradient for continuous control</div>
+                </div>
+                
+                <div class="algorithm-card" onclick="showAlgorithm('sac')">
+                    <span class="algorithm-icon">🌡️</span>
+                    <div class="algorithm-name">SAC</div>
+                    <div class="algorithm-desc">Soft Actor-Critic with entropy regularization</div>
+                </div>
+            </div>
+
+            <div class="comparison-box">
+                <div class="comparison-title">Policy Gradient vs Value-Based</div>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Aspect</th>
+                            <th>Policy Gradient</th>
+                            <th>Value-Based (Q-Learning)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr onclick="showComparison('convergence')">
+                            <td>Convergence</td>
+                            <td>Local optimum</td>
+                            <td>Global (tabular)</td>
+                        </tr>
+                        <tr onclick="showComparison('efficiency')">
+                            <td>Sample Efficiency</td>
+                            <td>Lower</td>
+                            <td>Higher</td>
+                        </tr>
+                        <tr onclick="showComparison('actions')">
+                            <td>Action Space</td>
+                            <td>Continuous/Discrete</td>
+                            <td>Discrete</td>
+                        </tr>
+                        <tr onclick="showComparison('stochastic')">
+                            <td>Stochastic Policies</td>
+                            <td>Natural</td>
+                            <td>ε-greedy needed</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week11_Slide215.html" class="nav-btn">← Previous</a>
+        <a href="Week11_Slide217.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Show gradient formula details
+        function showGradientFormula() {
+            modal.show('Policy Gradient Theorem', `
+                <div class="modal-highlight">
+                    ∇θ J(θ) = E[∇θ log π(a|s;θ) · Q(s,a)]
+                </div>
+                <h4>Components:</h4>
+                <ul>
+                    <li><strong>J(θ):</strong> Objective function (expected return)</li>
+                    <li><strong>∇θ log π(a|s;θ):</strong> Score function (direction to increase probability)</li>
+                    <li><strong>Q(s,a):</strong> Action value (how good was this action)</li>
+                </ul>
+                
+                <h4>Intuition:</h4>
+                <p>Increase probability of actions that led to high rewards, decrease probability of actions that led to low rewards.</p>
+                
+                <div class="modal-code">
+                    Practical forms:
+                    
+                    REINFORCE: ∇θ J = E[∇θ log π(a|s;θ) · Gt]
+                    Uses Monte Carlo return
+                    
+                    Actor-Critic: ∇θ J = E[∇θ log π(a|s;θ) · A(s,a)]
+                    Uses advantage function
+                    
+                    Natural PG: ∇θ J = F⁻¹ ∇θ J
+                    Uses Fisher information matrix
+                </div>
+                
+                <h4>Variance Reduction:</h4>
+                <ul>
+                    <li>Baseline subtraction: Use V(s) as baseline</li>
+                    <li>Advantage function: A(s,a) = Q(s,a) - V(s)</li>
+                    <li>Temporal difference: Use TD error as advantage estimate</li>
+                </ul>
+            `);
+        }
+
+        // Show algorithm details
+        function showAlgorithm(algo) {
+            const algorithms = {
+                'reinforce': {
+                    title: 'REINFORCE Algorithm',
+                    content: `
+                        <div class="modal-highlight">
+                            Monte Carlo Policy Gradient - The simplest policy gradient method
+                        </div>
+                        <div class="modal-code">
+                            Algorithm REINFORCE:
+                            1. Initialize policy parameters θ
+                            2. For each episode:
+                               a. Generate trajectory τ using π(·|·;θ)
+                               b. For t = 0 to T:
+                                  - Compute return Gt
+                                  - Update: θ ← θ + α∇θ log π(at|st;θ)·Gt
+                        </div>
+                        <h4>Characteristics:</h4>
+                        <ul>
+                            <li>✅ Simple and unbiased</li>
+                            <li>✅ Works with any differentiable policy</li>
+                            <li>❌ High variance</li>
+                            <li>❌ Requires full episodes</li>
+                        </ul>
+                        <h4>Improvements:</h4>
+                        <p>Add baseline: θ ← θ + α∇θ log π(at|st;θ)·(Gt - b(st))</p>
+                    `
+                },
+                'a2c': {
+                    title: 'A2C / A3C',
+                    content: `
+                        <div class="modal-highlight">
+                            Advantage Actor-Critic - Combines policy gradient with value function
+                        </div>
+                        <div class="modal-code">
+                            Architecture:
+                            - Actor: π(a|s;θ) - Selects actions
+                            - Critic: V(s;w) - Evaluates states
+                            
+                            Update rules:
+                            Actor: θ ← θ + α∇θ log π(a|s;θ)·A(s,a)
+                            Critic: w ← w + β∇w(r + γV(s';w) - V(s;w))²
+                            
+                            Advantage: A(s,a) = r + γV(s') - V(s)
+                        </div>
+                        <h4>A3C (Asynchronous):</h4>
+                        <ul>
+                            <li>Multiple parallel actors</li>
+                            <li>Asynchronous updates to global network</li>
+                            <li>Improved exploration through diversity</li>
+                        </ul>
+                        <h4>Benefits:</h4>
+                        <p>Lower variance than REINFORCE, online learning, parallel training</p>
+                    `
+                },
+                'ppo': {
+                    title: 'Proximal Policy Optimization',
+                    content: `
+                        <div class="modal-highlight">
+                            PPO - State-of-the-art policy gradient with stability
+                        </div>
+                        <div class="modal-code">
+                            Clipped objective:
+                            L(θ) = E[min(rt(θ)At, clip(rt(θ), 1-ε, 1+ε)At)]
+                            
+                            where rt(θ) = π(at|st;θ) / π(at|st;θold)
+                            
+                            Prevents large policy updates
+                            Typically ε = 0.2
+                        </div>
+                        <h4>Key Features:</h4>
+                        <ul>
+                            <li>Simple to implement</li>
+                            <li>Stable training</li>
+                            <li>Good sample efficiency</li>
+                            <li>Works well across many domains</li>
+                        </ul>
+                        <h4>Used by:</h4>
+                        <p>OpenAI Five (Dota 2), ChatGPT fine-tuning, Robotics</p>
+                    `
+                },
+                'trpo': {
+                    title: 'Trust Region Policy Optimization',
+                    content: `
+                        <div class="modal-highlight">
+                            TRPO - Guaranteed monotonic improvement with KL constraint
+                        </div>
+                        <div class="modal-code">
+                            Optimization problem:
+                            maximize E[π(a|s;θ)/π(a|s;θold) · A(s,a)]
+                            subject to KL(π(·|s;θold) || π(·|s;θ)) ≤ δ
+                            
+                            Solved using conjugate gradient
+                            Line search for step size
+                        </div>
+                        <h4>Advantages:</h4>
+                        <ul>
+                            <li>Theoretical guarantees</li>
+                            <li>Monotonic improvement</li>
+                            <li>Robust to hyperparameters</li>
+                        </ul>
+                        <h4>Disadvantages:</h4>
+                        <p>Complex implementation, computationally expensive</p>
+                    `
+                },
+                'ddpg': {
+                    title: 'Deep Deterministic Policy Gradient',
+                    content: `
+                        <div class="modal-highlight">
+                            DDPG - Actor-Critic for continuous control (off-policy)
+                        </div>
+                        <div class="modal-code">
+                            Components:
+                            - Deterministic actor: μ(s;θ)
+                            - Critic: Q(s,a;w)
+                            - Experience replay buffer
+                            - Target networks
+                            
+                            Actor update: ∇θJ = E[∇aQ(s,a;w)|a=μ(s) · ∇θμ(s;θ)]
+                            Critic update: TD error minimization
+                        </div>
+                        <h4>Key Features:</h4>
+                        <ul>
+                            <li>Off-policy learning</li>
+                            <li>Continuous actions</li>
+                            <li>Uses replay buffer like DQN</li>
+                            <li>Exploration via noise (Ornstein-Uhlenbeck)</li>
+                        </ul>
+                    `
+                },
+                'sac': {
+                    title: 'Soft Actor-Critic',
+                    content: `
+                        <div class="modal-highlight">
+                            SAC - Maximum entropy reinforcement learning
+                        </div>
+                        <div class="modal-code">
+                            Objective: Maximize reward + entropy
+                            J = E[Σ r + αH(π(·|s))]
+                            
+                            Components:
+                            - Stochastic actor
+                            - Two Q-networks (reduce overestimation)
+                            - Value network
+                            - Automatic temperature tuning
+                        </div>
+                        <h4>Benefits:</h4>
+                        <ul>
+                            <li>Sample efficient</li>
+                            <li>Robust to hyperparameters</li>
+                            <li>Good exploration through entropy</li>
+                            <li>State-of-the-art for continuous control</li>
+                        </ul>
+                    `
+                }
+            };
+            
+            const info = algorithms[algo];
+            if (info) {
+                modal.show(info.title, info.content);
+            }
+        }
+
+        // Show comparison details
+        function showComparison(aspect) {
+            const comparisons = {
+                'convergence': {
+                    title: 'Convergence Properties',
+                    content: `
+                        <h4>Policy Gradient:</h4>
+                        <p>Converges to local optimum due to non-convex optimization</p>
+                        <ul>
+                            <li>Gradient ascent on policy performance</li>
+                            <li>Multiple local optima possible</li>
+                            <li>Initialization matters</li>
+                        </ul>
+                        
+                        <h4>Value-Based:</h4>
+                        <p>Can converge to global optimum (tabular case)</p>
+                        <ul>
+                            <li>Q-learning finds optimal Q*</li>
+                            <li>Guarantees for tabular case</li>
+                            <li>Function approximation loses guarantees</li>
+                        </ul>
+                    `
+                },
+                'efficiency': {
+                    title: 'Sample Efficiency',
+                    content: `
+                        <h4>Policy Gradient:</h4>
+                        <p>Generally lower sample efficiency</p>
+                        <ul>
+                            <li>On-policy: Can't reuse old data</li>
+                            <li>High variance gradients</li>
+                            <li>Needs many samples for stable updates</li>
+                        </ul>
+                        
+                        <h4>Value-Based:</h4>
+                        <p>Better sample efficiency through replay</p>
+                        <ul>
+                            <li>Off-policy: Reuse experience</li>
+                            <li>Experience replay buffer</li>
+                            <li>Learn from all transitions</li>
+                        </ul>
+                    `
+                },
+                'actions': {
+                    title: 'Action Space Handling',
+                    content: `
+                        <h4>Policy Gradient:</h4>
+                        <p>Natural for continuous actions</p>
+                        <div class="modal-code">
+                            Continuous: π(a|s) = N(μ(s;θ), σ²)
+                            Output mean and variance
+                            Sample action from distribution
+                        </div>
+                        
+                        <h4>Value-Based:</h4>
+                        <p>Limited to discrete actions</p>
+                        <div class="modal-code">
+                            Discrete: Q(s,a) for each action
+                            Continuous requires discretization
+                            Or use DDPG/TD3 (actor-critic)
+                        </div>
+                    `
+                },
+                'stochastic': {
+                    title: 'Stochastic vs Deterministic',
+                    content: `
+                        <h4>Policy Gradient:</h4>
+                        <p>Naturally learns stochastic policies</p>
+                        <ul>
+                            <li>Outputs probability distribution</li>
+                            <li>Built-in exploration</li>
+                            <li>Can solve games requiring randomness</li>
+                        </ul>
+                        
+                        <h4>Value-Based:</h4>
+                        <p>Deterministic with added exploration</p>
+                        <ul>
+                            <li>Greedy policy from Q-values</li>
+                            <li>Needs ε-greedy for exploration</li>
+                            <li>Cannot learn truly stochastic optimal policies</li>
+                        </ul>
+                    `
+                }
+            };
+            
+            const info = comparisons[aspect];
+            if (info) {
+                modal.show(info.title, info.content);
+            }
+        }
+
+        // Interactive advantage items with modal
+        document.querySelectorAll('.advantage-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const title = this.querySelector('.advantage-title').textContent;
+                const desc = this.querySelector('.advantage-desc').textContent;
+                
+                const details = {
+                    '🎯 Direct Optimization': {
+                        detail: 'Policy gradient methods directly optimize the policy performance metric we care about.',
+                        example: `Value-based: Learn Q → Derive policy
+Policy gradient: Directly optimize π
+
+Objective: J(θ) = E[Σ γᵗ rₜ]
+Gradient: ∇θJ(θ) points toward better policies`,
+                        advantage: 'No need for arg max over actions, directly improves policy',
+                        application: 'Especially useful when policy is simpler than value function'
+                    },
+                    '🔄 Continuous Actions': {
+                        detail: 'Can handle continuous action spaces naturally by parameterizing a continuous distribution.',
+                        example: `Robot arm control:
+Action = [torque₁, torque₂, torque₃]
+Each torque ∈ [-1, 1]
+
+Policy: π(a|s) = N(μ(s;θ), σ²)
+Output mean and variance for Gaussian`,
+                        advantage: 'No need to discretize action space',
+                        application: 'Robotics, autonomous driving, continuous control'
+                    },
+                    '🎲 Stochastic Policies': {
+                        detail: 'Can learn optimal stochastic policies, important for partial observability and game theory.',
+                        example: `Rock-Paper-Scissors:
+Optimal: 1/3 each choice
+Deterministic policy is exploitable
+
+Aliased states (partial observability):
+Same observation, different optimal actions
+Stochastic policy handles this naturally`,
+                        advantage: 'Solves problems requiring randomness',
+                        application: 'Games, partially observable environments, exploration'
+                    },
+                    '📈 Convergence': {
+                        detail: 'Guaranteed convergence to local optimum with appropriate learning rates.',
+                        example: `Convergence conditions:
+- Step sizes: Σ αₜ = ∞, Σ αₜ² < ∞
+- Unbiased gradient estimates
+- Smooth policy parameterization
+
+Result: Converges to local optimum`,
+                        advantage: 'Strong theoretical foundations',
+                        application: 'Provides confidence in long-term training'
+                    },
+                    '🧩 Differentiable': {
+                        detail: 'End-to-end differentiable allowing integration with other neural architectures.',
+                        example: `Vision + Control:
+CNN (perception) → RNN (memory) → Policy
+All differentiable, train end-to-end
+
+Attention mechanisms, transformers
+Can be integrated seamlessly`,
+                        advantage: 'Leverages modern deep learning advances',
+                        application: 'Complex perception-action systems, multi-modal inputs'
+                    }
+                };
+                
+                const info = details[title];
+                modal.show(title, `
+                    <div class="modal-highlight">
+                        <strong>${desc}</strong>
+                    </div>
+                    <p>${info.detail}</p>
+                    <div class="modal-code">
+                        <strong>Example:</strong><br>
+                        <pre>${info.example}</pre>
+                    </div>
+                    <p><strong>Key Advantage:</strong> ${info.advantage}</p>
+                    <p><strong>Applications:</strong> ${info.application}</p>
+                `);
+            });
+        });
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 30; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Initialize
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (!modal.overlay.classList.contains('active')) {
+                if (e.key === 'ArrowRight' || e.key === ' ') {
+                    window.location.href = 'Week11_Slide217.html';
+                } else if (e.key === 'ArrowLeft') {
+                    window.location.href = 'Week11_Slide215.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>
