@@ -705,23 +705,23 @@
             <h2 class="section-title">Hyperparameter Tuning Methods</h2>
             
             <div class="tuning-methods">
-                <div class="method-card" onclick="showModal('Click for details', '<p>Details about this method.</p>')">
+                <div class="method-card">
                     <div class="method-icon">🔍</div>
                     <div class="method-title">Grid Search</div>
                     <div class="method-description">
                         Exhaustive search over specified parameter values. Systematic but can be slow for many parameters.
                     </div>
                 </div>
-                
-                <div class="method-card" onclick="showModal('Click for details', '<p>Details about this method.</p>')">
+
+                <div class="method-card">
                     <div class="method-icon">🎲</div>
                     <div class="method-title">Random Search</div>
                     <div class="method-description">
                         Random sampling from parameter distributions. Often more efficient than grid search.
                     </div>
                 </div>
-                
-                <div class="method-card" onclick="showModal('Click for details', '<p>Details about this method.</p>')">
+
+                <div class="method-card">
                     <div class="method-icon">🧠</div>
                     <div class="method-title">Bayesian Optimization</div>
                     <div class="method-description">
@@ -814,19 +814,347 @@
         const titleEl = document.getElementById('modalTitle');
         const contentEl = document.getElementById('modalContent');
         const closeBtn = document.getElementById('modalClose');
+
         window.showModal = function(title, content) {
             titleEl.textContent = title;
             contentEl.innerHTML = content;
             overlay.classList.add('active');
             document.body.style.overflow = 'hidden';
         };
+
         window.closeModal = function() {
             overlay.classList.remove('active');
             document.body.style.overflow = '';
         };
+
+        // Add click handlers for tuning method cards
+        document.querySelectorAll('.tuning-methods .method-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const methodTitle = this.querySelector('.method-title').textContent;
+
+                const methodDetails = {
+                    'Grid Search': {
+                        description: 'Grid Search performs an exhaustive search over a manually specified subset of the hyperparameter space.',
+                        algorithm: `<strong>Grid Search Algorithm:</strong><br>
+1. Define parameter grid: {C: [0.1, 1, 10, 100], gamma: [0.001, 0.01, 0.1, 1]}<br>
+2. For each combination in parameter grid:<br>
+   &nbsp;&nbsp;a. Train model with current parameter combination<br>
+   &nbsp;&nbsp;b. Evaluate using k-fold cross-validation<br>
+   &nbsp;&nbsp;c. Record average validation score<br>
+3. Select combination with best validation score<br>
+4. Retrain model on full training set with best parameters`,
+                        implementation: `from sklearn.model_selection import GridSearchCV
+from sklearn.svm import SVC
+from sklearn.preprocessing import StandardScaler
+
+# Scale features (important for SVM!)
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+
+# Define parameter grid
+param_grid = {
+    'C': [0.1, 1, 10, 100],
+    'gamma': [0.001, 0.01, 0.1, 1],
+    'kernel': ['rbf', 'linear']
+}
+
+# Create grid search
+grid_search = GridSearchCV(
+    SVC(),
+    param_grid,
+    cv=5,                    # 5-fold cross-validation
+    scoring='accuracy',
+    n_jobs=-1,              # Use all CPU cores
+    verbose=1
+)
+
+# Fit grid search
+grid_search.fit(X_train_scaled, y_train)
+
+# Best parameters and score
+print(f"Best parameters: {grid_search.best_params_}")
+print(f"Best CV score: {grid_search.best_score_:.3f}")
+
+# Use best model
+best_model = grid_search.best_estimator_
+predictions = best_model.predict(X_test_scaled)`,
+                        pros: 'Exhaustive - guaranteed to find best combination in grid, easy to parallelize, reproducible results, works well for discrete parameters',
+                        cons: 'Exponentially expensive with more parameters (curse of dimensionality), wastes computation on unlikely combinations, only explores pre-defined grid points',
+                        whenToUse: 'Use for small parameter spaces (2-3 parameters with few values each), when computational resources allow exhaustive search, when you need guaranteed optimal solution within grid',
+                        complexity: 'If grid has p parameters each with v values: O(v^p × training_time × cv_folds)',
+                        example: 'For SVM with 4 C values × 4 gamma values × 2 kernels = 32 total combinations. With 5-fold CV = 160 model trainings!'
+                    },
+                    'Random Search': {
+                        description: 'Random Search samples parameter settings from specified distributions rather than exhaustively trying all combinations.',
+                        algorithm: `<strong>Random Search Algorithm:</strong><br>
+1. Define parameter distributions (not just discrete values!)<br>
+2. Specify number of iterations n_iter (e.g., 100)<br>
+3. For i = 1 to n_iter:<br>
+   &nbsp;&nbsp;a. Randomly sample parameter combination from distributions<br>
+   &nbsp;&nbsp;b. Train model with sampled parameters<br>
+   &nbsp;&nbsp;c. Evaluate using k-fold cross-validation<br>
+   &nbsp;&nbsp;d. Record validation score<br>
+4. Select combination with best validation score<br>
+5. Retrain on full training set with best parameters`,
+                        implementation: `from sklearn.model_selection import RandomizedSearchCV
+from sklearn.svm import SVC
+from scipy.stats import loguniform, uniform
+
+# Define parameter distributions
+param_distributions = {
+    'C': loguniform(1e-3, 1e3),        # Log-uniform between 0.001 and 1000
+    'gamma': loguniform(1e-4, 1e-1),   # Log-uniform between 0.0001 and 0.1
+    'kernel': ['rbf', 'linear', 'poly'],
+    'degree': [2, 3, 4, 5]             # Only used if kernel='poly'
+}
+
+# Create random search
+random_search = RandomizedSearchCV(
+    SVC(),
+    param_distributions,
+    n_iter=100,             # Number of random samples
+    cv=5,
+    scoring='accuracy',
+    n_jobs=-1,
+    random_state=42,
+    verbose=1
+)
+
+random_search.fit(X_train_scaled, y_train)
+
+print(f"Best parameters: {random_search.best_params_}")
+print(f"Best CV score: {random_search.best_score_:.3f}")
+
+# Analyze parameter importance
+import pandas as pd
+results = pd.DataFrame(random_search.cv_results_)
+print(results[['param_C', 'param_gamma', 'mean_test_score']].sort_values('mean_test_score', ascending=False).head())`,
+                        pros: 'More efficient than grid search for high-dimensional spaces, can sample from continuous distributions, often finds better results with fewer iterations, explores more diverse parameter space',
+                        cons: 'Non-exhaustive (might miss optimal combination), results vary between runs (unless seed fixed), harder to parallelize intelligently, no guarantee of convergence',
+                        whenToUse: 'Use for large parameter spaces (4+ parameters), when you can define continuous distributions, when budget limits number of evaluations, when exploration is more important than exploitation',
+                        theory: 'Research shows random search is more efficient because not all hyperparameters are equally important. Random search allocates more budget to important dimensions.',
+                        complexity: 'O(n_iter × training_time × cv_folds) - independent of parameter space size!',
+                        example: 'With n_iter=100 and 5-fold CV = 500 model trainings, regardless of how many parameters you have!'
+                    },
+                    'Bayesian Optimization': {
+                        description: 'Bayesian Optimization uses probabilistic models to intelligently choose which hyperparameters to try next based on past results.',
+                        algorithm: `<strong>Bayesian Optimization Algorithm:</strong><br>
+1. Initialize with few random parameter combinations<br>
+2. Fit surrogate model (usually Gaussian Process) to map parameters → performance<br>
+3. For each iteration:<br>
+   &nbsp;&nbsp;a. Use acquisition function to select next promising parameters<br>
+   &nbsp;&nbsp;&nbsp;&nbsp;• Balance exploration (uncertain regions) vs exploitation (known good regions)<br>
+   &nbsp;&nbsp;b. Train model with selected parameters<br>
+   &nbsp;&nbsp;c. Evaluate performance using cross-validation<br>
+   &nbsp;&nbsp;d. Update surrogate model with new observation<br>
+4. Return parameters with best observed performance`,
+                        implementation: `# Install: pip install scikit-optimize
+from skopt import BayesSearchCV
+from skopt.space import Real, Categorical, Integer
+
+# Define search space with continuous and categorical dimensions
+search_space = {
+    'C': Real(1e-3, 1e3, prior='log-uniform'),
+    'gamma': Real(1e-4, 1e-1, prior='log-uniform'),
+    'kernel': Categorical(['rbf', 'linear', 'poly']),
+    'degree': Integer(2, 5)
+}
+
+# Create Bayesian optimizer
+bayes_search = BayesSearchCV(
+    SVC(),
+    search_space,
+    n_iter=50,              # Usually needs fewer iterations than random
+    cv=5,
+    scoring='accuracy',
+    n_jobs=-1,
+    random_state=42,
+    verbose=1
+)
+
+bayes_search.fit(X_train_scaled, y_train)
+
+print(f"Best parameters: {bayes_search.best_params_}")
+print(f"Best CV score: {bayes_search.best_score_:.3f}")
+
+# Analyze optimization progress
+import matplotlib.pyplot as plt
+plt.plot(bayes_search.cv_results_['mean_test_score'])
+plt.xlabel('Iteration')
+plt.ylabel('CV Score')
+plt.title('Bayesian Optimization Progress')
+plt.show()`,
+                        pros: 'Most sample-efficient method, intelligently explores parameter space, handles expensive objective functions well, provides uncertainty estimates, works with mixed parameter types (continuous + categorical)',
+                        cons: 'More complex to implement and understand, surrogate model overhead, can get stuck in local optima, acquisition function choice matters, requires more setup than grid/random',
+                        whenToUse: 'Use when model training is very expensive (large datasets, deep models), when you have limited evaluation budget (< 100 iterations), when you need state-of-the-art performance, for research and competitions',
+                        acquisitionFunctions: `<strong>Common Acquisition Functions:</strong><br>
+• <strong>Expected Improvement (EI):</strong> Expected improvement over current best<br>
+• <strong>Probability of Improvement (PI):</strong> Probability of beating current best<br>
+• <strong>Upper Confidence Bound (UCB):</strong> Mean + uncertainty (β × std)<br>
+• <strong>Thompson Sampling:</strong> Sample from posterior distribution`,
+                        complexity: 'O(n_iter × (training_time × cv_folds + surrogate_update))',
+                        keyInsight: 'Bayesian optimization can find excellent hyperparameters with 10-50 iterations, while random search might need 100-500. The intelligent search strategy pays off when evaluations are expensive.'
+                    }
+                };
+
+                const detail = methodDetails[methodTitle];
+                if (detail) {
+                    let modalHTML = `
+                        <div class="modal-highlight">
+                            <strong>Overview:</strong><br>
+                            ${detail.description}
+                        </div>
+                        <h4 style="color: #0d9488; margin: 20px 0 10px;">Algorithm:</h4>
+                        <div class="modal-highlight" style="background: rgba(251, 191, 36, 0.1);">
+                            ${detail.algorithm}
+                        </div>
+                        <h4 style="color: #0d9488; margin: 20px 0 10px;">Implementation:</h4>
+                        <div class="modal-code">${detail.implementation}</div>
+                        <p style="margin-top: 15px;"><strong>✅ Advantages:</strong> ${detail.pros}</p>
+                        <p style="margin-top: 10px;"><strong>⚠️ Limitations:</strong> ${detail.cons}</p>
+                        <p style="margin-top: 10px;"><strong>🎯 When to Use:</strong> ${detail.whenToUse}</p>`;
+
+                    if (detail.acquisitionFunctions) {
+                        modalHTML += `
+                        <h4 style="color: #0d9488; margin: 20px 0 10px;">Acquisition Functions:</h4>
+                        <div class="modal-highlight" style="background: rgba(251, 191, 36, 0.1);">
+                            ${detail.acquisitionFunctions}
+                        </div>`;
+                    }
+
+                    if (detail.theory) {
+                        modalHTML += `
+                        <div style="margin-top: 15px; padding: 15px; background: rgba(99, 102, 241, 0.1); border-radius: 10px; border-left: 4px solid #6366f1;">
+                            <strong>📚 Theory:</strong> ${detail.theory}
+                        </div>`;
+                    }
+
+                    modalHTML += `
+                        <div style="margin-top: 15px; padding: 15px; background: rgba(236, 72, 153, 0.1); border-radius: 10px;">
+                            <strong>⚡ Complexity:</strong> ${detail.complexity}
+                        </div>`;
+
+                    if (detail.example) {
+                        modalHTML += `
+                        <div style="margin-top: 15px; padding: 15px; background: rgba(251, 191, 36, 0.1); border-radius: 10px;">
+                            <strong>📊 Example:</strong> ${detail.example}
+                        </div>`;
+                    }
+
+                    if (detail.keyInsight) {
+                        modalHTML += `
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                            <strong>💡 Key Insight:</strong><br>
+                            ${detail.keyInsight}
+                        </div>`;
+                    }
+
+                    showModal(methodTitle, modalHTML);
+                }
+            });
+        });
+
+        // Interactive SVM Tuner functionality
+        const cSlider = document.getElementById('cSlider');
+        const gammaSlider = document.getElementById('gammaSlider');
+        const kernelSelect = document.getElementById('kernelSelect');
+        const cValue = document.getElementById('cValue');
+        const gammaValue = document.getElementById('gammaValue');
+        const trainAccuracy = document.getElementById('trainAccuracy');
+        const valAccuracy = document.getElementById('valAccuracy');
+        const supportVectors = document.getElementById('supportVectors');
+        const trainTime = document.getElementById('trainTime');
+
+        function updatePerformance() {
+            const C = parseFloat(cSlider.value);
+            const gamma = parseFloat(gammaSlider.value);
+            const kernel = kernelSelect.value;
+
+            // Update displayed values
+            cValue.textContent = C.toFixed(1);
+            gammaValue.textContent = gamma.toFixed(3);
+
+            // Simulate performance (in real scenario, this would train actual model)
+            // High C + High gamma = overfitting (high train, low val)
+            // Low C + Low gamma = underfitting (low train, medium val)
+            const overfit_score = C * gamma * 100;
+            const complexity = Math.log10(C + 1) + Math.log10(gamma * 1000 + 1);
+
+            let train_acc = 70 + Math.min(25, overfit_score);
+            let val_acc = 75 + 15 * Math.exp(-complexity) - overfit_score / 2;
+
+            // Kernel effects
+            if (kernel === 'linear') {
+                train_acc -= 5;
+                val_acc += 2;
+            } else if (kernel === 'poly') {
+                train_acc += 3;
+                val_acc -= 3;
+            }
+
+            // Clamp values
+            train_acc = Math.max(60, Math.min(99, train_acc));
+            val_acc = Math.max(55, Math.min(95, val_acc));
+
+            // Support vectors (more with lower C, fewer with higher C)
+            const sv = Math.floor(500 / C + 50 + Math.random() * 20);
+
+            // Training time (higher with higher complexity)
+            const time = (0.5 + complexity * 0.3 + Math.random() * 0.5).toFixed(1);
+
+            // Update display
+            trainAccuracy.textContent = train_acc.toFixed(1) + '%';
+            valAccuracy.textContent = val_acc.toFixed(1) + '%';
+            supportVectors.textContent = sv;
+            trainTime.textContent = time + 's';
+
+            // Color code based on overfitting
+            const gap = train_acc - val_acc;
+            if (gap > 10) {
+                valAccuracy.style.color = '#ef4444'; // Red for overfitting
+            } else if (gap < 3) {
+                valAccuracy.style.color = '#10b981'; // Green for good fit
+            } else {
+                valAccuracy.style.color = '#f59e0b'; // Yellow for moderate
+            }
+        }
+
+        cSlider.addEventListener('input', updatePerformance);
+        gammaSlider.addEventListener('input', updatePerformance);
+        kernelSelect.addEventListener('change', updatePerformance);
+
+        // Initial performance calculation
+        updatePerformance();
+
         closeBtn.addEventListener('click', window.closeModal);
         overlay.addEventListener('click', (e) => { if (e.target === overlay) window.closeModal(); });
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && overlay.classList.contains('active')) window.closeModal(); });
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (!overlay.classList.contains('active')) {
+                if (e.key === 'ArrowLeft') {
+                    window.location.href = 'Week4_Slide76.html';
+                } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                    window.location.href = 'Week4_Slide78.html';
+                }
+            }
+        });
     })();
 </script>
 </body>
