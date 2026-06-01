@@ -476,48 +476,48 @@
         </div>
         
         <div class="methods-grid">
-            <div class="method-card" style="--index: 1;" onclick="showModal('Click for details', '<p>Details about this method.</p>')">
+            <div class="method-card" style="--index: 1;">
                 <div class="method-header">
                     <div class="method-icon">🗳️</div>
                     <div class="method-name">Voting Methods</div>
                 </div>
-                
+
                 <div class="method-description">
                     Combine predictions from multiple diverse models using majority vote or weighted averaging.
                 </div>
-                
+
                 <div class="method-formula">
                     Hard Voting: argmax Σ votes<br>
                     Soft Voting: argmax Σ probabilities
                 </div>
             </div>
-            
-            <div class="method-card" style="--index: 2;" onclick="showModal('Click for details', '<p>Details about this method.</p>')">
+
+            <div class="method-card" style="--index: 2;">
                 <div class="method-header">
                     <div class="method-icon">🎒</div>
                     <div class="method-name">Bagging</div>
                 </div>
-                
+
                 <div class="method-description">
                     Bootstrap Aggregating trains multiple models on different subsets of training data.
                 </div>
-                
+
                 <div class="method-formula">
                     Random Forests = Bagging + Decision Trees<br>
                     + Random Feature Selection
                 </div>
             </div>
-            
-            <div class="method-card" style="--index: 3;" onclick="showModal('Click for details', '<p>Details about this method.</p>')">
+
+            <div class="method-card" style="--index: 3;">
                 <div class="method-header">
                     <div class="method-icon">🚀</div>
                     <div class="method-name">Boosting</div>
                 </div>
-                
+
                 <div class="method-description">
                     Sequential learning where each model corrects errors of previous models.
                 </div>
-                
+
                 <div class="method-formula">
                     AdaBoost, Gradient Boosting<br>
                     XGBoost, LightGBM
@@ -614,19 +614,240 @@
         const titleEl = document.getElementById('modalTitle');
         const contentEl = document.getElementById('modalContent');
         const closeBtn = document.getElementById('modalClose');
+
         window.showModal = function(title, content) {
             titleEl.textContent = title;
             contentEl.innerHTML = content;
             overlay.classList.add('active');
             document.body.style.overflow = 'hidden';
         };
+
         window.closeModal = function() {
             overlay.classList.remove('active');
             document.body.style.overflow = '';
         };
+
+        // Add click handlers for ensemble method cards
+        document.querySelectorAll('.method-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const methodName = this.querySelector('.method-name').textContent;
+
+                const methodDetails = {
+                    'Voting Methods': {
+                        description: 'Voting methods combine predictions from multiple diverse models by taking votes (classification) or averaging (regression).',
+                        types: `<strong>Hard Voting (Classification):</strong><br>
+Each model casts a vote for a class, and the class with the most votes wins.<br>
+<code>Prediction = argmax(Σ votes for each class)</code><br><br>
+<strong>Soft Voting (Classification):</strong><br>
+Each model outputs class probabilities, which are averaged. The class with highest average probability wins.<br>
+<code>Prediction = argmax(Σ P(class) / n_models)</code><br><br>
+<strong>Averaging (Regression):</strong><br>
+Simply average the numerical predictions from all models.<br>
+<code>Prediction = (1/n) Σ model_predictions</code>`,
+                        implementation: `from sklearn.ensemble import VotingClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.svm import SVC
+
+# Create diverse base models
+model1 = LogisticRegression()
+model2 = DecisionTreeClassifier()
+model3 = SVC(probability=True)
+
+# Hard voting ensemble
+voting_hard = VotingClassifier(
+    estimators=[('lr', model1), ('dt', model2), ('svc', model3)],
+    voting='hard'
+)
+
+# Soft voting ensemble (uses probabilities)
+voting_soft = VotingClassifier(
+    estimators=[('lr', model1), ('dt', model2), ('svc', model3)],
+    voting='soft'
+)
+
+voting_soft.fit(X_train, y_train)
+predictions = voting_soft.predict(X_test)`,
+                        pros: 'Simple to implement, works with any combination of models, can combine different types of algorithms (trees, linear models, etc.), reduces overfitting through diversity',
+                        cons: 'Requires training multiple independent models, models must be diverse to be effective, doesn\'t perform well if base models are highly correlated, no automatic way to weight better models more',
+                        whenToUse: 'Use when you have several different types of models with similar performance, when you want a simple ensemble approach, or when models make errors on different samples (high diversity)'
+                    },
+                    'Bagging': {
+                        description: 'Bootstrap Aggregating (Bagging) trains multiple instances of the same learning algorithm on different random subsets (with replacement) of the training data.',
+                        algorithm: `<strong>Bagging Algorithm:</strong><br>
+1. For i = 1 to T iterations:<br>
+   &nbsp;&nbsp;a. Create bootstrap sample Dᵢ by randomly sampling n examples with replacement from training set D<br>
+   &nbsp;&nbsp;b. Train model Mᵢ on bootstrap sample Dᵢ<br>
+2. For prediction:<br>
+   &nbsp;&nbsp;• Classification: Majority vote from all models<br>
+   &nbsp;&nbsp;• Regression: Average predictions from all models<br><br>
+<strong>Bootstrap Sample:</strong> Each model sees ~63.2% unique samples, ~36.8% duplicates (proven by probability theory)`,
+                        implementation: `from sklearn.ensemble import BaggingClassifier
+from sklearn.tree import DecisionTreeClassifier
+
+# Bagging with decision trees
+bagging = BaggingClassifier(
+    estimator=DecisionTreeClassifier(),
+    n_estimators=100,        # Number of models
+    max_samples=0.8,          # 80% of data per sample
+    max_features=0.8,         # 80% of features per sample
+    bootstrap=True,           # Sample with replacement
+    oob_score=True,          # Use out-of-bag samples for validation
+    random_state=42
+)
+
+bagging.fit(X_train, y_train)
+print(f"OOB Score: {bagging.oob_score_:.3f}")
+
+# Random Forest is bagging + random feature selection
+from sklearn.ensemble import RandomForestClassifier
+
+rf = RandomForestClassifier(
+    n_estimators=100,
+    max_depth=10,
+    random_state=42
+)
+rf.fit(X_train, y_train)`,
+                        pros: 'Reduces variance and overfitting, works well with high-variance models (like deep decision trees), provides out-of-bag (OOB) error estimate for free, easily parallelizable (train models independently)',
+                        cons: 'Doesn\'t reduce bias (if base model is biased, ensemble will be too), computationally expensive (trains many models), loses interpretability compared to single model',
+                        whenToUse: 'Use with high-variance, low-bias models (like decision trees), when you want to reduce overfitting without changing the base algorithm, when you have computational resources for parallel training',
+                        keyInsight: 'Random Forests = Bagging + Decision Trees + Random Feature Subsets. The feature randomness adds extra diversity beyond bootstrap sampling, making Random Forests even more powerful than standard bagging.'
+                    },
+                    'Boosting': {
+                        description: 'Boosting trains models sequentially, where each new model focuses on correcting the errors made by the previous models. Models are weighted by their accuracy.',
+                        types: `<strong>AdaBoost (Adaptive Boosting):</strong><br>
+Reweights training samples - increases weights for misclassified samples, decreases for correct ones. Each model focuses more on "hard" examples.<br><br>
+<strong>Gradient Boosting:</strong><br>
+Trains each new model to predict the residual errors (gradients) of the ensemble so far. Directly optimizes a loss function.<br><br>
+<strong>XGBoost (Extreme Gradient Boosting):</strong><br>
+Optimized implementation with regularization, parallel processing, handling missing values, and tree pruning.<br><br>
+<strong>LightGBM:</strong><br>
+Uses histogram-based learning and leaf-wise tree growth for faster training on large datasets.`,
+                        algorithm: `<strong>Gradient Boosting Algorithm:</strong><br>
+1. Initialize: F₀(x) = argmin Σ L(yᵢ, γ)<br>
+2. For m = 1 to M iterations:<br>
+   &nbsp;&nbsp;a. Compute pseudo-residuals: rᵢₘ = -[∂L(yᵢ, F(xᵢ)) / ∂F(xᵢ)]<br>
+   &nbsp;&nbsp;b. Fit weak learner hₘ(x) to residuals rᵢₘ<br>
+   &nbsp;&nbsp;c. Find optimal step size: γₘ = argmin Σ L(yᵢ, Fₘ₋₁(xᵢ) + γhₘ(xᵢ))<br>
+   &nbsp;&nbsp;d. Update: Fₘ(x) = Fₘ₋₁(x) + η·γₘ·hₘ(x)  [η = learning rate]<br>
+3. Final model: F(x) = F₀(x) + η Σ γₘ·hₘ(x)`,
+                        implementation: `# AdaBoost
+from sklearn.ensemble import AdaBoostClassifier
+
+adaboost = AdaBoostClassifier(
+    n_estimators=100,
+    learning_rate=1.0,
+    random_state=42
+)
+adaboost.fit(X_train, y_train)
+
+# Gradient Boosting
+from sklearn.ensemble import GradientBoostingClassifier
+
+gb = GradientBoostingClassifier(
+    n_estimators=100,
+    learning_rate=0.1,
+    max_depth=3,
+    min_samples_split=2,
+    subsample=0.8,  # Stochastic GB
+    random_state=42
+)
+gb.fit(X_train, y_train)
+
+# XGBoost (install with: pip install xgboost)
+import xgboost as xgb
+
+xgb_model = xgb.XGBClassifier(
+    n_estimators=100,
+    learning_rate=0.1,
+    max_depth=3,
+    subsample=0.8,
+    colsample_bytree=0.8,
+    reg_alpha=0.1,  # L1 regularization
+    reg_lambda=1.0,  # L2 regularization
+    random_state=42
+)
+xgb_model.fit(X_train, y_train)`,
+                        pros: 'Reduces both bias and variance, often achieves state-of-the-art performance on structured data, handles complex non-linear relationships well, built-in feature importance',
+                        cons: 'Sequential training (cannot parallelize across models), prone to overfitting if not tuned properly (need learning rate, max depth control), sensitive to noisy data and outliers, requires careful hyperparameter tuning',
+                        whenToUse: 'Use when you need maximum predictive performance on structured/tabular data, when you\'re willing to invest time in hyperparameter tuning, when interpretability is less important than accuracy',
+                        keyInsight: 'Boosting is the most powerful ensemble method for structured data. XGBoost and LightGBM dominate Kaggle competitions and real-world ML applications. The key is sequential error correction - each model learns what previous models got wrong.'
+                    }
+                };
+
+                const detail = methodDetails[methodName];
+                if (detail) {
+                    let modalHTML = `
+                        <div class="modal-highlight">
+                            <strong>Overview:</strong><br>
+                            ${detail.description}
+                        </div>`;
+
+                    if (detail.types) {
+                        modalHTML += `
+                        <h4 style="color: #0d9488; margin: 20px 0 10px;">Types & Variants:</h4>
+                        <div class="modal-highlight" style="background: rgba(251, 191, 36, 0.1);">
+                            ${detail.types}
+                        </div>`;
+                    }
+
+                    if (detail.algorithm) {
+                        modalHTML += `
+                        <h4 style="color: #0d9488; margin: 20px 0 10px;">Algorithm:</h4>
+                        <div class="modal-highlight" style="background: rgba(251, 191, 36, 0.1);">
+                            ${detail.algorithm}
+                        </div>`;
+                    }
+
+                    modalHTML += `
+                        <h4 style="color: #0d9488; margin: 20px 0 10px;">Implementation Example:</h4>
+                        <div class="modal-code">${detail.implementation}</div>
+                        <p style="margin-top: 15px;"><strong>✅ Advantages:</strong> ${detail.pros}</p>
+                        <p style="margin-top: 10px;"><strong>⚠️ Limitations:</strong> ${detail.cons}</p>
+                        <p style="margin-top: 10px;"><strong>🎯 When to Use:</strong> ${detail.whenToUse}</p>`;
+
+                    if (detail.keyInsight) {
+                        modalHTML += `
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                            <strong>💡 Key Insight:</strong><br>
+                            ${detail.keyInsight}
+                        </div>`;
+                    }
+
+                    showModal(methodName, modalHTML);
+                }
+            });
+        });
+
         closeBtn.addEventListener('click', window.closeModal);
         overlay.addEventListener('click', (e) => { if (e.target === overlay) window.closeModal(); });
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && overlay.classList.contains('active')) window.closeModal(); });
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (!overlay.classList.contains('active')) {
+                if (e.key === 'ArrowLeft') {
+                    window.location.href = 'Week4_Slide77.html';
+                } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                    window.location.href = 'Week4_Slide79.html';
+                }
+            }
+        });
     })();
 </script>
 </body>
