@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Agent-Environment Interaction</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .interaction-diagram {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            margin-bottom: 40px;
+            animation: slideInFromTop 1s ease-out 0.3s both;
+        }
+
+        .diagram-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 300px;
+            position: relative;
+        }
+
+        .agent-box, .env-box {
+            width: 180px;
+            height: 180px;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .agent-box {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            animation: pulse 2s infinite;
+        }
+
+        .env-box {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            animation: pulse 2s infinite;
+            animation-delay: 1s;
+        }
+
+        .agent-box:hover, .env-box:hover {
+            transform: scale(1.1);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+
+        .arrow-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            margin: 0 60px;
+            height: 200px;
+        }
+
+        .arrow {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .arrow:hover {
+            transform: scale(1.1);
+        }
+
+        .arrow-line {
+            width: 120px;
+            height: 3px;
+            background: #0d9488;
+            position: relative;
+        }
+
+        .arrow-head {
+            width: 0;
+            height: 0;
+            border-style: solid;
+        }
+
+        .arrow-right .arrow-head {
+            border-width: 10px 0 10px 15px;
+            border-color: transparent transparent transparent #0d9488;
+        }
+
+        .arrow-left .arrow-head {
+            border-width: 10px 15px 10px 0;
+            border-color: transparent #6366f1 transparent transparent;
+        }
+
+        .arrow-label {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: 600;
+            white-space: nowrap;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .info-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .info-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(13, 148, 136, 0.2);
+            border-color: #0d9488;
+        }
+
+        .info-card h3 {
+            color: #0d9488;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-icon {
+            font-size: 1.3em;
+        }
+
+        .info-list {
+            list-style: none;
+            margin-top: 15px;
+        }
+
+        .info-list li {
+            margin: 10px 0;
+            padding-left: 25px;
+            position: relative;
+            line-height: 1.6;
+        }
+
+        .info-list li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: #0d9488;
+            font-weight: bold;
+        }
+
+        .cycle-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.9s both;
+        }
+
+        .cycle-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .cycle-steps {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .cycle-step {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .cycle-step:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.3);
+        }
+
+        .cycle-step::after {
+            content: '→';
+            position: absolute;
+            right: -30px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5em;
+            color: #0d9488;
+        }
+
+        .cycle-step:last-child::after {
+            content: '';
+        }
+
+        .step-number {
+            display: inline-block;
+            width: 35px;
+            height: 35px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            border-radius: 50%;
+            line-height: 35px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .step-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 5px;
+        }
+
+        .step-desc {
+            font-size: 0.9em;
+            color: #64748b;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.3s ease;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 2em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .modal-close:hover {
+            background: #f1f5f9;
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            color: #1e293b;
+            line-height: 1.8;
+        }
+
+        .modal-content p {
+            margin: 15px 0;
+            font-size: 1.05em;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-left: 4px solid #0d9488;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            color: #0d9488;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 1em;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.4);
+        }
+
+        .nav-btn.special {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(240,253,250,0.95));
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            font-weight: 600;
+            color: #0d9488;
+            z-index: 100;
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(240,253,250,0.95));
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            font-weight: 600;
+            color: #0d9488;
+            z-index: 100;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @media (max-width: 768px) {
+            .content-grid { grid-template-columns: 1fr; }
+            .cycle-steps { grid-template-columns: 1fr; }
+            .cycle-step::after { display: none; }
+            .slide-title { font-size: 2.5em; }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 11</div>
+    <div class="slide-number">Slide 202 of 220</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Agent-Environment Interaction</h1>
+        
+        <div class="interaction-diagram">
+            <div class="diagram-container">
+                <div class="agent-box">
+                    <div style="font-size: 2em; margin-bottom: 10px;">🤖</div>
+                    <div>Agent</div>
+                </div>
+                
+                <div class="arrow-container">
+                    <div class="arrow arrow-right">
+                        <div class="arrow-line">
+                            <div class="arrow-label">Action (aₜ)</div>
+                        </div>
+                        <div class="arrow-head"></div>
+                    </div>
+                    
+                    <div class="arrow arrow-left">
+                        <div class="arrow-head"></div>
+                        <div class="arrow-line" style="background: #6366f1;">
+                            <div class="arrow-label">State (sₜ₊₁), Reward (rₜ)</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="env-box">
+                    <div style="font-size: 2em; margin-bottom: 10px;">🌍</div>
+                    <div>Environment</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-grid">
+            <div class="info-card">
+                <h3><span class="info-icon">🤖</span> Agent's Perspective</h3>
+                <ul class="info-list">
+                    <li>Observes current state sₜ</li>
+                    <li>Selects action aₜ based on policy π</li>
+                    <li>Receives reward signal rₜ</li>
+                    <li>Updates internal model/policy</li>
+                    <li>Learns from experience</li>
+                </ul>
+            </div>
+
+            <div class="info-card">
+                <h3><span class="info-icon">🌍</span> Environment's Role</h3>
+                <ul class="info-list">
+                    <li>Receives agent's action aₜ</li>
+                    <li>Transitions to new state sₜ₊₁</li>
+                    <li>Computes reward rₜ</li>
+                    <li>May be deterministic or stochastic</li>
+                    <li>Defines problem dynamics</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="cycle-section">
+            <h2 class="cycle-title">The RL Interaction Cycle</h2>
+            <div class="cycle-steps">
+                <div class="cycle-step">
+                    <div class="step-number">1</div>
+                    <div class="step-title">Observe</div>
+                    <div class="step-desc">Agent perceives state sₜ</div>
+                </div>
+                
+                <div class="cycle-step">
+                    <div class="step-number">2</div>
+                    <div class="step-title">Decide</div>
+                    <div class="step-desc">Select action aₜ using policy</div>
+                </div>
+                
+                <div class="cycle-step">
+                    <div class="step-number">3</div>
+                    <div class="step-title">Act</div>
+                    <div class="step-desc">Execute action in environment</div>
+                </div>
+                
+                <div class="cycle-step">
+                    <div class="step-number">4</div>
+                    <div class="step-title">Learn</div>
+                    <div class="step-desc">Update from reward & new state</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week11_Slide201.html" class="nav-btn">← Previous</a>
+        <a href="Week11_Slide203.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Interactive diagram elements
+        document.querySelector('.agent-box').addEventListener('click', function() {
+            modal.show('The RL Agent', `
+                <div class="modal-highlight">
+                    <strong>The Learning Decision Maker</strong>
+                </div>
+                
+                <p>The agent is the core component that learns and makes decisions in the RL system.</p>
+                
+                <div class="modal-code">
+class RLAgent:
+    def __init__(self):
+        self.policy = self.initialize_policy()
+        self.memory = []
+        
+    def perceive(self, state):
+        """Process incoming state information"""
+        self.current_state = self.preprocess(state)
+        
+    def act(self):
+        """Select action based on current policy"""
+        if random() < epsilon:  # Exploration
+            return random_action()
+        else:  # Exploitation
+            return self.policy(self.current_state)
+    
+    def learn(self, state, action, reward, next_state):
+        """Update policy based on experience"""
+        self.memory.append((state, action, reward, next_state))
+        self.update_policy()
+                </div>
+                
+                <p><strong>Key Agent Components:</strong></p>
+                <ul style="margin-left: 20px;">
+                    <li><strong>Policy (π):</strong> Maps states to actions</li>
+                    <li><strong>Value Function:</strong> Estimates future rewards</li>
+                    <li><strong>Model (optional):</strong> Predicts environment dynamics</li>
+                    <li><strong>Memory/Buffer:</strong> Stores past experiences</li>
+                </ul>
+                
+                <p><strong>Agent Types:</strong></p>
+                <ul style="margin-left: 20px;">
+                    <li><strong>Value-based:</strong> Learn value functions (Q-learning, SARSA)</li>
+                    <li><strong>Policy-based:</strong> Learn policy directly (REINFORCE)</li>
+                    <li><strong>Actor-Critic:</strong> Combine both approaches</li>
+                    <li><strong>Model-based:</strong> Learn environment model</li>
+                </ul>
+            `);
+        });
+
+        document.querySelector('.env-box').addEventListener('click', function() {
+            modal.show('The Environment', `
+                <div class="modal-highlight">
+                    <strong>The World the Agent Interacts With</strong>
+                </div>
+                
+                <p>The environment represents everything outside the agent - it receives actions and provides feedback.</p>
+                
+                <div class="modal-code">
+class Environment:
+    def __init__(self):
+        self.state = self.reset()
+        
+    def step(self, action):
+        """Execute action and return consequences"""
+        # Apply action to current state
+        next_state = self.transition(self.state, action)
+        
+        # Calculate reward
+        reward = self.reward_function(
+            self.state, action, next_state
+        )
+        
+        # Check if episode is done
+        done = self.is_terminal(next_state)
+        
+        # Additional info (optional)
+        info = {'success': reward > 0}
+        
+        self.state = next_state
+        return next_state, reward, done, info
+    
+    def reset(self):
+        """Reset to initial state"""
+        self.state = self.get_initial_state()
+        return self.state
+                </div>
+                
+                <p><strong>Environment Properties:</strong></p>
+                <ul style="margin-left: 20px;">
+                    <li><strong>State Space:</strong> All possible states</li>
+                    <li><strong>Action Space:</strong> All possible actions</li>
+                    <li><strong>Transition Function:</strong> P(s'|s,a)</li>
+                    <li><strong>Reward Function:</strong> R(s,a,s')</li>
+                </ul>
+                
+                <p><strong>Environment Types:</strong></p>
+                <ul style="margin-left: 20px;">
+                    <li><strong>Episodic:</strong> Natural ending point (games, tasks)</li>
+                    <li><strong>Continuous:</strong> No natural end (control systems)</li>
+                    <li><strong>Stationary:</strong> Rules don't change</li>
+                    <li><strong>Non-stationary:</strong> Rules evolve over time</li>
+                </ul>
+            `);
+        });
+
+        // Interactive arrows
+        document.querySelectorAll('.arrow').forEach(arrow => {
+            arrow.addEventListener('click', function() {
+                const label = this.querySelector('.arrow-label').textContent;
+                
+                if (label.includes('Action')) {
+                    modal.show('Action Signal', `
+                        <div class="modal-highlight">
+                            <strong>From Agent to Environment</strong>
+                        </div>
+                        
+                        <p>Actions are the agent's means of affecting the environment.</p>
+                        
+                        <div class="modal-code">
+# Discrete action space
+action = env.action_space.sample()  # Random action
+action = 2  # Specific action (e.g., "move right")
+
+# Continuous action space
+action = np.array([0.5, -0.3])  # Multi-dimensional
+
+# Action selection strategies
+def epsilon_greedy(Q, state, epsilon):
+    if np.random.random() < epsilon:
+        return env.action_space.sample()  # Explore
+    else:
+        return np.argmax(Q[state])  # Exploit
+                        </div>
+                        
+                        <p><strong>Action Spaces:</strong></p>
+                        <ul style="margin-left: 20px;">
+                            <li><strong>Discrete:</strong> Finite set {0, 1, 2, ..., n}</li>
+                            <li><strong>Continuous:</strong> Real-valued vectors</li>
+                            <li><strong>Hybrid:</strong> Mix of discrete and continuous</li>
+                        </ul>
+                        
+                        <p><strong>Action Selection Methods:</strong></p>
+                        <ul style="margin-left: 20px;">
+                            <li>Greedy: Always best known action</li>
+                            <li>ε-greedy: Random with probability ε</li>
+                            <li>Boltzmann: Probabilistic based on Q-values</li>
+                            <li>UCB: Upper confidence bound exploration</li>
+                        </ul>
+                    `);
+                } else {
+                    modal.show('State & Reward Signals', `
+                        <div class="modal-highlight">
+                            <strong>From Environment to Agent</strong>
+                        </div>
+                        
+                        <p>The environment provides state observations and reward feedback to the agent.</p>
+                        
+                        <div class="modal-code">
+# State representation examples
+state = env.observation  # Current observation
+
+# Tabular state
+state = 42  # State index
+
+# Feature vector
+state = np.array([position, velocity, angle])
+
+# Image state (e.g., Atari)
+state = np.array(84, 84, 4)  # Stacked frames
+
+# Reward examples
+reward = 1.0   # Positive reinforcement
+reward = -1.0  # Penalty
+reward = 0.0   # Neutral
+
+# Shaped rewards
+distance_reward = -0.1 * distance_to_goal
+time_penalty = -0.01
+bonus = 10.0 if goal_reached else 0
+reward = distance_reward + time_penalty + bonus
+                        </div>
+                        
+                        <p><strong>State Information:</strong></p>
+                        <ul style="margin-left: 20px;">
+                            <li><strong>Full observability:</strong> Complete state information</li>
+                            <li><strong>Partial observability:</strong> Limited view (POMDP)</li>
+                            <li><strong>State representation:</strong> Raw vs processed features</li>
+                        </ul>
+                        
+                        <p><strong>Reward Design:</strong></p>
+                        <ul style="margin-left: 20px;">
+                            <li><strong>Sparse:</strong> Only at goal/failure</li>
+                            <li><strong>Dense:</strong> Continuous feedback</li>
+                            <li><strong>Shaped:</strong> Engineered to guide learning</li>
+                            <li><strong>Intrinsic:</strong> Curiosity-driven exploration</li>
+                        </ul>
+                    `);
+                }
+            });
+        });
+
+        // Interactive info cards
+        document.querySelectorAll('.info-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('h3').textContent;
+                
+                if (title.includes('Agent')) {
+                    modal.show("Agent's Perspective", `
+                        <div class="modal-highlight">
+                            <strong>How the Agent Sees the World</strong>
+                        </div>
+                        
+                        <div class="modal-code">
+# Agent's main loop
+for episode in range(num_episodes):
+    state = env.reset()
+    total_reward = 0
+    
+    while not done:
+        # 1. Observe state
+        processed_state = preprocess(state)
+        
+        # 2. Select action
+        action = agent.select_action(processed_state)
+        
+        # 3. Execute and observe outcome
+        next_state, reward, done, info = env.step(action)
+        
+        # 4. Store experience
+        agent.remember(state, action, reward, next_state, done)
+        
+        # 5. Learn from experience
+        if len(agent.memory) > batch_size:
+            agent.replay_and_learn()
+        
+        state = next_state
+        total_reward += reward
+    
+    print(f"Episode {episode}: Total Reward = {total_reward}")
+                        </div>
+                        
+                        <p><strong>Agent's Challenges:</strong></p>
+                        <ul style="margin-left: 20px;">
+                            <li><strong>Exploration vs Exploitation:</strong> Try new things or use known good actions?</li>
+                            <li><strong>Credit Assignment:</strong> Which actions led to reward?</li>
+                            <li><strong>Generalization:</strong> Apply learning to new situations</li>
+                            <li><strong>Sample Efficiency:</strong> Learn from limited experience</li>
+                        </ul>
+                        
+                        <p><strong>Learning Strategies:</strong></p>
+                        <ul style="margin-left: 20px;">
+                            <li>Online learning: Update after each step</li>
+                            <li>Batch learning: Update after collecting experiences</li>
+                            <li>Experience replay: Learn from stored memories</li>
+                            <li>Transfer learning: Use knowledge from related tasks</li>
+                        </ul>
+                    `);
+                } else {
+                    modal.show("Environment's Role", `
+                        <div class="modal-highlight">
+                            <strong>The Problem Definition</strong>
+                        </div>
+                        
+                        <p>The environment defines the problem the agent must solve through its dynamics and reward structure.</p>
+                        
+                        <div class="modal-code">
+# OpenAI Gym environment interface
+import gym
+
+env = gym.make('CartPole-v1')
+
+# Environment properties
+print(f"State space: {env.observation_space}")
+print(f"Action space: {env.action_space}")
+
+# Custom environment
+class GridWorld(gym.Env):
+    def __init__(self, size=10):
+        self.size = size
+        self.observation_space = spaces.Discrete(size * size)
+        self.action_space = spaces.Discrete(4)  # up,down,left,right
+        
+    def step(self, action):
+        # Update position based on action
+        new_pos = self.move(self.agent_pos, action)
+        
+        # Check boundaries and obstacles
+        if self.is_valid(new_pos):
+            self.agent_pos = new_pos
+        
+        # Calculate reward
+        if self.agent_pos == self.goal_pos:
+            reward = 100
+            done = True
+        else:
+            reward = -1  # Step cost
+            done = False
+            
+        return self.agent_pos, reward, done, {}
+                        </div>
+                        
+                        <p><strong>Environment Design Considerations:</strong></p>
+                        <ul style="margin-left: 20px;">
+                            <li><strong>State representation:</strong> What information to provide?</li>
+                            <li><strong>Action effects:</strong> Deterministic or probabilistic?</li>
+                            <li><strong>Reward structure:</strong> How to incentivize desired behavior?</li>
+                            <li><strong>Termination conditions:</strong> When does episode end?</li>
+                        </ul>
+                        
+                        <p><strong>Common Environments:</strong></p>
+                        <ul style="margin-left: 20px;">
+                            <li>OpenAI Gym: Standard RL benchmarks</li>
+                            <li>Unity ML-Agents: 3D environments</li>
+                            <li>DeepMind Control Suite: Continuous control</li>
+                            <li>Custom simulators: Domain-specific problems</li>
+                        </ul>
+                    `);
+                }
+            });
+        });
+
+        // Interactive cycle steps
+        document.querySelectorAll('.cycle-step').forEach(step => {
+            step.addEventListener('click', function() {
+                const stepTitle = this.querySelector('.step-title').textContent;
+                
+                const stepDetails = {
+                    'Observe': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>State Observation Phase</strong>
+                            </div>
+                            
+                            <p>The agent perceives the current state of the environment through sensors or direct observation.</p>
+                            
+                            <div class="modal-code">
+# Different observation types
+# 1. Direct state access
+state = env.get_state()
+
+# 2. Sensor readings
+lidar_data = robot.get_lidar_scan()
+camera_image = robot.get_camera_image()
+state = process_sensors(lidar_data, camera_image)
+
+# 3. Partial observations (POMDP)
+visible_tiles = get_visible_area(agent_position, view_radius)
+state = encode_partial_state(visible_tiles)
+
+# 4. Historical observations
+state_history.append(current_observation)
+state = np.stack(state_history[-4:])  # Last 4 frames
+                            </div>
+                            
+                            <p><strong>State Processing:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Normalization: Scale features to similar ranges</li>
+                                <li>Feature extraction: Convert raw data to useful features</li>
+                                <li>Dimensionality reduction: Compress high-dimensional data</li>
+                                <li>State stacking: Include temporal information</li>
+                            </ul>
+                        `
+                    },
+                    'Decide': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Action Selection Phase</strong>
+                            </div>
+                            
+                            <p>The agent uses its policy to select an action based on the observed state.</p>
+                            
+                            <div class="modal-code">
+# Different decision-making strategies
+
+# 1. Deterministic policy
+action = policy(state)
+
+# 2. Stochastic policy
+action_probs = policy(state)
+action = np.random.choice(actions, p=action_probs)
+
+# 3. Q-value based
+q_values = q_network(state)
+if random.random() < epsilon:
+    action = env.action_space.sample()  # Explore
+else:
+    action = np.argmax(q_values)  # Exploit
+
+# 4. Policy gradient
+mean, std = policy_network(state)
+action = np.random.normal(mean, std)  # Continuous action
+action = np.clip(action, env.action_space.low, env.action_space.high)
+                            </div>
+                            
+                            <p><strong>Decision Factors:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Current policy parameters</li>
+                                <li>Exploration strategy (ε, temperature)</li>
+                                <li>Confidence/uncertainty estimates</li>
+                                <li>Safety constraints</li>
+                            </ul>
+                        `
+                    },
+                    'Act': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Action Execution Phase</strong>
+                            </div>
+                            
+                            <p>The selected action is executed in the environment, causing a state transition.</p>
+                            
+                            <div class="modal-code">
+# Action execution and outcome
+
+# Standard Gym interface
+next_state, reward, done, info = env.step(action)
+
+# Real robot control
+robot.set_joint_velocities(action)
+time.sleep(control_timestep)
+next_state = robot.get_state()
+
+# Simulation with physics
+forces = action_to_forces(action)
+simulator.apply_forces(forces)
+simulator.step()
+next_state = simulator.get_state()
+
+# Multi-agent environment
+actions = {agent_id: agent.act(states[agent_id]) 
+           for agent_id in agents}
+next_states, rewards, dones, infos = env.step(actions)
+                            </div>
+                            
+                            <p><strong>Execution Considerations:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Action delays and latency</li>
+                                <li>Noise and uncertainty in execution</li>
+                                <li>Safety limits and constraints</li>
+                                <li>Concurrent actions in multi-agent settings</li>
+                            </ul>
+                        `
+                    },
+                    'Learn': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Learning and Update Phase</strong>
+                            </div>
+                            
+                            <p>The agent updates its policy or value function based on the observed outcome.</p>
+                            
+                            <div class="modal-code">
+# Different learning updates
+
+# 1. Q-Learning update
+Q[state, action] += alpha * (
+    reward + gamma * max(Q[next_state]) - Q[state, action]
+)
+
+# 2. Policy Gradient update
+returns = compute_returns(rewards, gamma)
+loss = -log_prob(actions) * returns
+optimizer.zero_grad()
+loss.backward()
+optimizer.step()
+
+# 3. Actor-Critic update
+# Update critic
+value_loss = F.mse_loss(V(state), returns)
+critic_optimizer.zero_grad()
+value_loss.backward()
+critic_optimizer.step()
+
+# Update actor
+advantage = returns - V(state).detach()
+policy_loss = -log_prob * advantage
+actor_optimizer.zero_grad()
+policy_loss.backward()
+actor_optimizer.step()
+
+# 4. Experience Replay
+batch = sample_batch(replay_buffer, batch_size)
+for state, action, reward, next_state in batch:
+    target = reward + gamma * max(Q(next_state))
+    loss = (Q(state, action) - target) ** 2
+    # Backpropagate loss
+                            </div>
+                            
+                            <p><strong>Learning Components:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Learning rate (α): How much to update</li>
+                                <li>Discount factor (γ): Future reward importance</li>
+                                <li>Batch size: Samples per update</li>
+                                <li>Target networks: Stabilize learning</li>
+                            </ul>
+                        `
+                    }
+                };
+                
+                const details = stepDetails[stepTitle];
+                if (details) {
+                    modal.show(`RL Cycle: ${stepTitle}`, details.content);
+                }
+            });
+        });
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week11_Slide203.html';
+            } else if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week11_Slide201.html';
+            }
+        });
+    </script>
+</body>
+</html>

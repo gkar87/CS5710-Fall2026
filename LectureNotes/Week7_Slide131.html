@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - t-SNE Algorithm</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .tsne-overview {
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,253,250,0.95) 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .algorithm-section {
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,253,250,0.95) 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .concept-card {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .concept-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .concept-card:hover::before {
+            left: 100%;
+        }
+
+        .concept-card:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 30px rgba(13, 148, 136, 0.2);
+        }
+
+        .concept-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 10px;
+        }
+
+        .concept-desc {
+            color: #1e293b;
+            line-height: 1.6;
+        }
+
+        .algorithm-steps {
+            list-style: none;
+            counter-reset: step-counter;
+        }
+
+        .algorithm-step {
+            position: relative;
+            padding: 20px;
+            margin: 20px 0;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            counter-increment: step-counter;
+            padding-left: 60px;
+        }
+
+        .algorithm-step::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 35px;
+            height: 35px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .algorithm-step:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 30px rgba(13, 148, 136, 0.15);
+        }
+
+        .formula-box {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .formula-box:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 30px rgba(13, 148, 136, 0.15);
+        }
+
+        .visualization-container {
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,253,250,0.95) 100%);
+            border-radius: 20px;
+            padding: 40px;
+            margin-top: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            text-align: center;
+        }
+
+        .vis-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .vis-item {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .vis-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.2);
+        }
+
+        .vis-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .vis-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 5px;
+        }
+
+        .vis-desc {
+            font-size: 0.9em;
+            color: #1e293b;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 2em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .modal-close:hover {
+            color: #0d9488;
+            background: rgba(13, 148, 136, 0.1);
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            color: #1e293b;
+            line-height: 1.8;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #99f6e4;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .floating-elements {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            top: 0;
+            left: 0;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: float 20s linear infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .vis-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <div class="course-info">CS5710 - Week 7</div>
+    <div class="slide-number">Slide 131 of 140</div>
+
+    <div class="slide-container">
+        <h1 class="slide-title">t-SNE Algorithm</h1>
+
+        <div class="content-layout">
+            <div class="tsne-overview">
+                <h2 class="section-title">t-Distributed Stochastic Neighbor Embedding</h2>
+                
+                <div class="concept-card" onclick="showModal('What is t-SNE?', tsneIntroContent)">
+                    <div class="concept-title">🌐 Non-linear Dimensionality Reduction</div>
+                    <div class="concept-desc">Preserves local structure while revealing global patterns</div>
+                </div>
+
+                <div class="concept-card" onclick="showModal('Key Innovation', innovationContent)">
+                    <div class="concept-title">📊 Probability Distributions</div>
+                    <div class="concept-desc">Models similarities as conditional probabilities</div>
+                </div>
+
+                <div class="formula-box" onclick="showModal('Cost Function', costFunctionContent)">
+                    C = KL(P||Q) = ΣΣ p_ij log(p_ij/q_ij)
+                </div>
+
+                <div class="concept-card" onclick="showModal('t-Distribution', tDistContent)">
+                    <div class="concept-title">🔔 Heavy-Tailed Distribution</div>
+                    <div class="concept-desc">Uses Student t-distribution to avoid crowding problem</div>
+                </div>
+            </div>
+
+            <div class="algorithm-section">
+                <h2 class="section-title">Algorithm Steps</h2>
+                
+                <ul class="algorithm-steps">
+                    <li class="algorithm-step" onclick="showModal('Step 1: Compute Similarities', step1Content)">
+                        <strong>Compute High-D Similarities</strong><br>
+                        Calculate pairwise similarities in original space
+                    </li>
+                    
+                    <li class="algorithm-step" onclick="showModal('Step 2: Initialize Embedding', step2Content)">
+                        <strong>Random Initialization</strong><br>
+                        Initialize low-dimensional points randomly
+                    </li>
+                    
+                    <li class="algorithm-step" onclick="showModal('Step 3: Compute Low-D Similarities', step3Content)">
+                        <strong>Calculate Q Distribution</strong><br>
+                        Compute similarities in embedded space
+                    </li>
+                    
+                    <li class="algorithm-step" onclick="showModal('Step 4: Gradient Descent', step4Content)">
+                        <strong>Optimize Positions</strong><br>
+                        Minimize KL divergence via gradient descent
+                    </li>
+                    
+                    <li class="algorithm-step" onclick="showModal('Step 5: Early Exaggeration', step5Content)">
+                        <strong>Early Exaggeration Phase</strong><br>
+                        Multiply P by factor to form tight clusters
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="visualization-container">
+            <h2 class="section-title">t-SNE Characteristics</h2>
+            
+            <div class="vis-grid">
+                <div class="vis-item" onclick="showModal('Strengths', strengthsContent)">
+                    <div class="vis-icon">💪</div>
+                    <div class="vis-title">Strengths</div>
+                    <div class="vis-desc">Excellent for visualization</div>
+                </div>
+                
+                <div class="vis-item" onclick="showModal('Weaknesses', weaknessesContent)">
+                    <div class="vis-icon">⚠️</div>
+                    <div class="vis-title">Limitations</div>
+                    <div class="vis-desc">Computational complexity</div>
+                </div>
+                
+                <div class="vis-item" onclick="showModal('Parameters', parametersContent)">
+                    <div class="vis-icon">🎛️</div>
+                    <div class="vis-title">Key Parameters</div>
+                    <div class="vis-desc">Perplexity, learning rate</div>
+                </div>
+                
+                <div class="vis-item" onclick="showModal('Applications', applicationsContent)">
+                    <div class="vis-icon">🎯</div>
+                    <div class="vis-title">Applications</div>
+                    <div class="vis-desc">Data exploration, clustering</div>
+                </div>
+                
+                <div class="vis-item" onclick="showModal('Comparison', comparisonContent)">
+                    <div class="vis-icon">📈</div>
+                    <div class="vis-title">vs PCA/LDA</div>
+                    <div class="vis-desc">Non-linear vs linear</div>
+                </div>
+                
+                <div class="vis-item" onclick="showModal('Implementation', implementationContent)">
+                    <div class="vis-icon">💻</div>
+                    <div class="vis-title">Code Example</div>
+                    <div class="vis-desc">Using sklearn</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Structure -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Modal Title</h3>
+                <button class="modal-close" id="modalClose">&times;</button>
+            </div>
+            <div class="modal-content" id="modalContent">
+                Modal content will appear here...
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week7_Slide130.html" class="nav-btn">← Previous</a>
+        <a href="Week7_Slide132.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal content definitions
+        const tsneIntroContent = `
+            <div class="modal-highlight">
+                <strong>t-SNE is a powerful non-linear dimensionality reduction technique for visualization</strong>
+            </div>
+            <p>t-SNE (t-distributed Stochastic Neighbor Embedding) excels at:</p>
+            <ul>
+                <li>• Preserving local neighborhood structure</li>
+                <li>• Revealing clusters and patterns in high-dimensional data</li>
+                <li>• Creating intuitive 2D or 3D visualizations</li>
+                <li>• Handling non-linear relationships</li>
+            </ul>
+            <div class="modal-code">
+from sklearn.manifold import TSNE
+import numpy as np
+
+# Basic t-SNE usage
+tsne = TSNE(n_components=2, perplexity=30, 
+            learning_rate=200, n_iter=1000)
+X_embedded = tsne.fit_transform(X)
+            </div>
+            <p><strong>Key Insight:</strong> t-SNE converts similarities between data points into joint probabilities and tries to minimize the difference between these probabilities in high-D and low-D spaces.</p>
+        `;
+
+        const innovationContent = `
+            <div class="modal-highlight">
+                <strong>t-SNE models pairwise similarities as probabilities</strong>
+            </div>
+            <p><strong>High-dimensional space (P distribution):</strong></p>
+            <div class="modal-code">
+p_j|i = exp(-||x_i - x_j||² / 2σ_i²) / Σ_k≠i exp(-||x_i - x_k||² / 2σ_i²)
+
+# Gaussian distribution in high-D space
+# σ_i is chosen based on perplexity
+            </div>
+            <p><strong>Low-dimensional space (Q distribution):</strong></p>
+            <div class="modal-code">
+q_ij = (1 + ||y_i - y_j||²)^(-1) / Σ_k≠l (1 + ||y_k - y_l||²)^(-1)
+
+# Student t-distribution with df=1 (Cauchy) in low-D space
+            </div>
+            <p><strong>Why probabilities?</strong></p>
+            <ul>
+                <li>• Natural way to represent similarities</li>
+                <li>• Allows use of information theory (KL divergence)</li>
+                <li>• Handles different scales elegantly</li>
+            </ul>
+        `;
+
+        const costFunctionContent = `
+            <div class="modal-highlight">
+                <strong>t-SNE minimizes the Kullback-Leibler divergence between P and Q</strong>
+            </div>
+            <p>The cost function measures the difference between the two probability distributions:</p>
+            <div class="modal-code">
+C = KL(P||Q) = Σ_i Σ_j p_ij log(p_ij / q_ij)
+
+Where:
+• P = joint probability distribution in high-D space
+• Q = joint probability distribution in low-D space
+• p_ij = probability that x_i would pick x_j as neighbor
+• q_ij = probability that y_i would pick y_j as neighbor
+            </div>
+            <p><strong>Gradient of cost function:</strong></p>
+            <div class="modal-code">
+∂C/∂y_i = 4 Σ_j (p_ij - q_ij)(y_i - y_j)(1 + ||y_i - y_j||²)^(-1)
+            </div>
+            <p><strong>Interpretation:</strong> Points are attracted/repelled based on the difference between their high-D and low-D similarities.</p>
+        `;
+
+        const tDistContent = `
+            <div class="modal-highlight">
+                <strong>The "t" in t-SNE: Student t-distribution with one degree of freedom</strong>
+            </div>
+            <p><strong>Why use t-distribution instead of Gaussian?</strong></p>
+            <ul>
+                <li>• <strong>Heavy tails:</strong> Allows dissimilar points to be modeled far apart</li>
+                <li>• <strong>Crowding problem:</strong> Solves the issue of points crowding in the center</li>
+                <li>• <strong>Better separation:</strong> Creates clearer cluster boundaries</li>
+            </ul>
+            <div class="modal-code">
+# Gaussian vs t-distribution comparison
+import numpy as np
+import matplotlib.pyplot as plt
+
+x = np.linspace(-5, 5, 100)
+gaussian = np.exp(-x**2/2) / np.sqrt(2*np.pi)
+t_dist = 1 / (np.pi * (1 + x**2))
+
+plt.plot(x, gaussian, label='Gaussian')
+plt.plot(x, t_dist, label='t-distribution (df=1)')
+plt.legend()
+# t-distribution has heavier tails!
+            </div>
+            <p><strong>Effect:</strong> Similar points stay close, but dissimilar points can be pushed much further apart, creating better visual separation.</p>
+        `;
+
+        const step1Content = `
+            <div class="modal-highlight">
+                <strong>Step 1: Computing pairwise similarities in high-dimensional space</strong>
+            </div>
+            <p>Calculate conditional probabilities using Gaussian kernel:</p>
+            <div class="modal-code">
+def compute_pairwise_affinities(X, perplexity=30):
+    n = X.shape[0]
+    P = np.zeros((n, n))
+    
+    for i in range(n):
+        # Compute distances from point i
+        distances = np.sum((X - X[i])**2, axis=1)
+        
+        # Find σ_i using binary search to match perplexity
+        sigma = search_sigma(distances, perplexity)
+        
+        # Compute probabilities
+        P[i, :] = np.exp(-distances / (2 * sigma**2))
+        P[i, i] = 0  # No self-similarity
+        P[i, :] = P[i, :] / np.sum(P[i, :])
+    
+    # Symmetrize: p_ij = (p_i|j + p_j|i) / 2n
+    P = (P + P.T) / (2 * n)
+    return P
+            </div>
+            <p><strong>Perplexity:</strong> Effective number of neighbors (typically 5-50)</p>
+            <p><strong>σ_i selection:</strong> Binary search to match desired perplexity</p>
+        `;
+
+        const step2Content = `
+            <div class="modal-highlight">
+                <strong>Step 2: Initialize low-dimensional embedding</strong>
+            </div>
+            <p>Start with random positions or use PCA initialization:</p>
+            <div class="modal-code">
+def initialize_embedding(n_samples, n_components=2, method='random'):
+    if method == 'random':
+        # Random initialization from N(0, 1e-4)
+        Y = np.random.randn(n_samples, n_components) * 1e-4
+    elif method == 'pca':
+        # PCA initialization (often gives better results)
+        from sklearn.decomposition import PCA
+        pca = PCA(n_components=n_components)
+        Y = pca.fit_transform(X) * 1e-4
+    
+    return Y
+
+# Initialize positions
+Y = initialize_embedding(X.shape[0], n_components=2)
+            </div>
+            <p><strong>Best practices:</strong></p>
+            <ul>
+                <li>• PCA initialization often converges faster</li>
+                <li>• Small initial values prevent early cluster formation</li>
+                <li>• Multiple runs with different seeds for stability</li>
+            </ul>
+        `;
+
+        const step3Content = `
+            <div class="modal-highlight">
+                <strong>Step 3: Compute similarities in low-dimensional space</strong>
+            </div>
+            <p>Calculate Q distribution using Student t-distribution:</p>
+            <div class="modal-code">
+def compute_low_dim_affinities(Y):
+    n = Y.shape[0]
+    
+    # Compute pairwise distances
+    distances = np.zeros((n, n))
+    for i in range(n):
+        distances[i, :] = np.sum((Y - Y[i])**2, axis=1)
+    
+    # Apply Student t-distribution kernel
+    Q = 1 / (1 + distances)
+    np.fill_diagonal(Q, 0)
+    
+    # Normalize to get probabilities
+    Q = Q / np.sum(Q)
+    Q = np.maximum(Q, 1e-12)  # Avoid division by zero
+    
+    return Q
+
+# Compute low-D similarities
+Q = compute_low_dim_affinities(Y)
+            </div>
+            <p><strong>Key difference from P:</strong> Uses t-distribution instead of Gaussian to handle the crowding problem in low dimensions.</p>
+        `;
+
+        const step4Content = `
+            <div class="modal-highlight">
+                <strong>Step 4: Optimize via gradient descent</strong>
+            </div>
+            <p>Update positions to minimize KL divergence:</p>
+            <div class="modal-code">
+def tsne_gradient(P, Y):
+    n = Y.shape[0]
+    
+    # Compute Q distribution
+    Q = compute_low_dim_affinities(Y)
+    
+    # Compute gradient
+    PQ_diff = P - Q
+    gradient = np.zeros_like(Y)
+    
+    for i in range(n):
+        diff = Y[i] - Y
+        dist = 1 / (1 + np.sum(diff**2, axis=1))
+        gradient[i] = 4 * np.sum(
+            (PQ_diff[:, i] * dist)[:, np.newaxis] * diff, 
+            axis=0
+        )
+    
+    return gradient
+
+# Gradient descent with momentum
+velocity = np.zeros_like(Y)
+learning_rate = 200
+momentum = 0.5
+
+for iteration in range(1000):
+    gradient = tsne_gradient(P, Y)
+    velocity = momentum * velocity - learning_rate * gradient
+    Y = Y + velocity
+            </div>
+            <p><strong>Optimization tricks:</strong> Momentum, adaptive learning rate, early exaggeration</p>
+        `;
+
+        const step5Content = `
+            <div class="modal-highlight">
+                <strong>Step 5: Early exaggeration phase</strong>
+            </div>
+            <p>Multiply P by a factor (typically 4-12) in early iterations:</p>
+            <div class="modal-code">
+def tsne_with_early_exaggeration(X, n_iter=1000):
+    # Compute high-D affinities
+    P = compute_pairwise_affinities(X)
+    
+    # Initialize embedding
+    Y = initialize_embedding(X.shape[0])
+    
+    # Early exaggeration phase (first 250 iterations)
+    early_exaggeration = 12.0
+    P_exaggerated = P * early_exaggeration
+    
+    for i in range(250):
+        gradient = tsne_gradient(P_exaggerated, Y)
+        Y = update_positions(Y, gradient)
+    
+    # Normal optimization phase
+    for i in range(250, n_iter):
+        gradient = tsne_gradient(P, Y)
+        Y = update_positions(Y, gradient)
+    
+    return Y
+            </div>
+            <p><strong>Purpose:</strong></p>
+            <ul>
+                <li>• Forces tight clusters to form early</li>
+                <li>• Helps separate clusters in the embedding</li>
+                <li>• Creates space between natural groups</li>
+                <li>• Improves final visualization quality</li>
+            </ul>
+        `;
+
+        const strengthsContent = `
+            <div class="modal-highlight">
+                <strong>t-SNE Strengths and Advantages</strong>
+            </div>
+            <p><strong>1. Excellent Visualization Quality</strong></p>
+            <ul>
+                <li>• Reveals complex non-linear patterns</li>
+                <li>• Creates intuitive cluster visualizations</li>
+                <li>• Preserves local neighborhood structure well</li>
+            </ul>
+            <p><strong>2. Handles Non-linear Relationships</strong></p>
+            <ul>
+                <li>• Can separate non-linearly separable clusters</li>
+                <li>• Works well with manifold data</li>
+                <li>• Superior to linear methods for complex data</li>
+            </ul>
+            <p><strong>3. Robust to Outliers</strong></p>
+            <ul>
+                <li>• t-distribution handles outliers better than Gaussian</li>
+                <li>• Outliers pushed to periphery, don't affect clusters</li>
+            </ul>
+            <div class="modal-code">
+# t-SNE shines with complex datasets
+from sklearn.datasets import make_moons, make_circles
+
+# Non-linear datasets where t-SNE excels
+X_moons, y_moons = make_moons(n_samples=200, noise=0.1)
+X_circles, y_circles = make_circles(n_samples=200, noise=0.05)
+
+# t-SNE will separate these perfectly
+# while PCA would fail
+            </div>
+        `;
+
+        const weaknessesContent = `
+            <div class="modal-highlight">
+                <strong>t-SNE Limitations and Challenges</strong>
+            </div>
+            <p><strong>1. Computational Complexity</strong></p>
+            <ul>
+                <li>• O(n²) time and space complexity</li>
+                <li>• Slow for large datasets (>10,000 points)</li>
+                <li>• Barnes-Hut approximation helps: O(n log n)</li>
+            </ul>
+            <p><strong>2. Non-deterministic Results</strong></p>
+            <ul>
+                <li>• Different runs give different results</li>
+                <li>• Random initialization affects outcome</li>
+                <li>• Need multiple runs for confidence</li>
+            </ul>
+            <p><strong>3. Cannot Add New Points</strong></p>
+            <ul>
+                <li>• No direct transform for new data</li>
+                <li>• Must re-run entire algorithm</li>
+                <li>• Not suitable for online learning</li>
+            </ul>
+            <p><strong>4. Hyperparameter Sensitivity</strong></p>
+            <div class="modal-code">
+# Perplexity dramatically affects results
+for perplexity in [5, 30, 50, 100]:
+    tsne = TSNE(perplexity=perplexity)
+    # Each will give different clustering
+            </div>
+            <p><strong>5. Distance Interpretation Issues</strong></p>
+            <ul>
+                <li>• Global distances not preserved</li>
+                <li>• Cluster sizes may be misleading</li>
+                <li>• Inter-cluster distances not meaningful</li>
+            </ul>
+        `;
+
+        const parametersContent = `
+            <div class="modal-highlight">
+                <strong>Key t-SNE Parameters and Their Effects</strong>
+            </div>
+            <p><strong>1. Perplexity (5-50, default 30)</strong></p>
+            <div class="modal-code">
+# Perplexity ≈ expected number of neighbors
+# Low perplexity: focus on local structure
+tsne_local = TSNE(perplexity=5)  # Tight, many small clusters
+
+# High perplexity: focus on global structure  
+tsne_global = TSNE(perplexity=50)  # Fewer, larger clusters
+            </div>
+            <p><strong>2. Learning Rate (10-1000, default 200)</strong></p>
+            <div class="modal-code">
+# Too low: poor convergence
+tsne_slow = TSNE(learning_rate=10)  # May get stuck
+
+# Too high: points shoot off to infinity
+tsne_fast = TSNE(learning_rate=1000)  # Unstable
+            </div>
+            <p><strong>3. Number of Iterations (250-5000)</strong></p>
+            <div class="modal-code">
+# More iterations for better convergence
+tsne = TSNE(n_iter=5000)  # Better results, slower
+            </div>
+            <p><strong>4. Early Exaggeration (4-12)</strong></p>
+            <ul>
+                <li>• Higher values create more space between clusters</li>
+                <li>• Default 12 works well for most datasets</li>
+            </ul>
+            <p><strong>Rule of thumb:</strong> Perplexity should be between 5 and 50, typically dataset_size/100</p>
+        `;
+
+        const applicationsContent = `
+            <div class="modal-highlight">
+                <strong>Real-World t-SNE Applications</strong>
+            </div>
+            <p><strong>1. Genomics and Bioinformatics</strong></p>
+            <ul>
+                <li>• Single-cell RNA sequencing visualization</li>
+                <li>• Cell type identification</li>
+                <li>• Gene expression patterns</li>
+            </ul>
+            <p><strong>2. Computer Vision</strong></p>
+            <ul>
+                <li>• Feature visualization from CNNs</li>
+                <li>• Image similarity exploration</li>
+                <li>• Face embedding visualization</li>
+            </ul>
+            <p><strong>3. Natural Language Processing</strong></p>
+            <ul>
+                <li>• Word embedding visualization</li>
+                <li>• Document clustering</li>
+                <li>• Language model representations</li>
+            </ul>
+            <div class="modal-code">
+# Example: Visualizing word embeddings
+from gensim.models import Word2Vec
+
+# Train word embeddings
+model = Word2Vec(sentences, vector_size=100)
+
+# Get word vectors
+words = ['king', 'queen', 'man', 'woman', ...]
+vectors = [model.wv[word] for word in words]
+
+# Visualize with t-SNE
+tsne = TSNE(n_components=2, perplexity=15)
+embedded = tsne.fit_transform(vectors)
+
+# Plot reveals semantic relationships!
+            </div>
+            <p><strong>4. Anomaly Detection</strong></p>
+            <ul>
+                <li>• Outliers appear isolated in t-SNE plots</li>
+                <li>• Fraud detection in financial data</li>
+                <li>• Manufacturing defect identification</li>
+            </ul>
+        `;
+
+        const comparisonContent = `
+            <div class="modal-highlight">
+                <strong>t-SNE vs Other Dimensionality Reduction Methods</strong>
+            </div>
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr style="background: rgba(13, 148, 136, 0.1);">
+                    <th style="padding: 10px; border: 1px solid #0d9488;">Method</th>
+                    <th style="padding: 10px; border: 1px solid #0d9488;">Type</th>
+                    <th style="padding: 10px; border: 1px solid #0d9488;">Preserves</th>
+                    <th style="padding: 10px; border: 1px solid #0d9488;">Speed</th>
+                    <th style="padding: 10px; border: 1px solid #0d9488;">Use Case</th>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #0d9488;"><strong>t-SNE</strong></td>
+                    <td style="padding: 10px; border: 1px solid #0d9488;">Non-linear</td>
+                    <td style="padding: 10px; border: 1px solid #0d9488;">Local structure</td>
+                    <td style="padding: 10px; border: 1px solid #0d9488;">Slow</td>
+                    <td style="padding: 10px; border: 1px solid #0d9488;">Visualization</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #0d9488;"><strong>PCA</strong></td>
+                    <td style="padding: 10px; border: 1px solid #0d9488;">Linear</td>
+                    <td style="padding: 10px; border: 1px solid #0d9488;">Global variance</td>
+                    <td style="padding: 10px; border: 1px solid #0d9488;">Fast</td>
+                    <td style="padding: 10px; border: 1px solid #0d9488;">Preprocessing</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #0d9488;"><strong>LDA</strong></td>
+                    <td style="padding: 10px; border: 1px solid #0d9488;">Linear</td>
+                    <td style="padding: 10px; border: 1px solid #0d9488;">Class separation</td>
+                    <td style="padding: 10px; border: 1px solid #0d9488;">Fast</td>
+                    <td style="padding: 10px; border: 1px solid #0d9488;">Classification</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #0d9488;"><strong>UMAP</strong></td>
+                    <td style="padding: 10px; border: 1px solid #0d9488;">Non-linear</td>
+                    <td style="padding: 10px; border: 1px solid #0d9488;">Local + global</td>
+                    <td style="padding: 10px; border: 1px solid #0d9488;">Medium</td>
+                    <td style="padding: 10px; border: 1px solid #0d9488;">General</td>
+                </tr>
+            </table>
+            <div class="modal-code">
+# Comparison example
+from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
+import umap
+
+# Linear method
+pca = PCA(n_components=2)
+X_pca = pca.fit_transform(X)
+
+# Non-linear methods
+tsne = TSNE(n_components=2)
+X_tsne = tsne.fit_transform(X)
+
+umap_model = umap.UMAP(n_components=2)
+X_umap = umap_model.fit_transform(X)
+            </div>
+            <p><strong>When to use t-SNE:</strong> Exploratory data analysis, cluster visualization, pattern discovery in complex data</p>
+        `;
+
+        const implementationContent = `
+            <div class="modal-highlight">
+                <strong>Complete t-SNE Implementation Example</strong>
+            </div>
+            <div class="modal-code">
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.manifold import TSNE
+from sklearn.datasets import load_digits
+from sklearn.preprocessing import StandardScaler
+
+# Load dataset
+digits = load_digits()
+X, y = digits.data, digits.target
+
+# Preprocessing
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# Apply t-SNE with optimized parameters
+tsne = TSNE(
+    n_components=2,
+    perplexity=30,          # Balance local/global
+    early_exaggeration=12,   # Standard value
+    learning_rate=200,       # Auto also works well
+    n_iter=1000,            # Ensure convergence
+    random_state=42,        # Reproducibility
+    method='barnes_hut',    # Faster for large data
+    angle=0.5              # Speed/accuracy tradeoff
+)
+
+# Fit and transform
+X_embedded = tsne.fit_transform(X_scaled)
+
+# Visualization
+plt.figure(figsize=(12, 8))
+scatter = plt.scatter(
+    X_embedded[:, 0], 
+    X_embedded[:, 1],
+    c=y, 
+    cmap='tab10',
+    alpha=0.7,
+    edgecolors='black',
+    linewidth=0.5
+)
+plt.colorbar(scatter)
+plt.title('t-SNE visualization of digits dataset')
+plt.xlabel('t-SNE feature 1')
+plt.ylabel('t-SNE feature 2')
+
+# Add cluster annotations
+from scipy.spatial import ConvexHull
+for digit in range(10):
+    mask = y == digit
+    points = X_embedded[mask]
+    
+    # Find cluster center
+    center = points.mean(axis=0)
+    plt.annotate(
+        str(digit), 
+        center,
+        fontsize=15,
+        fontweight='bold',
+        color='white',
+        ha='center',
+        va='center',
+        bbox=dict(boxstyle='circle', fc='black', alpha=0.7)
+    )
+
+plt.show()
+
+# Measure quality
+from sklearn.metrics import silhouette_score
+score = silhouette_score(X_embedded, y)
+print(f"Silhouette Score: {score:.3f}")
+            </div>
+            <p><strong>Tips for better results:</strong></p>
+            <ul>
+                <li>• Standardize features before t-SNE</li>
+                <li>• Try PCA first if >50 dimensions</li>
+                <li>• Run multiple times with different seeds</li>
+                <li>• Experiment with perplexity values</li>
+            </ul>
+        `;
+
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Global function for onclick handlers
+        function showModal(title, content) {
+            modal.show(title, content);
+        }
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 30; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 20 + 's';
+                element.style.animationDuration = (Math.random() * 15 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Initialize components
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (!modal.overlay.classList.contains('active')) {
+                if (e.key === 'ArrowLeft') {
+                    window.location.href = 'Week7_Slide130.html';
+                } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                    window.location.href = 'Week7_Slide132.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

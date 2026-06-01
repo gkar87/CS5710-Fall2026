@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Decision Trees Introduction</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .concept-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .tree-visual-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .definition-box {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .key-features {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .feature-item {
+            padding: 20px;
+            margin: 15px 0;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .feature-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .feature-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .feature-desc {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .tree-diagram {
+            width: 100%;
+            height: 400px;
+            background: #1e293b;
+            border-radius: 15px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .node {
+            position: absolute;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            min-width: 120px;
+        }
+
+        .node:hover {
+            transform: scale(1.1);
+            box-shadow: 0 10px 30px rgba(13, 148, 136, 0.5);
+        }
+
+        .node.leaf {
+            background: linear-gradient(135deg, #10b981, #34d399);
+        }
+
+        .tree-line {
+            position: absolute;
+            background: #5eead4;
+            height: 2px;
+            transform-origin: left center;
+        }
+
+        .applications-banner {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .app-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .app-card {
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border: 2px solid #14b8a6;
+        }
+
+        .app-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .app-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+
+        .app-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #0d9488;
+        }
+
+        .app-desc {
+            font-size: 0.85em;
+            color: #475569;
+            line-height: 1.4;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .app-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    
+    <div class="course-info">CS5710 - Week 4</div>
+    <div class="slide-number">Slide 61 of 80</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Decision Trees Introduction</h1>
+        
+        <div class="content-layout">
+            <div class="concept-section">
+                <h2 class="section-title">What are Decision Trees?</h2>
+                
+                <div class="definition-box">
+                    <strong>Decision Trees</strong> are powerful supervised learning algorithms that make predictions by learning simple decision rules from data features, creating a tree-like model of decisions.
+                </div>
+                
+                <ul class="key-features">
+                    <li class="feature-item">
+                        <div class="feature-title">🌳 Hierarchical Structure</div>
+                        <div class="feature-desc">Breaks down complex decisions into simple yes/no questions</div>
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-title">👁️ Interpretability</div>
+                        <div class="feature-desc">Easy to understand and visualize, mimics human decision-making</div>
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-title">🎯 Versatility</div>
+                        <div class="feature-desc">Works for both classification and regression problems</div>
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-title">📊 Non-parametric</div>
+                        <div class="feature-desc">No assumptions about data distribution</div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="tree-visual-section">
+                <h2 class="section-title">Tree Structure</h2>
+                
+                <div class="tree-diagram" id="treeVisualization">
+                    <!-- Root Node -->
+                    <div class="node" style="top: 20px; left: 50%; transform: translateX(-50%);" id="root">
+                        Age > 30?
+                    </div>
+                    
+                    <!-- Level 2 -->
+                    <div class="node" style="top: 120px; left: 25%;" id="node1">
+                        Income > 50K?
+                    </div>
+                    <div class="node" style="top: 120px; right: 25%;" id="node2">
+                        Student?
+                    </div>
+                    
+                    <!-- Level 3 (Leaves) -->
+                    <div class="node leaf" style="top: 220px; left: 10%;">
+                        Approve
+                    </div>
+                    <div class="node leaf" style="top: 220px; left: 35%;">
+                        Deny
+                    </div>
+                    <div class="node leaf" style="top: 220px; right: 35%;">
+                        Deny
+                    </div>
+                    <div class="node leaf" style="top: 220px; right: 10%;">
+                        Approve
+                    </div>
+                    
+                    <!-- Connection lines -->
+                    <svg style="position: absolute; width: 100%; height: 100%; pointer-events: none;">
+                        <line x1="50%" y1="65" x2="25%" y2="120" stroke="#5eead4" stroke-width="2"/>
+                        <line x1="50%" y1="65" x2="75%" y2="120" stroke="#5eead4" stroke-width="2"/>
+                        <line x1="25%" y1="165" x2="10%" y2="220" stroke="#5eead4" stroke-width="2"/>
+                        <line x1="25%" y1="165" x2="35%" y2="220" stroke="#5eead4" stroke-width="2"/>
+                        <line x1="75%" y1="165" x2="65%" y2="220" stroke="#5eead4" stroke-width="2"/>
+                        <line x1="75%" y1="165" x2="90%" y2="220" stroke="#5eead4" stroke-width="2"/>
+                    </svg>
+                </div>
+                
+                <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                    <strong>Components:</strong><br>
+                    • <strong>Root Node:</strong> Starting point (top)<br>
+                    • <strong>Internal Nodes:</strong> Decision points<br>
+                    • <strong>Edges:</strong> Outcomes of decisions<br>
+                    • <strong>Leaf Nodes:</strong> Final predictions
+                </div>
+            </div>
+        </div>
+
+        <div class="applications-banner">
+            <h2 class="section-title">Real-World Applications</h2>
+            
+            <div class="app-grid">
+                <div class="app-card">
+                    <div class="app-icon">🏦</div>
+                    <div class="app-title">Credit Approval</div>
+                    <div class="app-desc">Banks use decision trees to evaluate loan applications</div>
+                </div>
+                
+                <div class="app-card">
+                    <div class="app-icon">🏥</div>
+                    <div class="app-title">Medical Diagnosis</div>
+                    <div class="app-desc">Doctors use tree-like logic to diagnose diseases</div>
+                </div>
+                
+                <div class="app-card">
+                    <div class="app-icon">📈</div>
+                    <div class="app-title">Customer Churn</div>
+                    <div class="app-desc">Predict which customers are likely to leave</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week3_Slide60.html" class="nav-btn">← Previous</a>
+        <a href="Week4_Slide62.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive feature items
+        document.querySelectorAll('.feature-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const title = this.querySelector('.feature-title').textContent;
+                const desc = this.querySelector('.feature-desc').textContent;
+                
+                const details = {
+                    '🌳 Hierarchical Structure': {
+                        detail: 'Decision trees split data recursively based on feature values, creating a hierarchy of decisions from root to leaves.',
+                        example: 'If-then-else rules:<br>IF age > 30 THEN<br>&nbsp;&nbsp;IF income > 50K THEN approve<br>&nbsp;&nbsp;ELSE deny<br>ELSE check other criteria',
+                        advantage: 'Natural representation of human decision-making process'
+                    },
+                    '👁️ Interpretability': {
+                        detail: 'Unlike black-box models, decision trees can be visualized and understood by non-experts.',
+                        example: 'A doctor can see exactly why a diagnosis was made:<br>"High fever" → "Cough present" → "Chest pain" → "Pneumonia likely"',
+                        advantage: 'Critical for regulated industries requiring explainable AI'
+                    },
+                    '🎯 Versatility': {
+                        detail: 'Decision trees handle both categorical and numerical features, classification and regression tasks.',
+                        example: 'Classification: Predict if email is spam<br>Regression: Predict house prices<br>Multi-output: Predict multiple targets simultaneously',
+                        advantage: 'One algorithm for many different problem types'
+                    },
+                    '📊 Non-parametric': {
+                        detail: 'No assumptions about data distribution, can capture non-linear relationships naturally.',
+                        example: 'Can model complex boundaries without polynomial features or transformations',
+                        advantage: 'Works well with mixed data types and irregular patterns'
+                    }
+                };
+                
+                const info = details[title];
+                modal.show(title, `
+                    <div class="modal-highlight">
+                        <strong>${desc}</strong>
+                    </div>
+                    <p>${info.detail}</p>
+                    <div class="modal-code">
+                        ${info.example}
+                    </div>
+                    <p><strong>Key Advantage:</strong> ${info.advantage}</p>
+                `);
+            });
+        });
+
+        // Interactive tree nodes
+        document.querySelectorAll('.node').forEach(node => {
+            node.addEventListener('click', function() {
+                const nodeText = this.textContent.trim();
+                const isLeaf = this.classList.contains('leaf');
+                
+                if (isLeaf) {
+                    modal.show('Leaf Node', `
+                        <div class="modal-highlight">
+                            <strong>Final Decision: ${nodeText}</strong>
+                        </div>
+                        <p>This is a leaf node - the end of a decision path.</p>
+                        <p><strong>Properties:</strong></p>
+                        <ul>
+                            <li>Contains the final prediction/classification</li>
+                            <li>No further splits occur</li>
+                            <li>Represents a pure or nearly pure subset of data</li>
+                        </ul>
+                    `);
+                } else {
+                    modal.show('Decision Node', `
+                        <div class="modal-highlight">
+                            <strong>Decision: ${nodeText}</strong>
+                        </div>
+                        <p>This is an internal node that splits the data based on a feature.</p>
+                        <p><strong>How it works:</strong></p>
+                        <ul>
+                            <li>Evaluates a condition on a single feature</li>
+                            <li>Sends data left (Yes) or right (No)</li>
+                            <li>Goal: Maximize information gain or reduce impurity</li>
+                        </ul>
+                    `);
+                }
+            });
+        });
+
+        // Interactive application cards
+        document.querySelectorAll('.app-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('.app-title').textContent;
+                
+                const appDetails = {
+                    'Credit Approval': {
+                        features: 'Income, Credit Score, Employment History, Debt Ratio',
+                        process: '1. Check credit score threshold<br>2. Evaluate income vs. loan amount<br>3. Assess employment stability<br>4. Final approval decision',
+                        benefit: 'Consistent, fast decisions while remaining explainable to regulators'
+                    },
+                    'Medical Diagnosis': {
+                        features: 'Symptoms, Test Results, Patient History, Demographics',
+                        process: '1. Primary symptom evaluation<br>2. Check diagnostic test results<br>3. Consider risk factors<br>4. Recommend treatment path',
+                        benefit: 'Supports doctors with systematic diagnostic approach'
+                    },
+                    'Customer Churn': {
+                        features: 'Usage Patterns, Support Tickets, Contract Length, Payment History',
+                        process: '1. Analyze recent activity decline<br>2. Check customer satisfaction scores<br>3. Evaluate competitive factors<br>4. Predict churn probability',
+                        benefit: 'Identify at-risk customers for proactive retention'
+                    }
+                };
+                
+                const details = appDetails[title];
+                modal.show(`Application: ${title}`, `
+                    <div class="modal-highlight">
+                        <strong>Real-world use case</strong>
+                    </div>
+                    <p><strong>Features Used:</strong><br>${details.features}</p>
+                    <p><strong>Decision Process:</strong><br>${details.process}</p>
+                    <p><strong>Business Benefit:</strong><br>${details.benefit}</p>
+                `);
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week3_Slide60.html';
+            } else if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week4_Slide62.html';
+            }
+        });
+    </script>
+</body>
+</html>

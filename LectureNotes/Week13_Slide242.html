@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Generator and Discriminator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .networks-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .network-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            animation: fadeInScale 0.8s ease-out;
+        }
+
+        .network-card.generator {
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border-top: 4px solid #14b8a6;
+        }
+
+        .network-card.discriminator {
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border-top: 4px solid #0d9488;
+        }
+
+        .network-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .network-icon {
+            font-size: 2.5em;
+            margin-right: 15px;
+        }
+
+        .network-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .architecture-section {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .architecture-section:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.2);
+        }
+
+        .layer-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .layer-item {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 12px 15px;
+            border-radius: 8px;
+            border-left: 3px solid #0d9488;
+            transition: all 0.3s ease;
+        }
+
+        .layer-item:hover {
+            background: white;
+            transform: translateX(5px);
+        }
+
+        .training-dynamics {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .dynamics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .dynamic-card {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .dynamic-card:hover {
+            transform: scale(1.05);
+            border-color: #0d9488;
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.2);
+        }
+
+        .dynamic-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+
+        .dynamic-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 10px;
+        }
+
+        .dynamic-desc {
+            font-size: 0.95em;
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 20px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.4;
+            animation: networkFloat 22s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes fadeInScale {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes networkFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.4; }
+            90% { opacity: 0.4; }
+            100% { transform: translateY(-100px) translateX(100px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .networks-comparison { grid-template-columns: 1fr; }
+            .dynamics-grid { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 13</div>
+    <div class="slide-number">Slide 242 of 260</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Generator and Discriminator Networks</h1>
+        
+        <div class="networks-comparison">
+            <div class="network-card generator">
+                <div class="network-header">
+                    <span class="network-icon">🎨</span>
+                    <h2 class="network-title">Generator (G)</h2>
+                </div>
+                
+                <div class="architecture-section" data-network="generator">
+                    <strong>Architecture Layers:</strong>
+                    <div class="layer-stack">
+                        <div class="layer-item">Input: Random Noise (z ~ N(0,1))</div>
+                        <div class="layer-item">Dense Layer (128 → 256 units)</div>
+                        <div class="layer-item">Batch Normalization + ReLU</div>
+                        <div class="layer-item">Dense/Deconv Layers (256 → 512)</div>
+                        <div class="layer-item">Upsampling Layers</div>
+                        <div class="layer-item">Output: Generated Sample</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 25px; padding: 20px; background: rgba(13, 148, 136, 0.05); border-radius: 10px;">
+                    <strong>🎯 Objective:</strong> Fool the discriminator by generating realistic samples
+                    <div style="margin-top: 10px; color: #64748b; font-size: 0.95em;">
+                        Loss: min<sub>G</sub> log(1 - D(G(z)))
+                    </div>
+                </div>
+            </div>
+
+            <div class="network-card discriminator">
+                <div class="network-header">
+                    <span class="network-icon">🔍</span>
+                    <h2 class="network-title">Discriminator (D)</h2>
+                </div>
+                
+                <div class="architecture-section" data-network="discriminator">
+                    <strong>Architecture Layers:</strong>
+                    <div class="layer-stack">
+                        <div class="layer-item">Input: Real/Fake Sample</div>
+                        <div class="layer-item">Conv/Dense Layer (input → 512)</div>
+                        <div class="layer-item">LeakyReLU + Dropout</div>
+                        <div class="layer-item">Conv/Dense Layers (512 → 256)</div>
+                        <div class="layer-item">Feature Extraction Layers</div>
+                        <div class="layer-item">Output: Probability (sigmoid)</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 25px; padding: 20px; background: rgba(13, 148, 136, 0.05); border-radius: 10px;">
+                    <strong>🎯 Objective:</strong> Correctly classify real vs generated samples
+                    <div style="margin-top: 10px; color: #64748b; font-size: 0.95em;">
+                        Loss: max<sub>D</sub> [log D(x) + log(1 - D(G(z)))]
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="training-dynamics">
+            <h2 class="section-title">⚔️ Training Dynamics</h2>
+            
+            <div class="dynamics-grid">
+                <div class="dynamic-card" data-dynamic="alternating">
+                    <div class="dynamic-icon">🔄</div>
+                    <div class="dynamic-title">Alternating Training</div>
+                    <div class="dynamic-desc">Train D for k steps, then G for 1 step</div>
+                </div>
+
+                <div class="dynamic-card" data-dynamic="balance">
+                    <div class="dynamic-icon">⚖️</div>
+                    <div class="dynamic-title">Balance Point</div>
+                    <div class="dynamic-desc">Neither network dominates the other</div>
+                </div>
+
+                <div class="dynamic-card" data-dynamic="convergence">
+                    <div class="dynamic-icon">🎯</div>
+                    <div class="dynamic-title">Nash Equilibrium</div>
+                    <div class="dynamic-desc">D(x) = D(G(z)) = 0.5</div>
+                </div>
+
+                <div class="dynamic-card" data-dynamic="capacity">
+                    <div class="dynamic-icon">💪</div>
+                    <div class="dynamic-title">Capacity Balance</div>
+                    <div class="dynamic-desc">Match network complexities</div>
+                </div>
+
+                <div class="dynamic-card" data-dynamic="gradients">
+                    <div class="dynamic-icon">📈</div>
+                    <div class="dynamic-title">Gradient Flow</div>
+                    <div class="dynamic-desc">Avoid vanishing/exploding gradients</div>
+                </div>
+
+                <div class="dynamic-card" data-dynamic="stability">
+                    <div class="dynamic-icon">🔧</div>
+                    <div class="dynamic-title">Training Stability</div>
+                    <div class="dynamic-desc">Use tricks like spectral norm</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week13_Slide241.html" class="nav-btn">← Previous</a>
+        <a href="Week13_Slide243.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 25; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 22 + 's';
+                element.style.animationDuration = (Math.random() * 15 + 18) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Architecture section interactions
+        document.querySelectorAll('.architecture-section').forEach(section => {
+            section.addEventListener('click', function() {
+                const network = this.dataset.network;
+                const details = {
+                    'generator': {
+                        title: '🎨 Generator Architecture Deep Dive',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Building the Creative Network</strong>
+                            </div>
+                            
+                            <h4>Common Architectures:</h4>
+                            <div class="modal-code">
+# DCGAN Generator
+class Generator(nn.Module):
+    def __init__(self, z_dim=100):
+        super().__init__()
+        self.main = nn.Sequential(
+            # Input: z_dim x 1 x 1
+            nn.ConvTranspose2d(z_dim, 512, 4, 1, 0),
+            nn.BatchNorm2d(512),
+            nn.ReLU(True),
+            # 512 x 4 x 4
+            nn.ConvTranspose2d(512, 256, 4, 2, 1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(True),
+            # 256 x 8 x 8
+            nn.ConvTranspose2d(256, 128, 4, 2, 1),
+            nn.BatchNorm2d(128),
+            nn.ReLU(True),
+            # 128 x 16 x 16
+            nn.ConvTranspose2d(128, 3, 4, 2, 1),
+            nn.Tanh()
+            # 3 x 32 x 32
+        )
+                            </div>
+                            
+                            <h4>Key Design Principles:</h4>
+                            <ul style="line-height: 1.8;">
+                                <li><strong>Transposed Convolutions:</strong> Gradually upsample spatial dimensions</li>
+                                <li><strong>Batch Normalization:</strong> Stabilize training, except in output layer</li>
+                                <li><strong>ReLU Activation:</strong> Standard for generator hidden layers</li>
+                                <li><strong>Tanh Output:</strong> Maps to [-1, 1] range for image generation</li>
+                                <li><strong>No Pooling:</strong> Use strided convolutions instead</li>
+                            </ul>
+                            
+                            <h4>Advanced Techniques:</h4>
+                            <ul style="line-height: 1.8;">
+                                <li><strong>Progressive Growing:</strong> Start small, add layers during training</li>
+                                <li><strong>Style Injection:</strong> Control different aspects at different scales</li>
+                                <li><strong>Self-Attention:</strong> Capture long-range dependencies</li>
+                                <li><strong>Conditional Generation:</strong> Add class or attribute labels</li>
+                            </ul>
+                        `
+                    },
+                    'discriminator': {
+                        title: '🔍 Discriminator Architecture Deep Dive',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Building the Critic Network</strong>
+                            </div>
+                            
+                            <h4>Common Architectures:</h4>
+                            <div class="modal-code">
+# DCGAN Discriminator
+class Discriminator(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.main = nn.Sequential(
+            # Input: 3 x 32 x 32
+            nn.Conv2d(3, 128, 4, 2, 1),
+            nn.LeakyReLU(0.2, inplace=True),
+            # 128 x 16 x 16
+            nn.Conv2d(128, 256, 4, 2, 1),
+            nn.BatchNorm2d(256),
+            nn.LeakyReLU(0.2, inplace=True),
+            # 256 x 8 x 8
+            nn.Conv2d(256, 512, 4, 2, 1),
+            nn.BatchNorm2d(512),
+            nn.LeakyReLU(0.2, inplace=True),
+            # 512 x 4 x 4
+            nn.Conv2d(512, 1, 4, 1, 0),
+            nn.Sigmoid()
+            # 1 x 1 x 1
+        )
+                            </div>
+                            
+                            <h4>Key Design Principles:</h4>
+                            <ul style="line-height: 1.8;">
+                                <li><strong>Strided Convolutions:</strong> Downsample instead of pooling</li>
+                                <li><strong>LeakyReLU:</strong> Allows small negative gradients (slope=0.2)</li>
+                                <li><strong>No BatchNorm in First Layer:</strong> Prevents sample correlation</li>
+                                <li><strong>Sigmoid Output:</strong> Probability of being real</li>
+                                <li><strong>Dropout:</strong> Optional regularization technique</li>
+                            </ul>
+                            
+                            <h4>Alternative Formulations:</h4>
+                            <ul style="line-height: 1.8;">
+                                <li><strong>WGAN:</strong> Remove sigmoid, use weight clipping</li>
+                                <li><strong>WGAN-GP:</strong> Add gradient penalty term</li>
+                                <li><strong>Spectral Norm:</strong> Normalize weights by spectral norm</li>
+                                <li><strong>PatchGAN:</strong> Output spatial map instead of single value</li>
+                            </ul>
+                        `
+                    }
+                };
+                
+                const detail = details[network];
+                if (detail) {
+                    modal.show(detail.title, detail.content);
+                }
+            });
+        });
+
+        // Training dynamics interactions
+        document.querySelectorAll('.dynamic-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const dynamic = this.dataset.dynamic;
+                const dynamicDetails = {
+                    'alternating': {
+                        title: '🔄 Alternating Training Strategy',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>The Dance of Generator and Discriminator</strong>
+                            </div>
+                            
+                            <h4>Training Algorithm:</h4>
+                            <div class="modal-code">
+for epoch in range(num_epochs):
+    for batch in dataloader:
+        # Train Discriminator k times
+        for _ in range(k):
+            # Real samples
+            d_loss_real = criterion(D(real_data), ones)
+            
+            # Fake samples
+            fake_data = G(noise)
+            d_loss_fake = criterion(D(fake_data.detach()), zeros)
+            
+            # Update D
+            d_loss = (d_loss_real + d_loss_fake) / 2
+            d_optimizer.step()
+        
+        # Train Generator once
+        fake_data = G(noise)
+        g_loss = criterion(D(fake_data), ones)
+        g_optimizer.step()
+                            </div>
+                            
+                            <h4>Choosing k (D steps per G step):</h4>
+                            <ul style="line-height: 1.8;">
+                                <li><strong>k=1:</strong> Standard, equal training</li>
+                                <li><strong>k=5:</strong> Common for WGAN</li>
+                                <li><strong>Adaptive:</strong> Adjust based on loss ratio</li>
+                                <li><strong>Early Training:</strong> Higher k helps D learn features</li>
+                            </ul>
+                            
+                            <p><strong>⚠️ Important:</strong> Too high k can cause D to overpower G, leading to vanishing gradients!</p>
+                        `
+                    },
+                    'balance': {
+                        title: '⚖️ Maintaining Training Balance',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>The Delicate Equilibrium</strong>
+                            </div>
+                            
+                            <h4>Balance Indicators:</h4>
+                            <ul style="line-height: 1.8;">
+                                <li><strong>D Loss ~0.69:</strong> Indicates uncertainty (log(2))</li>
+                                <li><strong>G Loss ~0.69:</strong> Generator fooling D half the time</li>
+                                <li><strong>D Accuracy ~50%:</strong> Can't distinguish real from fake</li>
+                                <li><strong>Stable Losses:</strong> Both losses plateau without diverging</li>
+                            </ul>
+                            
+                            <h4>Imbalance Symptoms:</h4>
+                            <div style="background: #fee2e2; padding: 15px; border-radius: 10px; margin: 15px 0;">
+                                <strong>D Too Strong:</strong>
+                                <ul>
+                                    <li>D loss → 0, G loss explodes</li>
+                                    <li>Vanishing gradients for G</li>
+                                    <li>Mode collapse in G</li>
+                                </ul>
+                            </div>
+                            
+                            <div style="background: #fef3c7; padding: 15px; border-radius: 10px; margin: 15px 0;">
+                                <strong>G Too Strong:</strong>
+                                <ul>
+                                    <li>D loss explodes</li>
+                                    <li>D outputs always ~0.5</li>
+                                    <li>Poor sample quality</li>
+                                </ul>
+                            </div>
+                            
+                            <h4>Balancing Techniques:</h4>
+                            <ul style="line-height: 1.8;">
+                                <li><strong>Learning Rate Tuning:</strong> Different rates for G and D</li>
+                                <li><strong>Label Smoothing:</strong> Use 0.9/0.1 instead of 1/0</li>
+                                <li><strong>Noise Injection:</strong> Add noise to D inputs</li>
+                                <li><strong>Capacity Matching:</strong> Similar network depths</li>
+                            </ul>
+                        `
+                    },
+                    'convergence': {
+                        title: '🎯 Nash Equilibrium',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>The Theoretical End Goal</strong>
+                            </div>
+                            
+                            <h4>Mathematical Definition:</h4>
+                            <p>At Nash Equilibrium, neither player can improve by changing strategy unilaterally:</p>
+                            <div class="modal-code">
+# Nash Equilibrium conditions:
+p_g = p_data  # Generator distribution matches data
+D(x) = 1/2    # Discriminator outputs 0.5 everywhere
+                            </div>
+                            
+                            <h4>Convergence Properties:</h4>
+                            <ul style="line-height: 1.8;">
+                                <li><strong>Global Optimum:</strong> G perfectly replicates data distribution</li>
+                                <li><strong>D Becomes Useless:</strong> Can't distinguish at all</li>
+                                <li><strong>Stable Point:</strong> No incentive to change</li>
+                                <li><strong>Rarely Achieved:</strong> In practice, oscillations continue</li>
+                            </ul>
+                            
+                            <h4>Practical Considerations:</h4>
+                            <ul style="line-height: 1.8;">
+                                <li><strong>Non-convex:</strong> Multiple local equilibria exist</li>
+                                <li><strong>Oscillations:</strong> Networks chase each other</li>
+                                <li><strong>Mode Collapse:</strong> G might capture only part of distribution</li>
+                                <li><strong>Early Stopping:</strong> Stop when quality is satisfactory</li>
+                            </ul>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.1); padding: 15px; border-radius: 10px; margin-top: 15px;">
+                                <strong>💡 Reality Check:</strong> Perfect equilibrium is rarely reached. Focus on generating high-quality, diverse samples instead!
+                            </div>
+                        `
+                    },
+                    'capacity': {
+                        title: '💪 Network Capacity Balance',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Matching Network Complexities</strong>
+                            </div>
+                            
+                            <h4>Capacity Considerations:</h4>
+                            <ul style="line-height: 1.8;">
+                                <li><strong>Similar Depths:</strong> Both networks should have comparable layers</li>
+                                <li><strong>Parameter Count:</strong> Roughly equal number of parameters</li>
+                                <li><strong>Computational Cost:</strong> Balance forward/backward pass times</li>
+                                <li><strong>Feature Maps:</strong> Match complexity of representations</li>
+                            </ul>
+                            
+                            <h4>Common Architectures:</h4>
+                            <div class="modal-code">
+# Balanced DCGAN
+Generator:     100 → 1024 → 512 → 256 → 128 → 3
+Discriminator: 3 → 128 → 256 → 512 → 1024 → 1
+
+# Balanced parameters (~3.5M each)
+G params: 3,578,435
+D params: 3,539,201
+                            </div>
+                            
+                            <h4>Imbalanced Capacity Effects:</h4>
+                            <ul style="line-height: 1.8;">
+                                <li><strong>D >> G:</strong> Generator can't fool discriminator</li>
+                                <li><strong>G >> D:</strong> Discriminator can't provide useful gradients</li>
+                                <li><strong>Solution:</strong> Adjust architecture or training schedule</li>
+                            </ul>
+                        `
+                    },
+                    'gradients': {
+                        title: '📈 Gradient Flow Management',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Ensuring Healthy Gradient Propagation</strong>
+                            </div>
+                            
+                            <h4>Common Gradient Problems:</h4>
+                            
+                            <div style="background: #fee2e2; padding: 15px; border-radius: 10px; margin: 15px 0;">
+                                <strong>Vanishing Gradients:</strong>
+                                <ul>
+                                    <li>D too confident → saturated sigmoid</li>
+                                    <li>Solution: Use Wasserstein loss or label smoothing</li>
+                                </ul>
+                            </div>
+                            
+                            <div style="background: #fef3c7; padding: 15px; border-radius: 10px; margin: 15px 0;">
+                                <strong>Exploding Gradients:</strong>
+                                <ul>
+                                    <li>Unstable training → loss divergence</li>
+                                    <li>Solution: Gradient clipping or spectral normalization</li>
+                                </ul>
+                            </div>
+                            
+                            <h4>Gradient Monitoring:</h4>
+                            <div class="modal-code">
+# Monitor gradient norms
+def log_gradients(model, name):
+    total_norm = 0
+    for p in model.parameters():
+        if p.grad is not None:
+            param_norm = p.grad.data.norm(2)
+            total_norm += param_norm.item() ** 2
+    total_norm = total_norm ** 0.5
+    print(f'{name} gradient norm: {total_norm:.4f}')
+                            </div>
+                            
+                            <h4>Solutions:</h4>
+                            <ul style="line-height: 1.8;">
+                                <li><strong>WGAN:</strong> Wasserstein distance for smoother gradients</li>
+                                <li><strong>Spectral Norm:</strong> Constrain Lipschitz constant</li>
+                                <li><strong>Gradient Penalty:</strong> Enforce 1-Lipschitz constraint</li>
+                                <li><strong>Skip Connections:</strong> Help gradient flow (Progressive GAN)</li>
+                            </ul>
+                        `
+                    },
+                    'stability': {
+                        title: '🔧 Training Stability Techniques',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Making GAN Training Robust</strong>
+                            </div>
+                            
+                            <h4>Stability Techniques:</h4>
+                            
+                            <strong>1. Spectral Normalization:</strong>
+                            <div class="modal-code">
+# Apply to all layers
+discriminator = spectral_norm(discriminator)
+                            </div>
+                            
+                            <strong>2. Gradient Penalty (WGAN-GP):</strong>
+                            <div class="modal-code">
+# Interpolate between real and fake
+alpha = torch.rand(batch_size, 1, 1, 1)
+interpolated = alpha * real + (1 - alpha) * fake
+grad = autograd.grad(D(interpolated), interpolated)[0]
+grad_penalty = ((grad.norm(2) - 1) ** 2).mean()
+                            </div>
+                            
+                            <strong>3. Label Smoothing:</strong>
+                            <div class="modal-code">
+real_labels = torch.ones(batch_size) * 0.9
+fake_labels = torch.ones(batch_size) * 0.1
+                            </div>
+                            
+                            <strong>4. Learning Rate Scheduling:</strong>
+                            <div class="modal-code">
+# Decay learning rate
+scheduler_G = lr_scheduler.ExponentialLR(opt_G, gamma=0.99)
+scheduler_D = lr_scheduler.ExponentialLR(opt_D, gamma=0.99)
+                            </div>
+                            
+                            <h4>Best Practices:</h4>
+                            <ul style="line-height: 1.8;">
+                                <li>Use DCGAN guidelines (no pooling, batch norm, etc.)</li>
+                                <li>Monitor metrics continuously</li>
+                                <li>Save checkpoints frequently</li>
+                                <li>Use multiple random seeds</li>
+                                <li>Start with proven architectures</li>
+                            </ul>
+                        `
+                    }
+                };
+                
+                const detail = dynamicDetails[dynamic];
+                if (detail) {
+                    modal.show(detail.title, detail.content);
+                }
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (!modal.overlay.classList.contains('active')) {
+                if (e.key === 'ArrowLeft') {
+                    window.location.href = 'Week13_Slide241.html';
+                } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                    window.location.href = 'Week13_Slide243.html';
+                }
+            }
+        });
+
+    </script>
+</body>
+</html>

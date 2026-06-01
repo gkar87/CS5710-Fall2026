@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - DBSCAN Algorithm</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .overview-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .algorithm-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .definition-text {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 25px;
+            padding: 20px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .key-features {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .feature-item {
+            padding: 15px;
+            margin: 12px 0;
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border-left: 3px solid #14b8a6;
+        }
+
+        .feature-item:hover {
+            transform: translateX(8px);
+            box-shadow: 0 8px 20px rgba(13, 148, 136, 0.15);
+        }
+
+        .feature-icon {
+            display: inline-block;
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+
+        .feature-text {
+            font-size: 0.95em;
+            color: #475569;
+        }
+
+        .algorithm-steps {
+            list-style: none;
+            counter-reset: step-counter;
+        }
+
+        .step-item {
+            padding: 20px;
+            margin: 15px 0;
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 15px;
+            border-left: 4px solid #14b8a6;
+            counter-increment: step-counter;
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .step-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(13, 148, 136, 0.15);
+        }
+
+        .step-item::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: -15px;
+            top: 15px;
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .step-text {
+            font-size: 1em;
+            color: #1e293b;
+            line-height: 1.6;
+            margin-left: 20px;
+        }
+
+        .advantages-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .advantages-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 25px;
+        }
+
+        .advantage-card, .disadvantage-card {
+            padding: 25px;
+            border-radius: 15px;
+            transition: transform 0.3s ease;
+        }
+
+        .advantage-card {
+            background: linear-gradient(135deg, #ccfbf1, #99f6e4);
+            border-left: 4px solid #10b981;
+        }
+
+        .disadvantage-card {
+            background: linear-gradient(135deg, #fed7d7, #fbb6ce);
+            border-left: 4px solid #ef4444;
+        }
+
+        .advantage-card:hover, .disadvantage-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .advantage-card .card-title {
+            color: #065f46;
+        }
+
+        .disadvantage-card .card-title {
+            color: #991b1b;
+        }
+
+        .card-list {
+            list-style: none;
+        }
+
+        .card-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            font-size: 0.95em;
+        }
+
+        .card-list li:last-child {
+            border-bottom: none;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: float 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .advantages-grid { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    
+    <div class="course-info">CS5710 - Week 6</div>
+    <div class="slide-number">Slide 111 of 120</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">DBSCAN Algorithm</h1>
+        
+        <div class="content-layout">
+            <div class="overview-section">
+                <h2 class="section-title">🎯 What is DBSCAN?</h2>
+                
+                <div class="definition-text">
+                    <strong>Density-Based Spatial Clustering of Applications with Noise (DBSCAN)</strong> is a density-based clustering algorithm that groups together points in high-density areas and marks points in low-density areas as outliers.
+                </div>
+                
+                <ul class="key-features">
+                    <li class="feature-item">
+                        <span class="feature-icon">🔢</span>
+                        <span class="feature-text">No need to specify number of clusters</span>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-icon">🌟</span>
+                        <span class="feature-text">Finds clusters of arbitrary shape</span>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-icon">🚫</span>
+                        <span class="feature-text">Robust to outliers and noise</span>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-icon">🎯</span>
+                        <span class="feature-text">Based on density reachability</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="algorithm-section">
+                <h2 class="section-title">⚙️ Algorithm Steps</h2>
+                
+                <ol class="algorithm-steps">
+                    <li class="step-item">
+                        <div class="step-text">
+                            <strong>Initialize:</strong> Mark all points as unvisited
+                        </div>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-text">
+                            <strong>For each point P:</strong> If P is unvisited, mark as visited
+                        </div>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-text">
+                            <strong>Find neighbors:</strong> Get all points within ε distance of P
+                        </div>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-text">
+                            <strong>Check density:</strong> If neighbors < minPts, mark P as noise
+                        </div>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-text">
+                            <strong>Create cluster:</strong> If neighbors ≥ minPts, start new cluster
+                        </div>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-text">
+                            <strong>Expand cluster:</strong> Add all density-reachable points
+                        </div>
+                    </li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="advantages-section">
+            <h2 class="section-title">⚖️ Advantages vs Disadvantages</h2>
+            
+            <div class="advantages-grid">
+                <div class="advantage-card">
+                    <div class="card-title">
+                        ✅ Advantages
+                    </div>
+                    <ul class="card-list">
+                        <li>No need to specify number of clusters beforehand</li>
+                        <li>Can find clusters of arbitrary shapes and sizes</li>
+                        <li>Robust to outliers - identifies noise points</li>
+                        <li>Deterministic results (unlike K-means)</li>
+                        <li>Works well with varying cluster densities</li>
+                        <li>Can discover clusters with non-convex shapes</li>
+                    </ul>
+                </div>
+                
+                <div class="disadvantage-card">
+                    <div class="card-title">
+                        ❌ Disadvantages
+                    </div>
+                    <ul class="card-list">
+                        <li>Sensitive to hyperparameters (ε and minPts)</li>
+                        <li>Struggles with varying densities</li>
+                        <li>Can be computationally expensive O(n²)</li>
+                        <li>Difficult to use with high-dimensional data</li>
+                        <li>Memory usage can be high for large datasets</li>
+                        <li>Border points may be assigned to different clusters</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week6_Slide110.html" class="nav-btn">← Previous</a>
+        <a href="Week6_Slide112.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive feature items
+        document.querySelectorAll('.feature-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const text = this.querySelector('.feature-text').textContent;
+                
+                const details = {
+                    'No need to specify number of clusters': {
+                        title: 'Automatic Cluster Detection',
+                        content: 'Unlike K-means where you must choose k beforehand, DBSCAN automatically determines the number of clusters based on the data\'s density structure. This makes it ideal for exploratory data analysis where you don\'t know the optimal number of clusters.'
+                    },
+                    'Finds clusters of arbitrary shape': {
+                        title: 'Shape Flexibility',
+                        content: 'DBSCAN can discover clusters with complex, non-spherical shapes including spirals, rings, and irregular boundaries. This is a major advantage over K-means which assumes spherical clusters.'
+                    },
+                    'Robust to outliers and noise': {
+                        title: 'Outlier Detection',
+                        content: 'Points that don\'t belong to any dense region are classified as noise/outliers. This dual functionality makes DBSCAN useful for both clustering and anomaly detection tasks.'
+                    },
+                    'Based on density reachability': {
+                        title: 'Density Connectivity',
+                        content: 'Two points belong to the same cluster if they are density-reachable from each other. This concept allows DBSCAN to handle clusters of varying shapes and sizes naturally.'
+                    }
+                };
+                
+                const detail = details[text];
+                if (detail) {
+                    modal.show(detail.title, `
+                        <div class="modal-highlight">
+                            ${detail.content}
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Interactive algorithm steps
+        document.querySelectorAll('.step-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const stepText = this.querySelector('.step-text').innerHTML;
+                const stepNumber = Array.from(this.parentNode.children).indexOf(this) + 1;
+                
+                const explanations = {
+                    1: 'Start with all points unmarked. This ensures we visit every point exactly once during the clustering process.',
+                    2: 'Process each point sequentially. This systematic approach ensures no point is overlooked.',
+                    3: 'Use a distance metric (usually Euclidean) to find all points within radius ε. This defines the local neighborhood.',
+                    4: 'If a point has fewer than minPts neighbors, it\'s in a sparse region and considered noise (for now).',
+                    5: 'Points with sufficient neighbors become core points and seed new clusters.',
+                    6: 'Recursively add all density-reachable points to expand the cluster boundary.'
+                };
+                
+                modal.show(`Step ${stepNumber} Details`, `
+                    <div class="modal-highlight">
+                        <p style="margin-bottom: 15px;"><strong>Step:</strong> ${stepText}</p>
+                        <p><strong>Explanation:</strong> ${explanations[stepNumber]}</p>
+                    </div>
+                `);
+            });
+        });
+
+        // Interactive advantage/disadvantage cards
+        document.querySelectorAll('.advantage-card, .disadvantage-card').forEach(card => {
+            card.style.cursor = 'pointer';
+            card.addEventListener('click', function() {
+                const isAdvantage = this.classList.contains('advantage-card');
+                const items = Array.from(this.querySelectorAll('.card-list li')).map(li => li.textContent);
+                
+                const title = isAdvantage ? 'DBSCAN Advantages Explained' : 'DBSCAN Limitations Explained';
+                const details = isAdvantage ? {
+                    'No need to specify number of clusters beforehand': 'Automatically discovers natural groupings in data without prior knowledge.',
+                    'Can find clusters of arbitrary shapes and sizes': 'Works with spiral, ring-shaped, and irregularly-shaped clusters.',
+                    'Robust to outliers - identifies noise points': 'Simultaneously performs clustering and outlier detection.',
+                    'Deterministic results (unlike K-means)': 'Always produces the same result for the same parameters and data order.',
+                    'Works well with varying cluster densities': 'Can handle clusters with different densities in the same dataset.',
+                    'Can discover clusters with non-convex shapes': 'Unlike K-means, not limited to spherical or convex boundaries.'
+                } : {
+                    'Sensitive to hyperparameters (ε and minPts)': 'Requires careful tuning; wrong parameters can merge distinct clusters or split coherent ones.',
+                    'Struggles with varying densities': 'If densities vary significantly, global parameters may not work for all regions.',
+                    'Can be computationally expensive O(n²)': 'Naive implementation requires distance calculation between all point pairs.',
+                    'Difficult to use with high-dimensional data': 'Distance becomes less meaningful in high dimensions (curse of dimensionality).',
+                    'Memory usage can be high for large datasets': 'May need to store distance matrices or neighbor lists in memory.',
+                    'Border points may be assigned to different clusters': 'Points on cluster boundaries might be assigned inconsistently in different runs.'
+                };
+                
+                const content = items.map(item => {
+                    const explanation = details[item] || 'No additional details available.';
+                    return `<p style="margin-bottom: 15px;"><strong>${item}:</strong> ${explanation}</p>`;
+                }).join('');
+                
+                modal.show(title, `<div class="modal-highlight">${content}</div>`);
+            });
+        });
+
+        // Initialize
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week6_Slide110.html';
+            } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                if (!modal.overlay.classList.contains('active')) {
+                    window.location.href = 'Week6_Slide112.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Convolutional Neural Networks (CNNs)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px 25px;
+            border-radius: 25px;
+            font-weight: 600;
+            color: #0d9488;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            font-size: 1.1em;
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px 25px;
+            border-radius: 25px;
+            font-weight: 600;
+            color: #0d9488;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            font-size: 1.1em;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.2em;
+            text-align: center;
+            margin-bottom: 40px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        @keyframes slideInFromTop {
+            0% { transform: translateY(-50px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 30px;
+        }
+
+        .intro-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            padding: 35px;
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(13, 148, 136, 0.1);
+            border: 2px solid rgba(13, 148, 136, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .intro-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(13, 148, 136, 0.2);
+        }
+
+        .section-title {
+            font-size: 2em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .cnn-features {
+            list-style: none;
+        }
+
+        .feature-item {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 18px;
+            border-radius: 15px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .feature-item:hover {
+            border-color: #0d9488;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .feature-title {
+            font-weight: 600;
+            color: #0d9488;
+            font-size: 1.2em;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .feature-desc {
+            color: #1e293b;
+            font-size: 1em;
+            line-height: 1.4;
+        }
+
+        .architecture-demo {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            padding: 30px;
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(13, 148, 136, 0.1);
+            border: 2px solid rgba(13, 148, 136, 0.1);
+            text-align: center;
+        }
+
+        .demo-canvas {
+            width: 100%;
+            height: 300px;
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 15px;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            margin: 20px 0;
+        }
+
+        .applications-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .app-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            padding: 25px;
+            border-radius: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .app-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(13, 148, 136, 0.15);
+            border-color: #0d9488;
+        }
+
+        .app-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .app-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 10px;
+        }
+
+        .app-desc {
+            color: #64748b;
+            font-size: 0.95em;
+            line-height: 1.4;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(13, 148, 136, 0.3);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(13, 148, 136, 0.4);
+        }
+
+        .floating-elements {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .floating-element {
+            position: absolute;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) rotate(0deg); }
+            100% { transform: translateY(-100px) rotate(360deg); }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 750px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .code-block {
+            background: #1e293b;
+            color: #14b8a6;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .applications-grid { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.2em; }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <div class="course-info">CS5710 - Week 9</div>
+    <div class="slide-number">Slide 163 of 180</div>
+
+    <div class="slide-container">
+        <h1 class="slide-title">📸 Convolutional Neural Networks (CNNs)</h1>
+        
+        <div class="content-layout">
+            <div class="intro-section">
+                <h2 class="section-title">🧠 What are CNNs?</h2>
+                
+                <ul class="cnn-features">
+                    <li class="feature-item" data-modal="definition">
+                        <div class="feature-title">🎯 Definition</div>
+                        <div class="feature-desc">Neural networks specialized for processing grid-like data (images)</div>
+                    </li>
+                    <li class="feature-item" data-modal="convolution">
+                        <div class="feature-title">🔍 Convolution Operation</div>
+                        <div class="feature-desc">Apply learnable filters to detect patterns and features</div>
+                    </li>
+                    <li class="feature-item" data-modal="hierarchy">
+                        <div class="feature-title">📊 Hierarchical Learning</div>
+                        <div class="feature-desc">Low-level features → Complex objects progressively</div>
+                    </li>
+                    <li class="feature-item" data-modal="invariance">
+                        <div class="feature-title">🎲 Translation Invariance</div>
+                        <div class="feature-desc">Detect features regardless of their position in the image</div>
+                    </li>
+                    <li class="feature-item" data-modal="efficiency">
+                        <div class="feature-title">⚡ Parameter Efficiency</div>
+                        <div class="feature-desc">Shared weights reduce overfitting and computation</div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="architecture-demo">
+                <h2 class="section-title">🏗️ CNN Architecture</h2>
+                <canvas class="demo-canvas" id="cnnCanvas" data-modal="architecture">
+                    <p style="padding: 50px; color: #64748b;">
+                        Click here to explore CNN architecture in detail
+                    </p>
+                </canvas>
+                <p style="color: #64748b; font-style: italic; margin-top: 10px;">
+                    Interactive visualization showing how CNNs process images layer by layer
+                </p>
+            </div>
+        </div>
+
+        <div class="applications-grid">
+            <div class="app-card" data-modal="vision">
+                <div class="app-icon">👁️</div>
+                <div class="app-title">Computer Vision</div>
+                <div class="app-desc">Image classification, object detection, facial recognition</div>
+            </div>
+            
+            <div class="app-card" data-modal="medical">
+                <div class="app-icon">🏥</div>
+                <div class="app-title">Medical Imaging</div>
+                <div class="app-desc">X-ray analysis, MRI scan interpretation, disease detection</div>
+            </div>
+            
+            <div class="app-card" data-modal="autonomous">
+                <div class="app-icon">🚗</div>
+                <div class="app-title">Autonomous Driving</div>
+                <div class="app-desc">Lane detection, pedestrian recognition, traffic sign reading</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week9_Slide162.html" class="nav-btn">← Previous</a>
+        <a href="Week9_Slide164.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            open(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Modal content definitions
+        const modalContents = {
+            definition: {
+                title: "What are Convolutional Neural Networks?",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>CNNs: The Computer Vision Revolution</strong><br>
+                        Specialized neural networks designed to process visual data efficiently.
+                    </div>
+                    <p><strong>Key Design Principles:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Local Connectivity:</strong> Neurons connect to small regions of input</li>
+                        <li><strong>Weight Sharing:</strong> Same filter applied across entire image</li>
+                        <li><strong>Spatial Hierarchy:</strong> Build complex features from simple ones</li>
+                        <li><strong>Translation Invariance:</strong> Detect features anywhere in image</li>
+                    </ul>
+                    <div class="code-block">
+# Simple CNN in TensorFlow
+import tensorflow as tf
+
+model = tf.keras.Sequential([
+    tf.keras.layers.Conv2D(32, (3,3), activation='relu'),
+    tf.keras.layers.MaxPooling2D(2,2),
+    tf.keras.layers.Conv2D(64, (3,3), activation='relu'),
+    tf.keras.layers.MaxPooling2D(2,2),
+    tf.keras.layers.Flatten(),
+    tf.keras.layers.Dense(64, activation='relu'),
+    tf.keras.layers.Dense(10, activation='softmax')
+])
+                    </div>
+                    <div class="modal-highlight" style="background: rgba(59, 130, 246, 0.1); border-left-color: #3b82f6;">
+                        <strong>Why CNNs Work:</strong><br>
+                        They mimic the hierarchical processing of the human visual cortex, where simple cells detect edges and complex cells detect objects.
+                    </div>
+                `
+            },
+            convolution: {
+                title: "The Convolution Operation",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Convolution: Pattern Detection Engine</strong><br>
+                        A mathematical operation that applies filters to detect features in images.
+                    </div>
+                    <p><strong>How Convolution Works:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Filter (Kernel):</strong> Small matrix of learnable weights</li>
+                        <li><strong>Sliding Window:</strong> Filter moves across input image</li>
+                        <li><strong>Element-wise Multiplication:</strong> Filter × Image patch</li>
+                        <li><strong>Sum:</strong> Add all products to get single output value</li>
+                        <li><strong>Feature Map:</strong> Collection of all output values</li>
+                    </ul>
+                    <div class="code-block">
+# Convolution example (simplified)
+import numpy as np
+
+# 3x3 edge detection filter
+edge_filter = np.array([[-1, -1, -1],
+                       [0,  0,  0],
+                       [1,  1,  1]])
+
+# Apply convolution (simplified)
+def convolve(image, filter):
+    output = np.zeros((image.shape[0]-2, image.shape[1]-2))
+    for i in range(output.shape[0]):
+        for j in range(output.shape[1]):
+            output[i,j] = np.sum(image[i:i+3, j:j+3] * filter)
+    return output
+                    </div>
+                    <div class="modal-highlight" style="background: rgba(16, 185, 129, 0.1); border-left-color: #10b981;">
+                        <strong>Magic of Learning:</strong><br>
+                        Instead of hand-crafted filters, CNNs learn optimal filters automatically through backpropagation!
+                    </div>
+                `
+            },
+            hierarchy: {
+                title: "Hierarchical Feature Learning",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>From Pixels to Objects</strong><br>
+                        CNNs build understanding progressively, layer by layer.
+                    </div>
+                    <p><strong>Feature Hierarchy in CNNs:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Layer 1:</strong> Edges, corners, basic shapes</li>
+                        <li><strong>Layer 2:</strong> Textures, simple patterns</li>
+                        <li><strong>Layer 3:</strong> Parts of objects (wheels, eyes, doors)</li>
+                        <li><strong>Layer 4:</strong> Full objects (cars, faces, animals)</li>
+                        <li><strong>Final Layer:</strong> High-level concepts and classifications</li>
+                    </ul>
+                    <p><strong>Example: Face Recognition CNN</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Early layers:</strong> Detect edges of facial features</li>
+                        <li><strong>Middle layers:</strong> Combine edges to form eyes, nose, mouth</li>
+                        <li><strong>Later layers:</strong> Assemble features into complete faces</li>
+                        <li><strong>Final layer:</strong> Identify specific person</li>
+                    </ul>
+                    <div class="modal-highlight" style="background: rgba(139, 92, 246, 0.1); border-left-color: #8b5cf6;">
+                        <strong>Biological Inspiration:</strong><br>
+                        This mirrors how the human visual cortex processes information, from V1 (edges) to higher areas (objects).
+                    </div>
+                `
+            },
+            invariance: {
+                title: "Translation Invariance",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Location Doesn't Matter</strong><br>
+                        CNNs can detect features regardless of where they appear in the image.
+                    </div>
+                    <p><strong>Why Translation Invariance Matters:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Flexible Recognition:</strong> Cat detected whether in center or corner</li>
+                        <li><strong>Reduced Training Data:</strong> Don't need examples in every position</li>
+                        <li><strong>Generalization:</strong> Works on new image compositions</li>
+                        <li><strong>Robustness:</strong> Performance doesn't depend on object location</li>
+                    </ul>
+                    <p><strong>How CNNs Achieve This:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Weight Sharing:</strong> Same filter applied everywhere</li>
+                        <li><strong>Pooling Operations:</strong> Summarize regions, reducing spatial size</li>
+                        <li><strong>Multiple Scales:</strong> Detect features at different resolutions</li>
+                    </ul>
+                    <div class="code-block">
+# Example: Max pooling for spatial invariance
+tf.keras.layers.MaxPooling2D(pool_size=(2, 2))
+
+# Takes maximum value in 2x2 regions
+# Reduces spatial dimensions while preserving important features
+# Input: 28x28 → Output: 14x14
+                    </div>
+                    <div class="modal-highlight" style="background: rgba(236, 72, 153, 0.1); border-left-color: #ec4899;">
+                        <strong>Limitation:</strong><br>
+                        CNNs are not invariant to rotation or scaling by default - these require data augmentation or specialized architectures.
+                    </div>
+                `
+            },
+            efficiency: {
+                title: "Parameter Efficiency",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Doing More with Less</strong><br>
+                        CNNs use far fewer parameters than fully connected networks for image processing.
+                    </div>
+                    <p><strong>Traditional Fully Connected Network:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>32x32 RGB image = 3,072 inputs</li>
+                        <li>First hidden layer with 1,000 neurons = 3,072,000 parameters</li>
+                        <li>Prone to overfitting with limited data</li>
+                        <li>No spatial structure understanding</li>
+                    </ul>
+                    <p><strong>CNN Approach:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>32 filters of size 3x3x3 = 864 parameters</li>
+                        <li>Each filter shared across entire image</li>
+                        <li>Much less prone to overfitting</li>
+                        <li>Preserves spatial relationships</li>
+                    </ul>
+                    <div class="code-block">
+# Parameter comparison
+# Fully connected: 32*32*3 * 1000 = 3,072,000 parameters
+# CNN conv layer: 32 * (3*3*3 + 1) = 896 parameters
+
+# 3,400x fewer parameters!
+# Yet CNNs typically perform much better on images
+                    </div>
+                    <div class="modal-highlight" style="background: rgba(34, 197, 94, 0.1); border-left-color: #22c55e;">
+                        <strong>Benefits:</strong><br>
+                        Fewer parameters → Less overfitting → Better generalization → Faster training → Less memory usage
+                    </div>
+                `
+            },
+            architecture: {
+                title: "CNN Architecture Deep Dive",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Building Blocks of CNNs</strong><br>
+                        Understanding the components that make CNNs powerful.
+                    </div>
+                    <p><strong>Typical CNN Architecture:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Input Layer:</strong> Raw image (e.g., 224×224×3)</li>
+                        <li><strong>Convolutional Layers:</strong> Feature detection with learnable filters</li>
+                        <li><strong>Activation Functions:</strong> Usually ReLU for non-linearity</li>
+                        <li><strong>Pooling Layers:</strong> Spatial dimensionality reduction</li>
+                        <li><strong>Batch Normalization:</strong> Stabilize training</li>
+                        <li><strong>Dropout:</strong> Prevent overfitting</li>
+                        <li><strong>Fully Connected Layers:</strong> Final classification</li>
+                        <li><strong>Output Layer:</strong> Probability distribution over classes</li>
+                    </ul>
+                    <div class="code-block">
+# Modern CNN architecture example
+model = tf.keras.Sequential([
+    # Feature extraction layers
+    tf.keras.layers.Conv2D(64, 3, activation='relu'),
+    tf.keras.layers.BatchNormalization(),
+    tf.keras.layers.MaxPooling2D(2),
+    
+    tf.keras.layers.Conv2D(128, 3, activation='relu'),
+    tf.keras.layers.BatchNormalization(),
+    tf.keras.layers.MaxPooling2D(2),
+    
+    tf.keras.layers.Conv2D(256, 3, activation='relu'),
+    tf.keras.layers.BatchNormalization(),
+    tf.keras.layers.GlobalAveragePooling2D(),
+    
+    # Classification layers
+    tf.keras.layers.Dropout(0.5),
+    tf.keras.layers.Dense(512, activation='relu'),
+    tf.keras.layers.Dropout(0.5),
+    tf.keras.layers.Dense(num_classes, activation='softmax')
+])
+                    </div>
+                    <div class="modal-highlight" style="background: rgba(168, 85, 247, 0.1); border-left-color: #a855f7;">
+                        <strong>Design Principles:</strong><br>
+                        • Start with small filters (3×3)<br>
+                        • Increase depth gradually<br>
+                        • Use batch normalization<br>
+                        • Apply dropout for regularization<br>
+                        • End with global pooling instead of flatten
+                    </div>
+                `
+            },
+            vision: {
+                title: "Computer Vision Applications",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>CNNs Revolutionized Computer Vision</strong><br>
+                        From basic image classification to complex scene understanding.
+                    </div>
+                    <p><strong>Image Classification:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>ImageNet: 1000+ object categories</li>
+                        <li>Medical image diagnosis</li>
+                        <li>Quality control in manufacturing</li>
+                        <li>Content moderation on social media</li>
+                    </ul>
+                    <p><strong>Object Detection:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>YOLO: Real-time object detection</li>
+                        <li>R-CNN family: High-accuracy detection</li>
+                        <li>Face detection in cameras</li>
+                        <li>Security and surveillance systems</li>
+                    </ul>
+                    <p><strong>Advanced Applications:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>Image segmentation (pixel-level classification)</li>
+                        <li>Style transfer (artistic image generation)</li>
+                        <li>Super-resolution (upscaling images)</li>
+                        <li>Image captioning (describing images in text)</li>
+                    </ul>
+                    <div class="modal-highlight" style="background: rgba(6, 182, 212, 0.1); border-left-color: #06b6d4;">
+                        <strong>Performance Milestones:</strong><br>
+                        • 2012: AlexNet (ImageNet winner)<br>
+                        • 2014: VGGNet (very deep networks)<br>
+                        • 2015: ResNet (skip connections)<br>
+                        • 2017: Vision Transformer (attention-based)
+                    </div>
+                `
+            },
+            medical: {
+                title: "Medical Imaging Applications",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>CNNs Save Lives</strong><br>
+                        AI-powered medical diagnosis often matches or exceeds human expert performance.
+                    </div>
+                    <p><strong>Radiology Applications:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Chest X-rays:</strong> Pneumonia, COVID-19, lung cancer detection</li>
+                        <li><strong>CT Scans:</strong> Brain hemorrhages, organ abnormalities</li>
+                        <li><strong>MRI Analysis:</strong> Tumor detection, brain lesions</li>
+                        <li><strong>Mammograms:</strong> Breast cancer screening</li>
+                    </ul>
+                    <p><strong>Dermatology:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>Skin cancer detection from photos</li>
+                        <li>Melanoma classification</li>
+                        <li>Dermatitis and rash diagnosis</li>
+                    </ul>
+                    <p><strong>Ophthalmology:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>Diabetic retinopathy screening</li>
+                        <li>Glaucoma detection</li>
+                        <li>Macular degeneration assessment</li>
+                    </ul>
+                    <div class="code-block">
+# Medical CNN example
+model = tf.keras.Sequential([
+    tf.keras.layers.Conv2D(32, 3, activation='relu'),
+    tf.keras.layers.MaxPooling2D(),
+    tf.keras.layers.Conv2D(64, 3, activation='relu'),
+    tf.keras.layers.MaxPooling2D(),
+    tf.keras.layers.GlobalAveragePooling2D(),
+    tf.keras.layers.Dense(128, activation='relu'),
+    tf.keras.layers.Dropout(0.5),
+    tf.keras.layers.Dense(2, activation='softmax')  # Normal vs Abnormal
+])
+                    </div>
+                    <div class="modal-highlight" style="background: rgba(239, 68, 68, 0.1); border-left-color: #ef4444;">
+                        <strong>Important Note:</strong><br>
+                        Medical AI systems require rigorous validation, regulatory approval, and should augment (not replace) human medical expertise.
+                    </div>
+                `
+            },
+            autonomous: {
+                title: "Autonomous Driving Vision",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>CNNs Enable Self-Driving Cars</strong><br>
+                        Computer vision is the foundation of autonomous vehicle perception.
+                    </div>
+                    <p><strong>Core Vision Tasks:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Object Detection:</strong> Cars, pedestrians, cyclists, animals</li>
+                        <li><strong>Lane Detection:</strong> Road boundaries and lane markings</li>
+                        <li><strong>Traffic Sign Recognition:</strong> Speed limits, stop signs, warnings</li>
+                        <li><strong>Traffic Light Detection:</strong> Red, yellow, green states</li>
+                        <li><strong>Depth Estimation:</strong> Distance to objects</li>
+                    </ul>
+                    <p><strong>Advanced Capabilities:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Semantic Segmentation:</strong> Classify every pixel</li>
+                        <li><strong>Motion Prediction:</strong> Predict pedestrian/vehicle paths</li>
+                        <li><strong>Weather Recognition:</strong> Rain, snow, fog adaptation</li>
+                        <li><strong>Night Vision:</strong> Infrared and low-light processing</li>
+                    </ul>
+                    <div class="code-block">
+# Multi-task CNN for autonomous driving
+class AutonomousDrivingNet(tf.keras.Model):
+    def __init__(self):
+        super().__init__()
+        self.backbone = tf.keras.applications.ResNet50()
+        self.object_detector = ObjectDetectionHead()
+        self.lane_detector = LaneDetectionHead()
+        self.depth_estimator = DepthEstimationHead()
+    
+    def call(self, inputs):
+        features = self.backbone(inputs)
+        objects = self.object_detector(features)
+        lanes = self.lane_detector(features)
+        depth = self.depth_estimator(features)
+        return objects, lanes, depth
+                    </div>
+                    <div class="modal-highlight" style="background: rgba(99, 102, 241, 0.1); border-left-color: #6366f1;">
+                        <strong>Industry Leaders:</strong><br>
+                        Tesla, Waymo, Cruise, and others process millions of images daily to train increasingly sophisticated vision systems.
+                    </div>
+                `
+            }
+        };
+
+        // CNN Architecture Visualization
+        function drawCNNArchitecture() {
+            const canvas = document.getElementById('cnnCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.offsetWidth;
+            canvas.height = 300;
+            
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, width, height);
+            
+            // Draw CNN pipeline
+            const stages = [
+                {name: 'Input', width: 60, height: 60, color: '#3b82f6'},
+                {name: 'Conv + ReLU', width: 50, height: 50, color: '#10b981'},
+                {name: 'Pool', width: 35, height: 35, color: '#f59e0b'},
+                {name: 'Conv + ReLU', width: 30, height: 30, color: '#10b981'},
+                {name: 'Pool', width: 20, height: 20, color: '#f59e0b'},
+                {name: 'FC', width: 15, height: 80, color: '#8b5cf6'},
+                {name: 'Output', width: 15, height: 40, color: '#ef4444'}
+            ];
+            
+            const spacing = (width - 100) / stages.length;
+            let x = 50;
+            
+            stages.forEach((stage, i) => {
+                // Draw rectangle
+                ctx.fillStyle = stage.color;
+                ctx.fillRect(x - stage.width/2, height/2 - stage.height/2, stage.width, stage.height);
+                
+                // Draw label
+                ctx.fillStyle = '#1e293b';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(stage.name, x, height/2 + stage.height/2 + 20);
+                
+                // Draw arrow to next stage
+                if (i < stages.length - 1) {
+                    ctx.strokeStyle = '#64748b';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(x + stage.width/2 + 5, height/2);
+                    ctx.lineTo(x + spacing - 5, height/2);
+                    ctx.stroke();
+                    
+                    // Arrow head
+                    ctx.beginPath();
+                    ctx.moveTo(x + spacing - 5, height/2);
+                    ctx.lineTo(x + spacing - 15, height/2 - 5);
+                    ctx.lineTo(x + spacing - 15, height/2 + 5);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+                
+                x += spacing;
+            });
+            
+            // Add title
+            ctx.fillStyle = '#0d9488';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('CNN Processing Pipeline', width/2, 30);
+        }
+
+        // Add click handlers to interactive elements
+        document.querySelectorAll('[data-modal]').forEach(item => {
+            item.addEventListener('click', () => {
+                const modalKey = item.dataset.modal;
+                const content = modalContents[modalKey];
+                if (content) {
+                    modal.open(content.title, content.content);
+                }
+            });
+        });
+
+        // Floating elements animation
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            const elementCount = 12;
+            
+            for (let i = 0; i < elementCount; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                
+                const size = Math.random() * 6 + 3;
+                const left = Math.random() * 100;
+                const delay = Math.random() * 20;
+                const duration = Math.random() * 10 + 15;
+                
+                element.style.width = size + 'px';
+                element.style.height = size + 'px';
+                element.style.left = left + '%';
+                element.style.animationDelay = delay + 's';
+                element.style.animationDuration = duration + 's';
+                
+                container.appendChild(element);
+            }
+        }
+
+        createFloatingElements();
+        drawCNNArchitecture();
+
+        // Redraw canvas on resize
+        window.addEventListener('resize', () => {
+            setTimeout(drawCNNArchitecture, 100);
+        });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (!e.target.closest('input, textarea')) {
+                if (e.key === 'ArrowLeft') {
+                    window.location.href = 'Week9_Slide162.html';
+                } else if (e.key === 'ArrowRight') {
+                    window.location.href = 'Week9_Slide164.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

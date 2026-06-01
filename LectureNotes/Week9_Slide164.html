@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Convolution Operation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px 25px;
+            border-radius: 25px;
+            font-weight: 600;
+            color: #0d9488;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            font-size: 1.1em;
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px 25px;
+            border-radius: 25px;
+            font-weight: 600;
+            color: #0d9488;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            font-size: 1.1em;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.2em;
+            text-align: center;
+            margin-bottom: 40px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        @keyframes slideInFromTop {
+            0% { transform: translateY(-50px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 30px;
+        }
+
+        .concept-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            padding: 30px;
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(13, 148, 136, 0.1);
+            border: 2px solid rgba(13, 148, 136, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .concept-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(13, 148, 136, 0.2);
+        }
+
+        .section-title {
+            font-size: 1.9em;
+            color: #0d9488;
+            margin-bottom: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .concept-list {
+            list-style: none;
+        }
+
+        .concept-item {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .concept-item:hover {
+            border-color: #0d9488;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(13, 148, 136, 0.15);
+        }
+
+        .concept-title {
+            font-weight: 600;
+            color: #0d9488;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .concept-desc {
+            color: #1e293b;
+            font-size: 0.95em;
+            line-height: 1.4;
+        }
+
+        .demo-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            padding: 30px;
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(13, 148, 136, 0.1);
+            border: 2px solid rgba(13, 148, 136, 0.1);
+            text-align: center;
+        }
+
+        .convolution-demo {
+            width: 100%;
+            height: 280px;
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 15px;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            margin: 15px 0;
+            cursor: pointer;
+        }
+
+        .formula-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            padding: 30px;
+            border-radius: 25px;
+            margin-top: 25px;
+            box-shadow: 0 10px 30px rgba(13, 148, 136, 0.1);
+            border: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .formula-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 20px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .formula-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        .formula-card {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .formula-card:hover {
+            border-color: #0d9488;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .formula-name {
+            font-weight: 600;
+            color: #0d9488;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .formula-math {
+            font-family: 'Times New Roman', serif;
+            font-size: 1.3em;
+            color: #1e293b;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+
+        .formula-desc {
+            color: #64748b;
+            font-size: 0.9em;
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(13, 148, 136, 0.3);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(13, 148, 136, 0.4);
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .code-block {
+            background: #1e293b;
+            color: #14b8a6;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+
+        .floating-elements {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .floating-element {
+            position: absolute;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) rotate(0deg); }
+            100% { transform: translateY(-100px) rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .formula-grid { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.4em; }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <div class="course-info">CS5710 - Week 9</div>
+    <div class="slide-number">Slide 164 of 180</div>
+
+    <div class="slide-container">
+        <h1 class="slide-title">🔍 Convolution Operation</h1>
+        
+        <div class="content-layout">
+            <div class="concept-section">
+                <h2 class="section-title">⚙️ Core Concepts</h2>
+                
+                <ul class="concept-list">
+                    <li class="concept-item" data-modal="definition">
+                        <div class="concept-title">🎯 Mathematical Definition</div>
+                        <div class="concept-desc">Element-wise multiplication and summation operation</div>
+                    </li>
+                    <li class="concept-item" data-modal="filter">
+                        <div class="concept-title">🔧 Filters (Kernels)</div>
+                        <div class="concept-desc">Small matrices of learnable parameters</div>
+                    </li>
+                    <li class="concept-item" data-modal="sliding">
+                        <div class="concept-title">🏃 Sliding Window</div>
+                        <div class="concept-desc">Filter moves across input systematically</div>
+                    </li>
+                    <li class="concept-item" data-modal="parameters">
+                        <div class="concept-title">📏 Key Parameters</div>
+                        <div class="concept-desc">Stride, padding, and dilation control behavior</div>
+                    </li>
+                    <li class="concept-item" data-modal="output">
+                        <div class="concept-title">📊 Feature Maps</div>
+                        <div class="concept-desc">Output activations reveal detected patterns</div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="demo-section">
+                <h2 class="section-title">🎮 Interactive Demo</h2>
+                <canvas class="convolution-demo" id="convolutionCanvas" data-modal="interactive">
+                    <p style="padding: 50px; color: #64748b;">
+                        Click to see convolution in action!
+                    </p>
+                </canvas>
+                <p style="color: #64748b; font-style: italic; margin-top: 10px;">
+                    Watch how a 3×3 filter slides across a 5×5 input image
+                </p>
+            </div>
+        </div>
+
+        <div class="formula-section">
+            <h2 class="formula-title">📐 Mathematical Formulations</h2>
+            
+            <div class="formula-grid">
+                <div class="formula-card" data-modal="conv2d">
+                    <div class="formula-name">2D Convolution</div>
+                    <div class="formula-math">
+                        (I * K)[i,j] = ΣΣ I[i+m,j+n] × K[m,n]
+                    </div>
+                    <div class="formula-desc">Fundamental 2D convolution operation</div>
+                </div>
+                
+                <div class="formula-card" data-modal="output-size">
+                    <div class="formula-name">Output Size</div>
+                    <div class="formula-math">
+                        O = (I + 2P - K) / S + 1
+                    </div>
+                    <div class="formula-desc">Calculate output dimensions</div>
+                </div>
+                
+                <div class="formula-card" data-modal="parameters-formula">
+                    <div class="formula-name">Parameter Count</div>
+                    <div class="formula-math">
+                        P = (K × K × C + 1) × F
+                    </div>
+                    <div class="formula-desc">Total learnable parameters</div>
+                </div>
+                
+                <div class="formula-card" data-modal="receptive-field">
+                    <div class="formula-name">Receptive Field</div>
+                    <div class="formula-math">
+                        RF = 1 + Σ(K - 1) × ∏S
+                    </div>
+                    <div class="formula-desc">Input region affecting output</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week9_Slide163.html" class="nav-btn">← Previous</a>
+        <a href="Week9_Slide165.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            open(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Modal content definitions
+        const modalContents = {
+            definition: {
+                title: "Mathematical Definition of Convolution",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Convolution: Pattern Detection Through Mathematics</strong><br>
+                        A mathematical operation that combines two functions to detect features in images.
+                    </div>
+                    <p><strong>The Operation:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Input:</strong> Image I and Filter K</li>
+                        <li><strong>Process:</strong> Slide filter over image, compute element-wise products</li>
+                        <li><strong>Aggregate:</strong> Sum all products for each position</li>
+                        <li><strong>Output:</strong> Feature map showing pattern matches</li>
+                    </ul>
+                    <div class="code-block">
+# Simple convolution implementation
+import numpy as np
+
+def convolution2d(image, kernel):
+    h, w = image.shape
+    kh, kw = kernel.shape
+    output = np.zeros((h-kh+1, w-kw+1))
+    
+    for i in range(h-kh+1):
+        for j in range(w-kw+1):
+            output[i,j] = np.sum(image[i:i+kh, j:j+kw] * kernel)
+    
+    return output
+
+# Example: Edge detection
+edge_kernel = np.array([[-1, -1, -1],
+                       [0,  0,  0],
+                       [1,  1,  1]])
+edges = convolution2d(image, edge_kernel)
+                    </div>
+                    <div class="modal-highlight" style="background: rgba(59, 130, 246, 0.1); border-left-color: #3b82f6;">
+                        <strong>Biological Inspiration:</strong><br>
+                        Convolution mimics how neurons in the visual cortex respond to specific patterns in their receptive fields.
+                    </div>
+                `
+            },
+            filter: {
+                title: "Filters (Kernels) - The Pattern Detectors",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Filters: Learnable Pattern Detectors</strong><br>
+                        Small matrices that learn to detect specific features in images.
+                    </div>
+                    <p><strong>Common Filter Types:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Edge Detectors:</strong> Sobel, Prewitt, Laplacian filters</li>
+                        <li><strong>Blur Filters:</strong> Gaussian, box filters for smoothing</li>
+                        <li><strong>Sharpening:</strong> Enhance edges and details</li>
+                        <li><strong>Learned Filters:</strong> CNNs learn optimal filters for tasks</li>
+                    </ul>
+                    <div class="code-block">
+# Common edge detection filters
+sobel_x = np.array([[-1, 0, 1],
+                   [-2, 0, 2],
+                   [-1, 0, 1]])  # Vertical edges
+
+sobel_y = np.array([[-1, -2, -1],
+                   [0,  0,  0],
+                   [1,  2,  1]])  # Horizontal edges
+
+# Gaussian blur (5x5)
+gaussian = (1/256) * np.array([[1,  4,  6,  4, 1],
+                              [4, 16, 24, 16, 4],
+                              [6, 24, 36, 24, 6],
+                              [4, 16, 24, 16, 4],
+                              [1,  4,  6,  4, 1]])
+
+# In CNNs, filters are learned automatically!
+conv_layer = tf.keras.layers.Conv2D(32, (3,3), activation='relu')
+                    </div>
+                    <div class="modal-highlight" style="background: rgba(16, 185, 129, 0.1); border-left-color: #10b981;">
+                        <strong>CNN Magic:</strong><br>
+                        Instead of hand-crafting filters, CNNs learn optimal filters through backpropagation, often discovering patterns humans never thought of!
+                    </div>
+                `
+            },
+            sliding: {
+                title: "Sliding Window Mechanism",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Systematic Pattern Scanning</strong><br>
+                        The filter slides across the input image, checking for patterns at every position.
+                    </div>
+                    <p><strong>Sliding Process:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Step 1:</strong> Place filter at top-left corner</li>
+                        <li><strong>Step 2:</strong> Compute convolution at current position</li>
+                        <li><strong>Step 3:</strong> Move filter by stride amount</li>
+                        <li><strong>Step 4:</strong> Repeat until entire image is covered</li>
+                        <li><strong>Step 5:</strong> Collect all outputs into feature map</li>
+                    </ul>
+                    <p><strong>Movement Parameters:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Stride:</strong> How many pixels to move each step</li>
+                        <li><strong>Padding:</strong> Add borders to control output size</li>
+                        <li><strong>Dilation:</strong> Skip pixels for larger receptive field</li>
+                    </ul>
+                    <div class="code-block">
+# TensorFlow convolution with parameters
+conv_layer = tf.keras.layers.Conv2D(
+    filters=64,      # Number of filters
+    kernel_size=3,   # 3x3 filter
+    strides=1,       # Move 1 pixel at a time
+    padding='same',  # Keep output size same as input
+    dilation_rate=1, # Standard convolution
+    activation='relu'
+)
+
+# Different configurations
+conv_large_stride = tf.keras.layers.Conv2D(64, 3, strides=2)  # Reduce size by half
+conv_dilated = tf.keras.layers.Conv2D(64, 3, dilation_rate=2)  # Larger receptive field
+                    </div>
+                    <div class="modal-highlight" style="background: rgba(139, 92, 246, 0.1); border-left-color: #8b5cf6;">
+                        <strong>Efficiency Insight:</strong><br>
+                        The sliding window approach allows one filter to detect patterns anywhere in the image, achieving translation invariance with parameter sharing.
+                    </div>
+                `
+            },
+            parameters: {
+                title: "Key Parameters: Stride, Padding, and Dilation",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Control Convolution Behavior</strong><br>
+                        These parameters control how convolution operates and what it produces.
+                    </div>
+                    <p><strong>Stride - Step Size:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Stride = 1:</strong> Dense sampling, preserves spatial information</li>
+                        <li><strong>Stride = 2:</strong> Skip every other pixel, reduces output size by half</li>
+                        <li><strong>Large Stride:</strong> More aggressive downsampling, faster computation</li>
+                    </ul>
+                    <p><strong>Padding - Border Handling:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>'valid':</strong> No padding, output smaller than input</li>
+                        <li><strong>'same':</strong> Zero padding, output same size as input</li>
+                        <li><strong>Custom:</strong> Specific padding amounts for fine control</li>
+                    </ul>
+                    <p><strong>Dilation - Receptive Field:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Dilation = 1:</strong> Standard convolution</li>
+                        <li><strong>Dilation = 2:</strong> Skip one pixel between filter elements</li>
+                        <li><strong>High Dilation:</strong> Capture long-range dependencies</li>
+                    </ul>
+                    <div class="code-block">
+# Output size calculation
+def calculate_output_size(input_size, kernel_size, stride, padding):
+    return (input_size + 2*padding - kernel_size) // stride + 1
+
+# Examples
+input_size = 32
+kernel_size = 3
+
+# Different configurations
+print(f"Valid padding: {calculate_output_size(32, 3, 1, 0)}")  # 30
+print(f"Same padding:  {calculate_output_size(32, 3, 1, 1)}")  # 32
+print(f"Stride 2:      {calculate_output_size(32, 3, 2, 1)}")  # 16
+
+# In practice
+conv1 = tf.keras.layers.Conv2D(64, 3, strides=1, padding='same')  # Preserve size
+conv2 = tf.keras.layers.Conv2D(64, 3, strides=2, padding='same')  # Halve size
+                    </div>
+                    <div class="modal-highlight" style="background: rgba(236, 72, 153, 0.1); border-left-color: #ec4899;">
+                        <strong>Design Choice:</strong><br>
+                        Stride controls spatial downsampling, padding preserves border information, and dilation increases receptive field without adding parameters.
+                    </div>
+                `
+            },
+            output: {
+                title: "Feature Maps - Pattern Detection Results",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Feature Maps Reveal What's Detected</strong><br>
+                        Each feature map shows where specific patterns were found in the input.
+                    </div>
+                    <p><strong>Feature Map Properties:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Depth:</strong> Number of filters = number of feature maps</li>
+                        <li><strong>Spatial Dimensions:</strong> Depend on input size, stride, padding</li>
+                        <li><strong>Values:</strong> Higher values = stronger pattern matches</li>
+                        <li><strong>Interpretation:</strong> Each map detects different features</li>
+                    </ul>
+                    <p><strong>Multiple Feature Maps:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Filter 1:</strong> Might detect vertical edges</li>
+                        <li><strong>Filter 2:</strong> Might detect horizontal edges</li>
+                        <li><strong>Filter 3:</strong> Might detect corners or curves</li>
+                        <li><strong>Combined:</strong> Rich representation of input patterns</li>
+                    </ul>
+                    <div class="code-block">
+# Feature map visualization
+import matplotlib.pyplot as plt
+
+# Get feature maps from a trained model
+model = tf.keras.Sequential([
+    tf.keras.layers.Conv2D(32, 3, activation='relu', input_shape=(28,28,1))
+])
+
+# Extract feature maps
+feature_extractor = tf.keras.Model(inputs=model.input, 
+                                 outputs=model.layers[0].output)
+features = feature_extractor(sample_image)
+
+# Visualize first 16 feature maps
+fig, axes = plt.subplots(4, 4, figsize=(12, 12))
+for i in range(16):
+    ax = axes[i//4, i%4]
+    ax.imshow(features[0,:,:,i], cmap='viridis')
+    ax.set_title(f'Filter {i+1}')
+    ax.axis('off')
+                    </div>
+                    <div class="modal-highlight" style="background: rgba(34, 197, 94, 0.1); border-left-color: #22c55e;">
+                        <strong>Hierarchical Learning:</strong><br>
+                        Early layers detect simple patterns (edges), deeper layers combine these into complex objects (faces, cars).
+                    </div>
+                `
+            },
+            interactive: {
+                title: "Interactive Convolution Visualization",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>See Convolution in Action</strong><br>
+                        Watch how a filter slides across an image and produces feature maps.
+                    </div>
+                    <p><strong>What the Demo Shows:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Input Image:</strong> 5×5 grid of pixel values</li>
+                        <li><strong>Filter:</strong> 3×3 pattern detector (edge detector)</li>
+                        <li><strong>Sliding Action:</strong> Filter moves from left to right, top to bottom</li>
+                        <li><strong>Computation:</strong> Element-wise multiply and sum at each position</li>
+                        <li><strong>Output:</strong> 3×3 feature map showing detected patterns</li>
+                    </ul>
+                    <p><strong>Understanding the Process:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Strong Positive:</strong> Bright spots indicate strong feature detection</li>
+                        <li><strong>Negative Values:</strong> Dark spots indicate inverse patterns</li>
+                        <li><strong>Zero/Low:</strong> No significant pattern detected</li>
+                        <li><strong>Spatial Relationship:</strong> Output position corresponds to input region</li>
+                    </ul>
+                    <div class="code-block">
+# What happens at each step
+input_patch = image[i:i+3, j:j+3]  # Extract 3x3 patch
+filter_response = np.sum(input_patch * filter)  # Convolution operation
+output[i,j] = filter_response  # Store result
+
+# Example calculation
+input_patch = [[1, 0, 1],
+              [0, 1, 0],
+              [1, 0, 1]]
+
+edge_filter = [[-1, -1, -1],
+              [0,  0,  0],
+              [1,  1,  1]]
+
+result = 1*(-1) + 0*(-1) + 1*(-1) + 0*0 + 1*0 + 0*0 + 1*1 + 0*1 + 1*1
+       = -1 + 0 + (-1) + 0 + 0 + 0 + 1 + 0 + 1 = 0
+                    </div>
+                    <div class="modal-highlight" style="background: rgba(168, 85, 247, 0.1); border-left-color: #a855f7;">
+                        <strong>Try It Yourself:</strong><br>
+                        Click different positions in the demo to see how the filter response changes based on local image patterns.
+                    </div>
+                `
+            },
+            conv2d: {
+                title: "2D Convolution Formula Explained",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Mathematical Foundation</strong><br>
+                        The formal definition of 2D discrete convolution used in CNNs.
+                    </div>
+                    <p><strong>Formula Breakdown:</strong></p>
+                    <div style="font-size: 1.3em; text-align: center; margin: 20px 0; padding: 20px; background: rgba(255,255,255,0.8); border-radius: 10px; font-family: 'Times New Roman', serif;">
+                        (I * K)[i,j] = ΣΣ I[i+m,j+n] × K[m,n]
+                    </div>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>I:</strong> Input image (2D array)</li>
+                        <li><strong>K:</strong> Kernel/Filter (smaller 2D array)</li>
+                        <li><strong>[i,j]:</strong> Output position in feature map</li>
+                        <li><strong>[m,n]:</strong> Position within kernel</li>
+                        <li><strong>ΣΣ:</strong> Sum over all kernel positions</li>
+                    </ul>
+                    <p><strong>Cross-Correlation vs Convolution:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>True Convolution:</strong> Flips kernel before sliding</li>
+                        <li><strong>Cross-Correlation:</strong> No kernel flipping (used in CNNs)</li>
+                        <li><strong>CNN Convention:</strong> Calls cross-correlation "convolution"</li>
+                        <li><strong>Practical Impact:</strong> None - kernels are learned anyway</li>
+                    </ul>
+                    <div class="code-block">
+# Implementing the formula
+def conv2d_formula(image, kernel):
+    I_h, I_w = image.shape
+    K_h, K_w = kernel.shape
+    
+    # Output size
+    O_h = I_h - K_h + 1
+    O_w = I_w - K_w + 1
+    output = np.zeros((O_h, O_w))
+    
+    # Apply formula
+    for i in range(O_h):
+        for j in range(O_w):
+            sum_val = 0
+            for m in range(K_h):
+                for n in range(K_w):
+                    sum_val += image[i+m, j+n] * kernel[m, n]
+            output[i, j] = sum_val
+    
+    return output
+                    </div>
+                    <div class="modal-highlight" style="background: rgba(6, 182, 212, 0.1); border-left-color: #06b6d4;">
+                        <strong>Efficiency Note:</strong><br>
+                        Modern implementations use optimized algorithms like Winograd or FFT-based convolution for speed, but the mathematical principle remains the same.
+                    </div>
+                `
+            },
+            "output-size": {
+                title: "Output Size Calculation",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Predicting Feature Map Dimensions</strong><br>
+                        Calculate output size before building your network architecture.
+                    </div>
+                    <p><strong>Formula Variables:</strong></p>
+                    <div style="font-size: 1.3em; text-align: center; margin: 20px 0; padding: 20px; background: rgba(255,255,255,0.8); border-radius: 10px; font-family: 'Times New Roman', serif;">
+                        O = (I + 2P - K) / S + 1
+                    </div>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>O:</strong> Output dimension (height or width)</li>
+                        <li><strong>I:</strong> Input dimension</li>
+                        <li><strong>P:</strong> Padding amount</li>
+                        <li><strong>K:</strong> Kernel/Filter size</li>
+                        <li><strong>S:</strong> Stride</li>
+                    </ul>
+                    <p><strong>Common Scenarios:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Preserve Size:</strong> Use padding = (K-1)/2 with stride = 1</li>
+                        <li><strong>Halve Size:</strong> Use stride = 2 (common in downsampling)</li>
+                        <li><strong>Valid Conv:</strong> P = 0, output shrinks by K-1 pixels</li>
+                        <li><strong>Same Conv:</strong> Padding chosen to maintain size</li>
+                    </ul>
+                    <div class="code-block">
+# Practical examples
+def output_size(input_size, kernel_size, stride=1, padding=0):
+    return (input_size + 2*padding - kernel_size) // stride + 1
+
+# ImageNet-style network
+print("32x32 input:")
+print(f"Conv 3x3, stride 1, pad 1: {output_size(32, 3, 1, 1)}")  # 32x32
+print(f"Conv 3x3, stride 2, pad 1: {output_size(32, 3, 2, 1)}")  # 16x16
+print(f"MaxPool 2x2, stride 2:     {output_size(32, 2, 2, 0)}")  # 16x16
+
+# Building a CNN
+sizes = [224]  # ImageNet input
+for layer in [(7,2,3), (3,1,1), (3,2,1)]:  # (kernel, stride, padding)
+    k, s, p = layer
+    sizes.append(output_size(sizes[-1], k, s, p))
+print(f"Layer sizes: {sizes}")  # [224, 112, 112, 56]
+                    </div>
+                    <div class="modal-highlight" style="background: rgba(239, 68, 68, 0.1); border-left-color: #ef4444;">
+                        <strong>Architecture Design:</strong><br>
+                        Plan your CNN architecture by calculating sizes layer by layer to ensure reasonable spatial dimensions throughout the network.
+                    </div>
+                `
+            },
+            "parameters-formula": {
+                title: "Parameter Count Formula",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Understanding Model Complexity</strong><br>
+                        Calculate the number of learnable parameters in convolutional layers.
+                    </div>
+                    <p><strong>Formula Components:</strong></p>
+                    <div style="font-size: 1.3em; text-align: center; margin: 20px 0; padding: 20px; background: rgba(255,255,255,0.8); border-radius: 10px; font-family: 'Times New Roman', serif;">
+                        P = (K × K × C + 1) × F
+                    </div>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>K:</strong> Kernel size (e.g., 3 for 3×3 filters)</li>
+                        <li><strong>C:</strong> Number of input channels</li>
+                        <li><strong>F:</strong> Number of filters (output channels)</li>
+                        <li><strong>+1:</strong> Bias parameter for each filter</li>
+                    </ul>
+                    <p><strong>Example Calculations:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>RGB Input:</strong> First layer has C = 3 channels</li>
+                        <li><strong>3×3 Filters:</strong> K = 3</li>
+                        <li><strong>32 Filters:</strong> F = 32</li>
+                        <li><strong>Parameters:</strong> (3×3×3 + 1) × 32 = 896</li>
+                    </ul>
+                    <div class="code-block">
+# Parameter counting function
+def conv_params(kernel_size, input_channels, output_filters, bias=True):
+    weights = kernel_size * kernel_size * input_channels * output_filters
+    biases = output_filters if bias else 0
+    return weights + biases
+
+# Example network
+params = 0
+
+# Layer 1: RGB input (3 channels) -> 32 filters
+params += conv_params(3, 3, 32)
+print(f"Layer 1: {conv_params(3, 3, 32):,} parameters")
+
+# Layer 2: 32 channels -> 64 filters  
+params += conv_params(3, 32, 64)
+print(f"Layer 2: {conv_params(3, 32, 64):,} parameters")
+
+# Layer 3: 64 channels -> 128 filters
+params += conv_params(3, 64, 128)
+print(f"Layer 3: {conv_params(3, 64, 128):,} parameters")
+
+print(f"Total conv params: {params:,}")
+
+# Compare with fully connected
+fc_params = 7*7*128 * 1000  # Flattened -> 1000 units
+print(f"Equivalent FC layer: {fc_params:,} parameters")
+                    </div>
+                    <div class="modal-highlight" style="background: rgba(34, 197, 94, 0.1); border-left-color: #22c55e;">
+                        <strong>Efficiency Advantage:</strong><br>
+                        CNNs use far fewer parameters than fully connected networks while achieving better performance on spatial data like images.
+                    </div>
+                `
+            },
+            "receptive-field": {
+                title: "Receptive Field Analysis",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Understanding What Each Neuron "Sees"</strong><br>
+                        The receptive field is the region of input that affects a particular output neuron.
+                    </div>
+                    <p><strong>Receptive Field Growth:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Layer 1:</strong> RF = kernel size (e.g., 3×3)</li>
+                        <li><strong>Layer 2:</strong> RF grows by (kernel_size - 1)</li>
+                        <li><strong>Pooling:</strong> Increases RF by pooling size</li>
+                        <li><strong>Deep Networks:</strong> Very large receptive fields</li>
+                    </ul>
+                    <p><strong>Why Receptive Field Matters:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Feature Complexity:</strong> Larger RF → more complex features</li>
+                        <li><strong>Context:</strong> Neurons can see more surrounding context</li>
+                        <li><strong>Object Size:</strong> RF should match object scale</li>
+                        <li><strong>Architecture Design:</strong> Balance depth vs RF size</li>
+                    </ul>
+                    <div class="code-block">
+# Receptive field calculation
+def receptive_field_size(layers):
+    """
+    layers: list of (kernel_size, stride) tuples
+    """
+    rf_size = 1
+    stride_prod = 1
+    
+    for kernel_size, stride in layers:
+        rf_size += (kernel_size - 1) * stride_prod
+        stride_prod *= stride
+    
+    return rf_size
+
+# Example: VGG-style network
+vgg_layers = [
+    (3, 1),  # Conv 3x3
+    (3, 1),  # Conv 3x3
+    (2, 2),  # MaxPool 2x2
+    (3, 1),  # Conv 3x3
+    (3, 1),  # Conv 3x3
+    (2, 2),  # MaxPool 2x2
+]
+
+rf = receptive_field_size(vgg_layers)
+print(f"Receptive field size: {rf}x{rf}")  # 28x28
+
+# Each layer's contribution
+print("Layer-by-layer RF growth:")
+rf_sizes = [1]
+stride = 1
+for i, (k, s) in enumerate(vgg_layers):
+    rf_sizes.append(rf_sizes[-1] + (k-1)*stride)
+    stride *= s
+    print(f"After layer {i+1}: {rf_sizes[-1]}x{rf_sizes[-1]}")
+                    </div>
+                    <div class="modal-highlight" style="background: rgba(168, 85, 247, 0.1); border-left-color: #a855f7;">
+                        <strong>Design Insight:</strong><br>
+                        Modern networks use techniques like dilated convolution and attention mechanisms to increase effective receptive field without adding too many parameters.
+                    </div>
+                `
+            }
+        };
+
+        // Convolution Animation
+        let animationId;
+        let currentStep = 0;
+        const totalSteps = 9; // 3x3 output positions
+
+        function drawConvolutionDemo() {
+            const canvas = document.getElementById('convolutionCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.offsetWidth;
+            canvas.height = 280;
+            
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, width, height);
+            
+            // Define grid sizes
+            const inputSize = 5;
+            const kernelSize = 3;
+            const outputSize = 3;
+            
+            const cellSize = 25;
+            const spacing = 40;
+            
+            // Input image (5x5)
+            const inputX = 50;
+            const inputY = 50;
+            const inputData = [
+                [1, 0, 1, 0, 1],
+                [0, 1, 0, 1, 0],
+                [1, 0, 1, 0, 1],
+                [0, 1, 0, 1, 0],
+                [1, 0, 1, 0, 1]
+            ];
+            
+            // Kernel (3x3 edge detector)
+            const kernelX = inputX + (inputSize * cellSize) + spacing;
+            const kernelY = inputY;
+            const kernelData = [
+                [-1, -1, -1],
+                [0, 0, 0],
+                [1, 1, 1]
+            ];
+            
+            // Output (3x3)
+            const outputX = kernelX + (kernelSize * cellSize) + spacing;
+            const outputY = inputY;
+            
+            // Calculate current filter position
+            const filterRow = Math.floor(currentStep / outputSize);
+            const filterCol = currentStep % outputSize;
+            
+            // Draw input image
+            ctx.strokeStyle = '#0d9488';
+            ctx.lineWidth = 2;
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            
+            for (let i = 0; i < inputSize; i++) {
+                for (let j = 0; j < inputSize; j++) {
+                    const x = inputX + j * cellSize;
+                    const y = inputY + i * cellSize;
+                    
+                    // Highlight current filter region
+                    if (i >= filterRow && i < filterRow + kernelSize &&
+                        j >= filterCol && j < filterCol + kernelSize) {
+                        ctx.fillStyle = 'rgba(13, 148, 136, 0.3)';
+                        ctx.fillRect(x, y, cellSize, cellSize);
+                    }
+                    
+                    ctx.strokeRect(x, y, cellSize, cellSize);
+                    
+                    ctx.fillStyle = inputData[i][j] ? '#0d9488' : '#64748b';
+                    ctx.fillText(inputData[i][j].toString(), x + cellSize/2, y + cellSize/2 + 5);
+                }
+            }
+            
+            // Draw kernel
+            ctx.fillStyle = '#1e293b';
+            ctx.fillText('Filter', kernelX + (kernelSize * cellSize)/2, kernelY - 10);
+            
+            for (let i = 0; i < kernelSize; i++) {
+                for (let j = 0; j < kernelSize; j++) {
+                    const x = kernelX + j * cellSize;
+                    const y = kernelY + i * cellSize;
+                    
+                    ctx.fillStyle = '#f59e0b';
+                    ctx.fillRect(x, y, cellSize, cellSize);
+                    ctx.strokeRect(x, y, cellSize, cellSize);
+                    
+                    ctx.fillStyle = '#1e293b';
+                    ctx.fillText(kernelData[i][j].toString(), x + cellSize/2, y + cellSize/2 + 5);
+                }
+            }
+            
+            // Draw output
+            ctx.fillStyle = '#1e293b';
+            ctx.fillText('Output', outputX + (outputSize * cellSize)/2, outputY - 10);
+            
+            for (let i = 0; i < outputSize; i++) {
+                for (let j = 0; j < outputSize; j++) {
+                    const x = outputX + j * cellSize;
+                    const y = outputY + i * cellSize;
+                    
+                    // Calculate convolution result for this position
+                    let result = 0;
+                    for (let ki = 0; ki < kernelSize; ki++) {
+                        for (let kj = 0; kj < kernelSize; kj++) {
+                            result += inputData[i + ki][j + kj] * kernelData[ki][kj];
+                        }
+                    }
+                    
+                    // Highlight current computation
+                    if (i === filterRow && j === filterCol) {
+                        ctx.fillStyle = 'rgba(245, 158, 11, 0.5)';
+                        ctx.fillRect(x, y, cellSize, cellSize);
+                    }
+                    
+                    ctx.strokeRect(x, y, cellSize, cellSize);
+                    
+                    // Show result if computed
+                    if ((i * outputSize + j) <= currentStep) {
+                        ctx.fillStyle = result === 0 ? '#64748b' : (result > 0 ? '#10b981' : '#ef4444');
+                        ctx.fillText(result.toString(), x + cellSize/2, y + cellSize/2 + 5);
+                    }
+                }
+            }
+            
+            // Draw arrows
+            ctx.strokeStyle = '#64748b';
+            ctx.lineWidth = 2;
+            
+            // Input to kernel arrow
+            const arrowY = inputY + (inputSize * cellSize) / 2;
+            ctx.beginPath();
+            ctx.moveTo(inputX + inputSize * cellSize + 5, arrowY);
+            ctx.lineTo(kernelX - 5, arrowY);
+            ctx.stroke();
+            
+            // Kernel to output arrow
+            ctx.beginPath();
+            ctx.moveTo(kernelX + kernelSize * cellSize + 5, arrowY);
+            ctx.lineTo(outputX - 5, arrowY);
+            ctx.stroke();
+            
+            // Add labels
+            ctx.fillStyle = '#1e293b';
+            ctx.font = 'bold 16px Arial';
+            ctx.fillText('Input (5×5)', inputX + (inputSize * cellSize)/2, inputY + inputSize * cellSize + 30);
+            ctx.fillText('Kernel (3×3)', kernelX + (kernelSize * cellSize)/2, kernelY + kernelSize * cellSize + 30);
+            ctx.fillText('Feature Map (3×3)', outputX + (outputSize * cellSize)/2, outputY + outputSize * cellSize + 30);
+        }
+
+        function animateConvolution() {
+            drawConvolutionDemo();
+            currentStep = (currentStep + 1) % totalSteps;
+            animationId = setTimeout(animateConvolution, 1500);
+        }
+
+        // Add click handlers to interactive elements
+        document.querySelectorAll('[data-modal]').forEach(item => {
+            item.addEventListener('click', () => {
+                const modalKey = item.dataset.modal;
+                const content = modalContents[modalKey];
+                if (content) {
+                    modal.open(content.title, content.content);
+                }
+            });
+        });
+
+        // Canvas click handler
+        document.getElementById('convolutionCanvas').addEventListener('click', () => {
+            if (animationId) {
+                clearTimeout(animationId);
+                animationId = null;
+            } else {
+                animateConvolution();
+            }
+        });
+
+        // Floating elements animation
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            const elementCount = 10;
+            
+            for (let i = 0; i < elementCount; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                
+                const size = Math.random() * 6 + 3;
+                const left = Math.random() * 100;
+                const delay = Math.random() * 20;
+                const duration = Math.random() * 10 + 15;
+                
+                element.style.width = size + 'px';
+                element.style.height = size + 'px';
+                element.style.left = left + '%';
+                element.style.animationDelay = delay + 's';
+                element.style.animationDuration = duration + 's';
+                
+                container.appendChild(element);
+            }
+        }
+
+        createFloatingElements();
+        drawConvolutionDemo();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (!e.target.closest('input, textarea')) {
+                if (e.key === 'ArrowLeft') {
+                    window.location.href = 'Week9_Slide163.html';
+                } else if (e.key === 'ArrowRight') {
+                    window.location.href = 'Week9_Slide165.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

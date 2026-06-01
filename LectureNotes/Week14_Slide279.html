@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Industry Best Practices</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .practices-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .practice-category {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: fadeInUp 1s ease-out;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .practice-category:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px rgba(13, 148, 136, 0.15);
+        }
+
+        .practice-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .practice-icon {
+            font-size: 2.5em;
+            margin-right: 15px;
+        }
+
+        .practice-title {
+            font-size: 1.5em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .practice-items {
+            list-style: none;
+        }
+
+        .practice-item {
+            padding: 10px 0;
+            color: #475569;
+            position: relative;
+            border-bottom: 1px solid rgba(13, 148, 136, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .practice-item:hover {
+            color: #0d9488;
+            padding-left: 10px;
+        }
+
+        .practice-item::before {
+            content: '✓';
+            color: #14b8a6;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .frameworks-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.5s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .frameworks-title {
+            font-size: 2em;
+            color: #0d9488;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .framework-tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            gap: 15px;
+        }
+
+        .tab-btn {
+            padding: 12px 25px;
+            background: rgba(13, 148, 136, 0.1);
+            border: 2px solid #14b8a6;
+            border-radius: 25px;
+            color: #0d9488;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            padding: 30px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .framework-description {
+            font-size: 1.1em;
+            color: #475569;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .framework-steps {
+            list-style: none;
+        }
+
+        .framework-step {
+            padding: 10px 0;
+            color: #0d9488;
+            font-weight: 500;
+            border-bottom: 1px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .step-number {
+            background: #0d9488;
+            color: white;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8em;
+            margin-right: 10px;
+        }
+
+        /* Navigation */
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        /* Course Info */
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 25px;
+            border-radius: 15px;
+            font-weight: 600;
+            color: #0d9488;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            z-index: 100;
+            font-size: 1.1em;
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 25px;
+            border-radius: 15px;
+            font-weight: 600;
+            color: #0d9488;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            z-index: 100;
+            font-size: 1.1em;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 900px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 2em;
+            color: #0d9488;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 2.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            line-height: 1;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .modal-close:hover {
+            color: #0d9488;
+            background: rgba(13, 148, 136, 0.1);
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            color: #1e293b;
+            line-height: 1.8;
+            font-size: 1.1em;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-left: 4px solid #0d9488;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            font-weight: 500;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #99f6e4;
+            padding: 20px;
+            border-radius: 12px;
+            font-family: 'Courier New', monospace;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+
+        /* Animations */
+        @keyframes slideInFromTop {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInFromBottom {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Floating Elements */
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 14</div>
+    <div class="slide-number">Slide 279 of 280</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Industry Best Practices</h1>
+        
+        <div class="practices-grid">
+            <div class="practice-category" data-category="development">
+                <div class="practice-header">
+                    <span class="practice-icon">💻</span>
+                    <div class="practice-title">Development Practices</div>
+                </div>
+                <ul class="practice-items">
+                    <li class="practice-item">Version control with Git for code and data</li>
+                    <li class="practice-item">Reproducible environments with Docker</li>
+                    <li class="practice-item">Code reviews and pair programming</li>
+                    <li class="practice-item">Automated testing (unit, integration, ML)</li>
+                    <li class="practice-item">Continuous integration and deployment</li>
+                    <li class="practice-item">Documentation and knowledge sharing</li>
+                </ul>
+            </div>
+
+            <div class="practice-category" data-category="data">
+                <div class="practice-header">
+                    <span class="practice-icon">📊</span>
+                    <div class="practice-title">Data Management</div>
+                </div>
+                <ul class="practice-items">
+                    <li class="practice-item">Data lineage and governance</li>
+                    <li class="practice-item">Schema validation and monitoring</li>
+                    <li class="practice-item">Data quality checks and alerts</li>
+                    <li class="practice-item">Privacy and security compliance</li>
+                    <li class="practice-item">Metadata management systems</li>
+                    <li class="practice-item">Data versioning and catalog</li>
+                </ul>
+            </div>
+
+            <div class="practice-category" data-category="modeling">
+                <div class="practice-header">
+                    <span class="practice-icon">🧠</span>
+                    <div class="practice-title">Model Development</div>
+                </div>
+                <ul class="practice-items">
+                    <li class="practice-item">Experiment tracking and management</li>
+                    <li class="practice-item">Cross-validation and proper evaluation</li>
+                    <li class="practice-item">Baseline models and benchmarking</li>
+                    <li class="practice-item">Feature engineering pipelines</li>
+                    <li class="practice-item">Model interpretability and explainability</li>
+                    <li class="practice-item">Bias detection and fairness testing</li>
+                </ul>
+            </div>
+
+            <div class="practice-category" data-category="production">
+                <div class="practice-header">
+                    <span class="practice-icon">🚀</span>
+                    <div class="practice-title">Production Systems</div>
+                </div>
+                <ul class="practice-items">
+                    <li class="practice-item">Model serving and API design</li>
+                    <li class="practice-item">Performance monitoring and alerting</li>
+                    <li class="practice-item">A/B testing and gradual rollouts</li>
+                    <li class="practice-item">Data drift and model degradation detection</li>
+                    <li class="practice-item">Automated retraining pipelines</li>
+                    <li class="practice-item">Disaster recovery and rollback plans</li>
+                </ul>
+            </div>
+
+            <div class="frameworks-section">
+                <h2 class="frameworks-title">📋 Industry Frameworks</h2>
+                
+                <div class="framework-tabs">
+                    <button class="tab-btn active" data-tab="mlops">MLOps Framework</button>
+                    <button class="tab-btn" data-tab="crisp">CRISP-DM</button>
+                    <button class="tab-btn" data-tab="team">Team Data Science</button>
+                </div>
+
+                <div class="tab-content active" id="mlops">
+                    <div class="framework-description">
+                        <strong>MLOps (Machine Learning Operations):</strong> A set of practices that combines ML, DevOps, and Data Engineering to deploy and maintain ML systems in production reliably and efficiently.
+                    </div>
+                    <ol class="framework-steps">
+                        <li class="framework-step">
+                            <span class="step-number">1</span>
+                            <strong>Development:</strong> Experiment tracking, version control, and collaborative development
+                        </li>
+                        <li class="framework-step">
+                            <span class="step-number">2</span>
+                            <strong>Training:</strong> Automated pipelines for data processing and model training
+                        </li>
+                        <li class="framework-step">
+                            <span class="step-number">3</span>
+                            <strong>Deployment:</strong> Containerization, orchestration, and serving infrastructure
+                        </li>
+                        <li class="framework-step">
+                            <span class="step-number">4</span>
+                            <strong>Monitoring:</strong> Performance tracking, drift detection, and automated alerts
+                        </li>
+                        <li class="framework-step">
+                            <span class="step-number">5</span>
+                            <strong>Governance:</strong> Model lifecycle management, compliance, and audit trails
+                        </li>
+                    </ol>
+                </div>
+
+                <div class="tab-content" id="crisp">
+                    <div class="framework-description">
+                        <strong>CRISP-DM (Cross Industry Standard Process for Data Mining):</strong> A proven methodology for structuring data science projects from business understanding to deployment.
+                    </div>
+                    <ol class="framework-steps">
+                        <li class="framework-step">
+                            <span class="step-number">1</span>
+                            <strong>Business Understanding:</strong> Define objectives, assess situation, determine goals
+                        </li>
+                        <li class="framework-step">
+                            <span class="step-number">2</span>
+                            <strong>Data Understanding:</strong> Collect, describe, explore, and verify data quality
+                        </li>
+                        <li class="framework-step">
+                            <span class="step-number">3</span>
+                            <strong>Data Preparation:</strong> Clean, construct, integrate, and format datasets
+                        </li>
+                        <li class="framework-step">
+                            <span class="step-number">4</span>
+                            <strong>Modeling:</strong> Select techniques, build models, and assess results
+                        </li>
+                        <li class="framework-step">
+                            <span class="step-number">5</span>
+                            <strong>Evaluation:</strong> Evaluate results, review process, determine next steps
+                        </li>
+                        <li class="framework-step">
+                            <span class="step-number">6</span>
+                            <strong>Deployment:</strong> Plan deployment, monitor, maintain, and produce reports
+                        </li>
+                    </ol>
+                </div>
+
+                <div class="tab-content" id="team">
+                    <div class="framework-description">
+                        <strong>Team Data Science Process (TDSP):</strong> Microsoft's agile, iterative methodology for delivering predictive analytics solutions and intelligent applications efficiently.
+                    </div>
+                    <ol class="framework-steps">
+                        <li class="framework-step">
+                            <span class="step-number">1</span>
+                            <strong>Business Understanding:</strong> Define objectives, identify data sources, and establish success criteria
+                        </li>
+                        <li class="framework-step">
+                            <span class="step-number">2</span>
+                            <strong>Data Acquisition:</strong> Ingest, explore, and set up data pipeline infrastructure
+                        </li>
+                        <li class="framework-step">
+                            <span class="step-number">3</span>
+                            <strong>Modeling:</strong> Feature engineering, model training, and evaluation with cross-validation
+                        </li>
+                        <li class="framework-step">
+                            <span class="step-number">4</span>
+                            <strong>Deployment:</strong> Operationalize models with monitoring, customer acceptance, and handoff
+                        </li>
+                        <li class="framework-step">
+                            <span class="step-number">5</span>
+                            <strong>Customer Acceptance:</strong> Validate system meets requirements and business objectives
+                        </li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week14_Slide278.html" class="nav-btn">← Previous</a>
+        <a href="Week14_Slide280.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Practice category details
+        const categoryDetails = {
+            'development': {
+                title: '💻 ML Development Best Practices',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Foundation of Success:</strong> Strong development practices are essential for reproducible, maintainable, and scalable ML systems.
+                    </div>
+                    
+                    <h4>🔄 Version Control Excellence</h4>
+                    <div class="modal-code">
+# Git Best Practices for ML:
+.gitignore should include:
+- *.pkl, *.joblib (model files)
+- data/ (unless small sample)
+- .env (environment variables)
+- __pycache__/ (Python cache)
+- .DS_Store (Mac files)
+- notebooks/.ipynb_checkpoints/
+
+# DVC for Data Version Control:
+dvc init
+dvc add data/dataset.csv
+git add data/dataset.csv.dvc .gitignore
+git commit -m "Add raw dataset"
+dvc push  # Upload to remote storage
+                    </div>
+                    
+                    <h4>🐳 Containerization Strategy</h4>
+                    <p><strong>Development Containers:</strong> Consistent development environments</p>
+                    <p><strong>Production Images:</strong> Optimized for performance and security</p>
+                    <p><strong>Multi-stage Builds:</strong> Separate training and serving images</p>
+                    <p><strong>Security Scanning:</strong> Vulnerability detection in base images</p>
+                    
+                    <h4>🧪 ML Testing Pyramid</h4>
+                    <p><strong>Unit Tests:</strong> Data processing functions, feature engineering</p>
+                    <p><strong>Integration Tests:</strong> End-to-end pipeline validation</p>
+                    <p><strong>Model Tests:</strong> Performance regression, invariance testing</p>
+                    <p><strong>Data Tests:</strong> Schema validation, distribution checks</p>
+                    
+                    <h4>🔄 CI/CD for ML</h4>
+                    <p><strong>Continuous Integration:</strong> Automated testing on code changes</p>
+                    <p><strong>Continuous Training:</strong> Automated retraining on new data</p>
+                    <p><strong>Continuous Deployment:</strong> Automated model deployment with validation</p>
+                    <p><strong>Continuous Monitoring:</strong> Real-time performance tracking</p>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                        <strong>💡 Key Insight:</strong> The most successful ML teams spend 80% of their effort on infrastructure and processes, 20% on algorithms. Strong foundations enable rapid iteration and reliable deployment.
+                    </div>
+                `
+            },
+            'production': {
+                title: '🚀 Production ML Systems Excellence',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Where Success is Measured:</strong> Production systems must handle real users, real data, and real business impact while maintaining reliability and performance.
+                    </div>
+                    
+                    <h4>🎯 Model Serving Patterns</h4>
+                    <div class="modal-code">
+# Common Serving Patterns:
+
+1. Batch Prediction:
+   - Scheduled inference on large datasets
+   - Example: Daily customer churn predictions
+   
+2. Online Prediction:
+   - Real-time inference via API
+   - Example: Fraud detection during transactions
+   
+3. Streaming Prediction:
+   - Continuous inference on data streams
+   - Example: Real-time recommendation updates
+   
+4. Edge Deployment:
+   - Inference on user devices
+   - Example: Mobile app image recognition
+                    </div>
+                    
+                    <h4>📊 Monitoring Strategy</h4>
+                    <p><strong>Technical Metrics:</strong></p>
+                    <p>• Latency (p50, p95, p99 percentiles)</p>
+                    <p>• Throughput (requests per second)</p>
+                    <p>• Error rates and availability</p>
+                    <p>• Resource utilization (CPU, memory, GPU)</p>
+                    
+                    <p><strong>ML-Specific Metrics:</strong></p>
+                    <p>• Prediction accuracy over time</p>
+                    <p>• Feature drift detection</p>
+                    <p>• Output distribution changes</p>
+                    <p>• Business impact metrics</p>
+                    
+                    <h4>🔄 A/B Testing Framework</h4>
+                    <p><strong>Hypothesis Formation:</strong> Clear metrics and success criteria</p>
+                    <p><strong>Traffic Splitting:</strong> Gradual rollout (1% → 10% → 50% → 100%)</p>
+                    <p><strong>Statistical Significance:</strong> Proper sample sizes and test duration</p>
+                    <p><strong>Business Impact:</strong> Revenue, engagement, or efficiency metrics</p>
+                    
+                    <h4>🚨 Incident Response</h4>
+                    <p><strong>Detection:</strong> Automated alerts for anomalies</p>
+                    <p><strong>Escalation:</strong> Clear on-call procedures</p>
+                    <p><strong>Mitigation:</strong> Fast rollback capabilities</p>
+                    <p><strong>Post-mortem:</strong> Learn from incidents without blame</p>
+                    
+                    <h4>📈 Performance Optimization</h4>
+                    <p><strong>Model Optimization:</strong> Quantization, pruning, distillation</p>
+                    <p><strong>Infrastructure:</strong> Caching, load balancing, auto-scaling</p>
+                    <p><strong>Feature Stores:</strong> Pre-computed features for low latency</p>
+                    <p><strong>Batch Processing:</strong> Efficient batch inference patterns</p>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                        <strong>⚡ Production Reality:</strong> 95% of ML models never make it to production. Those that do succeed have robust monitoring, gradual rollouts, and fast rollback capabilities.
+                    </div>
+                `
+            }
+        };
+
+        // Tab switching functionality
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const targetTab = this.dataset.tab;
+                
+                // Remove active class from all tabs and contents
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding content
+                this.classList.add('active');
+                document.getElementById(targetTab).classList.add('active');
+            });
+        });
+
+        // Attach click handlers to practice categories
+        document.querySelectorAll('.practice-category').forEach(category => {
+            category.addEventListener('click', function() {
+                const categoryType = this.dataset.category;
+                const details = categoryDetails[categoryType];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 15; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 20 + 's';
+                element.style.animationDuration = (Math.random() * 10 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Initialize
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (!modal.overlay.classList.contains('active')) {
+                if (e.key === 'ArrowLeft') {
+                    window.location.href = 'Week14_Slide278.html';
+                } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                    window.location.href = 'Week14_Slide280.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

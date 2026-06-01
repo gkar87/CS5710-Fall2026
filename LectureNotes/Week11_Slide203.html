@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Markov Decision Processes (MDPs)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .definition-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .components-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .definition-text {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .mdp-formula {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border: 2px solid #0d9488;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            text-align: center;
+            font-family: 'Times New Roman', serif;
+            font-size: 1.3em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .mdp-components {
+            list-style: none;
+        }
+
+        .component-item {
+            margin: 15px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .component-item:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.2);
+            border-color: #0d9488;
+        }
+
+        .component-title {
+            font-size: 1.3em;
+            color: #0d9488;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .component-desc {
+            font-size: 1em;
+            color: #475569;
+            line-height: 1.6;
+        }
+
+        .mdp-diagram {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            margin: 40px 0;
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+        }
+
+        .diagram-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .state-diagram {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 60px;
+            margin: 40px 0;
+        }
+
+        .state-node {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .state-node:hover {
+            transform: scale(1.1);
+            box-shadow: 0 15px 35px rgba(13, 148, 136, 0.3);
+        }
+
+        .arrow {
+            font-size: 2em;
+            color: #0d9488;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .arrow:hover {
+            transform: scale(1.2);
+        }
+
+        .properties-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .property-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .property-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.2);
+        }
+
+        .property-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+
+        .property-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 10px;
+        }
+
+        .property-desc {
+            font-size: 0.95em;
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.3s ease;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 2em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .modal-close:hover {
+            background: #f1f5f9;
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            color: #1e293b;
+            line-height: 1.8;
+        }
+
+        .modal-content p {
+            margin: 15px 0;
+            font-size: 1.05em;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-left: 4px solid #0d9488;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+
+        .modal-formula {
+            background: #f8fafc;
+            border: 2px solid #cbd5e1;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+            font-family: 'Times New Roman', serif;
+            font-size: 1.2em;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            color: #0d9488;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 1em;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.4);
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(240,253,250,0.95));
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            font-weight: 600;
+            color: #0d9488;
+            z-index: 100;
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(240,253,250,0.95));
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            font-weight: 600;
+            color: #0d9488;
+            z-index: 100;
+        }
+
+        .floating-elements {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .floating-element {
+            position: absolute;
+            font-size: 20px;
+            opacity: 0.1;
+            animation: mlFloat 20s infinite;
+            color: #0d9488;
+        }
+
+        .floating-element::before {
+            content: '⚡';
+        }
+
+        .floating-element:nth-child(3n)::before {
+            content: '🎯';
+        }
+
+        .floating-element:nth-child(3n+1)::before {
+            content: '🔄';
+        }
+
+        .floating-element:nth-child(3n+2)::before {
+            content: '📊';
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.1; }
+            90% { opacity: 0.1; }
+            100% { transform: translateY(-100px) translateX(100px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .properties-grid { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 11</div>
+    <div class="slide-number">Slide 203 of 220</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Markov Decision Processes (MDPs)</h1>
+        
+        <div class="content-layout">
+            <div class="definition-section">
+                <h2 class="section-title">What is an MDP?</h2>
+                
+                <div class="definition-text">
+                    A <strong>Markov Decision Process</strong> is a mathematical framework for modeling sequential decision-making where outcomes are partly random and partly under the control of a decision maker.
+                </div>
+                
+                <div class="mdp-formula">
+                    MDP = (S, A, P, R, γ)
+                </div>
+                
+                <div style="font-size: 1.1em; line-height: 1.7; color: #1e293b; margin-top: 20px;">
+                    <strong>Key Properties:</strong>
+                    <br><br>
+                    • <strong>Markov Property:</strong> Future depends only on current state
+                    <br>
+                    • <strong>Sequential:</strong> Decisions made over time
+                    <br>
+                    • <strong>Stochastic:</strong> Outcomes have uncertainty
+                    <br>
+                    • <strong>Discounted:</strong> Future rewards are less valuable
+                </div>
+            </div>
+
+            <div class="components-section">
+                <h2 class="section-title">MDP Components</h2>
+                
+                <ul class="mdp-components">
+                    <li class="component-item">
+                        <div class="component-title">🏛️ States (S)</div>
+                        <div class="component-desc">All possible situations the agent can be in</div>
+                    </li>
+                    <li class="component-item">
+                        <div class="component-title">⚡ Actions (A)</div>
+                        <div class="component-desc">All possible decisions the agent can make</div>
+                    </li>
+                    <li class="component-item">
+                        <div class="component-title">🔄 Transitions (P)</div>
+                        <div class="component-desc">Probability of moving between states</div>
+                    </li>
+                    <li class="component-item">
+                        <div class="component-title">🏆 Rewards (R)</div>
+                        <div class="component-desc">Immediate feedback for state-action pairs</div>
+                    </li>
+                    <li class="component-item">
+                        <div class="component-title">📉 Discount (γ)</div>
+                        <div class="component-desc">Factor for valuing future rewards</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="mdp-diagram">
+            <div class="diagram-title">MDP State Transition Example</div>
+            
+            <div class="state-diagram">
+                <div class="state-node">
+                    <div style="font-size: 1.5em;">S₁</div>
+                    <div style="font-size: 0.8em;">Start</div>
+                </div>
+                
+                <div class="arrow">→</div>
+                
+                <div class="state-node">
+                    <div style="font-size: 1.5em;">S₂</div>
+                    <div style="font-size: 0.8em;">Middle</div>
+                </div>
+                
+                <div class="arrow">→</div>
+                
+                <div class="state-node">
+                    <div style="font-size: 1.5em;">S₃</div>
+                    <div style="font-size: 0.8em;">Goal</div>
+                </div>
+            </div>
+            
+            <div class="properties-grid">
+                <div class="property-card">
+                    <div class="property-icon">🎲</div>
+                    <div class="property-title">Markov Property</div>
+                    <div class="property-desc">P(s'|s,a) is independent of history</div>
+                </div>
+                
+                <div class="property-card">
+                    <div class="property-icon">⏰</div>
+                    <div class="property-title">Temporal Structure</div>
+                    <div class="property-desc">Decisions unfold over discrete time steps</div>
+                </div>
+                
+                <div class="property-card">
+                    <div class="property-icon">🎯</div>
+                    <div class="property-title">Goal-Oriented</div>
+                    <div class="property-desc">Maximize cumulative expected reward</div>
+                </div>
+                
+                <div class="property-card">
+                    <div class="property-icon">🔮</div>
+                    <div class="property-title">Uncertainty</div>
+                    <div class="property-desc">Outcomes are probabilistic, not deterministic</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week11_Slide202.html" class="nav-btn">← Previous</a>
+        <a href="Week11_Slide204.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 20; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 20 + 's';
+                element.style.animationDuration = (Math.random() * 15 + 20) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive MDP components
+        document.querySelectorAll('.component-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const title = this.querySelector('.component-title').textContent;
+                
+                const details = {
+                    '🏛️ States (S)': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>The State Space</strong>
+                            </div>
+                            <p>States represent all possible configurations or situations in which the agent can find itself.</p>
+                            
+                            <div class="modal-code">
+# Examples of state representations
+
+# Grid World - Position-based states
+states = [(x, y) for x in range(5) for y in range(5)]
+# S = {(0,0), (0,1), ..., (4,4)} - 25 states
+
+# Inventory Management - Stock levels
+states = [stock_level for stock_level in range(0, 101)]
+# S = {0, 1, 2, ..., 100} - 101 states
+
+# Game State - Complex representation
+state = {
+    'player_health': 100,
+    'position': (x, y),
+    'inventory': ['sword', 'potion'],
+    'enemy_positions': [(x1, y1), (x2, y2)]
+}
+                            </div>
+                            
+                            <div class="modal-formula">
+                                S = {s₁, s₂, s₃, ..., sₙ}
+                            </div>
+                            
+                            <p><strong>State Properties:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Finite vs Infinite:</strong> Countable vs uncountable state spaces</li>
+                                <li><strong>Discrete vs Continuous:</strong> Distinct values vs real-valued</li>
+                                <li><strong>Observable vs Partially Observable:</strong> Full vs limited information</li>
+                                <li><strong>Markov Property:</strong> Current state contains all relevant history</li>
+                            </ul>
+                            
+                            <p><strong>Design Considerations:</strong> State representation must be Markovian while remaining computationally tractable.</p>
+                        `
+                    },
+                    '⚡ Actions (A)': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>The Action Space</strong>
+                            </div>
+                            <p>Actions are the choices available to the agent in each state. The action space can be state-dependent.</p>
+                            
+                            <div class="modal-code">
+# Action space examples
+
+# Discrete actions - Grid World
+actions = ['UP', 'DOWN', 'LEFT', 'RIGHT']
+# or numerically: A = {0, 1, 2, 3}
+
+# State-dependent actions
+def available_actions(state):
+    actions = []
+    x, y = state
+    if x > 0: actions.append('LEFT')
+    if x < max_x: actions.append('RIGHT')
+    if y > 0: actions.append('DOWN')
+    if y < max_y: actions.append('UP')
+    return actions
+
+# Continuous actions - Robot control
+action = {
+    'linear_velocity': 2.5,    # m/s
+    'angular_velocity': 0.3    # rad/s
+}
+# A ⊆ ℝᵈ (d-dimensional real space)
+
+# Hybrid actions - Trading
+action = {
+    'asset': 'AAPL',           # discrete choice
+    'quantity': 150.5,         # continuous value
+    'order_type': 'market'     # discrete choice
+}
+                            </div>
+                            
+                            <div class="modal-formula">
+                                A(s) = {a : agent can choose a in state s}
+                            </div>
+                            
+                            <p><strong>Action Types:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Deterministic:</strong> Action always has same effect</li>
+                                <li><strong>Stochastic:</strong> Action outcomes have probability distributions</li>
+                                <li><strong>Instantaneous:</strong> Effect happens immediately</li>
+                                <li><strong>Temporal:</strong> Effect unfolds over time</li>
+                            </ul>
+                        `
+                    },
+                    '🔄 Transitions (P)': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>State Transition Probabilities</strong>
+                            </div>
+                            <p>The transition function defines the probability of moving to state s' when taking action a in state s.</p>
+                            
+                            <div class="modal-formula">
+                                P(s'|s,a) = Pr{Sₜ₊₁ = s' | Sₜ = s, Aₜ = a}
+                            </div>
+                            
+                            <div class="modal-code">
+# Transition probability examples
+
+# Deterministic transitions
+def transition_deterministic(state, action):
+    x, y = state
+    if action == 'RIGHT' and x < max_x:
+        return (x + 1, y)  # P = 1.0
+    return state  # P = 1.0 (stay in place)
+
+# Stochastic transitions (slippery grid)
+transition_probs = {
+    ('RIGHT', 'intended'): 0.8,
+    ('RIGHT', 'perpendicular'): 0.1,  # up/down
+    ('RIGHT', 'opposite'): 0.0,
+    ('RIGHT', 'stay'): 0.1
+}
+
+# Transition matrix representation
+P = np.zeros((num_states, num_actions, num_states))
+P[s1, action, s2] = probability  # P(s2|s1, action)
+
+# Continuous state transitions (Gaussian noise)
+next_state = current_state + action + noise
+# where noise ~ N(0, σ²)
+                            </div>
+                            
+                            <p><strong>Transition Properties:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Markov Property:</strong> P(s'|s,a) independent of history</li>
+                                <li><strong>Stationarity:</strong> Transition probabilities don't change over time</li>
+                                <li><strong>Normalization:</strong> Σₛ' P(s'|s,a) = 1 for all s,a</li>
+                                <li><strong>Accessibility:</strong> Can we reach all states from any state?</li>
+                            </ul>
+                            
+                            <p><strong>Model-Free vs Model-Based:</strong> Agent may or may not know the transition function P.</p>
+                        `
+                    },
+                    '🏆 Rewards (R)': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Reward Function</strong>
+                            </div>
+                            <p>Rewards provide immediate feedback about the desirability of state-action pairs.</p>
+                            
+                            <div class="modal-formula">
+                                R(s,a,s') = E[Rₜ₊₁ | Sₜ = s, Aₜ = a, Sₜ₊₁ = s']
+                            </div>
+                            
+                            <div class="modal-code">
+# Reward function examples
+
+# Simple goal-based rewards
+def reward_function(state, action, next_state):
+    if next_state == goal_state:
+        return +100  # Goal reached
+    elif next_state in obstacle_states:
+        return -100  # Penalty for obstacles
+    else:
+        return -1    # Living cost / step penalty
+
+# Distance-based reward shaping
+def shaped_reward(state, action, next_state):
+    goal_distance = manhattan_distance(next_state, goal)
+    progress_reward = -0.1 * goal_distance
+    
+    if next_state == goal_state:
+        return 100 + progress_reward
+    elif is_obstacle(next_state):
+        return -100
+    else:
+        return progress_reward
+
+# Multi-objective rewards
+def complex_reward(state, action, next_state):
+    efficiency = -energy_used(action)
+    safety = -risk_assessment(next_state)
+    progress = progress_toward_goal(state, next_state)
+    
+    return 0.3*efficiency + 0.5*safety + 0.2*progress
+
+# Sparse vs Dense rewards
+sparse_reward = 100 if goal_reached else 0
+dense_reward = continuous_feedback_signal
+                            </div>
+                            
+                            <p><strong>Reward Design Principles:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Alignment:</strong> Rewards should reflect true objectives</li>
+                                <li><strong>Feasibility:</strong> Agent should be able to achieve good rewards</li>
+                                <li><strong>Density:</strong> Balance between sparse and overly shaped rewards</li>
+                                <li><strong>Bounds:</strong> Consider reward magnitude and range</li>
+                            </ul>
+                            
+                            <p><strong>Common Pitfalls:</strong> Reward hacking, unintended consequences, specification gaming</p>
+                        `
+                    },
+                    '📉 Discount (γ)': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Discount Factor</strong>
+                            </div>
+                            <p>The discount factor γ determines how much future rewards are worth compared to immediate rewards.</p>
+                            
+                            <div class="modal-formula">
+                                Gₜ = Rₜ₊₁ + γRₜ₊₂ + γ²Rₜ₊₃ + ... = Σₖ₌₀^∞ γᵏRₜ₊ₖ₊₁
+                            </div>
+                            
+                            <div class="modal-code">
+# Discount factor examples and effects
+
+# γ = 0 (myopic agent)
+return = immediate_reward  # Only cares about next reward
+
+# γ = 0.9 (typical choice)
+future_reward_in_10_steps = reward * (0.9**10) ≈ 0.35 * reward
+
+# γ = 0.99 (far-sighted agent)
+future_reward_in_100_steps = reward * (0.99**100) ≈ 0.37 * reward
+
+# γ = 1.0 (no discounting)
+# Only works for episodic tasks that terminate
+# Can lead to infinite returns in continuing tasks
+
+# Computing discounted returns
+def compute_returns(rewards, gamma=0.99):
+    returns = []
+    G = 0
+    for r in reversed(rewards):
+        G = r + gamma * G
+        returns.insert(0, G)
+    return returns
+
+# Present value interpretation
+present_value = future_reward / (1 + interest_rate)**time_steps
+# γ = 1/(1 + r) where r is interest rate
+                            </div>
+                            
+                            <p><strong>Discount Factor Effects:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>γ ≈ 0:</strong> Myopic behavior, only immediate rewards matter</li>
+                                <li><strong>γ ≈ 1:</strong> Far-sighted behavior, future rewards almost as important</li>
+                                <li><strong>Mathematical:</strong> Ensures convergence of infinite series</li>
+                                <li><strong>Computational:</strong> Finite horizon approximation</li>
+                            </ul>
+                            
+                            <p><strong>Choosing γ:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Problem horizon: Short-term vs long-term planning</li>
+                                <li>Uncertainty: Higher γ for more predictable environments</li>
+                                <li>Computational limits: Lower γ for faster convergence</li>
+                                <li>Domain knowledge: Economic discount rates, planning horizons</li>
+                            </ul>
+                        `
+                    }
+                };
+                
+                const info = details[title];
+                if (info) {
+                    modal.show(title, info.content);
+                }
+            });
+        });
+
+        // Interactive state nodes
+        document.querySelectorAll('.state-node').forEach(node => {
+            node.addEventListener('click', function() {
+                const stateText = this.querySelector('div').textContent;
+                
+                const stateDetails = {
+                    'S₁': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Initial State</strong>
+                            </div>
+                            <p>The starting point of the decision process. In many problems, the initial state distribution matters.</p>
+                            
+                            <div class="modal-code">
+# Initial state examples
+
+# Fixed start
+initial_state = (0, 0)  # Always start at origin
+
+# Random start
+import random
+initial_state = random.choice(valid_states)
+
+# Distributed start
+start_distribution = {
+    'state_1': 0.6,
+    'state_2': 0.3,
+    'state_3': 0.1
+}
+
+def sample_initial_state():
+    return np.random.choice(
+        list(start_distribution.keys()),
+        p=list(start_distribution.values())
+    )
+                            </div>
+                            
+                            <p><strong>Initial State Considerations:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Does the starting position affect the optimal policy?</li>
+                                <li>How does initial state distribution impact learning?</li>
+                                <li>Should we train from diverse starting conditions?</li>
+                            </ul>
+                        `
+                    },
+                    'S₂': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Intermediate State</strong>
+                            </div>
+                            <p>States encountered during the decision process. Most learning happens in these states.</p>
+                            
+                            <div class="modal-code">
+# State representation matters for learning
+
+# Good state representation - Markovian
+state = {
+    'position': (x, y),
+    'velocity': (vx, vy),
+    'battery_level': 85,
+    'obstacle_map': grid
+}
+
+# Poor state representation - Not Markovian
+state = {
+    'position': (x, y)
+    # Missing velocity and other crucial information
+}
+
+# Feature engineering for continuous spaces
+def extract_features(raw_state):
+    return [
+        distance_to_goal(raw_state),
+        angle_to_goal(raw_state),
+        obstacle_density(raw_state),
+        velocity_magnitude(raw_state)
+    ]
+                            </div>
+                            
+                            <p><strong>Intermediate State Challenges:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Balancing state representation complexity vs simplicity</li>
+                                <li>Ensuring sufficient exploration of state space</li>
+                                <li>Handling states rarely visited during training</li>
+                            </ul>
+                        `
+                    },
+                    'S₃': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Terminal/Goal State</strong>
+                            </div>
+                            <p>States that end an episode, either successfully (goal) or unsuccessfully (failure).</p>
+                            
+                            <div class="modal-code">
+# Terminal state examples
+
+# Goal states
+goal_states = {(4, 4), (target_x, target_y)}
+
+# Failure states  
+failure_states = {obstacles, out_of_bounds, collision_states}
+
+# Episode termination
+def is_terminal(state):
+    return (state in goal_states or 
+            state in failure_states or
+            episode_length > max_steps)
+
+# Different episode endings
+if state in goal_states:
+    reward = +100
+    done = True
+elif state in failure_states:
+    reward = -100  
+    done = True
+elif episode_length > max_steps:
+    reward = -10  # Timeout penalty
+    done = True
+else:
+    done = False
+                            </div>
+                            
+                            <p><strong>Terminal State Design:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Clear success/failure conditions</li>
+                                <li>Appropriate reward magnitudes</li>
+                                <li>Episode length limits to prevent infinite episodes</li>
+                                <li>Multiple goal states for flexible objectives</li>
+                            </ul>
+                        `
+                    }
+                };
+                
+                const details = stateDetails[stateText];
+                if (details) {
+                    modal.show(`MDP State: ${stateText}`, details.content);
+                }
+            });
+        });
+
+        // Interactive property cards
+        document.querySelectorAll('.property-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('.property-title').textContent;
+                
+                const propertyDetails = {
+                    'Markov Property': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>The Markov Property</strong>
+                            </div>
+                            <p>The future is independent of the past given the present. This is the fundamental assumption of MDPs.</p>
+                            
+                            <div class="modal-formula">
+                                P(Sₜ₊₁ = s' | Sₜ = s, Sₜ₋₁ = sₜ₋₁, ..., S₀ = s₀) = P(Sₜ₊₁ = s' | Sₜ = s)
+                            </div>
+                            
+                            <div class="modal-code">
+# Examples of Markov vs Non-Markov states
+
+# Markov state - contains all relevant information
+chess_state = {
+    'board_position': board,
+    'castling_rights': rights,
+    'en_passant': square,
+    'turn': 'white',
+    'move_count': 50
+}
+
+# Non-Markov state - missing information
+chess_state_bad = {
+    'board_position': board
+    # Missing: whose turn, castling rights, etc.
+}
+
+# Making non-Markov problems Markovian
+# Include history in state representation
+state_with_history = {
+    'current_position': (x, y),
+    'last_3_positions': [(x1,y1), (x2,y2), (x3,y3)],
+    'velocity': (vx, vy)
+}
+
+# Or use recurrent neural networks
+# RNN maintains hidden state as memory
+                            </div>
+                            
+                            <p><strong>Why Markov Property Matters:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Enables optimal substructure in dynamic programming</li>
+                                <li>Allows memoryless policies</li>
+                                <li>Simplifies mathematical analysis</li>
+                                <li>Reduces computational complexity</li>
+                            </ul>
+                            
+                            <p><strong>When Markov Property is Violated:</strong> Use state augmentation, belief states (POMDP), or memory-based architectures.</p>
+                        `
+                    },
+                    'Temporal Structure': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Sequential Decision Making</strong>
+                            </div>
+                            <p>MDPs model decision problems that unfold over time, with each decision affecting future opportunities.</p>
+                            
+                            <div class="modal-code">
+# Temporal structure in RL
+
+# Episode structure
+for episode in range(num_episodes):
+    state = env.reset()  # t = 0
+    total_reward = 0
+    
+    for t in range(max_episode_length):
+        action = agent.select_action(state)    # Decision at time t
+        next_state, reward, done, _ = env.step(action)
+        
+        # Store temporal transition
+        agent.store_experience(state, action, reward, next_state)
+        
+        total_reward += reward
+        state = next_state
+        
+        if done:
+            break
+
+# Time-dependent considerations
+def time_dependent_reward(state, action, time_step):
+    base_reward = compute_base_reward(state, action)
+    
+    # Time pressure
+    urgency_penalty = -0.1 * time_step
+    
+    # Deadline effects
+    if time_step > deadline:
+        return base_reward - 50  # Late penalty
+    
+    return base_reward + urgency_penalty
+
+# Finite vs infinite horizon
+finite_horizon = 100  # Episode ends after 100 steps
+infinite_horizon = float('inf')  # Continuing task
+                            </div>
+                            
+                            <p><strong>Temporal Considerations:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Credit Assignment:</strong> Which actions led to delayed rewards?</li>
+                                <li><strong>Planning Horizon:</strong> How far ahead should agent plan?</li>
+                                <li><strong>Temporal Abstractions:</strong> Options, macro-actions</li>
+                                <li><strong>Time-Varying Dynamics:</strong> Non-stationary environments</li>
+                            </ul>
+                        `
+                    },
+                    'Goal-Oriented': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Maximizing Cumulative Reward</strong>
+                            </div>
+                            <p>The agent's objective is to find a policy that maximizes expected cumulative discounted reward.</p>
+                            
+                            <div class="modal-formula">
+                                π* = argmax_π E[Σₜ₌₀^∞ γᵗRₜ₊₁ | π]
+                            </div>
+                            
+                            <div class="modal-code">
+# Goal formulations in RL
+
+# Episodic tasks - maximize episode return
+def episodic_return(rewards, gamma=0.99):
+    G = 0
+    for r in reversed(rewards):
+        G = r + gamma * G
+    return G
+
+# Continuing tasks - average reward
+def average_reward_rate(rewards, time_steps):
+    return sum(rewards) / len(rewards)
+
+# Multi-objective optimization
+def multi_objective_return(rewards, safety_violations, efficiency):
+    primary_return = sum(rewards)
+    safety_penalty = -1000 * safety_violations
+    efficiency_bonus = 0.1 * efficiency
+    
+    return primary_return + safety_penalty + efficiency_bonus
+
+# Goal conditioning
+def goal_conditioned_reward(state, action, goal):
+    if distance(state, goal) < threshold:
+        return 100  # Goal reached
+    else:
+        return -distance(state, goal)  # Shaped reward
+
+# Hierarchical goals
+class HierarchicalGoals:
+    def __init__(self):
+        self.long_term_goal = "complete_mission"
+        self.medium_term_goals = ["navigate_to_area", "collect_item"]
+        self.short_term_goals = ["move_forward", "turn_left"]
+                            </div>
+                            
+                            <p><strong>Goal Design Principles:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Specificity:</strong> Clear, measurable objectives</li>
+                                <li><strong>Achievability:</strong> Goals should be reachable</li>
+                                <li><strong>Alignment:</strong> Reward function matches true objective</li>
+                                <li><strong>Decomposition:</strong> Break complex goals into subgoals</li>
+                            </ul>
+                        `
+                    },
+                    'Uncertainty': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Stochastic Environments</strong>
+                            </div>
+                            <p>Uncertainty comes from stochastic transitions, partial observability, and unknown environment dynamics.</p>
+                            
+                            <div class="modal-code">
+# Sources of uncertainty in RL
+
+# 1. Stochastic transitions
+def noisy_transition(state, action):
+    intended_next_state = deterministic_transition(state, action)
+    
+    # Add noise
+    noise = np.random.normal(0, 0.1, size=state.shape)
+    actual_next_state = intended_next_state + noise
+    
+    return actual_next_state
+
+# 2. Partial observability
+def partial_observation(true_state):
+    # Agent only sees part of the environment
+    observable_range = 2
+    x, y = agent_position
+    visible_area = true_state[x-observable_range:x+observable_range,
+                             y-observable_range:y+observable_range]
+    return visible_area
+
+# 3. Unknown environment model
+class ModelFreeAgent:
+    def __init__(self):
+        # Agent doesn't know P(s'|s,a) or R(s,a,s')
+        self.q_table = defaultdict(float)
+    
+    def learn_from_experience(self, s, a, r, s_next):
+        # Learn from trial and error
+        self.q_table[(s, a)] += alpha * (
+            r + gamma * max(self.q_table[(s_next, a_next)] 
+                           for a_next in actions) 
+            - self.q_table[(s, a)]
+        )
+
+# 4. Observation noise
+def noisy_observation(true_state):
+    sensor_noise = np.random.normal(0, sensor_std)
+    return true_state + sensor_noise
+                            </div>
+                            
+                            <p><strong>Handling Uncertainty:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Robust Policies:</strong> Work well despite uncertainty</li>
+                                <li><strong>Exploration:</strong> Gather information to reduce uncertainty</li>
+                                <li><strong>Belief States:</strong> Maintain probability distributions</li>
+                                <li><strong>Risk-Sensitive RL:</strong> Consider variance, not just expectation</li>
+                            </ul>
+                            
+                            <p><strong>Uncertainty vs Risk:</strong> Distinguish between known probabilities (risk) and unknown probabilities (uncertainty).</p>
+                        `
+                    }
+                };
+                
+                const details = propertyDetails[title];
+                if (details) {
+                    modal.show(`MDP Property: ${title}`, details.content);
+                }
+            });
+        });
+
+        // Interactive arrows
+        document.querySelectorAll('.arrow').forEach(arrow => {
+            arrow.addEventListener('click', function() {
+                modal.show('State Transitions', `
+                    <div class="modal-highlight">
+                        <strong>How States Connect</strong>
+                    </div>
+                    
+                    <p>State transitions represent the dynamic evolution of the system based on agent actions.</p>
+                    
+                    <div class="modal-code">
+# Transition dynamics examples
+
+# Deterministic grid world
+def grid_transition(state, action):
+    x, y = state
+    if action == 'UP' and y > 0:
+        return (x, y - 1)
+    elif action == 'DOWN' and y < max_y:
+        return (x, y + 1)
+    elif action == 'LEFT' and x > 0:
+        return (x - 1, y)
+    elif action == 'RIGHT' and x < max_x:
+        return (x + 1, y)
+    else:
+        return state  # Hit boundary, stay in place
+
+# Stochastic wind world
+def windy_grid_transition(state, action):
+    intended_next = grid_transition(state, action)
+    x, y = intended_next
+    
+    # Random wind effect
+    wind_strength = np.random.choice([0, 1, 2], p=[0.6, 0.3, 0.1])
+    windy_next = (x, y - wind_strength)  # Wind pushes upward
+    
+    return clip_to_bounds(windy_next)
+
+# Continuous dynamics
+def pendulum_dynamics(state, action):
+    theta, theta_dot = state
+    torque = action
+    
+    # Physics simulation
+    theta_ddot = (3*g/(2*l)) * np.sin(theta) + (3/(m*l**2)) * torque
+    
+    # Numerical integration
+    new_theta_dot = theta_dot + dt * theta_ddot
+    new_theta = theta + dt * new_theta_dot
+    
+    return (new_theta, new_theta_dot)
+                    </div>
+                    
+                    <p><strong>Transition Function Properties:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>Must sum to 1: Σₛ' P(s'|s,a) = 1</li>
+                        <li>Can be deterministic: P(s'|s,a) ∈ {0,1}</li>
+                        <li>Can be stochastic: P(s'|s,a) ∈ [0,1]</li>
+                        <li>May depend on action: Different actions → different transitions</li>
+                    </ul>
+                `);
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week11_Slide204.html';
+            } else if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week11_Slide202.html';
+            }
+        });
+    </script>
+</body>
+</html>

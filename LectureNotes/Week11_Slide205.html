@@ -1,0 +1,3037 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Policy Types (Deterministic vs Stochastic)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .policy-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .policy-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .deterministic-section {
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+        }
+
+        .stochastic-section {
+            animation: slideInFromRight 1s ease-out 0.3s both;
+        }
+
+        .policy-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .policy-icon {
+            font-size: 3em;
+            margin-right: 15px;
+        }
+
+        .policy-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .policy-definition {
+            font-size: 1.1em;
+            line-height: 1.7;
+            color: #1e293b;
+            margin-bottom: 25px;
+            padding: 20px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .policy-formula {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border: 2px solid #0d9488;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+            font-family: 'Times New Roman', serif;
+            font-size: 1.1em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .characteristics-list {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .characteristic-item {
+            margin: 12px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border-left: 4px solid #0d9488;
+        }
+
+        .characteristic-item:hover {
+            transform: translateX(8px);
+            box-shadow: 0 8px 20px rgba(13, 148, 136, 0.2);
+        }
+
+        .characteristic-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 5px;
+        }
+
+        .characteristic-desc {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .examples-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            margin: 40px 0;
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+        }
+
+        .examples-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .examples-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .example-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            border: 2px solid transparent;
+        }
+
+        .example-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(13, 148, 136, 0.3);
+            border-color: #0d9488;
+        }
+
+        .example-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+
+        .example-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 10px;
+        }
+
+        .example-desc {
+            font-size: 0.95em;
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        .comparison-table {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.9s both;
+        }
+
+        .table-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 2px;
+            background: #0d9488;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .table-header {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            padding: 20px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .table-cell {
+            background: white;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .table-cell:hover {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+        }
+
+        .cell-aspect {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 5px;
+        }
+
+        .cell-content {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.4;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.3s ease;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 2em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .modal-close:hover {
+            background: #f1f5f9;
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            color: #1e293b;
+            line-height: 1.8;
+        }
+
+        .modal-content p {
+            margin: 15px 0;
+            font-size: 1.05em;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-left: 4px solid #0d9488;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+
+        .modal-formula {
+            background: #f8fafc;
+            border: 2px solid #cbd5e1;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+            font-family: 'Times New Roman', serif;
+            font-size: 1.2em;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            color: #0d9488;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 1em;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.4);
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(240,253,250,0.95));
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            font-weight: 600;
+            color: #0d9488;
+            z-index: 100;
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(240,253,250,0.95));
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            font-weight: 600;
+            color: #0d9488;
+            z-index: 100;
+        }
+
+        .floating-elements {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .floating-element {
+            position: absolute;
+            font-size: 20px;
+            opacity: 0.1;
+            animation: mlFloat 20s infinite;
+            color: #0d9488;
+        }
+
+        .floating-element::before {
+            content: '🎯';
+        }
+
+        .floating-element:nth-child(3n)::before {
+            content: '🎲';
+        }
+
+        .floating-element:nth-child(3n+1)::before {
+            content: '📋';
+        }
+
+        .floating-element:nth-child(3n+2)::before {
+            content: '⚖️';
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.1; }
+            90% { opacity: 0.1; }
+            100% { transform: translateY(-100px) translateX(100px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .policy-comparison { grid-template-columns: 1fr; }
+            .examples-grid { grid-template-columns: 1fr; }
+            .comparison-grid { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 11</div>
+    <div class="slide-number">Slide 205 of 220</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Policy Types: Deterministic vs Stochastic</h1>
+        
+        <div class="policy-comparison">
+            <div class="policy-section deterministic-section">
+                <div class="policy-header">
+                    <div class="policy-icon">🎯</div>
+                    <div class="policy-title">Deterministic Policies</div>
+                </div>
+                
+                <div class="policy-definition">
+                    A <strong>deterministic policy</strong> always chooses the same action in a given state. It provides a definite action for every state.
+                </div>
+                
+                <div class="policy-formula">
+                    π(s) = a<br>
+                    or π(a|s) ∈ {0, 1}
+                </div>
+                
+                <ul class="characteristics-list">
+                    <li class="characteristic-item">
+                        <div class="characteristic-title">🔒 Predictable</div>
+                        <div class="characteristic-desc">Same action every time in same state</div>
+                    </li>
+                    <li class="characteristic-item">
+                        <div class="characteristic-title">⚡ Efficient</div>
+                        <div class="characteristic-desc">Simple to represent and execute</div>
+                    </li>
+                    <li class="characteristic-item">
+                        <div class="characteristic-title">🎲 No Exploration</div>
+                        <div class="characteristic-desc">May miss better alternatives</div>
+                    </li>
+                    <li class="characteristic-item">
+                        <div class="characteristic-title">🏆 Optimal Form</div>
+                        <div class="characteristic-desc">Optimal policies can be deterministic</div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="policy-section stochastic-section">
+                <div class="policy-header">
+                    <div class="policy-icon">🎲</div>
+                    <div class="policy-title">Stochastic Policies</div>
+                </div>
+                
+                <div class="policy-definition">
+                    A <strong>stochastic policy</strong> defines a probability distribution over actions for each state. It can choose different actions with certain probabilities.
+                </div>
+                
+                <div class="policy-formula">
+                    π(a|s) = P(A_t = a | S_t = s)<br>
+                    Σ_a π(a|s) = 1
+                </div>
+                
+                <ul class="characteristics-list">
+                    <li class="characteristic-item">
+                        <div class="characteristic-title">🔍 Exploratory</div>
+                        <div class="characteristic-desc">Can try different actions</div>
+                    </li>
+                    <li class="characteristic-item">
+                        <div class="characteristic-title">🛡️ Robust</div>
+                        <div class="characteristic-desc">Less vulnerable to exploitation</div>
+                    </li>
+                    <li class="characteristic-item">
+                        <div class="characteristic-title">📊 Flexible</div>
+                        <div class="characteristic-desc">Can express uncertainty</div>
+                    </li>
+                    <li class="characteristic-item">
+                        <div class="characteristic-title">⚖️ Balanced</div>
+                        <div class="characteristic-desc">Natural exploration-exploitation trade-off</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="examples-section">
+            <div class="examples-title">Policy Examples in Different Domains</div>
+            
+            <div class="examples-grid">
+                <div class="example-card">
+                    <div class="example-icon">♟️</div>
+                    <div class="example-title">Chess</div>
+                    <div class="example-desc">Deterministic: Always play best move. Stochastic: Mix strategies to confuse opponent</div>
+                </div>
+                
+                <div class="example-card">
+                    <div class="example-icon">🤖</div>
+                    <div class="example-title">Robot Navigation</div>
+                    <div class="example-desc">Deterministic: Direct path. Stochastic: Add noise for robustness</div>
+                </div>
+                
+                <div class="example-card">
+                    <div class="example-icon">💰</div>
+                    <div class="example-title">Trading</div>
+                    <div class="example-desc">Deterministic: Fixed rules. Stochastic: Portfolio diversification</div>
+                </div>
+                
+                <div class="example-card">
+                    <div class="example-icon">🎮</div>
+                    <div class="example-title">Game AI</div>
+                    <div class="example-desc">Deterministic: Optimal play. Stochastic: Unpredictable behavior</div>
+                </div>
+                
+                <div class="example-card">
+                    <div class="example-icon">🚗</div>
+                    <div class="example-title">Autonomous Driving</div>
+                    <div class="example-desc">Deterministic: Traffic rules. Stochastic: Lane changing decisions</div>
+                </div>
+                
+                <div class="example-card">
+                    <div class="example-icon">🏭</div>
+                    <div class="example-title">Manufacturing</div>
+                    <div class="example-desc">Deterministic: Production schedule. Stochastic: Quality control sampling</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="comparison-table">
+            <div class="table-title">Deterministic vs Stochastic Comparison</div>
+            
+            <div class="comparison-grid">
+                <div class="table-header">Aspect</div>
+                <div class="table-header">Deterministic</div>
+                <div class="table-header">Stochastic</div>
+                
+                <div class="table-cell">
+                    <div class="cell-aspect">Representation</div>
+                </div>
+                <div class="table-cell">
+                    <div class="cell-content">π: S → A<br>Simple mapping</div>
+                </div>
+                <div class="table-cell">
+                    <div class="cell-content">π: S × A → [0,1]<br>Probability distribution</div>
+                </div>
+                
+                <div class="table-cell">
+                    <div class="cell-aspect">Exploration</div>
+                </div>
+                <div class="table-cell">
+                    <div class="cell-content">None inherent<br>Need external mechanism</div>
+                </div>
+                <div class="table-cell">
+                    <div class="cell-content">Natural exploration<br>Built into policy</div>
+                </div>
+                
+                <div class="table-cell">
+                    <div class="cell-aspect">Optimality</div>
+                </div>
+                <div class="table-cell">
+                    <div class="cell-content">Optimal can be deterministic<br>Greedy w.r.t. value function</div>
+                </div>
+                <div class="table-cell">
+                    <div class="cell-content">Can be optimal in games<br>Mixed strategies</div>
+                </div>
+                
+                <div class="table-cell">
+                    <div class="cell-aspect">Computation</div>
+                </div>
+                <div class="table-cell">
+                    <div class="cell-content">Fast execution<br>Simple storage</div>
+                </div>
+                <div class="table-cell">
+                    <div class="cell-content">Sampling required<br>More complex</div>
+                </div>
+                
+                <div class="table-cell">
+                    <div class="cell-aspect">Robustness</div>
+                </div>
+                <div class="table-cell">
+                    <div class="cell-content">Vulnerable to exploitation<br>Predictable</div>
+                </div>
+                <div class="table-cell">
+                    <div class="cell-content">Harder to exploit<br>Unpredictable</div>
+                </div>
+                
+                <div class="table-cell">
+                    <div class="cell-aspect">Learning</div>
+                </div>
+                <div class="table-cell">
+                    <div class="cell-content">Value-based methods<br>Q-learning, SARSA</div>
+                </div>
+                <div class="table-cell">
+                    <div class="cell-content">Policy gradients<br>REINFORCE, A3C</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week11_Slide204.html" class="nav-btn">← Previous</a>
+        <a href="Week11_Slide206.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 20; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 20 + 's';
+                element.style.animationDuration = (Math.random() * 15 + 20) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive characteristics
+        document.querySelectorAll('.characteristic-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const title = this.querySelector('.characteristic-title').textContent;
+                const section = this.closest('.policy-section');
+                const isDeterministic = section.classList.contains('deterministic-section');
+                
+                const characteristicDetails = {
+                    '🔒 Predictable': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Predictability in Deterministic Policies</strong>
+                            </div>
+                            <p>Deterministic policies always choose the same action given the same state, making behavior completely predictable.</p>
+                            
+                            <div class="modal-code">
+# Deterministic policy implementation
+class DeterministicPolicy:
+    def __init__(self):
+        # Simple state-to-action mapping
+        self.policy_table = {}
+    
+    def select_action(self, state):
+        """Always returns the same action for the same state"""
+        return self.policy_table.get(state, default_action)
+    
+    def set_action(self, state, action):
+        """Set deterministic action for state"""
+        self.policy_table[state] = action
+
+# Example: Grid world navigation
+def deterministic_grid_policy():
+    policy = {}
+    
+    # For each state, define exactly one action
+    for x in range(grid_width):
+        for y in range(grid_height):
+            state = (x, y)
+            
+            # Always move toward goal
+            if x < goal_x:
+                policy[state] = 'RIGHT'
+            elif x > goal_x:
+                policy[state] = 'LEFT'
+            elif y < goal_y:
+                policy[state] = 'UP'
+            elif y > goal_y:
+                policy[state] = 'DOWN'
+            else:
+                policy[state] = 'STAY'  # At goal
+    
+    return policy
+
+# Greedy policy from Q-values
+def greedy_policy(Q):
+    """Deterministic policy: always choose best action"""
+    policy = {}
+    for state in states:
+        best_action = max(actions, key=lambda a: Q[state, a])
+        policy[state] = best_action
+    return policy
+                            </div>
+                            
+                            <p><strong>Advantages of Predictability:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Consistency:</strong> Reliable behavior in production systems</li>
+                                <li><strong>Debugging:</strong> Easy to trace and understand</li>
+                                <li><strong>Verification:</strong> Can formally verify behavior</li>
+                                <li><strong>Efficiency:</strong> No need to sample from distributions</li>
+                            </ul>
+                            
+                            <p><strong>Disadvantages:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Vulnerable to adversarial exploitation</li>
+                                <li>No inherent exploration mechanism</li>
+                                <li>May miss better strategies</li>
+                                <li>Can get stuck in local optima</li>
+                            </ul>
+                        `
+                    },
+                    '⚡ Efficient': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Efficiency of Deterministic Policies</strong>
+                            </div>
+                            <p>Deterministic policies are computationally efficient to store, evaluate, and execute.</p>
+                            
+                            <div class="modal-code">
+# Efficient deterministic policy implementations
+
+# 1. Lookup table (small state spaces)
+class TabularDeterministicPolicy:
+    def __init__(self, num_states, num_actions):
+        # Just store one action per state
+        self.actions = np.zeros(num_states, dtype=int)
+    
+    def select_action(self, state):
+        return self.actions[state]  # O(1) lookup
+    
+    def update(self, state, action):
+        self.actions[state] = action
+
+# 2. Function approximation (large state spaces)
+class NeuralDeterministicPolicy:
+    def __init__(self, state_dim, action_dim):
+        self.network = nn.Sequential(
+            nn.Linear(state_dim, 128),
+            nn.ReLU(),
+            nn.Linear(128, 128),
+            nn.ReLU(),
+            nn.Linear(128, action_dim)
+        )
+    
+    def select_action(self, state):
+        with torch.no_grad():
+            logits = self.network(state)
+            return torch.argmax(logits).item()  # Greedy selection
+
+# 3. Memory efficient storage
+def compress_deterministic_policy(policy_table):
+    """Store only state-action pairs, not full probability table"""
+    compressed = {}
+    for state, action in policy_table.items():
+        compressed[state] = action  # Just the chosen action
+    return compressed
+
+# Performance comparison
+def benchmark_policies():
+    import time
+    
+    # Deterministic policy
+    det_policy = DeterministicPolicy()
+    
+    # Stochastic policy
+    stoch_policy = StochasticPolicy()
+    
+    # Time action selection
+    start = time.time()
+    for i in range(10000):
+        action = det_policy.select_action(random_state())
+    det_time = time.time() - start
+    
+    start = time.time()
+    for i in range(10000):
+        action = stoch_policy.select_action(random_state())
+    stoch_time = time.time() - start
+    
+    print(f"Deterministic: {det_time:.4f}s")
+    print(f"Stochastic: {stoch_time:.4f}s")
+    print(f"Speedup: {stoch_time/det_time:.2f}x")
+
+# Memory usage comparison
+def memory_comparison():
+    # Deterministic: 1 value per state
+    det_memory = num_states * sizeof(int)
+    
+    # Stochastic: probability for each action per state
+    stoch_memory = num_states * num_actions * sizeof(float)
+    
+    print(f"Memory ratio: {stoch_memory/det_memory:.1f}x more for stochastic")
+                            </div>
+                            
+                            <p><strong>Efficiency Benefits:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Fast Execution:</strong> O(1) action selection</li>
+                                <li><strong>Low Memory:</strong> Store only chosen actions</li>
+                                <li><strong>Simple Implementation:</strong> Easy to code and debug</li>
+                                <li><strong>Cache Friendly:</strong> Predictable memory access patterns</li>
+                            </ul>
+                        `
+                    },
+                    '🎲 No Exploration': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Exploration Challenge in Deterministic Policies</strong>
+                            </div>
+                            <p>Deterministic policies don't explore on their own - they need external mechanisms for exploration.</p>
+                            
+                            <div class="modal-code">
+# Adding exploration to deterministic policies
+
+# 1. Epsilon-greedy exploration
+class EpsilonGreedyPolicy:
+    def __init__(self, deterministic_policy, epsilon=0.1):
+        self.det_policy = deterministic_policy
+        self.epsilon = epsilon
+    
+    def select_action(self, state, explore=True):
+        if explore and np.random.random() < self.epsilon:
+            return np.random.choice(available_actions(state))
+        else:
+            return self.det_policy.select_action(state)
+
+# 2. Boltzmann exploration (softmax)
+class BoltzmannPolicy:
+    def __init__(self, Q_values, temperature=1.0):
+        self.Q = Q_values
+        self.temperature = temperature
+    
+    def select_action(self, state):
+        q_values = self.Q[state]
+        # Convert to probabilities with temperature
+        probs = softmax(q_values / self.temperature)
+        return np.random.choice(len(q_values), p=probs)
+    
+    def get_deterministic_action(self, state):
+        return np.argmax(self.Q[state])
+
+# 3. UCB (Upper Confidence Bound) exploration
+class UCBPolicy:
+    def __init__(self, num_actions):
+        self.action_counts = np.zeros(num_actions)
+        self.action_values = np.zeros(num_actions)
+        self.total_steps = 0
+    
+    def select_action(self, state):
+        if self.total_steps == 0:
+            return np.random.choice(len(self.action_values))
+        
+        # UCB formula: Q(a) + c * sqrt(ln(t) / N(a))
+        c = 2  # Exploration parameter
+        ucb_values = (self.action_values + 
+                     c * np.sqrt(np.log(self.total_steps) / 
+                                (self.action_counts + 1e-8)))
+        
+        return np.argmax(ucb_values)
+
+# 4. Exploration schedules
+class DecayingExploration:
+    def __init__(self, initial_epsilon=1.0, decay_rate=0.995, min_epsilon=0.01):
+        self.epsilon = initial_epsilon
+        self.decay_rate = decay_rate
+        self.min_epsilon = min_epsilon
+    
+    def get_epsilon(self, episode):
+        self.epsilon = max(self.min_epsilon, 
+                          self.epsilon * self.decay_rate)
+        return self.epsilon
+
+# 5. Curiosity-driven exploration
+class CuriosityDrivenPolicy:
+    def __init__(self, policy, curiosity_model):
+        self.policy = policy
+        self.curiosity = curiosity_model
+    
+    def select_action(self, state):
+        # Get base action from deterministic policy
+        base_action = self.policy.select_action(state)
+        
+        # Get curiosity bonus for each action
+        curiosity_bonuses = self.curiosity.get_bonuses(state)
+        
+        # Combine policy preference with curiosity
+        action_scores = self.policy.get_action_values(state) + curiosity_bonuses
+        
+        return np.argmax(action_scores)
+
+# Problem: Deterministic exploitation
+def demonstration_problem():
+    """
+    Shows how deterministic policies can be exploited
+    """
+    class PredictableAgent:
+        def select_action(self, state):
+            # Always chooses the same action pattern
+            if state % 2 == 0:
+                return 'COOPERATE'
+            else:
+                return 'DEFECT'
+    
+    class AdversarialAgent:
+        def __init__(self):
+            self.opponent_history = []
+        
+        def select_action(self, state):
+            # Learn opponent's pattern and exploit it
+            if len(self.opponent_history) > 10:
+                # Predict opponent's next move
+                predicted = self.predict_opponent(state)
+                return self.counter_action(predicted)
+            else:
+                return 'RANDOM'
+    
+    # Deterministic agent gets exploited!
+    return "Predictable behavior can be learned and countered"
+                            </div>
+                            
+                            <p><strong>Solutions for Exploration:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>ε-greedy:</strong> Random actions with probability ε</li>
+                                <li><strong>Boltzmann:</strong> Temperature-based probabilistic selection</li>
+                                <li><strong>UCB:</strong> Confidence-based exploration</li>
+                                <li><strong>Curiosity:</strong> Intrinsic motivation for novel states</li>
+                                <li><strong>Scheduled:</strong> Decay exploration over time</li>
+                            </ul>
+                        `
+                    },
+                    '🏆 Optimal Form': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Optimal Policies Can Be Deterministic</strong>
+                            </div>
+                            <p>In many settings, there exists an optimal deterministic policy that maximizes expected return.</p>
+                            
+                            <div class="modal-code">
+# Theoretical foundation: optimal deterministic policies
+
+# Policy improvement theorem
+def policy_improvement_theorem():
+    """
+    If π' is greedy w.r.t. V^π, then V^π'(s) >= V^π(s) for all s
+    """
+    # Given current policy π and its value function V^π
+    # Define improved policy π' as:
+    # π'(s) = argmax_a Σ_{s'} P(s'|s,a)[R(s,a,s') + γV^π(s')]
+    
+    # This improved policy is deterministic and better!
+    return "Greedy improvement leads to deterministic optimal policy"
+
+# Proof that optimal policy can be deterministic
+def optimal_deterministic_proof():
+    """
+    Mathematical proof outline
+    """
+    proof = """
+    1. Suppose π* is optimal but stochastic
+    2. For any state s where π* mixes actions, let a* be the best action:
+       a* = argmax_a Q*(s,a)
+    3. Define π'(s) = a* (deterministic choice of best action)
+    4. Then V^π'(s) >= V^π*(s) for all s
+    5. Since π* was optimal, we must have V^π'(s) = V^π*(s)
+    6. Therefore π' is also optimal and deterministic
+    """
+    return proof
+
+# Extracting optimal deterministic policy
+def extract_optimal_policy(Q_star):
+    """
+    Extract deterministic optimal policy from optimal Q-function
+    """
+    optimal_policy = {}
+    
+    for state in states:
+        # Greedy action selection
+        best_action = np.argmax(Q_star[state])
+        optimal_policy[state] = best_action
+    
+    return optimal_policy
+
+# Value iteration converges to deterministic optimal policy
+def value_iteration_result():
+    """
+    Value iteration produces optimal deterministic policy
+    """
+    # After value iteration converges to V*
+    # Extract policy greedily:
+    
+    for state in states:
+        action_values = []
+        for action in actions:
+            value = sum(P[state][action][next_state] * 
+                       (R[state][action][next_state] + gamma * V_star[next_state])
+                       for next_state in states)
+            action_values.append(value)
+        
+        # Optimal policy is deterministic
+        optimal_action = np.argmax(action_values)
+        optimal_policy[state] = optimal_action
+    
+    return optimal_policy
+
+# Q-learning converges to optimal deterministic policy
+class QLearningToOptimal:
+    def __init__(self):
+        self.Q = defaultdict(lambda: defaultdict(float))
+    
+    def update(self, state, action, reward, next_state):
+        # Standard Q-learning update
+        best_next_q = max(self.Q[next_state].values()) if self.Q[next_state] else 0
+        td_target = reward + gamma * best_next_q
+        td_error = td_target - self.Q[state][action]
+        self.Q[state][action] += alpha * td_error
+    
+    def get_optimal_policy(self):
+        """Extract deterministic optimal policy"""
+        policy = {}
+        for state in self.Q:
+            best_action = max(self.Q[state], key=self.Q[state].get)
+            policy[state] = best_action
+        return policy
+
+# Exception: Games may require mixed strategies
+def game_theory_exception():
+    """
+    In competitive games, optimal strategies might be stochastic
+    """
+    # Rock-Paper-Scissors example
+    # Optimal strategy: uniform random (1/3, 1/3, 1/3)
+    # Any deterministic strategy can be countered
+    
+    rps_optimal_policy = {
+        'any_state': {
+            'ROCK': 1/3,
+            'PAPER': 1/3,
+            'SCISSORS': 1/3
+        }
+    }
+    
+    return "In zero-sum games, optimal play might require randomization"
+
+# Multi-objective: Pareto optimal policies
+def pareto_optimal_set():
+    """
+    When multiple objectives exist, optimal set may include stochastic policies
+    """
+    # Example: Safety vs Performance trade-off
+    # Deterministic policy: max performance (risky)
+    # Stochastic policy: balance safety and performance
+    
+    return "Multi-objective optimization may favor stochastic policies"
+                            </div>
+                            
+                            <p><strong>When Deterministic is Optimal:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Single-agent MDPs:</strong> Bellman optimality guarantees deterministic optimal policy</li>
+                                <li><strong>Discounted rewards:</strong> Infinite horizon with discount factor</li>
+                                <li><strong>Well-defined objectives:</strong> Clear single objective to maximize</li>
+                                <li><strong>Stationary environments:</strong> Dynamics don't change over time</li>
+                            </ul>
+                            
+                            <p><strong>Exceptions:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Competitive games:</strong> Mixed strategies in zero-sum games</li>
+                                <li><strong>Multi-objective:</strong> Pareto optimal policies</li>
+                                <li><strong>Partial observability:</strong> POMDPs may need stochastic policies</li>
+                                <li><strong>Communication:</strong> Signaling in multi-agent settings</li>
+                            </ul>
+                        `
+                    },
+                    '🔍 Exploratory': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Natural Exploration in Stochastic Policies</strong>
+                            </div>
+                            <p>Stochastic policies inherently explore by sampling different actions according to their probability distributions.</p>
+                            
+                            <div class="modal-code">
+# Stochastic policy exploration mechanisms
+
+# 1. Softmax policy (Boltzmann distribution)
+class SoftmaxPolicy:
+    def __init__(self, temperature=1.0):
+        self.temperature = temperature
+    
+    def get_action_probabilities(self, q_values):
+        """Convert Q-values to action probabilities"""
+        # Higher temperature = more exploration
+        # Lower temperature = more exploitation
+        exp_values = np.exp(q_values / self.temperature)
+        probabilities = exp_values / np.sum(exp_values)
+        return probabilities
+    
+    def select_action(self, q_values):
+        probs = self.get_action_probabilities(q_values)
+        return np.random.choice(len(q_values), p=probs)
+
+# 2. Gaussian policy for continuous actions
+class GaussianPolicy:
+    def __init__(self, mean_network, std=1.0):
+        self.mean_network = mean_network
+        self.std = std
+    
+    def select_action(self, state):
+        mean = self.mean_network(state)
+        # Sample from Gaussian distribution
+        action = np.random.normal(mean, self.std)
+        return np.clip(action, action_low, action_high)
+    
+    def action_probability(self, state, action):
+        mean = self.mean_network(state)
+        # Gaussian probability density
+        return (1 / (self.std * np.sqrt(2 * np.pi))) * \
+               np.exp(-0.5 * ((action - mean) / self.std) ** 2)
+
+# 3. Categorical policy for discrete actions
+class CategoricalPolicy:
+    def __init__(self, policy_network):
+        self.policy_network = policy_network
+    
+    def get_action_distribution(self, state):
+        logits = self.policy_network(state)
+        return F.softmax(logits, dim=-1)
+    
+    def select_action(self, state):
+        probs = self.get_action_distribution(state)
+        return torch.multinomial(probs, 1).item()
+    
+    def log_prob(self, state, action):
+        probs = self.get_action_distribution(state)
+        return torch.log(probs[action])
+
+# 4. Entropy-regularized exploration
+class EntropyRegularizedPolicy:
+    def __init__(self, base_policy, entropy_weight=0.01):
+        self.base_policy = base_policy
+        self.entropy_weight = entropy_weight
+    
+    def select_action(self, state):
+        # Get base action probabilities
+        base_probs = self.base_policy.get_probabilities(state)
+        
+        # Add entropy bonus to encourage exploration
+        entropy = -np.sum(base_probs * np.log(base_probs + 1e-8))
+        
+        # Adjust probabilities to increase entropy
+        uniform = np.ones(len(base_probs)) / len(base_probs)
+        adjusted_probs = ((1 - self.entropy_weight) * base_probs + 
+                         self.entropy_weight * uniform)
+        
+        return np.random.choice(len(adjusted_probs), p=adjusted_probs)
+
+# 5. Adaptive exploration based on uncertainty
+class UncertaintyBasedPolicy:
+    def __init__(self, q_network_ensemble):
+        self.ensemble = q_network_ensemble
+    
+    def select_action(self, state):
+        # Get Q-value predictions from ensemble
+        q_predictions = [net(state) for net in self.ensemble]
+        q_mean = torch.mean(torch.stack(q_predictions), dim=0)
+        q_std = torch.std(torch.stack(q_predictions), dim=0)
+        
+        # Higher uncertainty = more exploration
+        exploration_bonus = q_std
+        adjusted_q = q_mean + exploration_bonus
+        
+        # Sample proportional to adjusted values
+        probs = F.softmax(adjusted_q, dim=-1)
+        return torch.multinomial(probs, 1).item()
+
+# 6. Curiosity-driven stochastic exploration
+class CuriosityDrivenPolicy:
+    def __init__(self, policy_net, curiosity_model):
+        self.policy_net = policy_net
+        self.curiosity = curiosity_model
+    
+    def select_action(self, state):
+        # Base policy probabilities
+        base_probs = F.softmax(self.policy_net(state), dim=-1)
+        
+        # Curiosity bonuses for each action
+        curiosity_bonuses = self.curiosity.get_action_bonuses(state)
+        
+        # Combine policy preference with curiosity
+        combined_logits = (torch.log(base_probs + 1e-8) + 
+                          curiosity_bonuses)
+        
+        final_probs = F.softmax(combined_logits, dim=-1)
+        return torch.multinomial(final_probs, 1).item()
+
+# Measuring exploration effectiveness
+def measure_exploration_coverage(policy, env, num_episodes=1000):
+    """Measure how well policy explores the state space"""
+    visited_states = set()
+    
+    for episode in range(num_episodes):
+        state = env.reset()
+        done = False
+        
+        while not done:
+            visited_states.add(state)
+            action = policy.select_action(state)
+            state, reward, done, _ = env.step(action)
+    
+    coverage = len(visited_states) / env.total_states
+    return coverage
+
+def compare_exploration_methods():
+    """Compare different stochastic exploration approaches"""
+    methods = {
+        'epsilon_greedy': EpsilonGreedyPolicy(epsilon=0.1),
+        'softmax_high_temp': SoftmaxPolicy(temperature=2.0),
+        'softmax_low_temp': SoftmaxPolicy(temperature=0.5),
+        'entropy_regularized': EntropyRegularizedPolicy(),
+        'uncertainty_based': UncertaintyBasedPolicy()
+    }
+    
+    results = {}
+    for name, policy in methods.items():
+        coverage = measure_exploration_coverage(policy)
+        results[name] = coverage
+    
+    return results
+                            </div>
+                            
+                            <p><strong>Exploration Benefits:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Natural Discovery:</strong> Automatically tries new actions</li>
+                                <li><strong>Balanced Exploration:</strong> Probability reflects confidence</li>
+                                <li><strong>Adaptive:</strong> Can adjust exploration based on learning progress</li>
+                                <li><strong>Continuous:</strong> Works throughout the learning process</li>
+                            </ul>
+                            
+                            <p><strong>Exploration Strategies:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Temperature-based (Boltzmann/Softmax)</li>
+                                <li>Entropy regularization</li>
+                                <li>Uncertainty-based exploration</li>
+                                <li>Curiosity-driven exploration</li>
+                            </ul>
+                        `
+                    },
+                    '🛡️ Robust': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Robustness of Stochastic Policies</strong>
+                            </div>
+                            <p>Stochastic policies are more robust to adversarial attacks, model uncertainty, and environmental changes due to their inherent randomness.</p>
+                            
+                            <div class="modal-code">
+# Robustness demonstrations
+
+# 1. Adversarial robustness
+class AdversarialRobustness:
+    def demonstrate_vulnerability(self):
+        """Show how deterministic policies can be exploited"""
+        
+        # Deterministic policy - predictable
+        det_policy = lambda state: 'COOPERATE' if state % 2 == 0 else 'DEFECT'
+        
+        # Adversarial counter-strategy
+        def exploit_deterministic(state, history):
+            # Predict deterministic agent's move
+            predicted_move = det_policy(state)
+            # Choose optimal counter
+            return counter_move(predicted_move)
+        
+        # Stochastic policy - unpredictable
+        stoch_policy = lambda state: np.random.choice(['COOPERATE', 'DEFECT'], 
+                                                     p=[0.7, 0.3])
+        
+        return "Stochastic policies are harder to exploit"
+    
+    def mixed_strategy_equilibrium(self):
+        """Game theory: mixed strategies for robustness"""
+        
+        # Rock-Paper-Scissors optimal strategy
+        rps_optimal = {
+            'ROCK': 1/3,
+            'PAPER': 1/3, 
+            'SCISSORS': 1/3
+        }
+        
+        # Any deviation can be exploited
+        # But this mixed strategy is unexploitable
+        return rps_optimal
+
+# 2. Model uncertainty robustness
+class ModelUncertaintyRobustness:
+    def __init__(self, true_env, model_ensemble):
+        self.true_env = true_env
+        self.models = model_ensemble
+    
+    def robust_policy_evaluation(self, policy):
+        """Evaluate policy across model ensemble"""
+        returns = []
+        
+        for model in self.models:
+            # Evaluate on each model
+            model_return = self.evaluate_on_model(policy, model)
+            returns.append(model_return)
+        
+        # Robust metrics
+        mean_return = np.mean(returns)
+        worst_case = np.min(returns)
+        std_return = np.std(returns)
+        
+        return {
+            'mean': mean_return,
+            'worst_case': worst_case,
+            'std': std_return,
+            'robustness_score': worst_case - std_return
+        }
+    
+    def stochastic_advantage(self):
+        """Why stochastic policies handle model uncertainty better"""
+        
+        # Deterministic policy: relies on exact model
+        det_policy = DeterministicPolicy()
+        
+        # Stochastic policy: hedges across actions
+        stoch_policy = StochasticPolicy()
+        
+        # When model is wrong, deterministic policy can fail completely
+        # Stochastic policy has built-in hedging
+        
+        return "Stochastic policies naturally hedge against model errors"
+
+# 3. Environmental robustness
+class EnvironmentalRobustness:
+    def handle_noise(self):
+        """Robustness to observation and transition noise"""
+        
+        def noisy_observations(true_state, noise_level=0.1):
+            # Add noise to state observations
+            noise = np.random.normal(0, noise_level, len(true_state))
+            return true_state + noise
+        
+        def deterministic_response(noisy_state):
+            # Deterministic policy gives same action for similar states
+            # Can be sensitive to noise
+            return argmax_action(noisy_state)
+        
+        def stochastic_response(noisy_state):
+            # Stochastic policy naturally smooths over noise
+            action_probs = softmax(policy_network(noisy_state))
+            return np.random.choice(actions, p=action_probs)
+        
+        return "Stochastic policies smooth over observation noise"
+    
+    def domain_adaptation(self):
+        """Adapting to new environments"""
+        
+        # Training environment
+        train_env = GridWorld(size=5, obstacles=low_obstacles)
+        
+        # Test environment (different)
+        test_env = GridWorld(size=5, obstacles=high_obstacles)
+        
+        # Deterministic policy: brittle to changes
+        det_policy = train_deterministic_policy(train_env)
+        det_performance = evaluate(det_policy, test_env)
+        
+        # Stochastic policy: more adaptable
+        stoch_policy = train_stochastic_policy(train_env)
+        stoch_performance = evaluate(stoch_policy, test_env)
+        
+        return f"Transfer: Stochastic {stoch_performance} > Deterministic {det_performance}"
+
+# 4. Distributional robustness
+class DistributionalRobustness:
+    def worst_case_analysis(self):
+        """Robust optimization approach"""
+        
+        # Define uncertainty set around nominal model
+        nominal_transitions = P_nominal
+        uncertainty_radius = 0.1
+        
+        def robust_policy_optimization(policy):
+            """Optimize for worst-case within uncertainty set"""
+            worst_case_return = float('inf')
+            
+            for P_perturbed in generate_uncertainty_set(nominal_transitions, uncertainty_radius):
+                returns = evaluate_policy(policy, P_perturbed)
+                worst_case_return = min(worst_case_return, returns)
+            
+            return worst_case_return
+        
+        # Stochastic policies often perform better in worst-case
+        return "Stochastic policies hedge against worst-case scenarios"
+
+# 5. Computational robustness
+class ComputationalRobustness:
+    def approximation_errors(self):
+        """Handling function approximation errors"""
+        
+        # Perfect Q-function (unknown)
+        Q_star = true_optimal_q_function()
+        
+        # Approximate Q-function (with errors)
+        Q_approx = neural_network_approximation()
+        
+        # Deterministic policy from approximate Q
+        det_action = np.argmax(Q_approx[state])
+        
+        # Stochastic policy with temperature
+        stoch_probs = softmax(Q_approx[state] / temperature)
+        stoch_action = np.random.choice(actions, p=stoch_probs)
+        
+        # Stochastic policy is less sensitive to approximation errors
+        return "Temperature smooths over Q-function errors"
+    
+    def gradient_noise_robustness(self):
+        """Robustness during learning"""
+        
+        # Policy gradient updates with noise
+        def noisy_policy_gradient(policy_params, gradient_noise=0.01):
+            true_gradient = compute_policy_gradient()
+            noise = np.random.normal(0, gradient_noise, len(true_gradient))
+            noisy_gradient = true_gradient + noise
+            
+            return noisy_gradient
+        
+        # Stochastic policies are naturally more robust to gradient noise
+        # Because they already have inherent randomness
+        
+        return "Stochastic policies handle noisy gradients better"
+
+# Measuring robustness
+def robustness_metrics(policy, test_scenarios):
+    """Comprehensive robustness evaluation"""
+    
+    results = {}
+    
+    for scenario_name, scenario in test_scenarios.items():
+        performance = evaluate_policy(policy, scenario)
+        results[scenario_name] = performance
+    
+    # Robustness metrics
+    mean_performance = np.mean(list(results.values()))
+    worst_case = np.min(list(results.values()))
+    std_performance = np.std(list(results.values()))
+    
+    robustness_score = worst_case / mean_performance
+    
+    return {
+        'mean': mean_performance,
+        'worst_case': worst_case,
+        'std': std_performance,
+        'robustness_score': robustness_score,
+        'scenario_results': results
+    }
+                            </div>
+                            
+                            <p><strong>Types of Robustness:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Adversarial:</strong> Resistance to exploitation by opponents</li>
+                                <li><strong>Model Uncertainty:</strong> Performance when environment model is wrong</li>
+                                <li><strong>Observation Noise:</strong> Handling noisy or partial observations</li>
+                                <li><strong>Domain Transfer:</strong> Adaptation to new environments</li>
+                                <li><strong>Approximation Errors:</strong> Tolerance to function approximation errors</li>
+                            </ul>
+                            
+                            <p><strong>Mechanisms for Robustness:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Natural hedging through action diversity</li>
+                                <li>Smoothing over model uncertainties</li>
+                                <li>Reduced sensitivity to parameter errors</li>
+                                <li>Built-in exploration for adaptation</li>
+                            </ul>
+                        `
+                    },
+                    '📊 Flexible': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Flexibility of Stochastic Policies</strong>
+                            </div>
+                            <p>Stochastic policies can express uncertainty, handle multiple objectives, and adapt to different situations more flexibly than deterministic policies.</p>
+                            
+                            <div class="modal-code">
+# Flexibility demonstrations
+
+# 1. Expressing uncertainty
+class UncertaintyAwarePolicy:
+    def __init__(self, confidence_threshold=0.8):
+        self.confidence_threshold = confidence_threshold
+    
+    def select_action(self, state, q_values):
+        """Adjust randomness based on confidence"""
+        
+        # High confidence: more deterministic
+        max_q = np.max(q_values)
+        min_q = np.min(q_values)
+        confidence = (max_q - min_q) / (abs(max_q) + 1e-8)
+        
+        if confidence > self.confidence_threshold:
+            # High confidence: low temperature (more deterministic)
+            temperature = 0.1
+        else:
+            # Low confidence: high temperature (more random)
+            temperature = 2.0
+        
+        probs = softmax(q_values / temperature)
+        return np.random.choice(len(q_values), p=probs)
+    
+    def get_action_confidence(self, state, q_values):
+        """Return confidence measure"""
+        probs = softmax(q_values)
+        entropy = -np.sum(probs * np.log(probs + 1e-8))
+        max_entropy = np.log(len(probs))
+        confidence = 1 - (entropy / max_entropy)
+        return confidence
+
+# 2. Multi-objective flexibility
+class MultiObjectivePolicy:
+    def __init__(self, objectives, weights):
+        self.objectives = objectives  # ['performance', 'safety', 'efficiency']
+        self.weights = weights        # [0.5, 0.3, 0.2]
+    
+    def select_action(self, state):
+        """Balance multiple objectives stochastically"""
+        
+        action_scores = {}
+        
+        for action in available_actions(state):
+            total_score = 0
+            
+            for obj, weight in zip(self.objectives, self.weights):
+                obj_score = self.evaluate_objective(state, action, obj)
+                total_score += weight * obj_score
+            
+            action_scores[action] = total_score
+        
+        # Convert scores to probabilities
+        scores = np.array(list(action_scores.values()))
+        probs = softmax(scores)
+        
+        actions = list(action_scores.keys())
+        return np.random.choice(actions, p=probs)
+    
+    def adjust_weights(self, new_weights):
+        """Dynamically adjust objective priorities"""
+        self.weights = new_weights
+
+# 3. Contextual adaptation
+class ContextualPolicy:
+    def __init__(self):
+        self.context_policies = {
+            'exploration': HighEntropyPolicy(),
+            'exploitation': LowEntropyPolicy(),
+            'conservative': SafePolicy(),
+            'aggressive': RiskyPolicy()
+        }
+    
+    def select_action(self, state, context='normal'):
+        """Adapt behavior based on context"""
+        
+        if context == 'learning':
+            # High exploration during learning
+            return self.context_policies['exploration'].select_action(state)
+        elif context == 'deployment':
+            # Conservative during deployment
+            return self.context_policies['conservative'].select_action(state)
+        elif context == 'competition':
+            # Aggressive in competitive settings
+            return self.context_policies['aggressive'].select_action(state)
+        else:
+            # Balanced approach
+            return self.balanced_action(state)
+    
+    def balanced_action(self, state):
+        """Combine different policy types"""
+        actions_probs = []
+        
+        for policy_name, policy in self.context_policies.items():
+            probs = policy.get_action_probabilities(state)
+            actions_probs.append(probs)
+        
+        # Average the probabilities
+        combined_probs = np.mean(actions_probs, axis=0)
+        return np.random.choice(len(combined_probs), p=combined_probs)
+
+# 4. Hierarchical flexibility
+class HierarchicalStochasticPolicy:
+    def __init__(self):
+        self.high_level_policy = HighLevelPolicy()  # Choose goals
+        self.low_level_policies = {
+            'goal_A': LowLevelPolicy_A(),
+            'goal_B': LowLevelPolicy_B(),
+            'goal_C': LowLevelPolicy_C()
+        }
+    
+    def select_action(self, state):
+        """Hierarchical stochastic decision making"""
+        
+        # High-level: stochastically choose subgoal
+        goal_probs = self.high_level_policy.get_goal_probabilities(state)
+        goals = list(self.low_level_policies.keys())
+        selected_goal = np.random.choice(goals, p=goal_probs)
+        
+        # Low-level: stochastically choose action for selected goal
+        low_level_policy = self.low_level_policies[selected_goal]
+        action = low_level_policy.select_action(state)
+        
+        return action, selected_goal
+
+# 5. Temporal flexibility
+class TemporallyAdaptivePolicy:
+    def __init__(self):
+        self.time_step = 0
+        self.adaptation_rate = 0.01
+    
+    def select_action(self, state):
+        """Adapt randomness over time"""
+        
+        # Early in training: high exploration
+        # Later in training: more exploitation
+        progress = min(self.time_step * self.adaptation_rate, 1.0)
+        
+        # Temperature decreases over time
+        temperature = 2.0 * (1 - progress) + 0.1 * progress
+        
+        q_values = self.get_q_values(state)
+        probs = softmax(q_values / temperature)
+        
+        self.time_step += 1
+        return np.random.choice(len(probs), p=probs)
+
+# 6. Social flexibility (multi-agent)
+class SociallyAwarePolicy:
+    def __init__(self):
+        self.cooperation_level = 0.5
+        self.opponent_model = OpponentModel()
+    
+    def select_action(self, state, opponents_present=True):
+        """Adjust behavior based on social context"""
+        
+        if not opponents_present:
+            # Solo: purely optimal
+            return self.optimal_action(state)
+        
+        # Predict opponents' actions
+        opponent_predictions = self.opponent_model.predict(state)
+        
+        # Adjust strategy based on social dynamics
+        if self.should_cooperate(opponent_predictions):
+            # Bias toward cooperative actions
+            coop_bonus = np.array([1.0, 0.5, 0.5, 0.1])  # Cooperation bias
+        else:
+            # Bias toward competitive actions
+            coop_bonus = np.array([0.1, 0.5, 0.5, 1.0])  # Competition bias
+        
+        base_probs = self.get_base_probabilities(state)
+        adjusted_probs = softmax(np.log(base_probs + 1e-8) + coop_bonus)
+        
+        return np.random.choice(len(adjusted_probs), p=adjusted_probs)
+
+# 7. Meta-learning flexibility
+class MetaLearningPolicy:
+    def __init__(self):
+        self.task_embedding = TaskEmbedding()
+        self.meta_policy = MetaPolicy()
+    
+    def adapt_to_task(self, task_data):
+        """Quickly adapt to new tasks"""
+        
+        # Extract task characteristics
+        task_features = self.task_embedding.encode(task_data)
+        
+        # Get task-specific policy parameters
+        policy_params = self.meta_policy.get_parameters(task_features)
+        
+        # Create adaptive stochastic policy
+        adapted_policy = StochasticPolicy(policy_params)
+        
+        return adapted_policy
+    
+    def select_action(self, state, task_context):
+        """Select action with task awareness"""
+        
+        # Get task-adapted policy
+        adapted_policy = self.adapt_to_task(task_context)
+        
+        # Use adapted policy for action selection
+        return adapted_policy.select_action(state)
+
+# Measuring flexibility
+def flexibility_metrics(policy, test_scenarios):
+    """Measure policy flexibility across scenarios"""
+    
+    adaptability_scores = []
+    
+    for scenario in test_scenarios:
+        # Measure how well policy adapts
+        initial_performance = evaluate_policy(policy, scenario, episodes=10)
+        
+        # Allow policy to adapt
+        policy.adapt_to_scenario(scenario)
+        
+        adapted_performance = evaluate_policy(policy, scenario, episodes=100)
+        
+        # Adaptation score
+        improvement = adapted_performance - initial_performance
+        adaptability_scores.append(improvement)
+    
+    flexibility_score = np.mean(adaptability_scores)
+    return flexibility_score
+                            </div>
+                            
+                            <p><strong>Dimensions of Flexibility:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Uncertainty Expression:</strong> Adjust randomness based on confidence</li>
+                                <li><strong>Multi-Objective:</strong> Balance competing objectives dynamically</li>
+                                <li><strong>Contextual:</strong> Adapt behavior to different situations</li>
+                                <li><strong>Temporal:</strong> Change strategy over time</li>
+                                <li><strong>Social:</strong> Adjust to multi-agent dynamics</li>
+                                <li><strong>Hierarchical:</strong> Multiple levels of stochastic decisions</li>
+                            </ul>
+                            
+                            <p><strong>Applications:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Adaptive control systems</li>
+                                <li>Multi-objective optimization</li>
+                                <li>Human-robot interaction</li>
+                                <li>Financial portfolio management</li>
+                            </ul>
+                        `
+                    },
+                    '⚖️ Balanced': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Natural Exploration-Exploitation Balance</strong>
+                            </div>
+                            <p>Stochastic policies naturally balance exploration and exploitation through their probability distributions, without needing external mechanisms.</p>
+                            
+                            <div class="modal-code">
+# Natural exploration-exploitation balance
+
+# 1. Softmax policy balancing
+class SoftmaxBalancedPolicy:
+    def __init__(self, temperature=1.0):
+        self.temperature = temperature
+    
+    def select_action(self, q_values):
+        """Automatic exploration-exploitation balance"""
+        
+        # Convert Q-values to probabilities
+        probs = softmax(q_values / self.temperature)
+        
+        # High Q-value actions get higher probability (exploitation)
+        # But all actions retain some probability (exploration)
+        
+        action = np.random.choice(len(q_values), p=probs)
+        
+        return action, probs
+    
+    def analyze_balance(self, q_values):
+        """Analyze exploration vs exploitation"""
+        
+        probs = softmax(q_values / self.temperature)
+        
+        # Exploitation measure: probability of best action
+        best_action = np.argmax(q_values)
+        exploitation = probs[best_action]
+        
+        # Exploration measure: entropy of distribution
+        entropy = -np.sum(probs * np.log(probs + 1e-8))
+        max_entropy = np.log(len(probs))
+        exploration = entropy / max_entropy
+        
+        return {
+            'exploitation': exploitation,
+            'exploration': exploration,
+            'balance_score': exploration * exploitation
+        }
+
+# 2. Thompson sampling - Bayesian balance
+class ThompsonSamplingPolicy:
+    def __init__(self, num_actions):
+        # Maintain belief distributions over Q-values
+        self.alpha = np.ones(num_actions)  # Success counts
+        self.beta = np.ones(num_actions)   # Failure counts
+    
+    def select_action(self, state):
+        """Sample from posterior distributions"""
+        
+        # Sample Q-value for each action from Beta distribution
+        sampled_q_values = []
+        for i in range(len(self.alpha)):
+            q_sample = np.random.beta(self.alpha[i], self.beta[i])
+            sampled_q_values.append(q_sample)
+        
+        # Choose action with highest sampled value
+        best_action = np.argmax(sampled_q_values)
+        
+        # This naturally balances:
+        # - Exploitation: actions with high mean get chosen more
+        # - Exploration: actions with high uncertainty get chances
+        
+        return best_action
+    
+    def update(self, action, reward):
+        """Update belief distributions"""
+        if reward > 0:
+            self.alpha[action] += 1
+        else:
+            self.beta[action] += 1
+
+# 3. UCB-style stochastic policy
+class UCBStochasticPolicy:
+    def __init__(self, confidence_level=2.0):
+        self.confidence_level = confidence_level
+        self.action_counts = defaultdict(int)
+        self.q_values = defaultdict(float)
+        self.total_steps = 0
+    
+    def select_action(self, state):
+        """Convert UCB scores to probabilities"""
+        
+        available_actions = get_available_actions(state)
+        ucb_scores = []
+        
+        for action in available_actions:
+            count = self.action_counts[action]
+            if count == 0:
+                ucb_score = float('inf')
+            else:
+                confidence_bonus = self.confidence_level * \
+                                 np.sqrt(np.log(self.total_steps) / count)
+                ucb_score = self.q_values[action] + confidence_bonus
+            
+            ucb_scores.append(ucb_score)
+        
+        # Convert UCB scores to probabilities
+        probs = softmax(np.array(ucb_scores))
+        
+        return np.random.choice(available_actions, p=probs)
+
+# 4. Information-theoretic balance
+class InfoTheoreticPolicy:
+    def __init__(self, information_weight=0.1):
+        self.info_weight = information_weight
+        self.q_network = QNetwork()
+        self.uncertainty_estimator = UncertaintyEstimator()
+    
+    def select_action(self, state):
+        """Balance reward and information gain"""
+        
+        # Expected reward for each action
+        q_values = self.q_network(state)
+        
+        # Expected information gain for each action
+        info_gains = self.uncertainty_estimator.get_info_gains(state)
+        
+        # Combined objective: reward + information
+        combined_values = q_values + self.info_weight * info_gains
+        
+        # Convert to probabilities
+        probs = softmax(combined_values)
+        
+        return np.random.choice(len(probs), p=probs)
+    
+    def adaptive_information_weight(self, learning_progress):
+        """Adjust exploration based on learning progress"""
+        # High exploration early, lower later
+        self.info_weight = 1.0 * (1 - learning_progress)
+
+# 5. Multi-armed bandit inspiration
+class BanditInspiredPolicy:
+    def __init__(self, decay_rate=0.99):
+        self.action_values = defaultdict(float)
+        self.action_counts = defaultdict(int)
+        self.decay_rate = decay_rate
+    
+    def select_action(self, state):
+        """Regret-minimizing stochastic selection"""
+        
+        available_actions = get_available_actions(state)
+        
+        # Compute regret-adjusted values
+        max_value = max(self.action_values[a] for a in available_actions)
+        regrets = [max_value - self.action_values[a] for a in available_actions]
+        
+        # Higher regret = higher exploration probability
+        exploration_probs = softmax(np.array(regrets))
+        
+        # Exploitation probabilities based on values
+        exploitation_probs = softmax([self.action_values[a] for a in available_actions])
+        
+        # Balance exploration and exploitation
+        alpha = self.get_exploration_rate()
+        final_probs = (alpha * exploration_probs + 
+                      (1 - alpha) * exploitation_probs)
+        
+        return np.random.choice(available_actions, p=final_probs)
+    
+    def get_exploration_rate(self):
+        """Adaptive exploration rate"""
+        total_experience = sum(self.action_counts.values())
+        return 1.0 / (1.0 + total_experience * 0.01)
+
+# 6. Portfolio-inspired diversification
+class PortfolioPolicy:
+    def __init__(self, risk_aversion=0.5):
+        self.risk_aversion = risk_aversion
+    
+    def select_action(self, state, q_estimates, q_uncertainties):
+        """Treat actions like financial assets in portfolio"""
+        
+        # Mean-variance optimization for action selection
+        expected_returns = q_estimates
+        variances = q_uncertainties ** 2
+        
+        # Portfolio optimization objective
+        def portfolio_objective(weights):
+            expected_return = np.dot(weights, expected_returns)
+            portfolio_variance = np.dot(weights, variances * weights)
+            
+            # Utility = expected return - risk penalty
+            utility = expected_return - 0.5 * self.risk_aversion * portfolio_variance
+            return -utility  # Minimize negative utility
+        
+        # Constraints: weights sum to 1, non-negative
+        constraints = [{'type': 'eq', 'fun': lambda w: np.sum(w) - 1}]
+        bounds = [(0, 1) for _ in range(len(expected_returns))]
+        
+        # Solve for optimal action probabilities
+        result = minimize(portfolio_objective, 
+                         x0=np.ones(len(expected_returns)) / len(expected_returns),
+                         bounds=bounds, constraints=constraints)
+        
+        optimal_probs = result.x
+        return np.random.choice(len(expected_returns), p=optimal_probs)
+
+# Measuring balance quality
+def measure_exploration_exploitation_balance(policy, env, num_episodes=1000):
+    """Measure how well policy balances exploration and exploitation"""
+    
+    episode_data = []
+    
+    for episode in range(num_episodes):
+        state = env.reset()
+        episode_actions = []
+        episode_rewards = []
+        
+        while not done:
+            action = policy.select_action(state)
+            next_state, reward, done, _ = env.step(action)
+            
+            episode_actions.append(action)
+            episode_rewards.append(reward)
+            state = next_state
+        
+        episode_data.append({
+            'actions': episode_actions,
+            'rewards': episode_rewards,
+            'total_reward': sum(episode_rewards)
+        })
+    
+    # Analysis metrics
+    action_diversity = measure_action_diversity(episode_data)
+    reward_progression = measure_reward_progression(episode_data)
+    regret = measure_cumulative_regret(episode_data)
+    
+    balance_score = action_diversity * reward_progression / (regret + 1e-8)
+    
+    return {
+        'action_diversity': action_diversity,
+        'reward_progression': reward_progression,
+        'cumulative_regret': regret,
+        'balance_score': balance_score
+    }
+                            </div>
+                            
+                            <p><strong>Natural Balance Mechanisms:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Softmax Temperature:</strong> Controls exploration-exploitation trade-off</li>
+                                <li><strong>Bayesian Sampling:</strong> Thompson sampling naturally balances</li>
+                                <li><strong>Uncertainty-Based:</strong> Explore where uncertain, exploit where confident</li>
+                                <li><strong>Information-Theoretic:</strong> Balance reward and information gain</li>
+                                <li><strong>Regret-Minimizing:</strong> Adapt exploration based on regret</li>
+                            </ul>
+                            
+                            <p><strong>Advantages of Natural Balance:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>No need for external exploration schedules</li>
+                                <li>Automatic adaptation to learning progress</li>
+                                <li>Principled trade-off based on value estimates</li>
+                                <li>Smooth transition from exploration to exploitation</li>
+                            </ul>
+                        `
+                    }
+                };
+                
+                const details = characteristicDetails[title];
+                if (details) {
+                    const policyType = isDeterministic ? 'Deterministic' : 'Stochastic';
+                    modal.show(`${policyType} Policy: ${title}`, details.content);
+                }
+            });
+        });
+
+        // Interactive example cards
+        document.querySelectorAll('.example-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('.example-title').textContent;
+                
+                const exampleDetails = {
+                    'Chess': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Policy Types in Chess</strong>
+                            </div>
+                            
+                            <p><strong>Deterministic Chess Policies:</strong></p>
+                            <p>Always play the objectively best move according to evaluation function.</p>
+                            
+                            <div class="modal-code">
+# Deterministic chess engine
+class DeterministicChessEngine:
+    def select_move(self, position):
+        # Always choose move with highest evaluation
+        best_move = None
+        best_score = -float('inf')
+        
+        for move in legal_moves(position):
+            score = minimax_evaluation(position.after_move(move), depth=10)
+            if score > best_score:
+                best_score = score
+                best_move = move
+        
+        return best_move  # Always the same for same position
+
+# Predictable but strong
+engine = DeterministicChessEngine()
+move1 = engine.select_move(position)  # Always same move
+move2 = engine.select_move(position)  # Identical to move1
+                            </div>
+                            
+                            <p><strong>Stochastic Chess Policies:</strong></p>
+                            <p>Mix good moves to add unpredictability and confuse opponents.</p>
+                            
+                            <div class="modal-code">
+# Stochastic chess engine
+class StochasticChessEngine:
+    def __init__(self, temperature=0.1):
+        self.temperature = temperature
+    
+    def select_move(self, position):
+        move_scores = {}
+        
+        for move in legal_moves(position):
+            score = minimax_evaluation(position.after_move(move), depth=10)
+            move_scores[move] = score
+        
+        # Convert scores to probabilities
+        moves = list(move_scores.keys())
+        scores = np.array(list(move_scores.values()))
+        
+        # Softmax with temperature
+        probs = np.exp(scores / self.temperature)
+        probs = probs / np.sum(probs)
+        
+        # Sample move according to probabilities
+        return np.random.choice(moves, p=probs)
+
+# Unpredictable but still strong
+engine = StochasticChessEngine()
+move1 = engine.select_move(position)  # Might be best move
+move2 = engine.select_move(position)  # Might be different!
+                            </div>
+                            
+                            <p><strong>When to Use Each:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Deterministic:</strong> Maximum strength, predictable analysis</li>
+                                <li><strong>Stochastic:</strong> Psychological advantage, harder to prepare against</li>
+                            </ul>
+                            
+                            <p><strong>Professional Example:</strong> AlphaZero uses deterministic policy during self-play training but can use stochastic policies for variety in games against humans.</p>
+                        `
+                    },
+                    'Robot Navigation': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Policy Types in Robot Navigation</strong>
+                            </div>
+                            
+                            <p><strong>Deterministic Navigation:</strong></p>
+                            <p>Always choose the shortest or most efficient path to the goal.</p>
+                            
+                            <div class="modal-code">
+# Deterministic robot navigation
+class DeterministicNavigator:
+    def __init__(self, goal_position):
+        self.goal = goal_position
+    
+    def select_action(self, robot_position, obstacles):
+        # Always move directly toward goal (if possible)
+        direction_to_goal = self.goal - robot_position
+        
+        # Choose action that minimizes distance to goal
+        best_action = None
+        min_distance = float('inf')
+        
+        for action in ['forward', 'left', 'right', 'backward']:
+            next_pos = self.simulate_action(robot_position, action)
+            
+            if not self.collides_with_obstacles(next_pos, obstacles):
+                distance = np.linalg.norm(next_pos - self.goal)
+                if distance < min_distance:
+                    min_distance = distance
+                    best_action = action
+        
+        return best_action
+
+# Always same path in same environment
+navigator = DeterministicNavigator(goal=(10, 10))
+path1 = navigator.plan_path(start=(0, 0))
+path2 = navigator.plan_path(start=(0, 0))  # Identical to path1
+                            </div>
+                            
+                            <p><strong>Stochastic Navigation:</strong></p>
+                            <p>Add noise or randomness for robustness and exploration of alternative paths.</p>
+                            
+                            <div class="modal-code">
+# Stochastic robot navigation
+class StochasticNavigator:
+    def __init__(self, goal_position, exploration_noise=0.1):
+        self.goal = goal_position
+        self.noise_level = exploration_noise
+    
+    def select_action(self, robot_position, obstacles):
+        # Compute base policy (toward goal)
+        direction_to_goal = self.goal - robot_position
+        action_values = self.compute_action_values(robot_position, obstacles)
+        
+        # Add exploration noise
+        noisy_values = action_values + np.random.normal(0, self.noise_level, len(action_values))
+        
+        # Convert to probabilities
+        probs = softmax(noisy_values)
+        actions = ['forward', 'left', 'right', 'backward']
+        
+        return np.random.choice(actions, p=probs)
+    
+    def adaptive_noise(self, success_rate):
+        # Reduce noise as robot learns better paths
+        if success_rate > 0.8:
+            self.noise_level *= 0.95
+        elif success_rate < 0.5:
+            self.noise_level *= 1.05
+
+# Different paths each time, discovers alternatives
+navigator = StochasticNavigator(goal=(10, 10))
+path1 = navigator.plan_path(start=(0, 0))
+path2 = navigator.plan_path(start=(0, 0))  # Different from path1!
+                            </div>
+                            
+                            <p><strong>Benefits Comparison:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Deterministic:</strong>
+                                    <ul style="margin-left: 20px;">
+                                        <li>Predictable execution time</li>
+                                        <li>Optimal paths in known environments</li>
+                                        <li>Easy to verify and debug</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Stochastic:</strong>
+                                    <ul style="margin-left: 20px;">
+                                        <li>Discovers multiple path options</li>
+                                        <li>Robust to dynamic obstacles</li>
+                                        <li>Handles sensor noise better</li>
+                                        <li>Explores unknown areas</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                            
+                            <p><strong>Real-World Application:</strong> Autonomous vehicles use deterministic policies for highway driving (predictable) but stochastic policies for parking and complex maneuvers (exploration needed).</p>
+                        `
+                    },
+                    'Trading': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Policy Types in Financial Trading</strong>
+                            </div>
+                            
+                            <p><strong>Deterministic Trading Strategies:</strong></p>
+                            <p>Follow fixed rules and signals with no randomness.</p>
+                            
+                            <div class="modal-code">
+# Deterministic trading strategy
+class DeterministicTrader:
+    def __init__(self):
+        self.moving_avg_short = 20
+        self.moving_avg_long = 50
+    
+    def make_decision(self, price_history):
+        # Fixed rule: Golden Cross strategy
+        ma_short = np.mean(price_history[-self.moving_avg_short:])
+        ma_long = np.mean(price_history[-self.moving_avg_long:])
+        
+        current_price = price_history[-1]
+        
+        # Deterministic decision rules
+        if ma_short > ma_long and current_price > ma_short:
+            return 'BUY', 1.0  # Always buy full position
+        elif ma_short < ma_long and current_price < ma_short:
+            return 'SELL', 1.0  # Always sell full position
+        else:
+            return 'HOLD', 0.0  # No action
+    
+    def backtest_strategy(self, historical_data):
+        # Always produces same results
+        decisions = []
+        for i in range(len(historical_data)):
+            decision = self.make_decision(historical_data[:i+1])
+            decisions.append(decision)
+        return decisions
+
+trader = DeterministicTrader()
+result1 = trader.backtest_strategy(price_data)
+result2 = trader.backtest_strategy(price_data)  # Identical results
+                            </div>
+                            
+                            <p><strong>Stochastic Trading Strategies:</strong></p>
+                            <p>Incorporate randomness for diversification and robustness.</p>
+                            
+                            <div class="modal-code">
+# Stochastic trading strategy
+class StochasticTrader:
+    def __init__(self, confidence_threshold=0.7):
+        self.confidence_threshold = confidence_threshold
+        self.portfolio_diversification = True
+    
+    def make_decision(self, market_signals, uncertainty_estimate):
+        # Multiple signal analysis
+        signals = {
+            'technical': self.technical_analysis(market_signals),
+            'fundamental': self.fundamental_analysis(market_signals),
+            'sentiment': self.sentiment_analysis(market_signals)
+        }
+        
+        # Weighted combination with uncertainty
+        signal_weights = np.array([0.4, 0.4, 0.2])
+        combined_signal = np.average(list(signals.values()), weights=signal_weights)
+        
+        # Adjust for uncertainty
+        confidence = 1.0 - uncertainty_estimate
+        
+        if confidence > self.confidence_threshold:
+            # High confidence: larger position sizes
+            if combined_signal > 0.2:
+                position_size = min(0.8, combined_signal * confidence)
+                return 'BUY', position_size
+            elif combined_signal < -0.2:
+                position_size = min(0.8, abs(combined_signal) * confidence)
+                return 'SELL', position_size
+        else:
+            # Low confidence: smaller, diversified positions
+            if abs(combined_signal) > 0.1:
+                position_size = 0.1 + 0.2 * confidence
+                action = 'BUY' if combined_signal > 0 else 'SELL'
+                return action, position_size
+        
+        return 'HOLD', 0.0
+    
+    def portfolio_allocation(self, assets, predictions, uncertainties):
+        """Stochastic portfolio optimization"""
+        
+        # Monte Carlo simulation for robust allocation
+        num_simulations = 1000
+        allocation_samples = []
+        
+        for sim in range(num_simulations):
+            # Sample from prediction distributions
+            sampled_returns = []
+            for i, asset in enumerate(assets):
+                predicted_return = predictions[i]
+                uncertainty = uncertainties[i]
+                sampled_return = np.random.normal(predicted_return, uncertainty)
+                sampled_returns.append(sampled_return)
+            
+            # Optimize portfolio for this sample
+            optimal_weights = self.optimize_portfolio(sampled_returns)
+            allocation_samples.append(optimal_weights)
+        
+        # Average across simulations for robust allocation
+        final_allocation = np.mean(allocation_samples, axis=0)
+        
+        return final_allocation
+
+trader = StochasticTrader()
+# Different results each time due to randomness
+result1 = trader.make_decision(market_data, uncertainty=0.3)
+result2 = trader.make_decision(market_data, uncertainty=0.3)  # Likely different
+                            </div>
+                            
+                            <p><strong>Risk Management Comparison:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Deterministic:</strong>
+                                    <ul style="margin-left: 20px;">
+                                        <li>Concentrated positions</li>
+                                        <li>All-or-nothing decisions</li>
+                                        <li>Vulnerable to regime changes</li>
+                                        <li>Easy to backtest and verify</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Stochastic:</strong>
+                                    <ul style="margin-left: 20px;">
+                                        <li>Natural diversification</li>
+                                        <li>Gradual position adjustments</li>
+                                        <li>Robust to model uncertainty</li>
+                                        <li>Better risk-adjusted returns</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                            
+                            <p><strong>Industry Practice:</strong> High-frequency trading often uses deterministic policies for speed, while portfolio management typically uses stochastic policies for risk management.</p>
+                        `
+                    },
+                    'Game AI': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Policy Types in Game AI</strong>
+                            </div>
+                            
+                            <p><strong>Deterministic Game AI:</strong></p>
+                            <p>Always plays the objectively best move according to game tree search.</p>
+                            
+                            <div class="modal-code">
+# Deterministic game AI
+class DeterministicGameAI:
+    def __init__(self, search_depth=8):
+        self.search_depth = search_depth
+    
+    def select_move(self, game_state):
+        # Minimax with alpha-beta pruning
+        _, best_move = self.minimax(game_state, self.search_depth, True)
+        return best_move
+    
+    def minimax(self, state, depth, maximizing_player, alpha=-inf, beta=inf):
+        if depth == 0 or state.is_terminal():
+            return self.evaluate_position(state), None
+        
+        best_move = None
+        
+        if maximizing_player:
+            max_eval = -float('inf')
+            for move in state.legal_moves():
+                new_state = state.make_move(move)
+                eval_score, _ = self.minimax(new_state, depth-1, False, alpha, beta)
+                
+                if eval_score > max_eval:
+                    max_eval = eval_score
+                    best_move = move
+                
+                alpha = max(alpha, eval_score)
+                if beta <= alpha:
+                    break  # Alpha-beta pruning
+            
+            return max_eval, best_move
+        else:
+            min_eval = float('inf')
+            for move in state.legal_moves():
+                new_state = state.make_move(move)
+                eval_score, _ = self.minimax(new_state, depth-1, True, alpha, beta)
+                
+                if eval_score < min_eval:
+                    min_eval = eval_score
+                    best_move = move
+                
+                beta = min(beta, eval_score)
+                if beta <= alpha:
+                    break
+            
+            return min_eval, best_move
+
+# Completely predictable
+ai = DeterministicGameAI()
+move1 = ai.select_move(position)
+move2 = ai.select_move(position)  # Always identical
+                            </div>
+                            
+                            <p><strong>Stochastic Game AI:</strong></p>
+                            <p>Adds randomness to create unpredictable and varied gameplay.</p>
+                            
+                            <div class="modal-code">
+# Stochastic game AI
+class StochasticGameAI:
+    def __init__(self, search_depth=8, temperature=0.5, creativity=0.1):
+        self.search_depth = search_depth
+        self.temperature = temperature
+        self.creativity = creativity
+    
+    def select_move(self, game_state):
+        # Evaluate all legal moves
+        move_evaluations = {}
+        
+        for move in game_state.legal_moves():
+            new_state = game_state.make_move(move)
+            evaluation = self.evaluate_with_search(new_state)
+            move_evaluations[move] = evaluation
+        
+        # Convert evaluations to probabilities
+        moves = list(move_evaluations.keys())
+        evaluations = np.array(list(move_evaluations.values()))
+        
+        # Add creativity bonus for unexpected moves
+        creativity_bonus = np.random.normal(0, self.creativity, len(evaluations))
+        adjusted_evaluations = evaluations + creativity_bonus
+        
+        # Softmax selection with temperature
+        probabilities = softmax(adjusted_evaluations / self.temperature)
+        
+        # Sample move according to probabilities
+        selected_move = np.random.choice(moves, p=probabilities)
+        
+        return selected_move, probabilities
+    
+    def adaptive_creativity(self, game_phase, opponent_skill):
+        """Adjust randomness based on context"""
+        
+        if game_phase == 'opening':
+            # More creativity in opening for variety
+            self.creativity = 0.2
+            self.temperature = 1.0
+        elif game_phase == 'middlegame':
+            # Balanced approach
+            self.creativity = 0.1
+            self.temperature = 0.5
+        else:  # endgame
+            # More precise in endgame
+            self.creativity = 0.05
+            self.temperature = 0.2
+        
+        # Adjust based on opponent strength
+        if opponent_skill == 'beginner':
+            # More random for fun gameplay
+            self.creativity *= 2
+        elif opponent_skill == 'expert':
+            # Less random for competitive play
+            self.creativity *= 0.5
+
+# Varied and interesting gameplay
+ai = StochasticGameAI()
+move1, probs1 = ai.select_move(position)
+move2, probs2 = ai.select_move(position)  # Often different moves!
+                            </div>
+                            
+                            <p><strong>Player Experience Comparison:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Deterministic AI:</strong>
+                                    <ul style="margin-left: 20px;">
+                                        <li>Maximum strength</li>
+                                        <li>Predictable patterns</li>
+                                        <li>Can become boring for players</li>
+                                        <li>Easy to exploit once patterns learned</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Stochastic AI:</strong>
+                                    <ul style="margin-left: 20px;">
+                                        <li>Varied and interesting gameplay</li>
+                                        <li>Unpredictable strategies</li>
+                                        <li>Better entertainment value</li>
+                                        <li>Harder to exploit</li>
+                                        <li>Can adjust difficulty dynamically</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                            
+                            <p><strong>Game Design Applications:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Competitive Games:</strong> Deterministic for tournaments</li>
+                                <li><strong>Casual Games:</strong> Stochastic for fun and variety</li>
+                                <li><strong>Educational Games:</strong> Stochastic with adaptive difficulty</li>
+                                <li><strong>Boss Battles:</strong> Mix both for challenging but fair encounters</li>
+                            </ul>
+                        `
+                    },
+                    'Autonomous Driving': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Policy Types in Autonomous Driving</strong>
+                            </div>
+                            
+                            <p><strong>Deterministic Driving Policies:</strong></p>
+                            <p>Follow strict traffic rules and predefined safety protocols.</p>
+                            
+                            <div class="modal-code">
+# Deterministic autonomous driving
+class DeterministicDrivingPolicy:
+    def __init__(self):
+        self.safety_rules = SafetyRuleEngine()
+        self.traffic_rules = TrafficRuleEngine()
+    
+    def make_driving_decision(self, sensor_data, traffic_state):
+        # Strict rule-based decision making
+        
+        # 1. Safety checks (highest priority)
+        if self.detect_imminent_collision(sensor_data):
+            return 'EMERGENCY_BRAKE'
+        
+        # 2. Traffic rule compliance
+        if traffic_state.red_light_ahead():
+            return 'STOP'
+        
+        if traffic_state.speed_limit_exceeded():
+            return 'REDUCE_SPEED'
+        
+        # 3. Navigation decisions
+        if self.should_change_lanes(sensor_data, traffic_state):
+            return 'CHANGE_LANE_LEFT' if self.left_lane_clear() else 'MAINTAIN_LANE'
+        
+        # 4. Default behavior
+        return 'MAINTAIN_CURRENT_BEHAVIOR'
+    
+    def lane_changing_logic(self, traffic_situation):
+        """Deterministic lane changing"""
+        
+        # Only change lanes if:
+        # 1. Clear gap of at least 50 meters
+        # 2. Speed advantage > 10 mph
+        # 3. No construction zones
+        # 4. Weather conditions good
+        
+        if (self.gap_distance() > 50 and 
+            self.speed_advantage() > 10 and
+            not self.construction_zone() and
+            self.weather_good()):
+            return 'CHANGE_LANE'
+        else:
+            return 'MAINTAIN_LANE'
+
+# Completely predictable behavior
+driver = DeterministicDrivingPolicy()
+decision1 = driver.make_driving_decision(sensor_data, traffic)
+decision2 = driver.make_driving_decision(sensor_data, traffic)  # Same decision
+                            </div>
+                            
+                            <p><strong>Stochastic Driving Policies:</strong></p>
+                            <p>Add controlled randomness for natural driving behavior and robustness.</p>
+                            
+                            <div class="modal-code">
+# Stochastic autonomous driving
+class StochasticDrivingPolicy:
+    def __init__(self, comfort_level='normal'):
+        self.comfort_level = comfort_level
+        self.driving_style_params = self.get_driving_style(comfort_level)
+    
+    def make_driving_decision(self, sensor_data, traffic_state, uncertainty_estimates):
+        # Multiple decision factors with uncertainties
+        
+        safety_score = self.compute_safety_score(sensor_data)
+        efficiency_score = self.compute_efficiency_score(traffic_state)
+        comfort_score = self.compute_comfort_score(sensor_data)
+        
+        # Combine scores with weights and uncertainty
+        decision_scores = {
+            'maintain_lane': 0.7 * safety_score + 0.3 * comfort_score,
+            'change_left': 0.5 * safety_score + 0.4 * efficiency_score + 0.1 * comfort_score,
+            'change_right': 0.5 * safety_score + 0.4 * efficiency_score + 0.1 * comfort_score,
+            'slow_down': 0.8 * safety_score + 0.2 * comfort_score,
+            'speed_up': 0.4 * safety_score + 0.6 * efficiency_score
+        }
+        
+        # Add uncertainty and driving style variation
+        for action in decision_scores:
+            uncertainty = uncertainty_estimates.get(action, 0.1)
+            style_variation = np.random.normal(0, self.driving_style_params['variation'])
+            decision_scores[action] += style_variation
+            
+            # Reduce score based on uncertainty
+            decision_scores[action] *= (1 - uncertainty)
+        
+        # Convert to probabilities and sample
+        actions = list(decision_scores.keys())
+        scores = np.array(list(decision_scores.values()))
+        probabilities = softmax(scores / self.driving_style_params['temperature'])
+        
+        return np.random.choice(actions, p=probabilities)
+    
+    def get_driving_style(self, comfort_level):
+        """Different driving personalities"""
+        styles = {
+            'conservative': {'variation': 0.05, 'temperature': 0.2, 'risk_tolerance': 0.1},
+            'normal': {'variation': 0.1, 'temperature': 0.5, 'risk_tolerance': 0.3},
+            'aggressive': {'variation': 0.15, 'temperature': 0.8, 'risk_tolerance': 0.5}
+        }
+        return styles.get(comfort_level, styles['normal'])
+    
+    def adaptive_lane_changing(self, traffic_density, weather_conditions):
+        """Probabilistic lane changing with context awareness"""
+        
+        # Base probability of lane change
+        base_prob = 0.3
+        
+        # Adjust for traffic density
+        if traffic_density > 0.8:
+            base_prob *= 0.5  # Less likely in heavy traffic
+        elif traffic_density < 0.3:
+            base_prob *= 1.5  # More likely in light traffic
+        
+        # Adjust for weather
+        if weather_conditions == 'rain':
+            base_prob *= 0.7
+        elif weather_conditions == 'snow':
+            base_prob *= 0.4
+        
+        # Add some randomness for natural behavior
+        variation = np.random.normal(0, 0.1)
+        final_prob = np.clip(base_prob + variation, 0, 1)
+        
+        return np.random.random() < final_prob
+
+# Natural, varied driving behavior
+driver = StochasticDrivingPolicy(comfort_level='normal')
+decision1 = driver.make_driving_decision(sensor_data, traffic, uncertainties)
+decision2 = driver.make_driving_decision(sensor_data, traffic, uncertainties)  # Might differ
+                            </div>
+                            
+                            <p><strong>Safety and Acceptance Trade-offs:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Deterministic Driving:</strong>
+                                    <ul style="margin-left: 20px;">
+                                        <li>Maximum safety and predictability</li>
+                                        <li>Consistent behavior for verification</li>
+                                        <li>May feel robotic to passengers</li>
+                                        <li>Can be overly conservative</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Stochastic Driving:</strong>
+                                    <ul style="margin-left: 20px;">
+                                        <li>More human-like driving patterns</li>
+                                        <li>Better passenger comfort and acceptance</li>
+                                        <li>Robust to sensor noise and uncertainty</li>
+                                        <li>Requires careful safety bounds</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                            
+                            <p><strong>Hybrid Approaches:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Deterministic for safety-critical decisions (emergency braking)</li>
+                                <li>Stochastic for comfort decisions (following distance, lane positioning)</li>
+                                <li>Adaptive switching based on driving scenario</li>
+                                <li>Passenger preference settings for driving style</li>
+                            </ul>
+                        `
+                    },
+                    'Manufacturing': {
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Policy Types in Manufacturing</strong>
+                            </div>
+                            
+                            <p><strong>Deterministic Manufacturing Policies:</strong></p>
+                            <p>Follow fixed schedules and procedures for consistency and quality control.</p>
+                            
+                            <div class="modal-code">
+# Deterministic manufacturing control
+class DeterministicManufacturingPolicy:
+    def __init__(self):
+        self.production_schedule = ProductionSchedule()
+        self.quality_standards = QualityStandards()
+    
+    def make_production_decision(self, current_state, demand_forecast):
+        # Fixed scheduling rules
+        
+        # 1. Check current inventory levels
+        inventory_level = current_state.inventory
+        target_inventory = demand_forecast.weekly_demand * 2  # 2-week buffer
+        
+        # 2. Deterministic production planning
+        if inventory_level < target_inventory * 0.8:
+            production_rate = self.max_production_rate
+        elif inventory_level > target_inventory * 1.2:
+            production_rate = self.min_production_rate
+        else:
+            production_rate = demand_forecast.daily_demand
+        
+        return {
+            'production_rate': production_rate,
+            'machine_assignment': self.optimal_machine_assignment(),
+            'quality_check_frequency': self.standard_quality_frequency,
+            'maintenance_schedule': self.fixed_maintenance_schedule
+        }
+    
+    def quality_control_policy(self, production_batch):
+        """Fixed quality control procedures"""
+        
+        # Always test same percentage of products
+        sample_size = max(10, int(0.05 * len(production_batch)))
+        
+        # Fixed testing protocol
+        test_sequence = [
+            'dimensional_check',
+            'stress_test', 
+            'functionality_test',
+            'visual_inspection'
+        ]
+        
+        # Deterministic accept/reject criteria
+        for test in test_sequence:
+            if not self.run_test(production_batch, test, sample_size):
+                return 'REJECT_BATCH'
+        
+        return 'ACCEPT_BATCH'
+
+# Predictable, consistent operations
+controller = DeterministicManufacturingPolicy()
+decision1 = controller.make_production_decision(state, forecast)
+decision2 = controller.make_production_decision(state, forecast)  # Identical
+                            </div>
+                            
+                            <p><strong>Stochastic Manufacturing Policies:</strong></p>
+                            <p>Incorporate randomness for robustness, quality sampling, and adaptive scheduling.</p>
+                            
+                            <div class="modal-code">
+# Stochastic manufacturing control
+class StochasticManufacturingPolicy:
+    def __init__(self, risk_tolerance=0.3):
+        self.risk_tolerance = risk_tolerance
+        self.demand_uncertainty_model = DemandUncertaintyModel()
+    
+    def make_production_decision(self, current_state, demand_forecast, market_uncertainty):
+        # Probabilistic production planning
+        
+        # 1. Model demand uncertainty
+        demand_scenarios = self.demand_uncertainty_model.generate_scenarios(
+            base_forecast=demand_forecast,
+            uncertainty_level=market_uncertainty
+        )
+        
+        # 2. Evaluate production strategies under uncertainty
+        production_options = self.generate_production_options()
+        strategy_scores = {}
+        
+        for strategy in production_options:
+            # Monte Carlo evaluation
+            total_score = 0
+            for scenario in demand_scenarios:
+                score = self.evaluate_strategy(strategy, scenario)
+                total_score += score
+            
+            avg_score = total_score / len(demand_scenarios)
+            strategy_scores[strategy] = avg_score
+        
+        # 3. Select strategy probabilistically
+        strategies = list(strategy_scores.keys())
+        scores = np.array(list(strategy_scores.values()))
+        
+        # Risk-adjusted scoring
+        if self.risk_tolerance < 0.5:
+            # Risk-averse: prefer strategies with lower variance
+            score_variance = [self.compute_variance(s, demand_scenarios) for s in strategies]
+            risk_penalty = np.array(score_variance) * (1 - self.risk_tolerance)
+            adjusted_scores = scores - risk_penalty
+        else:
+            # Risk-seeking: boost high-variance strategies
+            adjusted_scores = scores
+        
+        # Probabilistic selection
+        probabilities = softmax(adjusted_scores)
+        selected_strategy = np.random.choice(strategies, p=probabilities)
+        
+        return selected_strategy
+    
+    def adaptive_quality_sampling(self, production_history, defect_rates):
+        """Dynamic quality control based on recent performance"""
+        
+        # Base sampling rate
+        base_sample_rate = 0.05
+        
+        # Adjust based on recent quality trends
+        recent_defect_rate = np.mean(defect_rates[-10:])  # Last 10 batches
+        
+        if recent_defect_rate > 0.02:  # Higher than target
+            # Increase sampling
+            sample_rate = min(0.2, base_sample_rate * (1 + recent_defect_rate * 10))
+        else:
+            # Reduce sampling if quality is good
+            sample_rate = max(0.01, base_sample_rate * 0.8)
+        
+        # Add some randomness for comprehensive coverage
+        randomization_factor = np.random.uniform(0.8, 1.2)
+        final_sample_rate = sample_rate * randomization_factor
+        
+        return final_sample_rate
+    
+    def flexible_scheduling(self, machine_availability, rush_orders):
+        """Stochastic job scheduling with priorities"""
+        
+        # Multiple scheduling objectives
+        objectives = {
+            'minimize_completion_time': 0.4,
+            'maximize_machine_utilization': 0.3,
+            'minimize_setup_costs': 0.2,
+            'accommodate_rush_orders': 0.1
+        }
+        
+        # Generate multiple feasible schedules
+        candidate_schedules = self.generate_schedules(machine_availability)
+        
+        # Score each schedule on multiple criteria
+        schedule_scores = {}
+        for schedule in candidate_schedules:
+            total_score = 0
+            for objective, weight in objectives.items():
+                obj_score = self.evaluate_objective(schedule, objective)
+                total_score += weight * obj_score
+            
+            # Add noise for exploration of diverse schedules
+            noise = np.random.normal(0, 0.1)
+            schedule_scores[schedule] = total_score + noise
+        
+        # Select schedule probabilistically
+        schedules = list(schedule_scores.keys())
+        scores = np.array(list(schedule_scores.values()))
+        probabilities = softmax(scores)
+        
+        return np.random.choice(schedules, p=probabilities)
+
+# Adaptive, robust operations
+controller = StochasticManufacturingPolicy()
+decision1 = controller.make_production_decision(state, forecast, uncertainty)
+decision2 = controller.make_production_decision(state, forecast, uncertainty)  # May differ
+                            </div>
+                            
+                            <p><strong>Operational Trade-offs:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Deterministic Manufacturing:</strong>
+                                    <ul style="margin-left: 20px;">
+                                        <li>Consistent quality and output</li>
+                                        <li>Easy to plan and predict</li>
+                                        <li>Regulatory compliance</li>
+                                        <li>May be inflexible to demand changes</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Stochastic Manufacturing:</strong>
+                                    <ul style="margin-left: 20px;">
+                                        <li>Robust to demand uncertainty</li>
+                                        <li>Adaptive quality control</li>
+                                        <li>Better resource utilization</li>
+                                        <li>Handles supply chain disruptions</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                            
+                            <p><strong>Industry Applications:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Pharmaceutical:</strong> Deterministic for drug manufacturing (strict regulations)</li>
+                                <li><strong>Electronics:</strong> Stochastic for demand forecasting and inventory</li>
+                                <li><strong>Automotive:</strong> Hybrid approach - deterministic safety systems, stochastic scheduling</li>
+                                <li><strong>Food Production:</strong> Stochastic sampling for quality, deterministic safety protocols</li>
+                            </ul>
+                        `
+                    }
+                };
+                
+                const details = exampleDetails[title];
+                if (details) {
+                    modal.show(`Policy Types in ${title}`, details.content);
+                }
+            });
+        });
+
+        // Interactive comparison table cells
+        document.querySelectorAll('.table-cell').forEach(cell => {
+            cell.addEventListener('click', function() {
+                // Find the aspect and policy type
+                const row = this.parentElement;
+                const cells = Array.from(row.children);
+                const cellIndex = cells.indexOf(this);
+                
+                if (cellIndex === 0) return; // Skip aspect label
+                
+                const aspectCell = cells[0];
+                const aspect = aspectCell.querySelector('.cell-aspect').textContent;
+                const policyType = cellIndex === 1 ? 'Deterministic' : 'Stochastic';
+                const content = this.querySelector('.cell-content').textContent;
+                
+                modal.show(`${aspect}: ${policyType} Policies`, `
+                    <div class="modal-highlight">
+                        <strong>${aspect} in ${policyType} Policies</strong>
+                    </div>
+                    <p>${content}</p>
+                    <p>This represents a key difference in how ${policyType.toLowerCase()} policies handle ${aspect.toLowerCase()}.</p>
+                `);
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week11_Slide206.html';
+            } else if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week11_Slide204.html';
+            }
+        });
+    </script>
+</body>
+</html>

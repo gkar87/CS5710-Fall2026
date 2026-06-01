@@ -1,0 +1,1500 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Data Augmentation for Images</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px 25px;
+            border-radius: 25px;
+            font-weight: 600;
+            color: #0d9488;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            font-size: 1.1em;
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px 25px;
+            border-radius: 25px;
+            font-weight: 600;
+            color: #0d9488;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            font-size: 1.1em;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.2em;
+            text-align: center;
+            margin-bottom: 40px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        @keyframes slideInFromTop {
+            0% { transform: translateY(-50px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        .intro-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            padding: 35px;
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(13, 148, 136, 0.1);
+            border: 2px solid rgba(13, 148, 136, 0.1);
+            margin-bottom: 30px;
+            text-align: center;
+            animation: fadeIn 1s ease-out 0.3s both;
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        .intro-text {
+            font-size: 1.3em;
+            line-height: 1.7;
+            color: #1e293b;
+            margin-bottom: 20px;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .augmentation-grid {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .augmentation-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(13, 148, 136, 0.1);
+            border: 2px solid rgba(13, 148, 136, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            animation: fadeInUp 1s ease-out 0.5s both;
+        }
+
+        @keyframes fadeInUp {
+            0% { transform: translateY(30px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        .augmentation-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(13, 148, 136, 0.2);
+        }
+
+        .technique-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            padding: 30px;
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(13, 148, 136, 0.1);
+            border: 2px solid rgba(13, 148, 136, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .technique-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(13, 148, 136, 0.2);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .aug-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .aug-name {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #0d9488;
+            margin-bottom: 10px;
+        }
+
+        .aug-description {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .technique-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .technique-item {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 15px;
+            margin: 12px 0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid #0d9488;
+        }
+
+        .technique-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 8px 20px rgba(13, 148, 136, 0.2);
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .floating-elements {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.6;
+            animation: float 20s linear infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) translateX(-20px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.6; }
+            90% { opacity: 0.6; }
+            100% { transform: translateY(-100px) translateX(100px) rotate(360deg); opacity: 0; }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 9</div>
+    <div class="slide-number">Slide 175 of 180</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">🎨 Data Augmentation for Images</h1>
+        
+        <div class="intro-section" onclick="showAugmentationOverview()">
+            <div class="intro-text">
+                <strong>Creating More Training Data Without Collecting More Images</strong><br>
+                Data augmentation artificially expands your dataset by creating realistic variations of existing images.
+            </div>
+        </div>
+
+        <div class="content-grid">
+            <div class="technique-section" onclick="showGeometricTransforms()">
+                <h2 class="section-title">📐 Geometric Transforms</h2>
+                <ul class="technique-list">
+                    <li class="technique-item">
+                        <strong>Rotation:</strong> Rotate images by small angles
+                    </li>
+                    <li class="technique-item">
+                        <strong>Translation:</strong> Shift images horizontally/vertically
+                    </li>
+                    <li class="technique-item">
+                        <strong>Scaling:</strong> Zoom in/out of images
+                    </li>
+                    <li class="technique-item">
+                        <strong>Shearing:</strong> Slant images along axes
+                    </li>
+                    <li class="technique-item">
+                        <strong>Flipping:</strong> Mirror images horizontally/vertically
+                    </li>
+                </ul>
+            </div>
+
+            <div class="technique-section" onclick="showPhotometricTransforms()">
+                <h2 class="section-title">💡 Photometric Transforms</h2>
+                <ul class="technique-list">
+                    <li class="technique-item">
+                        <strong>Brightness:</strong> Adjust image luminosity
+                    </li>
+                    <li class="technique-item">
+                        <strong>Contrast:</strong> Modify difference between light/dark
+                    </li>
+                    <li class="technique-item">
+                        <strong>Saturation:</strong> Change color intensity
+                    </li>
+                    <li class="technique-item">
+                        <strong>Hue:</strong> Shift color spectrum
+                    </li>
+                    <li class="technique-item">
+                        <strong>Gamma:</strong> Adjust midtone contrast
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="augmentation-grid">
+            <div class="augmentation-card" onclick="showRandomCrop()">
+                <div class="aug-icon">✂️</div>
+                <div class="aug-name">Random Crop</div>
+                <div class="aug-description">Randomly crop different regions from images</div>
+            </div>
+            
+            <div class="augmentation-card" onclick="showMixup()">
+                <div class="aug-icon">🔀</div>
+                <div class="aug-name">Mixup</div>
+                <div class="aug-description">Blend two images and their labels</div>
+            </div>
+            
+            <div class="augmentation-card" onclick="showCutout()">
+                <div class="aug-icon">⬛</div>
+                <div class="aug-name">Cutout</div>
+                <div class="aug-description">Randomly mask out rectangular regions</div>
+            </div>
+            
+            <div class="augmentation-card" onclick="showAutoAugment()">
+                <div class="aug-icon">🤖</div>
+                <div class="aug-name">AutoAugment</div>
+                <div class="aug-description">AI-designed augmentation policies</div>
+            </div>
+            
+            <div class="augmentation-card" onclick="showElasticTransform()">
+                <div class="aug-icon">🌊</div>
+                <div class="aug-name">Elastic Transform</div>
+                <div class="aug-description">Smooth spatial deformations</div>
+            </div>
+            
+            <div class="augmentation-card" onclick="showGaussianNoise()">
+                <div class="aug-icon">📱</div>
+                <div class="aug-name">Gaussian Noise</div>
+                <div class="aug-description">Add random pixel-level noise</div>
+            </div>
+            
+            <div class="augmentation-card" onclick="showChannelShuffle()">
+                <div class="aug-icon">🎨</div>
+                <div class="aug-name">Channel Shuffle</div>
+                <div class="aug-description">Randomly reorder color channels</div>
+            </div>
+            
+            <div class="augmentation-card" onclick="showMosaic()">
+                <div class="aug-icon">🧩</div>
+                <div class="aug-name">Mosaic</div>
+                <div class="aug-description">Combine 4 images into one</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week9_Slide174.html" class="nav-btn">← Previous</a>
+        <a href="Week9_Slide176.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Modal content functions
+        function showAugmentationOverview() {
+            modal.show('Data Augmentation Overview', `
+                <div class="modal-highlight">
+                    <strong>Why Data Augmentation is Essential</strong>
+                </div>
+                
+                <p><strong>The Problem:</strong> Deep learning models are data-hungry, but collecting labeled data is expensive and time-consuming.</p>
+                
+                <p><strong>The Solution:</strong> Data augmentation creates new training examples by applying transformations to existing data.</p>
+                
+                <div class="modal-code">
+# Simple augmentation pipeline
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+
+datagen = ImageDataGenerator(
+    rotation_range=20,        # Rotate up to 20 degrees
+    width_shift_range=0.2,    # Shift horizontally by 20%
+    height_shift_range=0.2,   # Shift vertically by 20%
+    shear_range=0.2,          # Shear transformation
+    zoom_range=0.2,           # Zoom in/out by 20%
+    horizontal_flip=True,     # Random horizontal flip
+    fill_mode='nearest'       # Fill missing pixels
+)
+
+# Apply to training data
+train_generator = datagen.flow_from_directory(
+    'data/train',
+    target_size=(224, 224),
+    batch_size=32,
+    class_mode='categorical'
+)
+                </div>
+                
+                <p><strong>Benefits:</strong></p>
+                <ul>
+                    <li>• <strong>Reduces overfitting:</strong> Model sees more variation</li>
+                    <li>• <strong>Improves generalization:</strong> Better performance on new data</li>
+                    <li>• <strong>Increases dataset size:</strong> Effectively 10-100x more data</li>
+                    <li>• <strong>Handles data scarcity:</strong> Essential for small datasets</li>
+                </ul>
+                
+                <p><strong>Key Principles:</strong></p>
+                <ul>
+                    <li>• Transformations should preserve class labels</li>
+                    <li>• Apply augmentations that match real-world variations</li>
+                    <li>• Use stronger augmentation for smaller datasets</li>
+                    <li>• Test augmented samples manually to ensure quality</li>
+                </ul>
+            `);
+        }
+
+        function showGeometricTransforms() {
+            modal.show('Geometric Transformations', `
+                <div class="modal-highlight">
+                    <strong>Spatial Transformations that Preserve Object Identity</strong>
+                </div>
+                
+                <p><strong>1. Rotation:</strong></p>
+                <div class="modal-code">
+# Random rotation
+transform = transforms.RandomRotation(degrees=(-15, 15))
+
+# Or with probability
+transform = transforms.RandomApply([
+    transforms.RandomRotation(30)
+], p=0.5)
+
+# TensorFlow version
+datagen = ImageDataGenerator(rotation_range=15)
+                </div>
+                
+                <p><strong>2. Translation (Shifting):</strong></p>
+                <div class="modal-code">
+# PyTorch translation
+transform = transforms.RandomAffine(
+    degrees=0,
+    translate=(0.1, 0.1)  # 10% of image size
+)
+
+# TensorFlow version
+datagen = ImageDataGenerator(
+    width_shift_range=0.1,
+    height_shift_range=0.1
+)
+                </div>
+                
+                <p><strong>3. Scaling (Zoom):</strong></p>
+                <div class="modal-code">
+# Random scaling
+transform = transforms.RandomResizedCrop(
+    size=224,
+    scale=(0.8, 1.2),  # 80% to 120% of original
+    ratio=(0.75, 1.33)  # Aspect ratio range
+)
+
+# TensorFlow zoom
+datagen = ImageDataGenerator(zoom_range=0.2)
+                </div>
+                
+                <p><strong>Best Practices:</strong></p>
+                <ul>
+                    <li>• <strong>Rotation:</strong> ±15° for most objects, ±5° for text/faces</li>
+                    <li>• <strong>Translation:</strong> 10-20% of image size</li>
+                    <li>• <strong>Scaling:</strong> 0.8x to 1.2x original size</li>
+                    <li>• <strong>Shearing:</strong> Small angles (±10°) to avoid distortion</li>
+                    <li>• <strong>Flipping:</strong> Horizontal for most objects, avoid for text</li>
+                </ul>
+                
+                <p><strong>Task-Specific Considerations:</strong></p>
+                <ul>
+                    <li>• Medical images: Minimal rotation/flipping</li>
+                    <li>• Satellite images: Full 360° rotation OK</li>
+                    <li>• Text/OCR: Very limited geometric transforms</li>
+                    <li>• Face recognition: Small rotations, horizontal flips</li>
+                </ul>
+            `);
+        }
+
+        function showPhotometricTransforms() {
+            modal.show('Photometric Transformations', `
+                <div class="modal-highlight">
+                    <strong>Color and Intensity Variations</strong>
+                </div>
+                
+                <p><strong>1. Brightness Adjustment:</strong></p>
+                <div class="modal-code">
+# PyTorch brightness
+transform = transforms.ColorJitter(
+    brightness=0.2  # ±20% brightness variation
+)
+
+# Manual implementation
+def adjust_brightness(image, factor):
+    return tf.image.adjust_brightness(image, factor)
+
+# Random brightness
+def random_brightness(image):
+    factor = tf.random.uniform([], -0.2, 0.2)
+    return tf.image.adjust_brightness(image, factor)
+                </div>
+                
+                <p><strong>2. Contrast Modification:</strong></p>
+                <div class="modal-code">
+# Contrast adjustment
+transform = transforms.ColorJitter(contrast=0.2)
+
+# TensorFlow contrast
+def adjust_contrast(image, factor):
+    return tf.image.adjust_contrast(image, factor)
+
+# Combined color jittering
+transform = transforms.ColorJitter(
+    brightness=0.2,
+    contrast=0.2,
+    saturation=0.2,
+    hue=0.1
+)
+                </div>
+                
+                <p><strong>3. Advanced Color Augmentations:</strong></p>
+                <div class="modal-code">
+# HSV color space augmentation
+def hsv_augment(image):
+    # Convert to HSV
+    hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
+    
+    # Adjust hue, saturation, value
+    hsv[:, :, 0] += random.randint(-10, 10)  # Hue
+    hsv[:, :, 1] *= random.uniform(0.8, 1.2)  # Saturation
+    hsv[:, :, 2] *= random.uniform(0.8, 1.2)  # Value
+    
+    # Convert back to RGB
+    return cv2.cvtColor(hsv, cv2.COLOR_HSV2RGB)
+
+# Channel-wise normalization
+def channel_shuffle(image):
+    # Randomly permute color channels
+    channels = tf.unstack(image, axis=-1)
+    tf.random.shuffle(channels)
+    return tf.stack(channels, axis=-1)
+                </div>
+                
+                <p><strong>Application Guidelines:</strong></p>
+                <ul>
+                    <li>• <strong>Natural images:</strong> All photometric transforms useful</li>
+                    <li>• <strong>Medical scans:</strong> Minimal color changes, focus on intensity</li>
+                    <li>• <strong>Infrared/thermal:</strong> Intensity variations more important</li>
+                    <li>• <strong>Microscopy:</strong> Color changes can alter interpretation</li>
+                </ul>
+                
+                <p><strong>Recommended Ranges:</strong></p>
+                <ul>
+                    <li>• Brightness: ±20% (0.8x to 1.2x)</li>
+                    <li>• Contrast: ±20% variation</li>
+                    <li>• Saturation: ±30% for natural images</li>
+                    <li>• Hue: ±10° for realistic color shifts</li>
+                </ul>
+            `);
+        }
+
+        function showRandomCrop() {
+            modal.show('Random Crop Augmentation', `
+                <div class="modal-highlight">
+                    <strong>Focus on Different Parts of the Image</strong>
+                </div>
+                
+                <p><strong>Concept:</strong> Randomly crop different regions from images to create scale and translation invariance.</p>
+                
+                <div class="modal-code">
+# PyTorch Random Crop
+transform = transforms.Compose([
+    transforms.RandomResizedCrop(
+        size=224,                    # Output size
+        scale=(0.8, 1.0),           # Crop 80-100% of image
+        ratio=(0.75, 1.33),         # Aspect ratio range
+        interpolation=Image.BILINEAR
+    ),
+    transforms.ToTensor()
+])
+
+# TensorFlow Random Crop
+def random_crop(image, crop_size):
+    return tf.image.random_crop(
+        image, 
+        size=[crop_size, crop_size, 3]
+    )
+
+# Advanced: Multi-scale cropping
+def multiscale_crop(image, scales=[0.8, 0.9, 1.0]):
+    scale = random.choice(scales)
+    h, w = image.shape[:2]
+    crop_h, crop_w = int(h * scale), int(w * scale)
+    
+    # Random crop position
+    y = random.randint(0, h - crop_h)
+    x = random.randint(0, w - crop_w)
+    
+    crop = image[y:y+crop_h, x:x+crop_w]
+    return cv2.resize(crop, (224, 224))
+                </div>
+                
+                <p><strong>Benefits:</strong></p>
+                <ul>
+                    <li>• Forces model to recognize objects at different scales</li>
+                    <li>• Provides translation invariance</li>
+                    <li>• Helps with objects that don't fill entire image</li>
+                    <li>• Reduces background bias</li>
+                </ul>
+                
+                <p><strong>Strategies:</strong></p>
+                <ul>
+                    <li>• <strong>Central bias:</strong> Crop more often from center</li>
+                    <li>• <strong>Object-aware:</strong> Use bounding boxes to guide crops</li>
+                    <li>• <strong>Multi-crop testing:</strong> 5 or 10 crops at test time</li>
+                    <li>• <strong>Progressive cropping:</strong> Start large, gradually smaller</li>
+                </ul>
+                
+                <p><strong>Common Issues:</strong></p>
+                <ul>
+                    <li>• Cropping out important parts of objects</li>
+                    <li>• Creating unrealistic aspect ratios</li>
+                    <li>• Too aggressive cropping (< 70% area)</li>
+                </ul>
+            `);
+        }
+
+        function showMixup() {
+            modal.show('Mixup Data Augmentation', `
+                <div class="modal-highlight">
+                    <strong>Blending Images and Labels for Better Generalization</strong>
+                </div>
+                
+                <p><strong>Key Idea:</strong> Create virtual training examples by mixing two images and their labels.</p>
+                
+                <div class="modal-code">
+# Mixup implementation
+def mixup_data(x, y, alpha=1.0):
+    """Perform mixup augmentation"""
+    if alpha > 0:
+        lam = np.random.beta(alpha, alpha)
+    else:
+        lam = 1
+    
+    batch_size = x.size(0)
+    index = torch.randperm(batch_size)
+    
+    mixed_x = lam * x + (1 - lam) * x[index, :]
+    y_a, y_b = y, y[index]
+    
+    return mixed_x, y_a, y_b, lam
+
+# Mixup loss function
+def mixup_criterion(criterion, pred, y_a, y_b, lam):
+    return lam * criterion(pred, y_a) + (1 - lam) * criterion(pred, y_b)
+
+# Training loop with mixup
+for batch_idx, (inputs, targets) in enumerate(trainloader):
+    inputs, targets_a, targets_b, lam = mixup_data(
+        inputs, targets, alpha=1.0
+    )
+    
+    outputs = model(inputs)
+    loss = mixup_criterion(criterion, outputs, targets_a, targets_b, lam)
+    
+    loss.backward()
+    optimizer.step()
+                </div>
+                
+                <p><strong>How It Works:</strong></p>
+                <ul>
+                    <li>• Sample λ from Beta(α, α) distribution</li>
+                    <li>• Mix images: x̃ = λx₁ + (1-λ)x₂</li>
+                    <li>• Mix labels: ỹ = λy₁ + (1-λ)y₂</li>
+                    <li>• Train on mixed examples</li>
+                </ul>
+                
+                <p><strong>Benefits:</strong></p>
+                <ul>
+                    <li>• Reduces overfitting significantly</li>
+                    <li>• Improves calibration of predictions</li>
+                    <li>• Makes model more robust to adversarial examples</li>
+                    <li>• Works across different architectures and tasks</li>
+                </ul>
+                
+                <p><strong>Variants:</strong></p>
+                <ul>
+                    <li>• <strong>CutMix:</strong> Mix patches instead of full images</li>
+                    <li>• <strong>AugMix:</strong> Mix multiple augmentations</li>
+                    <li>• <strong>Manifold Mixup:</strong> Mix in hidden layers</li>
+                    <li>• <strong>AdaMixup:</strong> Adaptive mixing ratios</li>
+                </ul>
+                
+                <p><strong>Hyperparameters:</strong></p>
+                <ul>
+                    <li>• α = 1.0: Uniform mixing (most common)</li>
+                    <li>• α = 0.2: More conservative mixing</li>
+                    <li>• α = 2.0: More aggressive mixing</li>
+                </ul>
+            `);
+        }
+
+        function showCutout() {
+            modal.show('Cutout Augmentation', `
+                <div class="modal-highlight">
+                    <strong>Randomly Masking Patches to Improve Robustness</strong>
+                </div>
+                
+                <p><strong>Concept:</strong> Randomly mask out square regions in training images to force the model to use more diverse features.</p>
+                
+                <div class="modal-code">
+# Cutout implementation
+class Cutout:
+    def __init__(self, n_holes=1, length=16):
+        self.n_holes = n_holes
+        self.length = length
+    
+    def __call__(self, img):
+        h, w = img.size(1), img.size(2)
+        mask = np.ones((h, w), np.float32)
+        
+        for n in range(self.n_holes):
+            y = np.random.randint(h)
+            x = np.random.randint(w)
+            
+            y1 = np.clip(y - self.length // 2, 0, h)
+            y2 = np.clip(y + self.length // 2, 0, h)
+            x1 = np.clip(x - self.length // 2, 0, w)
+            x2 = np.clip(x + self.length // 2, 0, w)
+            
+            mask[y1: y2, x1: x2] = 0.
+        
+        mask = torch.from_numpy(mask)
+        mask = mask.expand_as(img)
+        img = img * mask
+        
+        return img
+
+# Usage in transforms
+transform_train = transforms.Compose([
+    transforms.RandomCrop(32, padding=4),
+    transforms.RandomHorizontalFlip(),
+    transforms.ToTensor(),
+    transforms.Normalize(mean, std),
+    Cutout(n_holes=1, length=16)
+])
+                </div>
+                
+                <p><strong>Variants:</strong></p>
+                <ul>
+                    <li>• <strong>Random Erasing:</strong> Similar but with random values</li>
+                    <li>• <strong>GridMask:</strong> Regular grid pattern masking</li>
+                    <li>• <strong>Hide and Seek:</strong> Multiple random patches</li>
+                    <li>• <strong>CutMix:</strong> Replace patch with another image</li>
+                </ul>
+                
+                <div class="modal-code">
+# Random Erasing variant
+class RandomErasing:
+    def __init__(self, probability=0.5, sl=0.02, sh=0.4, r1=0.3):
+        self.probability = probability
+        self.sl = sl  # Min erased area
+        self.sh = sh  # Max erased area
+        self.r1 = r1  # Min aspect ratio
+    
+    def __call__(self, img):
+        if random.uniform(0, 1) >= self.probability:
+            return img
+        
+        for attempt in range(100):
+            area = img.size()[1] * img.size()[2]
+            target_area = random.uniform(self.sl, self.sh) * area
+            aspect_ratio = random.uniform(self.r1, 1/self.r1)
+            
+            h = int(round(math.sqrt(target_area * aspect_ratio)))
+            w = int(round(math.sqrt(target_area / aspect_ratio)))
+            
+            if w < img.size()[2] and h < img.size()[1]:
+                x1 = random.randint(0, img.size()[1] - h)
+                y1 = random.randint(0, img.size()[2] - w)
+                
+                img[0, x1:x1+h, y1:y1+w] = random.random()
+                img[1, x1:x1+h, y1:y1+w] = random.random()
+                img[2, x1:x1+h, y1:y1+w] = random.random()
+                
+                return img
+        
+        return img
+                </div>
+                
+                <p><strong>Benefits:</strong></p>
+                <ul>
+                    <li>• Prevents overfitting to specific features</li>
+                    <li>• Improves occlusion robustness</li>
+                    <li>• Forces attention to distributed features</li>
+                    <li>• Simple to implement and effective</li>
+                </ul>
+            `);
+        }
+
+        function showAutoAugment() {
+            modal.show('AutoAugment - AI-Designed Augmentation', `
+                <div class="modal-highlight">
+                    <strong>Using Neural Architecture Search for Data Augmentation</strong>
+                </div>
+                
+                <p><strong>Concept:</strong> Use reinforcement learning to automatically discover optimal augmentation policies for specific datasets.</p>
+                
+                <div class="modal-code">
+# AutoAugment policy structure
+class AutoAugmentPolicy:
+    def __init__(self, name='imagenet'):
+        self.policies = self.get_policy(name)
+    
+    def get_policy(self, name):
+        if name == 'imagenet':
+            return [
+                [('Posterize', 0.4, 8), ('Rotate', 0.6, 9)],
+                [('Solarize', 0.6, 5), ('AutoContrast', 0.6, 5)],
+                [('Equalize', 0.8, 8), ('Equalize', 0.6, 3)],
+                [('Posterize', 0.6, 7), ('Posterize', 0.6, 6)],
+                [('Equalize', 0.4, 7), ('Solarize', 0.2, 4)],
+                # ... more policies
+            ]
+    
+    def __call__(self, img):
+        policy = random.choice(self.policies)
+        for transform_name, prob, magnitude in policy:
+            if random.random() < prob:
+                img = apply_transform(img, transform_name, magnitude)
+        return img
+
+# Available transforms in AutoAugment
+TRANSFORMS = [
+    'AutoContrast', 'Equalize', 'Invert', 'Rotate', 'Posterize',
+    'Solarize', 'SolarizeAdd', 'Color', 'Contrast', 'Brightness',
+    'Sharpness', 'ShearX', 'ShearY', 'CutoutAbs', 'TranslateXabs',
+    'TranslateYabs'
+]
+                </div>
+                
+                <p><strong>How AutoAugment Works:</strong></p>
+                <ul>
+                    <li>• Controller network proposes augmentation policies</li>
+                    <li>• Each policy = sequence of transform operations</li>
+                    <li>• Train model with proposed policy</li>
+                    <li>• Use validation accuracy as reward signal</li>
+                    <li>• Update controller to maximize reward</li>
+                </ul>
+                
+                <p><strong>Discovered Patterns:</strong></p>
+                <ul>
+                    <li>• Different datasets need different policies</li>
+                    <li>• Combining geometric + photometric transforms is key</li>
+                    <li>• Moderate probabilities (0.4-0.8) work best</li>
+                    <li>• Sequential application of 2-3 transforms optimal</li>
+                </ul>
+                
+                <p><strong>Variants and Improvements:</strong></p>
+                <ul>
+                    <li>• <strong>Fast AutoAugment:</strong> Faster search using density matching</li>
+                    <li>• <strong>RandAugment:</strong> Simplified with uniform sampling</li>
+                    <li>• <strong>AugMax:</strong> Adversarial augmentation search</li>
+                    <li>• <strong>TrivialAugment:</strong> Single random transform</li>
+                </ul>
+                
+                <div class="modal-code">
+# RandAugment - Simplified version
+def randaugment(img, n=2, m=9):
+    """
+    n: number of transforms to apply
+    m: magnitude of transforms (0-30)
+    """
+    ops = [
+        'AutoContrast', 'Equalize', 'Rotate', 'Solarize',
+        'Color', 'Posterize', 'Brightness', 'Contrast', 'Sharpness'
+    ]
+    
+    for _ in range(n):
+        op = random.choice(ops)
+        img = apply_transform(img, op, m)
+    
+    return img
+                </div>
+            `);
+        }
+
+        function showElasticTransform() {
+            modal.show('Elastic Transformation', `
+                <div class="modal-highlight">
+                    <strong>Smooth Spatial Deformations</strong>
+                </div>
+                
+                <p><strong>Concept:</strong> Apply smooth, non-linear spatial transformations to simulate natural deformations.</p>
+                
+                <div class="modal-code">
+# Elastic transformation implementation
+import cv2
+from scipy.ndimage import gaussian_filter
+
+def elastic_transform(image, alpha=34, sigma=4, alpha_affine=0.2):
+    """
+    Elastic deformation of images as described in:
+    Simard, Steinkraus and Platt, "Best Practices for
+    Convolutional Neural Networks applied to Visual Document Analysis", in
+    Proc. of the International Conference on Document Analysis and
+    Recognition, 2003.
+    """
+    random_state = np.random.RandomState(None)
+    
+    shape = image.shape
+    shape_size = shape[:2]
+    
+    # Random affine
+    center_square = np.float32(shape_size) // 2
+    square_size = min(shape_size) // 3
+    pts1 = np.float32([center_square + square_size,    
+                       [center_square[0]+square_size, center_square[1]-square_size],
+                       center_square - square_size])
+    pts2 = pts1 + random_state.uniform(-alpha_affine, alpha_affine, size=pts1.shape).astype(np.float32)
+    M = cv2.getAffineTransform(pts1, pts2)
+    image = cv2.warpAffine(image, M, shape_size[::-1], borderMode=cv2.BORDER_REFLECT_101)
+    
+    # Random elastic deformation
+    dx = gaussian_filter((random_state.rand(*shape_size) * 2 - 1), sigma) * alpha
+    dy = gaussian_filter((random_state.rand(*shape_size) * 2 - 1), sigma) * alpha
+    
+    x, y = np.meshgrid(np.arange(shape[1]), np.arange(shape[0]))
+    indices = np.reshape(y+dy, (-1, 1)), np.reshape(x+dx, (-1, 1))
+    
+    return map_coordinates(image, indices, order=1, mode='reflect').reshape(shape)
+                </div>
+                
+                <p><strong>Parameters:</strong></p>
+                <ul>
+                    <li>• <strong>α (alpha):</strong> Scaling factor for deformation strength</li>
+                    <li>• <strong>σ (sigma):</strong> Gaussian kernel standard deviation</li>
+                    <li>• <strong>alpha_affine:</strong> Random affine transformation strength</li>
+                </ul>
+                
+                <p><strong>Applications:</strong></p>
+                <ul>
+                    <li>• <strong>Medical imaging:</strong> Simulate tissue deformation</li>
+                    <li>• <strong>Document analysis:</strong> Paper wrinkling/distortion</li>
+                    <li>• <strong>Handwriting recognition:</strong> Natural writing variations</li>
+                    <li>• <strong>Biological images:</strong> Cell shape variations</li>
+                </ul>
+                
+                <p><strong>Optimized Implementation:</strong></p>
+                <div class="modal-code">
+# Using albumentations library
+import albumentations as A
+
+transform = A.Compose([
+    A.ElasticTransform(
+        alpha=120,          # Strength of deformation
+        sigma=120 * 0.05,   # Standard deviation of gaussian kernel
+        alpha_affine=120 * 0.03,  # Affine transformation strength
+        border_mode=cv2.BORDER_REFLECT_101,
+        p=0.5
+    )
+])
+
+# Apply transformation
+transformed = transform(image=image)
+image = transformed['image']
+                </div>
+                
+                <p><strong>Performance Tips:</strong></p>
+                <ul>
+                    <li>• Pre-compute displacement fields for speed</li>
+                    <li>• Use GPU-accelerated interpolation</li>
+                    <li>• Apply to patches rather than full images</li>
+                    <li>• Cache transformed images if memory allows</li>
+                </ul>
+            `);
+        }
+
+        function showGaussianNoise() {
+            modal.show('Gaussian Noise Augmentation', `
+                <div class="modal-highlight">
+                    <strong>Adding Random Noise for Robustness</strong>
+                </div>
+                
+                <p><strong>Purpose:</strong> Add random noise to images to improve model robustness and prevent overfitting to clean data.</p>
+                
+                <div class="modal-code">
+# Simple Gaussian noise
+def add_gaussian_noise(image, mean=0, std=0.1):
+    """Add Gaussian noise to image"""
+    noise = np.random.normal(mean, std, image.shape)
+    noisy_image = image + noise
+    return np.clip(noisy_image, 0, 1)
+
+# PyTorch implementation
+class GaussianNoise:
+    def __init__(self, mean=0., std=0.1):
+        self.std = std
+        self.mean = mean
+        
+    def __call__(self, tensor):
+        return tensor + torch.randn(tensor.size()) * self.std + self.mean
+
+# TensorFlow implementation
+def gaussian_noise(image, stddev=0.1):
+    noise = tf.random.normal(shape=tf.shape(image), stddev=stddev)
+    return tf.clip_by_value(image + noise, 0.0, 1.0)
+
+# Adaptive noise based on image intensity
+def adaptive_gaussian_noise(image, noise_factor=0.1):
+    """Noise level adapts to local image intensity"""
+    std_map = tf.image.rgb_to_grayscale(image) * noise_factor
+    noise = tf.random.normal(tf.shape(image)) * std_map
+    return tf.clip_by_value(image + noise, 0.0, 1.0)
+                </div>
+                
+                <p><strong>Types of Noise:</strong></p>
+                <ul>
+                    <li>• <strong>Gaussian:</strong> Normal distribution, most common</li>
+                    <li>• <strong>Salt & Pepper:</strong> Random black and white pixels</li>
+                    <li>• <strong>Poisson:</strong> Shot noise, common in low-light</li>
+                    <li>• <strong>Speckle:</strong> Multiplicative noise</li>
+                    <li>• <strong>Uniform:</strong> Random values in range</li>
+                </ul>
+                
+                <div class="modal-code">
+# Different noise types
+def salt_pepper_noise(image, salt_prob=0.05, pepper_prob=0.05):
+    """Salt and pepper noise"""
+    noisy = image.copy()
+    
+    # Salt noise
+    salt = np.random.random(image.shape[:2]) < salt_prob
+    noisy[salt] = 1
+    
+    # Pepper noise
+    pepper = np.random.random(image.shape[:2]) < pepper_prob
+    noisy[pepper] = 0
+    
+    return noisy
+
+def poisson_noise(image):
+    """Poisson noise"""
+    vals = len(np.unique(image))
+    vals = 2 ** np.ceil(np.log2(vals))
+    noisy = np.random.poisson(image * vals) / float(vals)
+    return noisy
+
+def speckle_noise(image, std=0.1):
+    """Speckle noise"""
+    gauss = np.random.normal(0, std, image.shape)
+    noisy = image + image * gauss
+    return np.clip(noisy, 0, 1)
+                </div>
+                
+                <p><strong>Application Guidelines:</strong></p>
+                <ul>
+                    <li>• <strong>Computer Vision:</strong> σ = 0.05-0.15 for natural images</li>
+                    <li>• <strong>Medical Imaging:</strong> σ = 0.01-0.05 (preserve details)</li>
+                    <li>• <strong>Low-light scenarios:</strong> Higher noise levels</li>
+                    <li>• <strong>Satellite imagery:</strong> Sensor-specific noise models</li>
+                </ul>
+                
+                <p><strong>Benefits:</strong></p>
+                <ul>
+                    <li>• Improves robustness to sensor noise</li>
+                    <li>• Prevents overfitting to clean data</li>
+                    <li>• Simulates real-world acquisition conditions</li>
+                    <li>• Helps with domain adaptation</li>
+                </ul>
+            `);
+        }
+
+        function showChannelShuffle() {
+            modal.show('Channel Shuffle Augmentation', `
+                <div class="modal-highlight">
+                    <strong>Randomizing Color Channel Order</strong>
+                </div>
+                
+                <p><strong>Concept:</strong> Randomly permute RGB color channels to reduce color bias and improve robustness.</p>
+                
+                <div class="modal-code">
+# Basic channel shuffle
+def channel_shuffle(image):
+    """Randomly permute color channels"""
+    channels = cv2.split(image)
+    random.shuffle(channels)
+    return cv2.merge(channels)
+
+# PyTorch implementation
+class ChannelShuffle:
+    def __init__(self, probability=0.5):
+        self.probability = probability
+    
+    def __call__(self, tensor):
+        if random.random() < self.probability:
+            # Generate random permutation
+            perm = torch.randperm(tensor.size(0))
+            return tensor[perm]
+        return tensor
+
+# TensorFlow implementation
+def tf_channel_shuffle(image):
+    """TensorFlow channel shuffle"""
+    channels = tf.unstack(image, axis=-1)
+    indices = tf.random.shuffle(tf.range(len(channels)))
+    shuffled_channels = tf.gather(channels, indices)
+    return tf.stack(shuffled_channels, axis=-1)
+
+# Selective channel operations
+def channel_dropout(image, drop_prob=0.1):
+    """Randomly set channels to zero"""
+    mask = np.random.random(3) > drop_prob
+    result = image.copy()
+    for i in range(3):
+        if not mask[i]:
+            result[:, :, i] = 0
+    return result
+                </div>
+                
+                <p><strong>Variations:</strong></p>
+                <ul>
+                    <li>• <strong>Full shuffle:</strong> All 6 permutations (RGB→BGR, etc.)</li>
+                    <li>• <strong>Pair swap:</strong> Only swap two channels</li>
+                    <li>• <strong>Channel dropout:</strong> Zero out random channels</li>
+                    <li>• <strong>Weighted shuffle:</strong> Some permutations more likely</li>
+                </ul>
+                
+                <div class="modal-code">
+# Advanced channel manipulations
+class AdvancedChannelAug:
+    def __init__(self):
+        self.operations = [
+            self.rgb_to_bgr,
+            self.rgb_to_gbr,
+            self.channel_swap,
+            self.channel_invert,
+            self.grayscale_channel
+        ]
+    
+    def rgb_to_bgr(self, image):
+        return image[:, :, [2, 1, 0]]
+    
+    def rgb_to_gbr(self, image):
+        return image[:, :, [1, 2, 0]]
+    
+    def channel_swap(self, image):
+        # Swap random pair of channels
+        channels = [0, 1, 2]
+        i, j = random.sample(channels, 2)
+        result = image.copy()
+        result[:, :, [i, j]] = result[:, :, [j, i]]
+        return result
+    
+    def channel_invert(self, image):
+        # Invert random channel
+        channel = random.randint(0, 2)
+        result = image.copy()
+        result[:, :, channel] = 1 - result[:, :, channel]
+        return result
+    
+    def grayscale_channel(self, image):
+        # Replace random channel with grayscale
+        gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+        channel = random.randint(0, 2)
+        result = image.copy()
+        result[:, :, channel] = gray
+        return result
+                </div>
+                
+                <p><strong>When to Use:</strong></p>
+                <ul>
+                    <li>• Models overfitting to specific color patterns</li>
+                    <li>• Datasets with color bias</li>
+                    <li>• Cross-domain adaptation (RGB → IR, etc.)</li>
+                    <li>• Improving robustness to lighting conditions</li>
+                </ul>
+                
+                <p><strong>Considerations:</strong></p>
+                <ul>
+                    <li>• May not be suitable for color-critical tasks</li>
+                    <li>• Can confuse models trained on RGB order</li>
+                    <li>• Use sparingly (p=0.1-0.3)</li>
+                    <li>• Test impact on validation performance</li>
+                </ul>
+            `);
+        }
+
+        function showMosaic() {
+            modal.show('Mosaic Augmentation', `
+                <div class="modal-highlight">
+                    <strong>Combining Multiple Images into Training Samples</strong>
+                </div>
+                
+                <p><strong>Concept:</strong> Combine 4 images into a single training sample, popularized by YOLOv4 for object detection.</p>
+                
+                <div class="modal-code">
+# Mosaic augmentation implementation
+def mosaic_augment(images, labels, img_size=416):
+    """
+    Create mosaic from 4 images
+    images: list of 4 images
+    labels: list of 4 label sets (bounding boxes)
+    """
+    # Create empty mosaic canvas
+    mosaic = np.zeros((img_size, img_size, 3), dtype=np.uint8)
+    
+    # Random center point
+    xc = int(random.uniform(img_size * 0.25, img_size * 0.75))
+    yc = int(random.uniform(img_size * 0.25, img_size * 0.75))
+    
+    for i, (img, label) in enumerate(zip(images, labels)):
+        h, w = img.shape[:2]
+        
+        # Resize image randomly
+        scale = random.uniform(0.5, 1.5)
+        new_h, new_w = int(h * scale), int(w * scale)
+        img = cv2.resize(img, (new_w, new_h))
+        
+        # Determine position in mosaic
+        if i == 0:  # Top-left
+            x1a, y1a, x2a, y2a = max(xc - new_w, 0), max(yc - new_h, 0), xc, yc
+            x1b, y1b, x2b, y2b = new_w - (x2a - x1a), new_h - (y2a - y1a), new_w, new_h
+        elif i == 1:  # Top-right
+            x1a, y1a, x2a, y2a = xc, max(yc - new_h, 0), min(xc + new_w, img_size), yc
+            x1b, y1b, x2b, y2b = 0, new_h - (y2a - y1a), min(new_w, x2a - x1a), new_h
+        elif i == 2:  # Bottom-left
+            x1a, y1a, x2a, y2a = max(xc - new_w, 0), yc, xc, min(img_size, yc + new_h)
+            x1b, y1b, x2b, y2b = new_w - (x2a - x1a), 0, new_w, min(y2a - y1a, new_h)
+        elif i == 3:  # Bottom-right
+            x1a, y1a, x2a, y2a = xc, yc, min(xc + new_w, img_size), min(img_size, yc + new_h)
+            x1b, y1b, x2b, y2b = 0, 0, min(new_w, x2a - x1a), min(y2a - y1a, new_h)
+        
+        # Place image segment in mosaic
+        mosaic[y1a:y2a, x1a:x2a] = img[y1b:y2b, x1b:x2b]
+        
+        # Adjust labels (for object detection)
+        if label is not None:
+            label = adjust_labels(label, x1a, y1a, scale)
+    
+    return mosaic
+
+# For classification tasks (simpler version)
+def mosaic_classification(images, labels, grid_size=2):
+    """Create grid mosaic for classification"""
+    h, w = images[0].shape[:2]
+    mosaic_h, mosaic_w = h * grid_size, w * grid_size
+    mosaic = np.zeros((mosaic_h, mosaic_w, 3), dtype=np.uint8)
+    
+    for i, img in enumerate(images):
+        row = i // grid_size
+        col = i % grid_size
+        
+        y1, y2 = row * h, (row + 1) * h
+        x1, x2 = col * w, (col + 1) * w
+        
+        mosaic[y1:y2, x1:x2] = img
+    
+    # Resize back to original size
+    mosaic = cv2.resize(mosaic, (w, h))
+    return mosaic
+                </div>
+                
+                <p><strong>Benefits:</strong></p>
+                <ul>
+                    <li>• Increases diversity of training samples</li>
+                    <li>• Improves small object detection</li>
+                    <li>• Forces model to handle multi-object scenes</li>
+                    <li>• Enhances context understanding</li>
+                </ul>
+                
+                <p><strong>Variations:</strong></p>
+                <ul>
+                    <li>• <strong>MixUp Mosaic:</strong> Blend overlapping regions</li>
+                    <li>• <strong>3×3 Mosaic:</strong> 9 images instead of 4</li>
+                    <li>• <strong>Irregular Mosaic:</strong> Non-uniform grid divisions</li>
+                    <li>• <strong>Temporal Mosaic:</strong> For video data</li>
+                </ul>
+                
+                <p><strong>Applications:</strong></p>
+                <ul>
+                    <li>• Object detection (YOLO, SSD)</li>
+                    <li>• Instance segmentation</li>
+                    <li>• Multi-label classification</li>
+                    <li>• Scene understanding tasks</li>
+                </ul>
+                
+                <p><strong>Implementation Tips:</strong></p>
+                <ul>
+                    <li>• Use with probability 0.5-0.8 during training</li>
+                    <li>• Ensure proper label adjustment for detection</li>
+                    <li>• May slow down training due to complexity</li>
+                    <li>• Works best with large batch sizes</li>
+                </ul>
+            `);
+        }
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 30; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 20 + 's';
+                element.style.animationDuration = (Math.random() * 15 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Initialize
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (!modal.overlay.classList.contains('active')) {
+                if (e.key === 'ArrowRight') {
+                    window.location.href = 'Week9_Slide176.html';
+                } else if (e.key === 'ArrowLeft') {
+                    window.location.href = 'Week9_Slide174.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

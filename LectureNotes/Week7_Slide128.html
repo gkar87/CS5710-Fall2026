@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Kernel PCA</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .concept-section {
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,253,250,0.95) 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .kernels-section {
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,253,250,0.95) 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .concept-box {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .kernel-card {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 15px 0;
+            border: 1px solid #14b8a6;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+
+        .kernel-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 10px 20px rgba(13, 148, 136, 0.2);
+        }
+
+        .kernel-name {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 10px;
+        }
+
+        .kernel-formula {
+            font-family: 'Courier New', monospace;
+            background: #f0fdfa;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            text-align: center;
+        }
+
+        .visualization-demo {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,253,250,0.95) 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.5s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .demo-title {
+            font-size: 2em;
+            color: #0d9488;
+            margin-bottom: 30px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .plot-container {
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid #14b8a6;
+        }
+
+        .plot-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 15px;
+        }
+
+        .plot-canvas {
+            width: 100%;
+            height: 250px;
+            background: white;
+            border-radius: 10px;
+        }
+
+        .kernel-selector {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .kernel-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .kernel-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(13, 148, 136, 0.3);
+        }
+
+        .kernel-btn.active {
+            background: linear-gradient(135deg, #f59e0b, #f97316);
+        }
+
+        .advantages-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,253,250,0.95) 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.7s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .advantages-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .advantage-card {
+            background: linear-gradient(135deg, #ffffff, #f0fdfa);
+            padding: 25px;
+            border-radius: 15px;
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .advantage-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.2);
+        }
+
+        .advantage-icon {
+            font-size: 2em;
+            margin-bottom: 15px;
+        }
+
+        .advantage-title {
+            color: #0d9488;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number, .course-info {
+            position: fixed;
+            top: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .slide-number { right: 30px; }
+        .course-info { left: 30px; }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #334155;
+        }
+
+        @media (max-width: 1024px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .comparison-grid { grid-template-columns: 1fr; }
+            .advantages-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .slide-title { font-size: 2.5em; }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 7</div>
+    <div class="slide-number">Slide 128 of 140</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">🌀 Kernel PCA</h1>
+        
+        <div class="content-layout">
+            <div class="concept-section">
+                <h2 class="section-title">🎯 The Kernel Trick</h2>
+                
+                <div class="concept-box">
+                    <strong>Key Idea:</strong> Project data into higher-dimensional space where it becomes linearly separable, without explicitly computing the transformation.
+                </div>
+                
+                <h3 style="color: #0d9488; margin: 20px 0;">Why Kernel PCA?</h3>
+                <ul style="line-height: 2; color: #134e4a;">
+                    <li>• Handle non-linear relationships</li>
+                    <li>• Capture complex patterns</li>
+                    <li>• No explicit feature mapping needed</li>
+                    <li>• Works in infinite-dimensional spaces</li>
+                </ul>
+                
+                <div class="concept-box" style="margin-top: 20px;">
+                    <strong>Mathematical Foundation:</strong><br>
+                    Instead of φ(x)ᵀφ(y), compute k(x,y) directly<br>
+                    where k is the kernel function
+                </div>
+            </div>
+
+            <div class="kernels-section">
+                <h2 class="section-title">📐 Common Kernels</h2>
+                
+                <div class="kernel-card" onclick="showModal('polynomial')">
+                    <div class="kernel-name">Polynomial Kernel</div>
+                    <div class="kernel-formula">k(x,y) = (xᵀy + c)ᵈ</div>
+                    <div style="color: #64748b; font-size: 0.9em;">Captures polynomial features</div>
+                </div>
+                
+                <div class="kernel-card" onclick="showModal('rbf')">
+                    <div class="kernel-name">RBF (Gaussian) Kernel</div>
+                    <div class="kernel-formula">k(x,y) = exp(-γ||x-y||²)</div>
+                    <div style="color: #64748b; font-size: 0.9em;">Most popular, infinite dimensions</div>
+                </div>
+                
+                <div class="kernel-card" onclick="showModal('sigmoid')">
+                    <div class="kernel-name">Sigmoid Kernel</div>
+                    <div class="kernel-formula">k(x,y) = tanh(αxᵀy + c)</div>
+                    <div style="color: #64748b; font-size: 0.9em;">Similar to neural networks</div>
+                </div>
+                
+                <div class="kernel-card" onclick="showModal('laplacian')">
+                    <div class="kernel-name">Laplacian Kernel</div>
+                    <div class="kernel-formula">k(x,y) = exp(-α||x-y||)</div>
+                    <div style="color: #64748b; font-size: 0.9em;">Robust to outliers</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="visualization-demo">
+            <h2 class="demo-title">🔄 Linear PCA vs Kernel PCA</h2>
+            
+            <div class="kernel-selector">
+                <button class="kernel-btn active" onclick="selectKernel('linear')">Linear</button>
+                <button class="kernel-btn" onclick="selectKernel('poly')">Polynomial</button>
+                <button class="kernel-btn" onclick="selectKernel('rbf')">RBF</button>
+                <button class="kernel-btn" onclick="selectKernel('sigmoid')">Sigmoid</button>
+            </div>
+            
+            <div class="comparison-grid">
+                <div class="plot-container">
+                    <div class="plot-title">Original Data (Non-linear)</div>
+                    <canvas id="originalPlot" class="plot-canvas"></canvas>
+                </div>
+                
+                <div class="plot-container">
+                    <div class="plot-title">After Kernel PCA</div>
+                    <canvas id="transformedPlot" class="plot-canvas"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="advantages-section">
+            <h2 class="demo-title">💡 Advantages & Considerations</h2>
+            
+            <div class="advantages-grid">
+                <div class="advantage-card">
+                    <div class="advantage-icon">✅</div>
+                    <div class="advantage-title">Advantages</div>
+                    <ul style="color: #64748b; line-height: 1.8;">
+                        <li>• Handles non-linear patterns</li>
+                        <li>• No need to specify features</li>
+                        <li>• Works with any data type</li>
+                        <li>• Powerful for complex datasets</li>
+                    </ul>
+                </div>
+                
+                <div class="advantage-card">
+                    <div class="advantage-icon">⚠️</div>
+                    <div class="advantage-title">Considerations</div>
+                    <ul style="color: #64748b; line-height: 1.8;">
+                        <li>• Computationally expensive O(n³)</li>
+                        <li>• Kernel selection is crucial</li>
+                        <li>• Parameter tuning required</li>
+                        <li>• Difficult to interpret components</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week7_Slide127.html" class="nav-btn">← Previous</a>
+        <a href="Week7_Slide129.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Modal content database
+        const modalContent = {
+            'polynomial': {
+                title: 'Polynomial Kernel',
+                content: `
+                    <div style="background: linear-gradient(135deg, #ccfbf1, #99f6e4); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                        <h3 style="color: #0d9488;">k(x,y) = (xᵀy + c)ᵈ</h3>
+                        <p style="margin-top: 10px;">Maps data to polynomial feature space of degree d</p>
+                    </div>
+                    
+                    <h4 style="color: #0d9488; margin: 20px 0;">Parameters:</h4>
+                    <ul style="line-height: 2;">
+                        <li><strong>d:</strong> Polynomial degree (typically 2-5)</li>
+                        <li><strong>c:</strong> Constant term (often 0 or 1)</li>
+                    </ul>
+                    
+                    <h4 style="color: #0d9488; margin: 20px 0;">When to Use:</h4>
+                    <ul style="line-height: 2;">
+                        <li>• Natural polynomial relationships</li>
+                        <li>• Image processing (pixel interactions)</li>
+                        <li>• When you know the degree of non-linearity</li>
+                    </ul>
+                    
+                    <h4 style="color: #0d9488; margin: 20px 0;">Example:</h4>
+                    <p>d=2 captures all pairwise feature interactions<br>
+                    d=3 includes three-way interactions</p>
+                `
+            },
+            'rbf': {
+                title: 'RBF (Radial Basis Function) Kernel',
+                content: `
+                    <div style="background: linear-gradient(135deg, #ccfbf1, #99f6e4); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                        <h3 style="color: #0d9488;">k(x,y) = exp(-γ||x-y||²)</h3>
+                        <p style="margin-top: 10px;">Maps to infinite-dimensional space, most versatile kernel</p>
+                    </div>
+                    
+                    <h4 style="color: #0d9488; margin: 20px 0;">Parameter γ (gamma):</h4>
+                    <ul style="line-height: 2;">
+                        <li><strong>Small γ:</strong> Wide influence, smoother boundaries</li>
+                        <li><strong>Large γ:</strong> Narrow influence, complex boundaries</li>
+                        <li><strong>Default:</strong> γ = 1/n_features</li>
+                    </ul>
+                    
+                    <h4 style="color: #0d9488; margin: 20px 0;">Advantages:</h4>
+                    <ul style="line-height: 2;">
+                        <li>• Works well for most non-linear problems</li>
+                        <li>• No need to specify complexity</li>
+                        <li>• Smooth, continuous transformations</li>
+                    </ul>
+                    
+                    <h4 style="color: #0d9488; margin: 20px 0;">Best For:</h4>
+                    <p>Complex patterns, unknown relationships, general-purpose use</p>
+                `
+            },
+            'sigmoid': {
+                title: 'Sigmoid (Hyperbolic Tangent) Kernel',
+                content: `
+                    <div style="background: linear-gradient(135deg, #ccfbf1, #99f6e4); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                        <h3 style="color: #0d9488;">k(x,y) = tanh(αxᵀy + c)</h3>
+                        <p style="margin-top: 10px;">Inspired by neural networks, S-shaped transformation</p>
+                    </div>
+                    
+                    <h4 style="color: #0d9488; margin: 20px 0;">Parameters:</h4>
+                    <ul style="line-height: 2;">
+                        <li><strong>α:</strong> Slope parameter (scaling)</li>
+                        <li><strong>c:</strong> Intercept constant</li>
+                    </ul>
+                    
+                    <h4 style="color: #0d9488; margin: 20px 0;">Characteristics:</h4>
+                    <ul style="line-height: 2;">
+                        <li>• Similar to MLP activation</li>
+                        <li>• Not always positive semi-definite</li>
+                        <li>• Can model threshold behaviors</li>
+                    </ul>
+                    
+                    <h4 style="color: #0d9488; margin: 20px 0;">Use Cases:</h4>
+                    <p>Neural network-like transformations, binary-like patterns</p>
+                `
+            },
+            'laplacian': {
+                title: 'Laplacian Kernel',
+                content: `
+                    <div style="background: linear-gradient(135deg, #ccfbf1, #99f6e4); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                        <h3 style="color: #0d9488;">k(x,y) = exp(-α||x-y||)</h3>
+                        <p style="margin-top: 10px;">Similar to RBF but uses L1 distance, more robust</p>
+                    </div>
+                    
+                    <h4 style="color: #0d9488; margin: 20px 0;">Key Differences from RBF:</h4>
+                    <ul style="line-height: 2;">
+                        <li>• Uses Manhattan distance (L1)</li>
+                        <li>• More robust to outliers</li>
+                        <li>• Sharper transitions</li>
+                        <li>• Less smooth than Gaussian</li>
+                    </ul>
+                    
+                    <h4 style="color: #0d9488; margin: 20px 0;">When to Choose:</h4>
+                    <ul style="line-height: 2;">
+                        <li>• Noisy data with outliers</li>
+                        <li>• Sparse features</li>
+                        <li>• City-block distance is meaningful</li>
+                    </ul>
+                `
+            }
+        };
+
+        function showModal(key) {
+            const content = modalContent[key];
+            if (content) {
+                modal.show(content.title, content.content);
+            }
+        }
+
+        // Visualization functions
+        let currentKernel = 'linear';
+
+        function generateCircularData() {
+            const data = [];
+            // Inner circle
+            for (let i = 0; i < 50; i++) {
+                const angle = (i / 50) * 2 * Math.PI;
+                const r = 2 + (Math.random() - 0.5) * 0.5;
+                data.push({
+                    x: r * Math.cos(angle),
+                    y: r * Math.sin(angle),
+                    class: 0
+                });
+            }
+            // Outer circle
+            for (let i = 0; i < 50; i++) {
+                const angle = (i / 50) * 2 * Math.PI;
+                const r = 4 + (Math.random() - 0.5) * 0.5;
+                data.push({
+                    x: r * Math.cos(angle),
+                    y: r * Math.sin(angle),
+                    class: 1
+                });
+            }
+            return data;
+        }
+
+        function drawOriginalData() {
+            const canvas = document.getElementById('originalPlot');
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            
+            const data = generateCircularData();
+            const colors = ['#0d9488', '#f59e0b'];
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw axes
+            ctx.strokeStyle = '#cbd5e1';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.moveTo(0, canvas.height / 2);
+            ctx.lineTo(canvas.width, canvas.height / 2);
+            ctx.stroke();
+            
+            // Draw points
+            data.forEach(point => {
+                const x = canvas.width / 2 + point.x * 30;
+                const y = canvas.height / 2 - point.y * 30;
+                
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, Math.PI * 2);
+                ctx.fillStyle = colors[point.class];
+                ctx.fill();
+            });
+        }
+
+        function drawTransformedData() {
+            const canvas = document.getElementById('transformedPlot');
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            
+            const data = generateCircularData();
+            const colors = ['#0d9488', '#f59e0b'];
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw axes
+            ctx.strokeStyle = '#cbd5e1';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.moveTo(0, canvas.height / 2);
+            ctx.lineTo(canvas.width, canvas.height / 2);
+            ctx.stroke();
+            
+            // Transform and draw points based on kernel
+            data.forEach(point => {
+                let x, y;
+                
+                if (currentKernel === 'linear') {
+                    // No transformation, circles overlap
+                    x = canvas.width / 2 + point.x * 30;
+                    y = canvas.height / 2 - point.y * 30;
+                } else {
+                    // Simulate kernel transformation (separable)
+                    const r = Math.sqrt(point.x * point.x + point.y * point.y);
+                    const transformed = currentKernel === 'rbf' ? 
+                        Math.exp(-0.5 * r) : 
+                        currentKernel === 'poly' ?
+                        r * r :
+                        Math.tanh(r);
+                    
+                    x = canvas.width / 2 + (point.class === 0 ? -1 : 1) * transformed * 60;
+                    y = canvas.height / 2 - point.y * 20;
+                }
+                
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, Math.PI * 2);
+                ctx.fillStyle = colors[point.class];
+                ctx.fill();
+            });
+            
+            // Add separation indicator
+            if (currentKernel !== 'linear') {
+                ctx.strokeStyle = '#ef4444';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(canvas.width / 2, 20);
+                ctx.lineTo(canvas.width / 2, canvas.height - 20);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+        }
+
+        function selectKernel(kernel) {
+            currentKernel = kernel;
+            
+            // Update button states
+            document.querySelectorAll('.kernel-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Redraw plots
+            drawTransformedData();
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (modal.overlay.classList.contains('active')) return;
+            
+            if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week7_Slide127.html';
+            } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                window.location.href = 'Week7_Slide129.html';
+            }
+        });
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            drawOriginalData();
+            drawTransformedData();
+        });
+    </script>
+</body>
+</html>

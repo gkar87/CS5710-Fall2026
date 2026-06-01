@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Expectation-Maximization (EM) Algorithm</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .algorithm-overview {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .definition-text {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 25px;
+            padding: 20px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .steps-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .step-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .step-section:nth-child(1) {
+            animation: slideInFromLeft 1s ease-out 0.5s both;
+            border-left: 5px solid #3b82f6;
+        }
+
+        .step-section:nth-child(2) {
+            animation: slideInFromRight 1s ease-out 0.5s both;
+            border-left: 5px solid #f59e0b;
+        }
+
+        .step-section:hover {
+            transform: translateY(-10px);
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .step-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: white;
+        }
+
+        .e-step-icon { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .m-step-icon { background: linear-gradient(135deg, #f59e0b, #d97706); }
+
+        .step-title {
+            font-size: 1.5em;
+            font-weight: 600;
+        }
+
+        .e-step .step-title { color: #1e40af; }
+        .m-step .step-title { color: #92400e; }
+
+        .step-description {
+            font-size: 1em;
+            line-height: 1.7;
+            color: #374151;
+            margin-bottom: 20px;
+        }
+
+        .math-formulas {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 15px;
+            border-left: 3px solid;
+            margin: 10px 0;
+        }
+
+        .e-step .math-formulas { border-left-color: #3b82f6; }
+        .m-step .math-formulas { border-left-color: #f59e0b; }
+
+        .formula {
+            font-family: 'Courier New', monospace;
+            text-align: center;
+            margin: 8px 0;
+            font-size: 0.95em;
+            color: #134e4a;
+        }
+
+        .visual-demo {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.8s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            margin-bottom: 40px;
+        }
+
+        .demo-controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(13, 148, 136, 0.3);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .em-canvas {
+            width: 100%;
+            height: 400px;
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 15px;
+            border: 2px solid #14b8a6;
+            position: relative;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .convergence-chart {
+            width: 100%;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            margin-top: 20px;
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            position: relative;
+        }
+
+        .demo-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+            border-left: 3px solid #14b8a6;
+        }
+
+        .stat-value {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #0d9488;
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            color: #64748b;
+        }
+
+        .convergence-analysis {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 1s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 25px;
+        }
+
+        .analysis-card {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 15px;
+            padding: 25px;
+            border-left: 4px solid #14b8a6;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+
+        .analysis-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .analysis-title {
+            font-size: 1.2em;
+            color: #0d9488;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .analysis-text {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.6;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: float 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        @media (max-width: 768px) {
+            .steps-layout { grid-template-columns: 1fr; }
+            .analysis-grid { grid-template-columns: 1fr; }
+            .demo-stats { grid-template-columns: repeat(2, 1fr); }
+            .slide-title { font-size: 2.5em; }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    
+    <div class="course-info">CS5710 - Week 6</div>
+    <div class="slide-number">Slide 116 of 120</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Expectation-Maximization (EM) Algorithm</h1>
+        
+        <div class="algorithm-overview">
+            <h2 class="section-title">🎯 Algorithm Overview</h2>
+            
+            <div class="definition-text">
+                The <strong>Expectation-Maximization (EM)</strong> algorithm is a general iterative method for finding maximum likelihood estimates in models with latent (hidden) variables. It alternates between two steps: the E-step (expectation) and the M-step (maximization).
+            </div>
+        </div>
+
+        <div class="steps-layout">
+            <div class="step-section e-step">
+                <div class="step-header">
+                    <div class="step-icon e-step-icon">E</div>
+                    <div class="step-title">Expectation Step</div>
+                </div>
+                
+                <div class="step-description">
+                    Calculate the expected value of the log-likelihood function with respect to the latent variables, given the current parameter estimates and observed data.
+                </div>
+                
+                <div class="math-formulas">
+                    <div class="formula">Q(θ|θ⁽ᵗ⁾) = E[log p(X,Z|θ) | X,θ⁽ᵗ⁾]</div>
+                    <div class="formula">γ(zₙₖ) = p(zₙₖ=1|xₙ,θ⁽ᵗ⁾)</div>
+                    <div class="formula">= πₖ⁽ᵗ⁾N(xₙ|μₖ⁽ᵗ⁾,Σₖ⁽ᵗ⁾) / Σⱼπⱼ⁽ᵗ⁾N(xₙ|μⱼ⁽ᵗ⁾,Σⱼ⁽ᵗ⁾)</div>
+                </div>
+                
+                <ul style="list-style: none; margin-top: 15px;">
+                    <li style="padding: 8px 0; color: #475569;">✓ Compute posterior probabilities</li>
+                    <li style="padding: 8px 0; color: #475569;">✓ Calculate responsibilities</li>
+                    <li style="padding: 8px 0; color: #475569;">✓ Fixed parameters from previous iteration</li>
+                </ul>
+            </div>
+
+            <div class="step-section m-step">
+                <div class="step-header">
+                    <div class="step-icon m-step-icon">M</div>
+                    <div class="step-title">Maximization Step</div>
+                </div>
+                
+                <div class="step-description">
+                    Maximize the Q-function with respect to the parameters to obtain updated parameter estimates for the next iteration.
+                </div>
+                
+                <div class="math-formulas">
+                    <div class="formula">θ⁽ᵗ⁺¹⁾ = arg max Q(θ|θ⁽ᵗ⁾)</div>
+                    <div class="formula">μₖ⁽ᵗ⁺¹⁾ = Σₙγ(zₙₖ)xₙ / Σₙγ(zₙₖ)</div>
+                    <div class="formula">Σₖ⁽ᵗ⁺¹⁾ = Σₙγ(zₙₖ)(xₙ-μₖ⁽ᵗ⁺¹⁾)(xₙ-μₖ⁽ᵗ⁺¹⁾)ᵀ / Σₙγ(zₙₖ)</div>
+                    <div class="formula">πₖ⁽ᵗ⁺¹⁾ = Σₙγ(zₙₖ) / N</div>
+                </div>
+                
+                <ul style="list-style: none; margin-top: 15px;">
+                    <li style="padding: 8px 0; color: #475569;">✓ Update means and covariances</li>
+                    <li style="padding: 8px 0; color: #475569;">✓ Update mixing coefficients</li>
+                    <li style="padding: 8px 0; color: #475569;">✓ Use responsibilities from E-step</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="visual-demo">
+            <h2 class="section-title">📊 EM Algorithm Visualization</h2>
+            
+            <div class="demo-controls">
+                <button class="control-btn" id="generatePoints">Generate Data</button>
+                <button class="control-btn" id="initializeEM">Initialize EM</button>
+                <button class="control-btn" id="stepE">E-Step</button>
+                <button class="control-btn" id="stepM">M-Step</button>
+                <button class="control-btn" id="runComplete">Run to Convergence</button>
+                <button class="control-btn" id="resetEM">Reset</button>
+            </div>
+            
+            <div class="em-canvas" id="emCanvas"></div>
+            
+            <div class="convergence-chart" id="convergenceChart">
+                <canvas id="likelihoodCanvas" width="800" height="200"></canvas>
+            </div>
+            
+            <div class="demo-stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="iterationCount">0</div>
+                    <div class="stat-label">Iterations</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="logLikelihood">-</div>
+                    <div class="stat-label">Log-Likelihood</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="currentStep">Init</div>
+                    <div class="stat-label">Current Step</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="convergenceStatus">Not Started</div>
+                    <div class="stat-label">Status</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="convergence-analysis">
+            <h2 class="section-title">📈 Convergence Properties</h2>
+            
+            <div class="analysis-grid">
+                <div class="analysis-card">
+                    <div class="analysis-title">Monotonic Increase</div>
+                    <div class="analysis-text">
+                        The EM algorithm guarantees that the likelihood increases (or stays constant) at each iteration: L(θ⁽ᵗ⁺¹⁾) ≥ L(θ⁽ᵗ⁾). This ensures we're moving towards a (local) optimum.
+                    </div>
+                </div>
+                
+                <div class="analysis-card">
+                    <div class="analysis-title">Convergence Criteria</div>
+                    <div class="analysis-text">
+                        Stop when the change in log-likelihood falls below a threshold, or when parameter changes become negligible. Typical threshold: |L⁽ᵗ⁺¹⁾ - L⁽ᵗ⁾| < ε.
+                    </div>
+                </div>
+                
+                <div class="analysis-card">
+                    <div class="analysis-title">Local Optima</div>
+                    <div class="analysis-text">
+                        EM is guaranteed to converge to a local maximum of the likelihood function. Different initializations may lead to different local optima. Multiple random starts are recommended.
+                    </div>
+                </div>
+                
+                <div class="analysis-card">
+                    <div class="analysis-title">Convergence Rate</div>
+                    <div class="analysis-text">
+                        EM has linear convergence rate. Near the optimum, it can be slow to converge. The rate depends on the amount of "missing information" in the model.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week6_Slide115.html" class="nav-btn">← Previous</a>
+        <a href="Week6_Slide117.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // EM Algorithm Visualization
+        class EMDemo {
+            constructor() {
+                this.canvas = document.getElementById('emCanvas');
+                this.likelihoodCanvas = document.getElementById('likelihoodCanvas');
+                this.ctx = this.likelihoodCanvas.getContext('2d');
+                
+                this.points = [];
+                this.components = [];
+                this.iteration = 0;
+                this.currentStep = 'init';
+                this.likelihoodHistory = [];
+                this.isConverged = false;
+                
+                this.setupEventListeners();
+                this.generateData();
+            }
+            
+            setupEventListeners() {
+                document.getElementById('generatePoints').addEventListener('click', () => this.generateData());
+                document.getElementById('initializeEM').addEventListener('click', () => this.initializeEM());
+                document.getElementById('stepE').addEventListener('click', () => this.performEStep());
+                document.getElementById('stepM').addEventListener('click', () => this.performMStep());
+                document.getElementById('runComplete').addEventListener('click', () => this.runToConvergence());
+                document.getElementById('resetEM').addEventListener('click', () => this.reset());
+            }
+            
+            generateData() {
+                this.points = [];
+                this.canvas.innerHTML = '';
+                
+                // Generate data from 3 known Gaussians
+                const trueComponents = [
+                    { center: [25, 30], weight: 0.4, points: 40 },
+                    { center: [70, 35], weight: 0.35, points: 35 },
+                    { center: [45, 70], weight: 0.25, points: 25 }
+                ];
+                
+                trueComponents.forEach((comp, compIndex) => {
+                    for (let i = 0; i < comp.points; i++) {
+                        const angle = Math.random() * 2 * Math.PI;
+                        const radius = Math.random() * 60 + 20;
+                        const x = Math.max(5, Math.min(95, comp.center[0] + Math.cos(angle) * radius / 4));
+                        const y = Math.max(5, Math.min(95, comp.center[1] + Math.sin(angle) * radius / 4));
+                        
+                        const point = { x, y, trueComponent: compIndex, responsibilities: [] };
+                        
+                        const element = document.createElement('div');
+                        element.className = 'gmm-point';
+                        element.style.position = 'absolute';
+                        element.style.width = '6px';
+                        element.style.height = '6px';
+                        element.style.borderRadius = '50%';
+                        element.style.backgroundColor = '#64748b';
+                        element.style.left = point.x + '%';
+                        element.style.top = point.y + '%';
+                        element.style.transform = 'translate(-50%, -50%)';
+                        this.canvas.appendChild(element);
+                        
+                        point.element = element;
+                        this.points.push(point);
+                    }
+                });
+                
+                this.reset();
+            }
+            
+            initializeEM() {
+                // Initialize 3 components randomly
+                this.components = [];
+                for (let k = 0; k < 3; k++) {
+                    const randomPoint = this.points[Math.floor(Math.random() * this.points.length)];
+                    this.components.push({
+                        mean: [randomPoint.x, randomPoint.y],
+                        covariance: [[200, 0], [0, 200]], // Diagonal covariance
+                        weight: 1.0 / 3,
+                        color: [`#ef4444`, `#3b82f6`, `#10b981`][k]
+                    });
+                }
+                
+                this.iteration = 0;
+                this.currentStep = 'initialized';
+                this.likelihoodHistory = [];
+                this.isConverged = false;
+                
+                this.updateDisplay();
+                this.drawComponents();
+            }
+            
+            performEStep() {
+                if (this.components.length === 0) {
+                    this.initializeEM();
+                    return;
+                }
+                
+                // Calculate responsibilities for each point
+                this.points.forEach(point => {
+                    point.responsibilities = [];
+                    let totalProb = 0;
+                    
+                    // Calculate probability for each component
+                    this.components.forEach(comp => {
+                        const prob = comp.weight * this.gaussianProbability([point.x, point.y], comp.mean, comp.covariance);
+                        point.responsibilities.push(prob);
+                        totalProb += prob;
+                    });
+                    
+                    // Normalize responsibilities (posterior probabilities)
+                    point.responsibilities = point.responsibilities.map(r => r / (totalProb + 1e-10));
+                });
+                
+                this.currentStep = 'E-step';
+                this.updatePointColors();
+                this.updateDisplay();
+            }
+            
+            performMStep() {
+                if (this.currentStep !== 'E-step') {
+                    alert('Please perform E-step first!');
+                    return;
+                }
+                
+                // Update parameters for each component
+                this.components.forEach((comp, k) => {
+                    let nk = 0;
+                    let newMean = [0, 0];
+                    
+                    // Calculate effective number of points and new mean
+                    this.points.forEach(point => {
+                        const responsibility = point.responsibilities[k];
+                        nk += responsibility;
+                        newMean[0] += responsibility * point.x;
+                        newMean[1] += responsibility * point.y;
+                    });
+                    
+                    if (nk > 1e-10) {
+                        newMean[0] /= nk;
+                        newMean[1] /= nk;
+                        
+                        // Update covariance (simplified to diagonal)
+                        let covXX = 0, covYY = 0;
+                        this.points.forEach(point => {
+                            const responsibility = point.responsibilities[k];
+                            covXX += responsibility * Math.pow(point.x - newMean[0], 2);
+                            covYY += responsibility * Math.pow(point.y - newMean[1], 2);
+                        });
+                        
+                        comp.mean = newMean;
+                        comp.covariance = [[Math.max(covXX / nk, 50), 0], [0, Math.max(covYY / nk, 50)]];
+                        comp.weight = nk / this.points.length;
+                    }
+                });
+                
+                this.iteration++;
+                this.currentStep = 'M-step';
+                
+                // Calculate log-likelihood
+                const logLikelihood = this.calculateLogLikelihood();
+                this.likelihoodHistory.push(logLikelihood);
+                
+                this.drawComponents();
+                this.drawLikelihoodChart();
+                this.updateDisplay();
+                
+                // Check convergence
+                if (this.likelihoodHistory.length > 1) {
+                    const improvement = this.likelihoodHistory[this.likelihoodHistory.length - 1] - 
+                                       this.likelihoodHistory[this.likelihoodHistory.length - 2];
+                    if (improvement < 0.1) {
+                        this.isConverged = true;
+                        this.currentStep = 'converged';
+                        this.updateDisplay();
+                    }
+                }
+            }
+            
+            runToConvergence() {
+                if (this.components.length === 0) {
+                    this.initializeEM();
+                }
+                
+                const maxIterations = 50;
+                let prevLogLikelihood = -Infinity;
+                
+                const iterate = () => {
+                    this.performEStep();
+                    setTimeout(() => {
+                        this.performMStep();
+                        
+                        if (this.iteration < maxIterations && !this.isConverged) {
+                            setTimeout(iterate, 500);
+                        }
+                    }, 300);
+                };
+                
+                iterate();
+            }
+            
+            gaussianProbability(x, mean, covariance) {
+                const dx = x[0] - mean[0];
+                const dy = x[1] - mean[1];
+                const det = covariance[0][0] * covariance[1][1] - covariance[0][1] * covariance[1][0];
+                const invCov00 = covariance[1][1] / det;
+                const invCov11 = covariance[0][0] / det;
+                
+                const exponent = -0.5 * (dx * dx * invCov00 + dy * dy * invCov11);
+                return Math.exp(exponent) / (2 * Math.PI * Math.sqrt(det));
+            }
+            
+            calculateLogLikelihood() {
+                let logLikelihood = 0;
+                this.points.forEach(point => {
+                    let pointProb = 0;
+                    this.components.forEach(comp => {
+                        pointProb += comp.weight * this.gaussianProbability([point.x, point.y], comp.mean, comp.covariance);
+                    });
+                    logLikelihood += Math.log(pointProb + 1e-10);
+                });
+                return logLikelihood;
+            }
+            
+            updatePointColors() {
+                this.points.forEach(point => {
+                    if (point.responsibilities.length > 0) {
+                        let maxResp = 0;
+                        let bestComp = 0;
+                        point.responsibilities.forEach((resp, k) => {
+                            if (resp > maxResp) {
+                                maxResp = resp;
+                                bestComp = k;
+                            }
+                        });
+                        point.element.style.backgroundColor = this.components[bestComp].color;
+                    }
+                });
+            }
+            
+            drawComponents() {
+                // Remove existing ellipses
+                document.querySelectorAll('.component-ellipse').forEach(el => el.remove());
+                
+                this.components.forEach((comp, k) => {
+                    const ellipse = document.createElement('div');
+                    ellipse.className = 'component-ellipse';
+                    ellipse.style.position = 'absolute';
+                    ellipse.style.border = `2px solid ${comp.color}`;
+                    ellipse.style.borderRadius = '50%';
+                    ellipse.style.background = `${comp.color}20`;
+                    ellipse.style.pointerEvents = 'none';
+                    
+                    const scaleX = Math.sqrt(comp.covariance[0][0]) * 3;
+                    const scaleY = Math.sqrt(comp.covariance[1][1]) * 3;
+                    
+                    const width = Math.min(scaleX, 200);
+                    const height = Math.min(scaleY, 200);
+                    
+                    ellipse.style.width = width + 'px';
+                    ellipse.style.height = height + 'px';
+                    ellipse.style.left = (comp.mean[0] * this.canvas.offsetWidth / 100 - width / 2) + 'px';
+                    ellipse.style.top = (comp.mean[1] * this.canvas.offsetHeight / 100 - height / 2) + 'px';
+                    
+                    this.canvas.appendChild(ellipse);
+                });
+            }
+            
+            drawLikelihoodChart() {
+                this.ctx.clearRect(0, 0, this.likelihoodCanvas.width, this.likelihoodCanvas.height);
+                
+                if (this.likelihoodHistory.length < 2) return;
+                
+                const margin = 30;
+                const chartWidth = this.likelihoodCanvas.width - 2 * margin;
+                const chartHeight = this.likelihoodCanvas.height - 2 * margin;
+                
+                const minLikelihood = Math.min(...this.likelihoodHistory);
+                const maxLikelihood = Math.max(...this.likelihoodHistory);
+                const range = maxLikelihood - minLikelihood;
+                
+                // Draw axes
+                this.ctx.strokeStyle = '#0d9488';
+                this.ctx.lineWidth = 2;
+                this.ctx.beginPath();
+                this.ctx.moveTo(margin, margin);
+                this.ctx.lineTo(margin, this.likelihoodCanvas.height - margin);
+                this.ctx.lineTo(this.likelihoodCanvas.width - margin, this.likelihoodCanvas.height - margin);
+                this.ctx.stroke();
+                
+                // Draw likelihood curve
+                this.ctx.strokeStyle = '#ef4444';
+                this.ctx.lineWidth = 3;
+                this.ctx.beginPath();
+                
+                this.likelihoodHistory.forEach((likelihood, i) => {
+                    const x = margin + (i / (this.likelihoodHistory.length - 1)) * chartWidth;
+                    const y = this.likelihoodCanvas.height - margin - ((likelihood - minLikelihood) / (range || 1)) * chartHeight;
+                    
+                    if (i === 0) {
+                        this.ctx.moveTo(x, y);
+                    } else {
+                        this.ctx.lineTo(x, y);
+                    }
+                });
+                this.ctx.stroke();
+                
+                // Draw points
+                this.ctx.fillStyle = '#ef4444';
+                this.likelihoodHistory.forEach((likelihood, i) => {
+                    const x = margin + (i / (this.likelihoodHistory.length - 1)) * chartWidth;
+                    const y = this.likelihoodCanvas.height - margin - ((likelihood - minLikelihood) / (range || 1)) * chartHeight;
+                    
+                    this.ctx.beginPath();
+                    this.ctx.arc(x, y, 4, 0, 2 * Math.PI);
+                    this.ctx.fill();
+                });
+                
+                // Add labels
+                this.ctx.fillStyle = '#134e4a';
+                this.ctx.font = '12px Arial';
+                this.ctx.fillText('Iteration', this.likelihoodCanvas.width / 2 - 20, this.likelihoodCanvas.height - 5);
+                
+                this.ctx.save();
+                this.ctx.translate(15, this.likelihoodCanvas.height / 2);
+                this.ctx.rotate(-Math.PI / 2);
+                this.ctx.fillText('Log-Likelihood', -40, 0);
+                this.ctx.restore();
+            }
+            
+            updateDisplay() {
+                document.getElementById('iterationCount').textContent = this.iteration;
+                document.getElementById('currentStep').textContent = this.currentStep;
+                
+                if (this.likelihoodHistory.length > 0) {
+                    document.getElementById('logLikelihood').textContent = 
+                        this.likelihoodHistory[this.likelihoodHistory.length - 1].toFixed(2);
+                } else {
+                    document.getElementById('logLikelihood').textContent = '-';
+                }
+                
+                document.getElementById('convergenceStatus').textContent = 
+                    this.isConverged ? 'Converged' : (this.components.length > 0 ? 'Running' : 'Not Started');
+            }
+            
+            reset() {
+                this.components = [];
+                this.iteration = 0;
+                this.currentStep = 'init';
+                this.likelihoodHistory = [];
+                this.isConverged = false;
+                
+                document.querySelectorAll('.component-ellipse').forEach(el => el.remove());
+                this.points.forEach(point => {
+                    point.element.style.backgroundColor = '#64748b';
+                    point.responsibilities = [];
+                });
+                
+                this.ctx.clearRect(0, 0, this.likelihoodCanvas.width, this.likelihoodCanvas.height);
+                this.updateDisplay();
+            }
+        }
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive step sections
+        document.querySelectorAll('.step-section').forEach(section => {
+            section.addEventListener('click', function() {
+                const isEStep = this.classList.contains('e-step');
+                
+                const title = isEStep ? 'E-Step Details' : 'M-Step Details';
+                const content = isEStep ? 
+                    `<p><strong>Purpose:</strong> Calculate the posterior probability (responsibility) that each data point belongs to each component.</p>
+                     <p><strong>Input:</strong> Current parameter estimates θ⁽ᵗ⁾ and observed data X.</p>
+                     <p><strong>Output:</strong> Responsibilities γ(zₙₖ) for all data points and components.</p>
+                     <p><strong>Key Insight:</strong> This step "fills in" the missing information about cluster assignments using Bayes' theorem.</p>` :
+                    `<p><strong>Purpose:</strong> Update parameter estimates to maximize the expected log-likelihood computed in the E-step.</p>
+                     <p><strong>Input:</strong> Responsibilities γ(zₙₖ) from the E-step.</p>
+                     <p><strong>Output:</strong> Updated parameters θ⁽ᵗ⁺¹⁾ (means, covariances, mixing coefficients).</p>
+                     <p><strong>Key Insight:</strong> This step uses weighted maximum likelihood estimation, where weights are the responsibilities.</p>`;
+                
+                modal.show(title, `<div class="modal-highlight">${content}</div>`);
+            });
+        });
+
+        // Interactive analysis cards
+        document.querySelectorAll('.analysis-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('.analysis-title').textContent;
+                
+                const details = {
+                    'Monotonic Increase': 'This is a key theoretical guarantee of EM. Each iteration increases the likelihood, ensuring we never move away from a local optimum. However, the algorithm may get stuck in local maxima.',
+                    'Convergence Criteria': 'Common stopping criteria include: (1) Change in log-likelihood < ε, (2) Change in parameters < δ, (3) Maximum iterations reached. Choose ε based on your precision requirements.',
+                    'Local Optima': 'EM finds local, not global optima. The final solution depends on initialization. Use multiple random initializations and choose the best result based on likelihood.',
+                    'Convergence Rate': 'Linear convergence means the error decreases by a constant factor each iteration. Near convergence, EM can be slow. Advanced variants like ECM or SAGE can improve convergence speed.'
+                };
+                
+                modal.show(title + ' - Details', `
+                    <div class="modal-highlight">
+                        ${details[title]}
+                    </div>
+                `);
+            });
+        });
+
+        // Initialize
+        const demo = new EMDemo();
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week6_Slide115.html';
+            } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                if (!modal.overlay.classList.contains('active')) {
+                    window.location.href = 'Week6_Slide117.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

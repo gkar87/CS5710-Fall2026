@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Normal Equation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.2em;
+            text-align: center;
+            margin-bottom: 40px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 30px;
+        }
+
+        .concept-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .comparison-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.6em;
+            color: #0d9488;
+            margin-bottom: 20px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .definition-text {
+            font-size: 1.1em;
+            line-height: 1.7;
+            color: #1e293b;
+            margin-bottom: 25px;
+            padding: 20px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .formula-box {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+            font-size: 1.3em;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        .formula-main {
+            font-size: 1.4em;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(94, 234, 212, 0.2);
+            margin-bottom: 15px;
+        }
+
+        .formula-detail {
+            font-size: 0.85em;
+            color: #94a3b8;
+            line-height: 1.5;
+        }
+
+        .where-section {
+            margin-top: 20px;
+            font-size: 0.95em;
+            line-height: 1.6;
+            color: #1e293b;
+        }
+
+        .where-section strong {
+            color: #0d9488;
+        }
+
+        .method-card {
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid;
+            margin: 15px 0;
+        }
+
+        .method-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .gradient-card {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border-color: #f59e0b;
+            color: #92400e;
+        }
+
+        .normal-card {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-color: #14b8a6;
+            color: #0d9488;
+        }
+
+        .method-icon {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .method-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .method-features {
+            list-style: none;
+            text-align: left;
+            font-size: 0.85em;
+        }
+
+        .method-features li {
+            margin: 6px 0;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .method-features li:last-child {
+            border-bottom: none;
+        }
+
+        .derivation-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .derivation-steps {
+            list-style: none;
+            margin-top: 15px;
+        }
+
+        .derivation-item {
+            padding: 15px;
+            margin: 12px 0;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .derivation-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .step-number {
+            display: inline-block;
+            background: #0d9488;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 28px;
+            font-weight: 600;
+            margin-right: 12px;
+            font-size: 0.85em;
+        }
+
+        .step-content {
+            display: inline-block;
+            vertical-align: top;
+            width: calc(100% - 45px);
+        }
+
+        .step-text {
+            font-size: 1em;
+            color: #1e293b;
+            line-height: 1.5;
+        }
+
+        .step-formula {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            margin-top: 8px;
+        }
+
+        .pros-cons-section {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .pros-card, .cons-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.9s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .pros-list, .cons-list {
+            list-style: none;
+            margin-top: 15px;
+        }
+
+        .pros-item, .cons-item {
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .pros-item {
+            background: linear-gradient(135deg, #dcfdf7 0%, #a7f3d0 100%);
+            border-left: 4px solid #10b981;
+        }
+
+        .cons-item {
+            background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%);
+            border-left: 4px solid #ef4444;
+        }
+
+        .pros-item:hover, .cons-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        .item-icon {
+            font-size: 1.1em;
+            flex-shrink: 0;
+        }
+
+        .item-text {
+            font-size: 0.9em;
+            color: #1e293b;
+            line-height: 1.4;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .pros-cons-section { grid-template-columns: 1fr; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.6em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.4em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.05em;
+            line-height: 1.7;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 18px;
+            border-radius: 12px;
+            margin: 15px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-formula {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 12px 0;
+        }
+    </style>
+    <script src="navigation.js"></script>
+</head>
+<body>
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 2</div>
+    <div class="slide-number">Slide 33 of 40</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Normal Equation</h1>
+        
+        <div class="content-layout">
+            <div class="concept-section">
+                <h2 class="section-title">Analytical Solution</h2>
+                
+                <div class="definition-text">
+                    The <strong>Normal Equation</strong> provides a direct, analytical solution to linear regression without iteration. It finds the optimal parameters in one step by solving the closed-form equation.
+                </div>
+                
+                <div class="formula-box">
+                    <div class="formula-main">θ = (X<sup>T</sup>X)<sup>-1</sup>X<sup>T</sup>y</div>
+                    <div class="formula-detail">The closed-form solution for optimal linear regression parameters</div>
+                </div>
+                
+                <div class="where-section">
+                    <strong>Where:</strong><br>
+                    • θ = optimal parameters (vector)<br>
+                    • X = design matrix (features)<br>
+                    • X<sup>T</sup> = transpose of X<br>
+                    • (X<sup>T</sup>X)<sup>-1</sup> = inverse matrix<br>
+                    • y = target values (vector)
+                </div>
+            </div>
+
+            <div class="comparison-section">
+                <h2 class="section-title">vs Gradient Descent</h2>
+                
+                <div class="method-card gradient-card" onclick="showModal('Gradient Descent', gradientDescentContent)">
+                    <div class="method-icon">🏃‍♂️</div>
+                    <div class="method-title">Gradient Descent</div>
+                    <ul class="method-features">
+                        <li>🔄 Iterative process</li>
+                        <li>⏱️ Requires many steps</li>
+                        <li>🎛️ Needs learning rate</li>
+                        <li>📈 Works with large datasets</li>
+                        <li>🔧 Hyperparameter tuning</li>
+                    </ul>
+                </div>
+                
+                <div class="method-card normal-card" onclick="showModal('Normal Equation', normalEquationContent)">
+                    <div class="method-icon">⚡</div>
+                    <div class="method-title">Normal Equation</div>
+                    <ul class="method-features">
+                        <li>📐 Direct calculation</li>
+                        <li>🎯 One-step solution</li>
+                        <li>🚫 No hyperparameters</li>
+                        <li>⚠️ Expensive for large data</li>
+                        <li>✨ Exact answer</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="derivation-section">
+            <h2 class="section-title">Mathematical Derivation</h2>
+            
+            <div style="margin-bottom: 20px; font-size: 1.05em; line-height: 1.6; color: #1e293b;">
+                <strong>How do we derive the Normal Equation?</strong> Let's minimize the cost function analytically:
+            </div>
+            
+            <ul class="derivation-steps">
+                <li class="derivation-item" onclick="showModal('Step 1: Cost Function', step1Content)">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <div class="step-text">Start with the cost function (Mean Squared Error)</div>
+                        <div class="step-formula">J(θ) = ½(Xθ - y)<sup>T</sup>(Xθ - y)</div>
+                    </div>
+                </li>
+                <li class="derivation-item" onclick="showModal('Step 2: Matrix Expansion', step2Content)">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <div class="step-text">Expand the matrix multiplication</div>
+                        <div class="step-formula">J(θ) = ½(θ<sup>T</sup>X<sup>T</sup>Xθ - 2θ<sup>T</sup>X<sup>T</sup>y + y<sup>T</sup>y)</div>
+                    </div>
+                </li>
+                <li class="derivation-item" onclick="showModal('Step 3: Derivative', step3Content)">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <div class="step-text">Take the derivative with respect to θ</div>
+                        <div class="step-formula">∇J(θ) = X<sup>T</sup>Xθ - X<sup>T</sup>y</div>
+                    </div>
+                </li>
+                <li class="derivation-item" onclick="showModal('Step 4: Set to Zero', step4Content)">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <div class="step-text">Set the derivative equal to zero for minimum</div>
+                        <div class="step-formula">X<sup>T</sup>Xθ - X<sup>T</sup>y = 0</div>
+                    </div>
+                </li>
+                <li class="derivation-item" onclick="showModal('Step 5: Solve', step5Content)">
+                    <div class="step-number">5</div>
+                    <div class="step-content">
+                        <div class="step-text">Solve for θ (assuming X<sup>T</sup>X is invertible)</div>
+                        <div class="step-formula">θ = (X<sup>T</sup>X)<sup>-1</sup>X<sup>T</sup>y</div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <div class="pros-cons-section">
+            <div class="pros-card">
+                <h2 class="section-title" style="color: #10b981;">✅ Advantages</h2>
+                <ul class="pros-list">
+                    <li class="pros-item" onclick="showModal('No Learning Rate', noLearningRateContent)">
+                        <div class="item-icon">⚡</div>
+                        <div class="item-text">No need to choose learning rate</div>
+                    </li>
+                    <li class="pros-item" onclick="showModal('Exact Solution', exactSolutionContent)">
+                        <div class="item-icon">🎯</div>
+                        <div class="item-text">Gives exact analytical solution</div>
+                    </li>
+                    <li class="pros-item" onclick="showModal('No Iterations', noIterationsContent)">
+                        <div class="item-icon">🚫</div>
+                        <div class="item-text">No iterations required</div>
+                    </li>
+                    <li class="pros-item" onclick="showModal('Small Datasets', smallDatasetsContent)">
+                        <div class="item-icon">📊</div>
+                        <div class="item-text">Works well for small to medium datasets</div>
+                    </li>
+                    <li class="pros-item" onclick="showModal('No Hyperparameters', noHyperparametersContent)">
+                        <div class="item-icon">🔧</div>
+                        <div class="item-text">No hyperparameter tuning</div>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="cons-card">
+                <h2 class="section-title" style="color: #ef4444;">❌ Disadvantages</h2>
+                <ul class="cons-list">
+                    <li class="cons-item" onclick="showModal('O(n³) Complexity', on3ComplexityContent)">
+                        <div class="item-icon">💻</div>
+                        <div class="item-text">O(n³) computational complexity</div>
+                    </li>
+                    <li class="cons-item" onclick="showModal('Large Data', largeDataContent)">
+                        <div class="item-icon">📈</div>
+                        <div class="item-text">Doesn't scale well with large datasets</div>
+                    </li>
+                    <li class="cons-item" onclick="showModal('Invertibility', invertibilityContent)">
+                        <div class="item-icon">⚠️</div>
+                        <div class="item-text">Requires X<sup>T</sup>X to be invertible</div>
+                    </li>
+                    <li class="cons-item" onclick="showModal('Memory', memoryContent)">
+                        <div class="item-icon">💾</div>
+                        <div class="item-text">Memory intensive for large feature sets</div>
+                    </li>
+                    <li class="cons-item" onclick="showModal('Linear Only', linearOnlyContent)">
+                        <div class="item-icon">🚫</div>
+                        <div class="item-text">Only works for linear regression</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week2_Slide32.html" class="nav-btn">← Previous</a>
+        <a href="Week2_Slide34.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal Content Definitions
+        const gradientDescentContent = `
+            <p><strong>Gradient Descent</strong> is an iterative optimization algorithm that minimizes a function by moving in the direction of steepest descent.</p>
+            <div class="modal-highlight">
+                <p><strong>Key Characteristics:</strong></p>
+                <ul>
+                    <li>Starts with initial parameters</li>
+                    <li>Computes gradient of cost function</li>
+                    <li>Updates parameters in opposite direction of gradient</li>
+                    <li>Repeats until convergence</li>
+                </ul>
+            </div>
+            <p><strong>When to use:</strong> Large datasets, neural networks, non-convex problems.</p>
+            <p><strong>Formula:</strong> θ = θ - α · ∇J(θ)</p>
+            <p>Where α is the learning rate controlling step size.</p>
+        `;
+
+        const normalEquationContent = `
+            <p><strong>Normal Equation</strong> provides a direct closed-form solution to linear regression without iteration.</p>
+            <div class="modal-highlight">
+                <p><strong>Key Characteristics:</strong></p>
+                <ul>
+                    <li>Solves analytically in one step</li>
+                    <li>No learning rate needed</li>
+                    <li>Computes matrix inverse: (X<sup>T</sup>X)<sup>-1</sup></li>
+                    <li>Exact solution (when X<sup>T</sup>X is invertible)</li>
+                </ul>
+            </div>
+            <p><strong>When to use:</strong> Small to medium datasets, when exact solution needed.</p>
+            <p><strong>Formula:</strong> θ = (X<sup>T</sup>X)<sup>-1</sup>X<sup>T</sup>y</p>
+        `;
+
+        const step1Content = `
+            <p><strong>Starting with Mean Squared Error (MSE)</strong> as our cost function to minimize.</p>
+            <div class="modal-formula">J(θ) = ½(Xθ - y)<sup>T</sup>(Xθ - y)</div>
+            <p>The ½ factor cancels out when we take the derivative, making the math cleaner.</p>
+            <div class="modal-highlight">
+                <p><strong>Purpose:</strong> Measures how well the model fits the data</p>
+                <p>Goal: Find θ that minimizes J(θ)</p>
+            </div>
+        `;
+
+        const step2Content = `
+            <p><strong>Expanding the matrix multiplication</strong> to analyze each term.</p>
+            <div class="modal-formula">J(θ) = ½(θ<sup>T</sup>X<sup>T</sup>Xθ - 2θ<sup>T</sup>X<sup>T</sup>y + y<sup>T</sup>y)</div>
+            <p>This expansion helps us identify terms that depend on θ.</p>
+            <div class="modal-highlight">
+                <p><strong>Key insight:</strong> Only the first two terms contain θ</p>
+                <p>The last term y<sup>T</sup>y is constant with respect to θ</p>
+            </div>
+        `;
+
+        const step3Content = `
+            <p><strong>Taking the derivative</strong> with respect to θ using matrix calculus rules.</p>
+            <div class="modal-formula">∇J(θ) = X<sup>T</sup>Xθ - X<sup>T</sup>y</div>
+            <p>Key rules used:</p>
+            <ul>
+                <li>d/dθ(θ<sup>T</sup>Aθ) = (A + A<sup>T</sup>)θ</li>
+                <li>d/dθ(b<sup>T</sup>θ) = b</li>
+            </ul>
+            <div class="modal-highlight">
+                <p><strong>Gradient:</strong> Points in direction of steepest increase</p>
+                <p>We want to go in opposite direction (minimum)</p>
+            </div>
+        `;
+
+        const step4Content = `
+            <p><strong>Setting the derivative equal to zero</strong> to find the minimum (critical point).</p>
+            <div class="modal-formula">X<sup>T</sup>Xθ - X<sup>T</sup>y = 0</div>
+            <p>At the minimum, the gradient equals zero by definition.</p>
+            <div class="modal-highlight">
+                <p><strong>Key insight:</strong> When ∇J(θ) = 0, we've found a minimum (or maximum/saddle point)</p>
+                <p>For convex problems, this is guaranteed to be the global minimum</p>
+            </div>
+        `;
+
+        const step5Content = `
+            <p><strong>Solving for θ</strong> to get the normal equation.</p>
+            <div class="modal-formula">θ = (X<sup>T</sup>X)<sup>-1</sup>X<sup>T</sup>y</div>
+            <p><strong>Prerequisite:</strong> X<sup>T</sup>X must be invertible (non-singular).</p>
+            <div class="modal-highlight">
+                <p><strong>If not invertible:</strong></p>
+                <ul>
+                    <li>Use regularization (Ridge)</li>
+                    <li>Use pseudo-inverse (Moore-Penrose)</li>
+                    <li>Use PCA to reduce dimensionality</li>
+                </ul>
+            </div>
+        `;
+
+        const noLearningRateContent = `
+            <p>Unlike gradient descent which requires tuning the learning rate α, the normal equation has no hyperparameters to tune.</p>
+            <div class="modal-highlight">
+                <p><strong>benefit:</strong> No risk of:</p>
+                <ul>
+                    <li>Divergence (α too large)</li>
+                    <li>Slow convergence (α too small)</li>
+                </ul>
+            </div>
+        `;
+
+        const exactSolutionContent = `
+            <p>Provides the globally optimal solution in one calculation, unlike iterative methods that may get stuck in local minima.</p>
+            <div class="modal-highlight">
+                <p><strong>Guarantee:</strong> If X<sup>T</sup>X is invertible, this is THE optimal solution</p>
+            </div>
+        `;
+
+        const noIterationsContent = `
+            <p>No need to run iterations - computes the answer directly.</p>
+            <div class="modal-highlight">
+                <p><strong>Benefit:</strong> Predictable computation time</p>
+                <p>No convergence monitoring needed</p>
+            </div>
+        `;
+
+        const smallDatasetsContent = `
+            <p>Ideal for small to medium datasets where computing the matrix inverse is feasible.</p>
+            <div class="modal-highlight">
+                <p><strong>Recommended:</strong> n &lt; 10,000 features</p>
+            </div>
+        `;
+
+        const noHyperparametersContent = `
+            <p>No learning rate, no iterations, no convergence criteria to tune.</p>
+            <div class="modal-highlight">
+                <p><strong>Simply:</strong> Plug in X and y, get θ</p>
+            </div>
+        `;
+
+        const on3ComplexityContent = `
+            <p>Computing the matrix inverse (X<sup>T</sup>X)<sup>-1</sup> has O(n³) time complexity.</p>
+            <div class="modal-formula">θ(n³) operations</div>
+            <p>Where n = number of features</p>
+            <div class="modal-highlight">
+                <p><strong>10 features:</strong> ~1,000 operations</p>
+                <p><strong>1000 features:</strong> ~1 billion operations</p>
+            </div>
+        `;
+
+        const largeDataContent = `
+            <p>The computational cost grows cubically with features, not samples.</p>
+            <div class="modal-highlight">
+                <p><strong>Problem:</strong> For large n, becomes impractical</p>
+                <p>Gradient descent scales better: O(n·m) where m = iterations</p>
+            </div>
+        `;
+
+        const invertibilityContent = `
+            <p>X<sup>T</sup>X must be invertible (non-singular with full rank).</p>
+            <div class="modal-highlight">
+                <p><strong>When it fails:</strong></p>
+                <ul>
+                    <li>More features than samples (n > m)</li>
+                    <li>Redundant features (linearly dependent)</li>
+                </ul>
+            </div>
+            <p><strong>Solutions:</strong> Regularization, PCA, pseudo-inverse</p>
+        `;
+
+        const memoryContent = `
+            <p>Requires storing and computing the full (n×n) matrix X<sup>T</sup>X.</p>
+            <div class="modal-highlight">
+                <p><strong>Memory:</strong> O(n²)</p>
+                <p>1000 features = 1M elements = ~8MB</p>
+                <p>10000 features = 100M elements = ~800MB</p>
+            </div>
+        `;
+
+        const linearOnlyContent = `
+            <p>Only works for linear regression problems.</p>
+            <div class="modal-highlight">
+                <p><strong>Cannot handle:</strong></p>
+                <ul>
+                    <li>Neural networks</li>
+                    <li>Logistic regression</li>
+                    <li>Non-linear relationships</li>
+                </ul>
+            </div>
+            <p>For non-linear problems, use gradient descent with feature engineering.</p>
+        `;
+
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Global function for onclick handlers
+        function showModal(title, content) {
+            modal.show(title, content);
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (!modal.overlay.classList.contains('active')) {
+                if (e.key === 'ArrowLeft') {
+                    window.location.href = 'Week2_Slide32.html';
+                } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                    window.location.href = 'Week2_Slide34.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

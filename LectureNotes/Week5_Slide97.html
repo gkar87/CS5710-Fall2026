@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Random Search</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .random-intro {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .advantages-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .random-description {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .advantages-list {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .advantage-item {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #14b8a6;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .advantage-item:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 30px rgba(13, 148, 136, 0.2);
+        }
+
+        .advantage-title {
+            font-size: 1.2em;
+            color: #0d9488;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .advantage-desc {
+            color: #475569;
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+
+        .comparison-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .comparison-title {
+            font-size: 2em;
+            color: #0d9488;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .search-comparison {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 40px;
+            margin: 30px 0;
+        }
+
+        .search-method {
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            border-radius: 15px;
+            padding: 30px;
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .search-method:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(13, 148, 136, 0.2);
+        }
+
+        .search-method.random {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+        }
+
+        .method-name {
+            font-size: 1.5em;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .method-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin: 20px 0;
+            height: 120px;
+        }
+
+        .grid-cell {
+            background: rgba(13, 148, 136, 0.1);
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .grid-cell.searched {
+            background: rgba(13, 148, 136, 0.8);
+            transform: scale(1.1);
+        }
+
+        .random .grid-cell {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .random .grid-cell.searched {
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .method-stats {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            margin: 5px 0;
+            font-size: 0.9em;
+        }
+
+        .random-visualization {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.9s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            margin-top: 30px;
+        }
+
+        .visualization-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+
+        .parameter-space {
+            background: #1e293b;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            position: relative;
+            height: 300px;
+            overflow: hidden;
+        }
+
+        .space-point {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .space-point.grid {
+            background: #64748b;
+        }
+
+        .space-point.random {
+            background: #14b8a6;
+            box-shadow: 0 0 10px rgba(20, 184, 166, 0.5);
+        }
+
+        .space-point.best {
+            background: #f59e0b;
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.7);
+            transform: scale(1.5);
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+            color: #475569;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .code-example {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 1.2s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            margin-top: 30px;
+        }
+
+        .code-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+
+        .code-block {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 25px;
+            border-radius: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 20px 0;
+            border: 1px solid rgba(13, 148, 136, 0.3);
+        }
+
+        .code-comment {
+            color: #94a3b8;
+            font-style: italic;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.7; }
+            50% { transform: scale(1.2); opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .search-comparison { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 5</div>
+    <div class="slide-number">Slide 97 of 100</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">🎲 Random Search</h1>
+        
+        <div class="content-layout">
+            <div class="random-intro">
+                <h2 class="section-title">What is Random Search?</h2>
+                
+                <div class="random-description">
+                    <strong>Random Search</strong> is a hyperparameter optimization technique that samples parameter combinations randomly from specified distributions, often outperforming grid search with less computational cost.
+                </div>
+                
+                <div style="font-size: 1.1em; line-height: 1.7; color: #1e293b;">
+                    <strong>🎯 Philosophy:</strong><br>
+                    Random sampling can be more efficient than exhaustive search.
+                    <br><br>
+                    <strong>🔬 Key Insight:</strong><br>
+                    Not all hyperparameters are equally important for performance.
+                    <br><br>
+                    <strong>⚡ Efficiency:</strong><br>
+                    Better use of computational budget in high-dimensional spaces.
+                </div>
+            </div>
+
+            <div class="advantages-section">
+                <h2 class="section-title">Why Random Search?</h2>
+                
+                <div class="advantages-list">
+                    <div class="advantage-item" data-advantage="efficiency">
+                        <div class="advantage-title">🚀 Computational Efficiency</div>
+                        <div class="advantage-desc">Often finds good solutions faster than grid search</div>
+                    </div>
+                    
+                    <div class="advantage-item" data-advantage="coverage">
+                        <div class="advantage-title">🌐 Better Space Coverage</div>
+                        <div class="advantage-desc">Explores parameter space more effectively</div>
+                    </div>
+                    
+                    <div class="advantage-item" data-advantage="scaling">
+                        <div class="advantage-title">📈 Scales with Dimensions</div>
+                        <div class="advantage-desc">Performance advantage increases with more parameters</div>
+                    </div>
+                    
+                    <div class="advantage-item" data-advantage="anytime">
+                        <div class="advantage-title">⏱️ Anytime Algorithm</div>
+                        <div class="advantage-desc">Can be stopped early with best result so far</div>
+                    </div>
+                    
+                    <div class="advantage-item" data-advantage="flexible">
+                        <div class="advantage-title">🔧 Flexible Distributions</div>
+                        <div class="advantage-desc">Supports continuous and discrete parameters</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="comparison-section">
+            <h2 class="comparison-title">🔄 Grid Search vs Random Search</h2>
+            <p style="text-align: center; color: #475569; margin-bottom: 20px;">
+                Visual comparison of search strategies in parameter space
+            </p>
+            
+            <div class="search-comparison">
+                <div class="search-method" data-method="grid">
+                    <div class="method-name">Grid Search</div>
+                    <div class="method-grid" id="gridMethod"></div>
+                    <div class="method-stats">
+                        <div class="stat-item"><strong>Coverage:</strong> Systematic</div>
+                        <div class="stat-item"><strong>Efficiency:</strong> Low</div>
+                        <div class="stat-item"><strong>Combinations:</strong> n^d</div>
+                        <div class="stat-item"><strong>Early Stop:</strong> No</div>
+                    </div>
+                </div>
+                
+                <div class="search-method random" data-method="random">
+                    <div class="method-name">Random Search</div>
+                    <div class="method-grid" id="randomMethod"></div>
+                    <div class="method-stats">
+                        <div class="stat-item"><strong>Coverage:</strong> Probabilistic</div>
+                        <div class="stat-item"><strong>Efficiency:</strong> High</div>
+                        <div class="stat-item"><strong>Combinations:</strong> User-defined</div>
+                        <div class="stat-item"><strong>Early Stop:</strong> Yes</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="random-visualization">
+            <h2 class="visualization-title">🎯 Random Search in Action</h2>
+            <p style="text-align: center; color: #475569; margin-bottom: 20px;">
+                Parameter space exploration: learning_rate vs n_estimators
+            </p>
+            
+            <div class="parameter-space" id="parameterSpace">
+                <!-- Points will be added dynamically -->
+            </div>
+            
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-dot" style="background: #64748b;"></div>
+                    <span>Grid Search Points</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot" style="background: #14b8a6;"></div>
+                    <span>Random Search Points</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot" style="background: #f59e0b;"></div>
+                    <span>Optimal Region</span>
+                </div>
+            </div>
+            
+            <div style="margin-top: 25px; padding: 20px; background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%); border-radius: 15px; border-left: 4px solid #0d9488;">
+                <strong style="color: #0d9488;">🔍 Observation:</strong><br>
+                Random search explores diverse regions and has higher probability of finding the optimal area compared to grid search with the same budget.
+            </div>
+        </div>
+
+        <div class="code-example">
+            <h2 class="code-title">💻 Random Search Implementation</h2>
+            
+            <div class="code-block">
+<span class="code-comment"># Random Search with scikit-learn</span>
+<span style="color: #f97316;">from</span> sklearn.model_selection <span style="color: #f97316;">import</span> RandomizedSearchCV
+<span style="color: #f97316;">from</span> sklearn.ensemble <span style="color: #f97316;">import</span> RandomForestClassifier
+<span style="color: #f97316;">from</span> scipy.stats <span style="color: #f97316;">import</span> randint, uniform
+<span style="color: #f97316;">import</span> numpy <span style="color: #f97316;">as</span> np
+
+<span class="code-comment"># Define parameter distributions</span>
+param_distributions = {
+    <span style="color: #a855f7;">'n_estimators'</span>: randint(50, 500),           <span class="code-comment"># Discrete uniform</span>
+    <span style="color: #a855f7;">'max_depth'</span>: randint(3, 20),               <span class="code-comment"># Discrete uniform</span>
+    <span style="color: #a855f7;">'min_samples_split'</span>: randint(2, 20),       <span class="code-comment"># Discrete uniform</span>
+    <span style="color: #a855f7;">'min_samples_leaf'</span>: randint(1, 10),        <span class="code-comment"># Discrete uniform</span>
+    <span style="color: #a855f7;">'max_features'</span>: [<span style="color: #a855f7;">'sqrt'</span>, <span style="color: #a855f7;">'log2'</span>, None],     <span class="code-comment"># Categorical</span>
+    <span style="color: #a855f7;">'bootstrap'</span>: [True, False]                 <span class="code-comment"># Boolean</span>
+}
+
+<span class="code-comment"># Initialize model</span>
+rf = RandomForestClassifier(random_state=42)
+
+<span class="code-comment"># Random search with specified iterations</span>
+random_search = RandomizedSearchCV(
+    estimator=rf,
+    param_distributions=param_distributions,
+    n_iter=100,             <span class="code-comment"># Number of random samples</span>
+    cv=5,                   <span class="code-comment"># Cross-validation folds</span>
+    scoring=<span style="color: #a855f7;">'accuracy'</span>,
+    n_jobs=-1,              <span class="code-comment"># Parallel processing</span>
+    random_state=42,        <span class="code-comment"># Reproducibility</span>
+    verbose=1
+)
+
+<span class="code-comment"># Fit random search</span>
+random_search.fit(X_train, y_train)
+
+<span class="code-comment"># Results analysis</span>
+<span style="color: #06b6d4;">print</span>(<span style="color: #a855f7;">f"Best parameters: {random_search.best_params_}"</span>)
+<span style="color: #06b6d4;">print</span>(<span style="color: #a855f7;">f"Best CV score: {random_search.best_score_:.4f}"</span>)
+
+<span class="code-comment"># Compare with Grid Search efficiency</span>
+<span style="color: #06b6d4;">print</span>(<span style="color: #a855f7;">f"Random Search: 100 iterations"</span>)
+<span style="color: #06b6d4;">print</span>(<span style="color: #a855f7;">f"Equivalent Grid: {450 * 17 * 18 * 9 * 3 * 2:,} combinations"</span>)
+            </div>
+            
+            <div style="margin-top: 25px; padding: 20px; background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%); border-radius: 15px; border-left: 4px solid #0d9488;">
+                <strong style="color: #0d9488;">🧠 Advanced Techniques:</strong><br>
+                • Use <code>scipy.stats</code> distributions for continuous parameters<br>
+                • Log-uniform distribution for learning rates: <code>loguniform(1e-5, 1e-1)</code><br>
+                • Early stopping based on convergence criteria<br>
+                • Successive halving for budget-aware optimization
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week5_Slide96.html" class="nav-btn">← Previous</a>
+        <a href="Week5_Slide98.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Advantage details
+        const advantageDetails = {
+            'efficiency': {
+                title: 'Computational Efficiency',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Bergstra & Bengio (2012):</strong> Random search often outperforms grid search
+                    </div>
+                    <p><strong>Why More Efficient?</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Budget Control:</strong> You decide exactly how many trials to run</li>
+                        <li><strong>No Wasted Computation:</strong> Each trial explores new regions</li>
+                        <li><strong>Early Termination:</strong> Stop when good enough solution found</li>
+                        <li><strong>Parallelization:</strong> Trials are completely independent</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Efficiency comparison
+# Grid Search: 4^6 = 4,096 combinations (fixed)
+grid_params = {
+    'param1': [1, 2, 3, 4],
+    'param2': [1, 2, 3, 4],
+    # ... 6 parameters total
+}
+
+# Random Search: You choose (e.g., 100 trials)
+random_params = {
+    'param1': uniform(1, 4),
+    'param2': uniform(1, 4),
+    # ... same 6 parameters
+}
+# n_iter = 100  # Much less computation!
+                    </div>
+                    
+                    <p><strong>Empirical Evidence:</strong> Random search with 60 trials often performs as well as grid search with 4,096 trials!</p>
+                `
+            },
+            'coverage': {
+                title: 'Better Space Coverage',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Key Insight:</strong> Random sampling provides better exploration diversity
+                    </div>
+                    <p><strong>Grid Search Problems:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Axis-Aligned:</strong> Only explores grid intersections</li>
+                        <li><strong>Missed Regions:</strong> Large gaps between grid points</li>
+                        <li><strong>Uniform Spacing:</strong> May miss optimal regions</li>
+                        <li><strong>Curse of Dimensionality:</strong> Exponential growth in combinations</li>
+                    </ul>
+                    
+                    <p><strong>Random Search Advantages:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Uniform Coverage:</strong> Each region has equal probability</li>
+                        <li><strong>Non-Grid Points:</strong> Explores entire continuous space</li>
+                        <li><strong>Adaptive Density:</strong> More samples in promising regions possible</li>
+                        <li><strong>Dimension Independent:</strong> Scales naturally</li>
+                    </ul>
+                    
+                    <p><strong>Mathematical Foundation:</strong> For d-dimensional space with n trials, random search provides O(n^(-1/d)) convergence rate.</p>
+                `
+            },
+            'scaling': {
+                title: 'Scales with Dimensions',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>High-Dimensional Advantage:</strong> Random search superiority increases with parameter count
+                    </div>
+                    <p><strong>Dimensionality Analysis:</strong></p>
+                    <p>For d parameters with k values each:</p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Grid Search:</strong> k^d total combinations (exponential)</li>
+                        <li><strong>Random Search:</strong> n trials (user-controlled)</li>
+                        <li><strong>Crossover Point:</strong> Random search wins when n < k^d</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Scaling example
+parameters = 10
+values_per_param = 5
+
+# Grid search
+grid_combinations = values_per_param ** parameters
+print(f"Grid search: {grid_combinations:,} combinations")
+# Output: 9,765,625 combinations!
+
+# Random search  
+random_trials = 1000
+print(f"Random search: {random_trials} trials")
+# 9,765x less computation!
+                    </div>
+                    
+                    <p><strong>Practical Impact:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>3-4 parameters:</strong> Grid search manageable</li>
+                        <li><strong>5-7 parameters:</strong> Random search starts winning</li>
+                        <li><strong>8+ parameters:</strong> Random search clearly superior</li>
+                        <li><strong>Neural Networks:</strong> Often 20+ hyperparameters!</li>
+                    </ul>
+                `
+            },
+            'anytime': {
+                title: 'Anytime Algorithm',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Flexible Execution:</strong> Can stop early and still get meaningful results
+                    </div>
+                    <p><strong>Anytime Properties:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Progressive Improvement:</strong> Solution quality improves over time</li>
+                        <li><strong>Early Termination:</strong> Stop when time/budget exhausted</li>
+                        <li><strong>Graceful Degradation:</strong> Less time = slightly worse result</li>
+                        <li><strong>Interactive Tuning:</strong> Monitor progress and adjust</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Anytime random search implementation
+class AnytimeRandomSearch:
+    def __init__(self, estimator, param_distributions):
+        self.estimator = estimator
+        self.param_distributions = param_distributions
+        self.best_score = -np.inf
+        self.best_params = None
+        self.iteration = 0
+    
+    def search_step(self, X, y):
+        # Sample random parameters
+        params = self.sample_parameters()
+        
+        # Evaluate
+        score = cross_val_score(
+            self.estimator.set_params(**params), 
+            X, y, cv=5
+        ).mean()
+        
+        # Update best if improved
+        if score > self.best_score:
+            self.best_score = score
+            self.best_params = params
+            print(f"New best at iteration {self.iteration}: {score:.4f}")
+        
+        self.iteration += 1
+        return self.best_params, self.best_score
+                    </div>
+                    
+                    <p><strong>Use Cases:</strong> Time-limited competitions, real-time systems, interactive ML, resource-constrained environments</p>
+                `
+            },
+            'flexible': {
+                title: 'Flexible Distributions',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Distribution Support:</strong> Continuous, discrete, categorical, and custom distributions
+                    </div>
+                    <p><strong>Supported Distributions:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Uniform:</strong> Equal probability across range</li>
+                        <li><strong>Log-Uniform:</strong> For learning rates, regularization</li>
+                        <li><strong>Normal/Gaussian:</strong> Around known good values</li>
+                        <li><strong>Discrete:</strong> Integers, categories</li>
+                        <li><strong>Custom:</strong> Domain-specific distributions</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+from scipy.stats import uniform, loguniform, randint, norm
+
+# Distribution examples
+param_distributions = {
+    # Continuous uniform
+    'max_features': uniform(0.1, 0.9),
+    
+    # Log-uniform for learning rate
+    'learning_rate': loguniform(1e-5, 1e-1),
+    
+    # Discrete uniform
+    'n_estimators': randint(50, 500),
+    
+    # Normal around good value  
+    'reg_alpha': norm(1.0, 0.3),
+    
+    # Categorical
+    'kernel': ['linear', 'rbf', 'poly'],
+    
+    # Custom distribution
+    'custom_param': lambda: np.random.choice([1, 5, 10], p=[0.5, 0.3, 0.2])
+}
+                    </div>
+                    
+                    <p><strong>Advanced Techniques:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Prior Knowledge:</strong> Use informative priors</li>
+                        <li><strong>Adaptive Sampling:</strong> Update distributions based on results</li>
+                        <li><strong>Multi-Modal:</strong> Mixture distributions for complex spaces</li>
+                    </ul>
+                `
+            }
+        };
+
+        // Make advantage items clickable
+        document.querySelectorAll('.advantage-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const advantage = this.dataset.advantage;
+                const details = advantageDetails[advantage];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        // Search method visualization
+        function initializeSearchMethods() {
+            // Grid method
+            const gridContainer = document.getElementById('gridMethod');
+            for (let i = 0; i < 25; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'grid-cell';
+                if (i % 4 === 0 || i % 4 === 3) { // Simulate systematic sampling
+                    cell.classList.add('searched');
+                }
+                gridContainer.appendChild(cell);
+            }
+            
+            // Random method
+            const randomContainer = document.getElementById('randomMethod');
+            const randomIndices = [];
+            while (randomIndices.length < 8) {
+                const idx = Math.floor(Math.random() * 25);
+                if (!randomIndices.includes(idx)) {
+                    randomIndices.push(idx);
+                }
+            }
+            
+            for (let i = 0; i < 25; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'grid-cell';
+                if (randomIndices.includes(i)) {
+                    cell.classList.add('searched');
+                }
+                randomContainer.appendChild(cell);
+            }
+        }
+
+        // Parameter space visualization
+        function initializeParameterSpace() {
+            const space = document.getElementById('parameterSpace');
+            
+            // Grid points (5x5 grid)
+            for (let x = 0; x < 5; x++) {
+                for (let y = 0; y < 5; y++) {
+                    const point = document.createElement('div');
+                    point.className = 'space-point grid';
+                    point.style.left = (x * 60 + 40) + 'px';
+                    point.style.top = (y * 60 + 40) + 'px';
+                    
+                    // Mark optimal region (around position 2,1)
+                    if ((x === 2 && y === 1) || (x === 3 && y === 1) || (x === 2 && y === 2)) {
+                        point.classList.add('best');
+                        point.classList.remove('grid');
+                    }
+                    
+                    space.appendChild(point);
+                }
+            }
+            
+            // Random points
+            for (let i = 0; i < 20; i++) {
+                const point = document.createElement('div');
+                point.className = 'space-point random';
+                point.style.left = (Math.random() * 260 + 20) + 'px';
+                point.style.top = (Math.random() * 260 + 20) + 'px';
+                
+                // Check if near optimal region
+                const x = parseInt(point.style.left);
+                const y = parseInt(point.style.top);
+                if (x > 100 && x < 200 && y > 40 && y < 140) {
+                    point.classList.add('best');
+                    point.classList.remove('random');
+                }
+                
+                space.appendChild(point);
+            }
+        }
+
+        // Search method click handlers
+        document.querySelectorAll('.search-method').forEach(method => {
+            method.addEventListener('click', function() {
+                const methodType = this.dataset.method;
+                
+                const methodDetails = {
+                    'grid': {
+                        title: 'Grid Search Characteristics',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Systematic Exploration:</strong> Exhaustive but expensive
+                            </div>
+                            <p><strong>Grid Search Properties:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Deterministic:</strong> Same results every time</li>
+                                <li><strong>Complete Coverage:</strong> Tests all specified combinations</li>
+                                <li><strong>Guaranteed Optimum:</strong> Within the defined grid</li>
+                                <li><strong>Resource Intensive:</strong> Exponential scaling</li>
+                            </ul>
+                            
+                            <p><strong>Best Use Cases:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>Small parameter spaces (≤ 4 parameters)</li>
+                                <li>When computational budget is not a constraint</li>
+                                <li>Need for complete exploration guarantees</li>
+                                <li>Parameters have clear discrete optimal values</li>
+                            </ul>
+                            
+                            <p><strong>Limitations:</strong> Curse of dimensionality, no early stopping, inflexible parameter sampling</p>
+                        `
+                    },
+                    'random': {
+                        title: 'Random Search Characteristics',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Probabilistic Exploration:</strong> Efficient and flexible
+                            </div>
+                            <p><strong>Random Search Properties:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li><strong>Stochastic:</strong> Different results each run (set random seed for reproducibility)</li>
+                                <li><strong>Budget-Controlled:</strong> You decide how many trials</li>
+                                <li><strong>Anytime Algorithm:</strong> Can stop early</li>
+                                <li><strong>Dimension-Friendly:</strong> Scales well with parameters</li>
+                            </ul>
+                            
+                            <p><strong>Best Use Cases:</strong></p>
+                            <ul style="margin-left: 20px;">
+                                <li>High-dimensional parameter spaces (≥ 5 parameters)</li>
+                                <li>Limited computational budget</li>
+                                <li>Continuous parameter distributions</li>
+                                <li>When good-enough solutions are acceptable</li>
+                            </ul>
+                            
+                            <p><strong>Advantages:</strong> Better exploration, computational efficiency, flexible distributions, early stopping capability</p>
+                        `
+                    }
+                };
+                
+                const details = methodDetails[methodType];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        // Parameter space click handler
+        document.getElementById('parameterSpace').addEventListener('click', function(e) {
+            if (e.target.classList.contains('space-point')) {
+                let title, content;
+                
+                if (e.target.classList.contains('best')) {
+                    title = 'Optimal Region';
+                    content = `
+                        <div class="modal-highlight">
+                            <strong>Sweet Spot Found!</strong> This region contains optimal hyperparameters
+                        </div>
+                        <p><strong>Why This Region is Optimal:</strong></p>
+                        <ul style="margin-left: 20px;">
+                            <li><strong>Learning Rate:</strong> ~0.05-0.15 (balanced convergence)</li>
+                            <li><strong>N_estimators:</strong> ~100-200 (sufficient complexity)</li>
+                            <li><strong>Performance:</strong> Cross-validation scores > 89%</li>
+                            <li><strong>Stability:</strong> Low variance across folds</li>
+                        </ul>
+                        
+                        <p><strong>Search Strategy Impact:</strong></p>
+                        <ul style="margin-left: 20px;">
+                            <li><strong>Grid Search:</strong> 3/25 points hit optimal region (12%)</li>
+                            <li><strong>Random Search:</strong> ~6/20 points hit optimal region (30%)</li>
+                            <li><strong>Probability Advantage:</strong> Random search 2.5x more likely to find optimum</li>
+                        </ul>
+                    `;
+                } else if (e.target.classList.contains('grid')) {
+                    title = 'Grid Search Point';
+                    content = `
+                        <p><strong>Grid Search Characteristics:</strong></p>
+                        <ul style="margin-left: 20px;">
+                            <li><strong>Position:</strong> Fixed grid intersection</li>
+                            <li><strong>Coverage:</strong> Systematic but sparse</li>
+                            <li><strong>Limitation:</strong> May miss optimal regions between grid points</li>
+                        </ul>
+                        
+                        <p><strong>Analysis:</strong> Grid search only explores predefined locations, potentially missing optimal parameter combinations that fall between grid points.</p>
+                    `;
+                } else {
+                    title = 'Random Search Point';
+                    content = `
+                        <p><strong>Random Search Characteristics:</strong></p>
+                        <ul style="margin-left: 20px;">
+                            <li><strong>Position:</strong> Uniformly sampled from parameter space</li>
+                            <li><strong>Coverage:</strong> Probabilistic but comprehensive</li>
+                            <li><strong>Advantage:</strong> Can discover any point in continuous space</li>
+                        </ul>
+                        
+                        <p><strong>Analysis:</strong> Random search explores the entire parameter space uniformly, giving it better chances of discovering optimal regions.</p>
+                    `;
+                }
+                
+                modal.show(title, content);
+            }
+        });
+
+        // Initialize components
+        createFloatingElements();
+        initializeSearchMethods();
+        initializeParameterSpace();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week5_Slide96.html';
+            } else if ((e.key === 'ArrowRight' || e.key === ' ') && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week5_Slide98.html';
+            }
+        });
+
+    </script>
+</body>
+</html>

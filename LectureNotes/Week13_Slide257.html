@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - ML in Healthcare</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .applications-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .application-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 0.8s ease-out;
+            animation-fill-mode: both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .application-card:nth-child(1) { animation-delay: 0.2s; }
+        .application-card:nth-child(2) { animation-delay: 0.3s; }
+        .application-card:nth-child(3) { animation-delay: 0.4s; }
+        .application-card:nth-child(4) { animation-delay: 0.5s; }
+
+        .application-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px rgba(13, 148, 136, 0.2);
+        }
+
+        .application-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+        }
+
+        .app-icon {
+            font-size: 3em;
+            margin-bottom: 20px;
+            display: inline-block;
+            animation: pulse 2s infinite;
+        }
+
+        .app-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .app-description {
+            font-size: 1.1em;
+            line-height: 1.6;
+            color: #1e293b;
+            margin-bottom: 20px;
+        }
+
+        .app-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-badge {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #0d9488;
+        }
+
+        .learn-more {
+            margin-top: 20px;
+            color: #14b8a6;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .impact-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            margin-top: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .impact-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .impact-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 25px;
+            text-align: center;
+        }
+
+        .impact-item {
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .impact-item:hover {
+            transform: scale(1.1);
+        }
+
+        .impact-number {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: #0d9488;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .impact-label {
+            font-size: 0.9em;
+            color: #64748b;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        .tech-list {
+            list-style: none;
+            margin: 20px 0;
+        }
+
+        .tech-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .tech-list li:last-child {
+            border-bottom: none;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .applications-grid { grid-template-columns: 1fr; }
+            .impact-stats { grid-template-columns: repeat(2, 1fr); }
+            .slide-title { font-size: 2.5em; }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 13</div>
+    <div class="slide-number">Slide 257 of 260</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">🏥 ML in Healthcare</h1>
+        
+        <div class="applications-grid">
+            <div class="application-card" data-app="medical-imaging">
+                <div class="app-icon">🔬</div>
+                <h3 class="app-title">Medical Imaging & Diagnosis</h3>
+                <p class="app-description">
+                    Deep learning models analyze X-rays, MRIs, and CT scans to detect diseases 
+                    with accuracy matching or exceeding human radiologists.
+                </p>
+                <div class="app-stats">
+                    <span class="stat-badge">99% Accuracy</span>
+                    <span class="stat-badge">50% Faster</span>
+                    <span class="stat-badge">Early Detection</span>
+                </div>
+                <div class="learn-more">Click to learn more →</div>
+            </div>
+
+            <div class="application-card" data-app="drug-discovery">
+                <div class="app-icon">💊</div>
+                <h3 class="app-title">Drug Discovery & Development</h3>
+                <p class="app-description">
+                    ML accelerates pharmaceutical research by predicting molecular behavior 
+                    and identifying promising drug candidates years faster.
+                </p>
+                <div class="app-stats">
+                    <span class="stat-badge">10x Faster</span>
+                    <span class="stat-badge">$1B+ Saved</span>
+                    <span class="stat-badge">AI-Designed Drugs</span>
+                </div>
+                <div class="learn-more">Click to learn more →</div>
+            </div>
+
+            <div class="application-card" data-app="personalized-medicine">
+                <div class="app-icon">🧬</div>
+                <h3 class="app-title">Personalized Medicine</h3>
+                <p class="app-description">
+                    Genomic analysis and patient data enable tailored treatment plans 
+                    optimized for individual genetic profiles and medical histories.
+                </p>
+                <div class="app-stats">
+                    <span class="stat-badge">Genomic Analysis</span>
+                    <span class="stat-badge">Custom Treatments</span>
+                    <span class="stat-badge">Better Outcomes</span>
+                </div>
+                <div class="learn-more">Click to learn more →</div>
+            </div>
+
+            <div class="application-card" data-app="predictive-analytics">
+                <div class="app-icon">📊</div>
+                <h3 class="app-title">Predictive Healthcare Analytics</h3>
+                <p class="app-description">
+                    Predict patient deterioration, hospital readmissions, and disease outbreaks 
+                    using real-time data analysis and pattern recognition.
+                </p>
+                <div class="app-stats">
+                    <span class="stat-badge">85% Prediction Rate</span>
+                    <span class="stat-badge">ICU Monitoring</span>
+                    <span class="stat-badge">Risk Assessment</span>
+                </div>
+                <div class="learn-more">Click to learn more →</div>
+            </div>
+        </div>
+
+        <div class="impact-section">
+            <h2 class="impact-title">Global Healthcare Impact</h2>
+            <div class="impact-stats">
+                <div class="impact-item" data-stat="lives-saved">
+                    <span class="impact-number">500K+</span>
+                    <span class="impact-label">Lives Saved Annually</span>
+                </div>
+                <div class="impact-item" data-stat="diagnosis-time">
+                    <span class="impact-number">60%</span>
+                    <span class="impact-label">Faster Diagnosis</span>
+                </div>
+                <div class="impact-item" data-stat="cost-reduction">
+                    <span class="impact-number">$150B</span>
+                    <span class="impact-label">Annual Cost Savings</span>
+                </div>
+                <div class="impact-item" data-stat="accuracy">
+                    <span class="impact-number">95%+</span>
+                    <span class="impact-label">Detection Accuracy</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week13_Slide256.html" class="nav-btn">← Previous</a>
+        <a href="Week13_Slide258.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.body;
+            for (let i = 0; i < 15; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (18 + Math.random() * 10) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Application card details
+        const applicationDetails = {
+            'medical-imaging': {
+                title: 'Medical Imaging & Diagnosis',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>🔬 Revolutionary AI-Powered Medical Imaging</strong>
+                    </div>
+                    
+                    <h4>How It Works:</h4>
+                    <p>Deep Convolutional Neural Networks (CNNs) analyze medical images pixel by pixel, 
+                    identifying patterns invisible to the human eye. These models are trained on millions 
+                    of annotated medical images.</p>
+                    
+                    <div class="modal-code">
+# Example: Chest X-Ray Analysis Pipeline
+model = tf.keras.models.load_model('chest_xray_model')
+prediction = model.predict(preprocessed_image)
+# Output: {'pneumonia': 0.92, 'normal': 0.08}
+                    </div>
+                    
+                    <h4>Key Applications:</h4>
+                    <ul class="tech-list">
+                        <li><strong>🫁 Lung Cancer Detection:</strong> AI detects nodules 40% earlier than traditional methods</li>
+                        <li><strong>👁️ Diabetic Retinopathy:</strong> Prevents blindness through early detection in 90% of cases</li>
+                        <li><strong>🧠 Brain Tumor Classification:</strong> 95% accuracy in identifying tumor types</li>
+                        <li><strong>❤️ Cardiac Imaging:</strong> Predicts heart disease risk 5 years in advance</li>
+                    </ul>
+                    
+                    <div class="modal-highlight">
+                        <strong>Impact:</strong> Google's AI can detect breast cancer with 89% accuracy, 
+                        reducing false positives by 5.7% and false negatives by 9.4% compared to radiologists.
+                    </div>
+                `
+            },
+            'drug-discovery': {
+                title: 'Drug Discovery & Development',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>💊 AI-Accelerated Pharmaceutical Innovation</strong>
+                    </div>
+                    
+                    <h4>ML Techniques in Drug Discovery:</h4>
+                    <p>Machine learning models predict molecular interactions, identify drug targets, 
+                    and optimize compound structures, reducing development time from 10-15 years to 3-5 years.</p>
+                    
+                    <div class="modal-code">
+# Molecular Property Prediction
+from rdkit import Chem
+from deepchem.models import GraphConvModel
+
+model = GraphConvModel(n_tasks=1, mode='regression')
+# Predict drug-protein binding affinity
+binding_score = model.predict(molecular_graph)
+                    </div>
+                    
+                    <h4>Breakthrough Applications:</h4>
+                    <ul class="tech-list">
+                        <li><strong>🧪 AlphaFold:</strong> Predicted 3D structure of 200M+ proteins in 18 months</li>
+                        <li><strong>🔬 Target Identification:</strong> ML identifies novel drug targets 100x faster</li>
+                        <li><strong>⚗️ Lead Optimization:</strong> AI designs molecules with 35% higher success rate</li>
+                        <li><strong>🏥 Clinical Trial Design:</strong> Predicts trial outcomes with 85% accuracy</li>
+                    </ul>
+                    
+                    <div class="modal-highlight">
+                        <strong>Success Story:</strong> Atomwise used AI to identify potential COVID-19 treatments 
+                        in just 4 days, a process that traditionally takes months or years.
+                    </div>
+                `
+            },
+            'personalized-medicine': {
+                title: 'Personalized Medicine',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>🧬 Precision Healthcare Tailored to Your DNA</strong>
+                    </div>
+                    
+                    <h4>The Science of Personalization:</h4>
+                    <p>ML algorithms analyze genetic data, medical history, lifestyle factors, and biomarkers 
+                    to create individualized treatment plans optimized for each patient's unique profile.</p>
+                    
+                    <div class="modal-code">
+# Genomic Risk Prediction Model
+patient_genome = load_genome_sequence(patient_id)
+risk_factors = extract_snps(patient_genome)
+disease_risk = ml_model.predict_risk(
+    genomic_data=risk_factors,
+    clinical_data=patient_history,
+    lifestyle=patient_lifestyle
+)
+# Output: Personalized risk scores and treatment recommendations
+                    </div>
+                    
+                    <h4>Revolutionary Applications:</h4>
+                    <ul class="tech-list">
+                        <li><strong>🎯 Cancer Treatment:</strong> Tumor DNA sequencing guides targeted therapy selection</li>
+                        <li><strong>💉 Pharmacogenomics:</strong> Predicts drug response based on genetic markers</li>
+                        <li><strong>🧮 Dosage Optimization:</strong> ML calculates optimal drug doses per individual</li>
+                        <li><strong>🔮 Disease Prevention:</strong> Identifies high-risk individuals decades before onset</li>
+                    </ul>
+                    
+                    <div class="modal-highlight">
+                        <strong>Case Study:</strong> Memorial Sloan Kettering's Watson for Oncology provides 
+                        personalized cancer treatment recommendations, improving patient outcomes by 30%.
+                    </div>
+                `
+            },
+            'predictive-analytics': {
+                title: 'Predictive Healthcare Analytics',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>📊 Forecasting Health Outcomes with Big Data</strong>
+                    </div>
+                    
+                    <h4>Predictive Models in Action:</h4>
+                    <p>Real-time analysis of Electronic Health Records (EHRs), vital signs, and patient behavior 
+                    enables early intervention and prevents medical emergencies before they occur.</p>
+                    
+                    <div class="modal-code">
+# ICU Patient Deterioration Prediction
+from sklearn.ensemble import RandomForestClassifier
+
+features = ['heart_rate', 'blood_pressure', 'oxygen_sat', 
+            'temperature', 'lab_results', 'medications']
+model = RandomForestClassifier(n_estimators=100)
+risk_score = model.predict_proba(patient_data)
+if risk_score > 0.7:
+    alert_medical_team(patient_id, urgency='HIGH')
+                    </div>
+                    
+                    <h4>Critical Applications:</h4>
+                    <ul class="tech-list">
+                        <li><strong>🚨 Sepsis Detection:</strong> Identifies sepsis 6 hours earlier, saving 30% more lives</li>
+                        <li><strong>🏥 Readmission Prevention:</strong> Reduces 30-day readmissions by 25%</li>
+                        <li><strong>🦠 Outbreak Prediction:</strong> Detects disease clusters 2 weeks before traditional methods</li>
+                        <li><strong>⏰ Emergency Triage:</strong> Optimizes ER wait times and resource allocation</li>
+                    </ul>
+                    
+                    <div class="modal-highlight">
+                        <strong>Impact:</strong> Johns Hopkins' TREWS system predicts septic shock 
+                        6 hours in advance with 85% accuracy, potentially saving 270,000 lives annually in the US.
+                    </div>
+                `
+            }
+        };
+
+        // Impact statistics details
+        const impactDetails = {
+            'lives-saved': {
+                title: 'Lives Saved Through ML',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>500,000+ Lives Saved Annually Through ML Applications</strong>
+                    </div>
+                    
+                    <h4>Breakdown by Application:</h4>
+                    <ul class="tech-list">
+                        <li><strong>Early Cancer Detection:</strong> 150,000 lives/year</li>
+                        <li><strong>Sepsis Prediction:</strong> 75,000 lives/year</li>
+                        <li><strong>Cardiac Event Prevention:</strong> 100,000 lives/year</li>
+                        <li><strong>Medication Error Reduction:</strong> 50,000 lives/year</li>
+                        <li><strong>Surgical Complications:</strong> 40,000 lives/year</li>
+                        <li><strong>Diabetic Complications:</strong> 85,000 lives/year</li>
+                    </ul>
+                    
+                    <p>These numbers represent documented cases where ML directly contributed to 
+                    life-saving interventions through early detection, accurate diagnosis, or preventive care.</p>
+                `
+            },
+            'diagnosis-time': {
+                title: 'Faster Diagnosis',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>60% Reduction in Diagnostic Time</strong>
+                    </div>
+                    
+                    <h4>Time Savings by Specialty:</h4>
+                    <ul class="tech-list">
+                        <li><strong>Radiology:</strong> From 30 min to 5 min per scan</li>
+                        <li><strong>Pathology:</strong> From 20 min to 3 min per slide</li>
+                        <li><strong>Emergency Medicine:</strong> From 4 hours to 90 minutes</li>
+                        <li><strong>Genetic Testing:</strong> From weeks to hours</li>
+                    </ul>
+                    
+                    <p>ML not only speeds up diagnosis but also enables 24/7 availability of 
+                    expert-level diagnostic capabilities, especially in underserved areas.</p>
+                `
+            },
+            'cost-reduction': {
+                title: 'Healthcare Cost Savings',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>$150 Billion Annual Cost Reduction</strong>
+                    </div>
+                    
+                    <h4>Sources of Savings:</h4>
+                    <ul class="tech-list">
+                        <li><strong>Reduced Readmissions:</strong> $25 billion/year</li>
+                        <li><strong>Early Disease Detection:</strong> $40 billion/year</li>
+                        <li><strong>Optimized Drug Development:</strong> $35 billion/year</li>
+                        <li><strong>Administrative Efficiency:</strong> $20 billion/year</li>
+                        <li><strong>Preventive Care:</strong> $30 billion/year</li>
+                    </ul>
+                    
+                    <p>These savings enable healthcare systems to provide better care to more patients 
+                    while reducing the financial burden on individuals and society.</p>
+                `
+            },
+            'accuracy': {
+                title: 'Detection Accuracy',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>95%+ Detection Accuracy Across Multiple Conditions</strong>
+                    </div>
+                    
+                    <h4>Accuracy by Condition:</h4>
+                    <ul class="tech-list">
+                        <li><strong>Skin Cancer:</strong> 95% accuracy (dermatologist: 86.6%)</li>
+                        <li><strong>Diabetic Retinopathy:</strong> 97% accuracy</li>
+                        <li><strong>Pneumonia (X-rays):</strong> 92% accuracy</li>
+                        <li><strong>Breast Cancer:</strong> 94.5% accuracy</li>
+                        <li><strong>Atrial Fibrillation:</strong> 98% accuracy</li>
+                    </ul>
+                    
+                    <p>ML models consistently match or exceed human expert performance, 
+                    especially in pattern recognition tasks involving medical imaging.</p>
+                `
+            }
+        };
+
+        // Add click handlers for application cards
+        document.querySelectorAll('.application-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const app = this.dataset.app;
+                const details = applicationDetails[app];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        // Add click handlers for impact statistics
+        document.querySelectorAll('.impact-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const stat = this.dataset.stat;
+                const details = impactDetails[stat];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        // Initialize floating elements
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week13_Slide256.html';
+            } else if (e.key === 'ArrowRight' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week13_Slide258.html';
+            }
+        });
+    </script>
+</body>
+</html>

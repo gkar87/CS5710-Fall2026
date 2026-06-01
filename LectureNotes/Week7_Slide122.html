@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Why Dimensionality Reduction?</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .benefits-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .techniques-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .intro-text {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .benefit-list {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .benefit-item {
+            padding: 20px;
+            margin: 15px 0;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .benefit-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .benefit-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .benefit-desc {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .comparison-banner {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .comparison-title {
+            font-size: 1.4em;
+            color: #0d9488;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .comparison-card {
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border: 2px solid #14b8a6;
+            transition: all 0.3s ease;
+        }
+
+        .comparison-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .comparison-header {
+            font-size: 1.3em;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .without-reduction {
+            color: #dc2626;
+        }
+
+        .with-reduction {
+            color: #0d9488;
+        }
+
+        .comparison-metrics {
+            text-align: left;
+            margin-top: 20px;
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .metric-label {
+            font-weight: 600;
+            color: #475569;
+        }
+
+        .metric-value {
+            font-weight: 700;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .comparison-grid { grid-template-columns: 1fr; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    
+    <div class="course-info">CS5710 - Week 7</div>
+    <div class="slide-number">Slide 122 of 140</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Why Dimensionality Reduction?</h1>
+        
+        <div class="content-layout">
+            <div class="benefits-section">
+                <h2 class="section-title">Key Benefits</h2>
+                
+                <div class="intro-text">
+                    <strong>Dimensionality Reduction</strong> transforms high-dimensional data into a lower-dimensional representation while preserving important information.
+                </div>
+                
+                <ul class="benefit-list">
+                    <li class="benefit-item">
+                        <div class="benefit-title">📊 Data Visualization</div>
+                        <div class="benefit-desc">Project data to 2D/3D for human understanding</div>
+                    </li>
+                    <li class="benefit-item">
+                        <div class="benefit-title">⚡ Computational Efficiency</div>
+                        <div class="benefit-desc">Faster training and prediction with fewer features</div>
+                    </li>
+                    <li class="benefit-item">
+                        <div class="benefit-title">🎯 Noise Reduction</div>
+                        <div class="benefit-desc">Remove irrelevant features and focus on signal</div>
+                    </li>
+                    <li class="benefit-item">
+                        <div class="benefit-title">💾 Storage Savings</div>
+                        <div class="benefit-desc">Compress data while keeping information</div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="techniques-section">
+                <h2 class="section-title">Main Approaches</h2>
+                
+                <ul class="benefit-list">
+                    <li class="benefit-item">
+                        <div class="benefit-title">🔄 Feature Extraction</div>
+                        <div class="benefit-desc">Create new features from combinations (PCA, t-SNE)</div>
+                    </li>
+                    <li class="benefit-item">
+                        <div class="benefit-title">✂️ Feature Selection</div>
+                        <div class="benefit-desc">Choose subset of original features</div>
+                    </li>
+                    <li class="benefit-item">
+                        <div class="benefit-title">🧠 Manifold Learning</div>
+                        <div class="benefit-desc">Discover underlying low-dimensional structure</div>
+                    </li>
+                    <li class="benefit-item">
+                        <div class="benefit-title">🤖 Deep Learning</div>
+                        <div class="benefit-desc">Autoencoders learn compressed representations</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="comparison-banner">
+            <div class="comparison-title">Before vs After Dimensionality Reduction</div>
+            
+            <div class="comparison-grid">
+                <div class="comparison-card">
+                    <div class="comparison-header without-reduction">❌ Without Reduction</div>
+                    <div class="comparison-metrics">
+                        <div class="metric-row">
+                            <span class="metric-label">Dimensions:</span>
+                            <span class="metric-value" style="color: #dc2626;">10,000</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Training Time:</span>
+                            <span class="metric-value" style="color: #dc2626;">2 hours</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Storage:</span>
+                            <span class="metric-value" style="color: #dc2626;">5 GB</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Visualization:</span>
+                            <span class="metric-value" style="color: #dc2626;">Impossible</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Overfitting:</span>
+                            <span class="metric-value" style="color: #dc2626;">High Risk</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="comparison-card">
+                    <div class="comparison-header with-reduction">✅ With Reduction</div>
+                    <div class="comparison-metrics">
+                        <div class="metric-row">
+                            <span class="metric-label">Dimensions:</span>
+                            <span class="metric-value" style="color: #0d9488;">50</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Training Time:</span>
+                            <span class="metric-value" style="color: #0d9488;">2 minutes</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Storage:</span>
+                            <span class="metric-value" style="color: #0d9488;">25 MB</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Visualization:</span>
+                            <span class="metric-value" style="color: #0d9488;">2D/3D plots</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Overfitting:</span>
+                            <span class="metric-value" style="color: #0d9488;">Reduced</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 30px; padding: 20px; background: rgba(13, 148, 136, 0.1); border-radius: 15px; text-align: center;">
+                <strong style="color: #0d9488;">💡 Result:</strong> 95% variance retained with 0.5% of original dimensions!
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week7_Slide121.html" class="nav-btn">← Previous</a>
+        <a href="Week7_Slide123.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive benefit items with modal
+        document.querySelectorAll('.benefits-section .benefit-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const title = this.querySelector('.benefit-title').textContent;
+                const desc = this.querySelector('.benefit-desc').textContent;
+                
+                const details = {
+                    '📊 Data Visualization': {
+                        detail: 'High-dimensional data cannot be visualized directly. Dimensionality reduction enables meaningful visualizations.',
+                        example: 'MNIST digits (784D) → 2D scatter plot<br>Word embeddings (300D) → 2D semantic map<br>Gene expression (20,000D) → 3D clusters',
+                        technique: 'PCA for linear projection, t-SNE for local structure, UMAP for global structure'
+                    },
+                    '⚡ Computational Efficiency': {
+                        detail: 'Fewer dimensions mean faster computation for all downstream tasks.',
+                        example: 'SVM on 10,000D: O(n³d) → hours<br>SVM on 50D: O(n³d) → minutes<br>100× speedup is common!',
+                        technique: 'PCA keeps top components, Random Projection for speed'
+                    },
+                    '🎯 Noise Reduction': {
+                        detail: 'High dimensions often contain noise. Reduction keeps signal, removes noise.',
+                        example: 'Image denoising: Keep principal components<br>Text: Remove rare words<br>Sensors: Filter measurement noise',
+                        technique: 'PCA captures variance, Autoencoders learn representations'
+                    },
+                    '💾 Storage Savings': {
+                        detail: 'Compressed representations require much less storage and bandwidth.',
+                        example: 'Face images: 10,000 pixels → 100 features<br>99% compression ratio<br>Network transfer: 100× faster',
+                        technique: 'PCA for linear compression, Autoencoders for non-linear'
+                    }
+                };
+                
+                const info = details[title];
+                if (info) {
+                    modal.show(title, `
+                        <div class="modal-highlight">
+                            <strong>${desc}</strong>
+                        </div>
+                        <p>${info.detail}</p>
+                        <div class="modal-code">
+                            <strong>Real Examples:</strong><br>
+                            ${info.example}
+                        </div>
+                        <p><strong>Common Techniques:</strong> ${info.technique}</p>
+                    `);
+                }
+            });
+        });
+
+        // Interactive technique items with modal
+        document.querySelectorAll('.techniques-section .benefit-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const title = this.querySelector('.benefit-title').textContent;
+                const desc = this.querySelector('.benefit-desc').textContent;
+                
+                const details = {
+                    '🔄 Feature Extraction': {
+                        detail: 'Transform original features into new, more informative features.',
+                        methods: 'PCA: Linear combinations<br>t-SNE: Non-linear embeddings<br>LDA: Supervised projections',
+                        pros: 'Creates optimal features, captures complex patterns',
+                        cons: 'Loses interpretability, new features are combinations'
+                    },
+                    '✂️ Feature Selection': {
+                        detail: 'Select subset of most informative original features.',
+                        methods: 'Filter: Statistical tests<br>Wrapper: Model-based selection<br>Embedded: L1 regularization',
+                        pros: 'Maintains interpretability, simple to understand',
+                        cons: 'May miss feature interactions, limited by original features'
+                    },
+                    '🧠 Manifold Learning': {
+                        detail: 'Discover the low-dimensional manifold embedded in high-dimensional space.',
+                        methods: 'Isomap: Geodesic distances<br>LLE: Local linear embeddings<br>Spectral: Graph-based',
+                        pros: 'Captures non-linear structure, preserves local geometry',
+                        cons: 'Computationally expensive, sensitive to parameters'
+                    },
+                    '🤖 Deep Learning': {
+                        detail: 'Neural networks learn optimal compressed representations.',
+                        methods: 'Autoencoders: Reconstruction<br>VAE: Probabilistic encoding<br>Contrastive: Self-supervised',
+                        pros: 'Learns complex non-linear mappings, end-to-end training',
+                        cons: 'Requires lots of data, black-box nature'
+                    }
+                };
+                
+                const info = details[title];
+                if (info) {
+                    modal.show(title, `
+                        <div class="modal-highlight">
+                            <strong>${desc}</strong>
+                        </div>
+                        <p>${info.detail}</p>
+                        <div class="modal-code">
+                            <strong>Methods:</strong><br>
+                            ${info.methods}
+                        </div>
+                        <p><strong>✅ Advantages:</strong> ${info.pros}</p>
+                        <p><strong>⚠️ Limitations:</strong> ${info.cons}</p>
+                    `);
+                }
+            });
+        });
+
+        // Interactive comparison cards
+        document.querySelectorAll('.comparison-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const isWithReduction = this.querySelector('.with-reduction');
+                
+                if (isWithReduction) {
+                    modal.show('Benefits of Dimensionality Reduction', `
+                        <div class="modal-highlight">
+                            <h4>Dramatic Improvements Across All Metrics</h4>
+                        </div>
+                        <p><strong>🚀 Speed Gains:</strong><br>
+                        60× faster training, 100× faster inference</p>
+                        <p><strong>💾 Storage Efficiency:</strong><br>
+                        200× compression with minimal information loss</p>
+                        <p><strong>👁️ Visualization:</strong><br>
+                        Transform impossible-to-see data into clear patterns</p>
+                        <p><strong>📊 Better Models:</strong><br>
+                        Reduced overfitting leads to better generalization</p>
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                            <strong>Real Case Study:</strong><br>
+                            Netflix reduced movie features from 17,770 to 50, improving recommendations and reducing compute costs by 99%!
+                        </div>
+                    `);
+                } else {
+                    modal.show('Problems Without Reduction', `
+                        <div class="modal-highlight">
+                            <h4>High Dimensions Create Multiple Problems</h4>
+                        </div>
+                        <p><strong>😰 Computational Burden:</strong><br>
+                        Training becomes prohibitively expensive</p>
+                        <p><strong>💸 Resource Costs:</strong><br>
+                        Storage and compute costs skyrocket</p>
+                        <p><strong>🎯 Poor Performance:</strong><br>
+                        Models overfit with too many features</p>
+                        <p><strong>😵 No Insights:</strong><br>
+                        Cannot visualize or understand patterns</p>
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(220, 38, 38, 0.1); border-radius: 10px;">
+                            <strong>Warning:</strong><br>
+                            Many algorithms become unusable above 1000 dimensions without reduction!
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week7_Slide121.html';
+            } else if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week7_Slide123.html';
+            }
+        });
+
+    </script>
+</body>
+</html>

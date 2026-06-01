@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - History and Evolution of ML</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .timeline-container {
+            position: relative;
+            padding: 40px 0;
+            margin: 40px 0;
+        }
+
+        .timeline-line {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, #0d9488 0%, #14b8a6 100%);
+            transform: translateX(-50%);
+        }
+
+        .timeline-item {
+            display: flex;
+            align-items: center;
+            margin: 40px 0;
+            position: relative;
+            animation: fadeInScale 0.8s ease-out;
+        }
+
+        .timeline-item:nth-child(even) {
+            flex-direction: row-reverse;
+        }
+
+        .timeline-content {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 30px;
+            width: 45%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .timeline-content:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 40px rgba(13, 148, 136, 0.2);
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+            border-radius: 50%;
+            box-shadow: 0 0 0 8px rgba(13, 148, 136, 0.2);
+            z-index: 2;
+        }
+
+        .timeline-year {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #0d9488;
+            margin-bottom: 10px;
+        }
+
+        .timeline-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #134e4a;
+            margin-bottom: 10px;
+        }
+
+        .timeline-desc {
+            color: #475569;
+            line-height: 1.6;
+        }
+
+        .era-banner {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            margin: 40px 0;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            animation: slideInFromBottom 1s ease-out 0.5s both;
+        }
+
+        .era-title {
+            font-size: 2em;
+            color: #0d9488;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .era-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .era-card {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            border: 2px solid #14b8a6;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .era-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.2);
+        }
+
+        .era-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+
+        .era-period {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 10px;
+        }
+
+        .era-description {
+            font-size: 0.9em;
+            color: #475569;
+            line-height: 1.4;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .timeline-item { flex-direction: column !important; }
+            .timeline-item:nth-child(even) { flex-direction: column !important; }
+            .timeline-content { width: 90%; margin: 20px auto; }
+            .timeline-line { left: 20px; }
+            .timeline-dot { left: 20px; }
+            .era-grid { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    
+    <div class="course-info">CS5710 - Week 1</div>
+    <div class="slide-number">Slide 3 of 20</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">History and Evolution of ML</h1>
+        
+        <div class="timeline-container">
+            <div class="timeline-line"></div>
+            
+            <div class="timeline-item">
+                <div class="timeline-content">
+                    <div class="timeline-year">1943</div>
+                    <div class="timeline-title">Neural Networks Born</div>
+                    <div class="timeline-desc">McCulloch & Pitts create first mathematical model of artificial neurons</div>
+                </div>
+                <div class="timeline-dot"></div>
+            </div>
+            
+            <div class="timeline-item">
+                <div class="timeline-content">
+                    <div class="timeline-year">1950</div>
+                    <div class="timeline-title">Turing Test</div>
+                    <div class="timeline-desc">Alan Turing proposes test for machine intelligence</div>
+                </div>
+                <div class="timeline-dot"></div>
+            </div>
+            
+            <div class="timeline-item">
+                <div class="timeline-content">
+                    <div class="timeline-year">1956</div>
+                    <div class="timeline-title">AI & ML Birth</div>
+                    <div class="timeline-desc">Dartmouth Conference coins "Artificial Intelligence"</div>
+                </div>
+                <div class="timeline-dot"></div>
+            </div>
+            
+            <div class="timeline-item">
+                <div class="timeline-content">
+                    <div class="timeline-year">1957</div>
+                    <div class="timeline-title">Perceptron</div>
+                    <div class="timeline-desc">Frank Rosenblatt creates first trainable neural network</div>
+                </div>
+                <div class="timeline-dot"></div>
+            </div>
+            
+            <div class="timeline-item">
+                <div class="timeline-content">
+                    <div class="timeline-year">1967</div>
+                    <div class="timeline-title">Nearest Neighbor</div>
+                    <div class="timeline-desc">Cover & Hart develop k-NN algorithm for pattern recognition</div>
+                </div>
+                <div class="timeline-dot"></div>
+            </div>
+            
+            <div class="timeline-item">
+                <div class="timeline-content">
+                    <div class="timeline-year">1974-1980</div>
+                    <div class="timeline-title">First AI Winter</div>
+                    <div class="timeline-desc">Limited computing power and unrealistic expectations halt progress</div>
+                </div>
+                <div class="timeline-dot"></div>
+            </div>
+            
+            <div class="timeline-item">
+                <div class="timeline-content">
+                    <div class="timeline-year">1986</div>
+                    <div class="timeline-title">Backpropagation</div>
+                    <div class="timeline-desc">Rumelhart, Hinton & Williams revive neural networks</div>
+                </div>
+                <div class="timeline-dot"></div>
+            </div>
+            
+            <div class="timeline-item">
+                <div class="timeline-content">
+                    <div class="timeline-year">1995</div>
+                    <div class="timeline-title">SVM & Random Forest</div>
+                    <div class="timeline-desc">Vapnik's Support Vector Machines and Breiman's ensemble methods</div>
+                </div>
+                <div class="timeline-dot"></div>
+            </div>
+            
+            <div class="timeline-item">
+                <div class="timeline-content">
+                    <div class="timeline-year">1997</div>
+                    <div class="timeline-title">Deep Blue</div>
+                    <div class="timeline-desc">IBM's Deep Blue defeats world chess champion Garry Kasparov</div>
+                </div>
+                <div class="timeline-dot"></div>
+            </div>
+            
+            <div class="timeline-item">
+                <div class="timeline-content">
+                    <div class="timeline-year">2006</div>
+                    <div class="timeline-title">Deep Learning Era</div>
+                    <div class="timeline-desc">Geoffrey Hinton introduces deep belief networks</div>
+                </div>
+                <div class="timeline-dot"></div>
+            </div>
+            
+            <div class="timeline-item">
+                <div class="timeline-content">
+                    <div class="timeline-year">2012</div>
+                    <div class="timeline-title">AlexNet Revolution</div>
+                    <div class="timeline-desc">Deep CNN wins ImageNet by huge margin, sparking DL boom</div>
+                </div>
+                <div class="timeline-dot"></div>
+            </div>
+            
+            <div class="timeline-item">
+                <div class="timeline-content">
+                    <div class="timeline-year">2016</div>
+                    <div class="timeline-title">AlphaGo Victory</div>
+                    <div class="timeline-desc">DeepMind's AlphaGo defeats world Go champion Lee Sedol</div>
+                </div>
+                <div class="timeline-dot"></div>
+            </div>
+            
+            <div class="timeline-item">
+                <div class="timeline-content">
+                    <div class="timeline-year">2017</div>
+                    <div class="timeline-title">Transformer Architecture</div>
+                    <div class="timeline-desc">"Attention is All You Need" revolutionizes NLP</div>
+                </div>
+                <div class="timeline-dot"></div>
+            </div>
+            
+            <div class="timeline-item">
+                <div class="timeline-content">
+                    <div class="timeline-year">2022-2024</div>
+                    <div class="timeline-title">Generative AI Explosion</div>
+                    <div class="timeline-desc">ChatGPT, DALL-E, and LLMs transform society</div>
+                </div>
+                <div class="timeline-dot"></div>
+            </div>
+        </div>
+
+        <div class="era-banner">
+            <h2 class="era-title">Three Waves of AI/ML</h2>
+            
+            <div class="era-grid">
+                <div class="era-card">
+                    <div class="era-icon">🌅</div>
+                    <div class="era-period">1950s-1970s</div>
+                    <div class="era-description">
+                        <strong>Symbolic AI Era</strong><br>
+                        Rule-based systems, logic programming, expert systems
+                    </div>
+                </div>
+                
+                <div class="era-card">
+                    <div class="era-icon">📊</div>
+                    <div class="era-period">1980s-2000s</div>
+                    <div class="era-description">
+                        <strong>Statistical ML Era</strong><br>
+                        SVMs, decision trees, Bayesian methods, ensemble learning
+                    </div>
+                </div>
+                
+                <div class="era-card">
+                    <div class="era-icon">🧠</div>
+                    <div class="era-period">2010s-Present</div>
+                    <div class="era-description">
+                        <strong>Deep Learning Era</strong><br>
+                        CNNs, RNNs, Transformers, Foundation Models, GenAI
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week1_Slide2.html" class="nav-btn">← Previous</a>
+        <a href="Week1_Slide4.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                const size = Math.random() * 10 + 3;
+                element.style.width = size + 'px';
+                element.style.height = size + 'px';
+                container.appendChild(element);
+            }
+        }
+
+        // Timeline item details
+        const timelineDetails = {
+            '1943': {
+                title: 'The Birth of Neural Networks',
+                content: `
+                    <p><strong>Warren McCulloch and Walter Pitts</strong> published "A Logical Calculus of Ideas Immanent in Nervous Activity"</p>
+                    <div class="modal-highlight">
+                        <strong>Key Innovation:</strong><br>
+                        First mathematical model showing how neurons might work together to perform computations.
+                    </div>
+                    <p><strong>Impact:</strong> Laid the foundation for artificial neural networks and showed that simple units could perform complex computations when connected.</p>
+                    <p><strong>Fun Fact:</strong> This work was inspired by studying how biological neurons fire in the brain!</p>
+                `
+            },
+            '1950': {
+                title: 'The Turing Test',
+                content: `
+                    <p><strong>Alan Turing</strong> published "Computing Machinery and Intelligence"</p>
+                    <div class="modal-highlight">
+                        <strong>The Imitation Game:</strong><br>
+                        Can a machine convince a human it's human through conversation?
+                    </div>
+                    <p><strong>Significance:</strong> First formal definition of machine intelligence and sparked philosophical debates that continue today.</p>
+                    <p><strong>Modern Relevance:</strong> ChatGPT and modern LLMs are getting closer to passing comprehensive Turing tests!</p>
+                `
+            },
+            '1956': {
+                title: 'The Dartmouth Conference',
+                content: `
+                    <p><strong>John McCarthy, Marvin Minsky, Nathaniel Rochester, and Claude Shannon</strong> organized the historic conference.</p>
+                    <div class="modal-highlight">
+                        <strong>"Artificial Intelligence" is born!</strong><br>
+                        The term was coined and the field was formally established.
+                    </div>
+                    <p><strong>Bold Prediction:</strong> They believed AI would be solved within a generation (spoiler: it wasn't!).</p>
+                    <p><strong>Legacy:</strong> Established AI as a legitimate field of academic study.</p>
+                `
+            },
+            '1957': {
+                title: 'The Perceptron',
+                content: `
+                    <p><strong>Frank Rosenblatt</strong> created the first trainable artificial neural network.</p>
+                    <div class="modal-highlight">
+                        <strong>Revolutionary Feature:</strong><br>
+                        Could learn from examples rather than being explicitly programmed!
+                    </div>
+                    <p><strong>Capabilities:</strong> Could classify simple patterns and images.</p>
+                    <p><strong>Limitation:</strong> Could only solve linearly separable problems (led to AI winter).</p>
+                `
+            },
+            '1967': {
+                title: 'k-Nearest Neighbors',
+                content: `
+                    <p><strong>Cover & Hart</strong> developed one of the simplest yet most effective ML algorithms.</p>
+                    <div class="modal-highlight">
+                        <strong>Simple Principle:</strong><br>
+                        "You are who your neighbors are" - classify based on nearby examples.
+                    </div>
+                    <p><strong>Still Used Today:</strong> Recommendation systems, pattern recognition, and as a baseline algorithm.</p>
+                `
+            },
+            '1974-1980': {
+                title: 'The First AI Winter',
+                content: `
+                    <p>A period of reduced funding and interest in AI research.</p>
+                    <div class="modal-highlight">
+                        <strong>Causes:</strong><br>
+                        • Overpromising and underdelivering<br>
+                        • Limited computing power<br>
+                        • XOR problem exposed perceptron limitations
+                    </div>
+                    <p><strong>Lesson Learned:</strong> Hype cycles can damage scientific progress.</p>
+                    <p><strong>Silver Lining:</strong> Led to more rigorous mathematical foundations.</p>
+                `
+            },
+            '1986': {
+                title: 'Backpropagation Revolution',
+                content: `
+                    <p><strong>Rumelhart, Hinton, and Williams</strong> popularized backpropagation algorithm.</p>
+                    <div class="modal-highlight">
+                        <strong>Breakthrough:</strong><br>
+                        Enabled training of multi-layer neural networks!
+                    </div>
+                    <p><strong>Why It Matters:</strong> Solved the XOR problem and enabled deep learning.</p>
+                    <p><strong>Geoffrey Hinton:</strong> Would later become the "Godfather of AI".</p>
+                `
+            },
+            '1995': {
+                title: 'Classical ML Golden Age',
+                content: `
+                    <p><strong>Vladimir Vapnik's SVMs</strong> and <strong>Leo Breiman's Random Forests</strong></p>
+                    <div class="modal-highlight">
+                        <strong>SVM Innovation:</strong> Maximum margin classification with kernel trick<br>
+                        <strong>Random Forest:</strong> Ensemble learning - wisdom of crowds for algorithms
+                    </div>
+                    <p><strong>Impact:</strong> Dominated ML competitions for the next decade.</p>
+                    <p><strong>Still Relevant:</strong> Often outperform deep learning on structured/tabular data!</p>
+                `
+            },
+            '1997': {
+                title: 'Deep Blue Defeats Kasparov',
+                content: `
+                    <p><strong>IBM's Deep Blue</strong> defeats world chess champion Garry Kasparov.</p>
+                    <div class="modal-highlight">
+                        <strong>Historic Moment:</strong><br>
+                        First time a computer defeated a reigning world champion in chess.
+                    </div>
+                    <p><strong>Method:</strong> Brute force search + hand-crafted evaluation (not ML!).</p>
+                    <p><strong>Public Impact:</strong> Showed machines could match human expertise in complex domains.</p>
+                `
+            },
+            '2006': {
+                title: 'Deep Learning Renaissance',
+                content: `
+                    <p><strong>Geoffrey Hinton</strong> introduces Deep Belief Networks.</p>
+                    <div class="modal-highlight">
+                        <strong>Key Innovation:</strong><br>
+                        Layer-wise pre-training made deep networks trainable!
+                    </div>
+                    <p><strong>Timing:</strong> GPUs were becoming available for parallel computation.</p>
+                    <p><strong>Result:</strong> Started the modern deep learning revolution.</p>
+                `
+            },
+            '2012': {
+                title: 'AlexNet Changes Everything',
+                content: `
+                    <p><strong>Alex Krizhevsky, Ilya Sutskever, and Geoffrey Hinton</strong> win ImageNet.</p>
+                    <div class="modal-highlight">
+                        <strong>Stunning Victory:</strong><br>
+                        Error rate: 15.3% (previous best: 26.2%)
+                    </div>
+                    <p><strong>Secret Weapons:</strong> GPUs, ReLU activation, dropout, data augmentation.</p>
+                    <p><strong>Impact:</strong> Every major tech company immediately invested in deep learning.</p>
+                `
+            },
+            '2016': {
+                title: 'AlphaGo Makes History',
+                content: `
+                    <p><strong>DeepMind's AlphaGo</strong> defeats Lee Sedol 4-1 in Go.</p>
+                    <div class="modal-highlight">
+                        <strong>Why Go Matters:</strong><br>
+                        • 10^170 possible positions (more than atoms in universe)<br>
+                        • Requires intuition, not just calculation
+                    </div>
+                    <p><strong>Method:</strong> Deep reinforcement learning + Monte Carlo tree search.</p>
+                    <p><strong>Move 37:</strong> A creative move no human would play - showed AI creativity!</p>
+                `
+            },
+            '2017': {
+                title: 'Attention Is All You Need',
+                content: `
+                    <p><strong>Google researchers</strong> introduce the Transformer architecture.</p>
+                    <div class="modal-highlight">
+                        <strong>Revolutionary Concept:</strong><br>
+                        Self-attention mechanism - let the model decide what to focus on!
+                    </div>
+                    <p><strong>Goodbye RNNs:</strong> Parallel processing made training 100x faster.</p>
+                    <p><strong>Foundation for:</strong> BERT, GPT, and all modern LLMs.</p>
+                `
+            },
+            '2022-2024': {
+                title: 'The GenAI Revolution',
+                content: `
+                    <p><strong>ChatGPT, DALL-E, Midjourney, Claude</strong> and more transform society.</p>
+                    <div class="modal-highlight">
+                        <strong>Breakthrough Capabilities:</strong><br>
+                        • Human-like text generation<br>
+                        • Photorealistic image creation<br>
+                        • Code generation<br>
+                        • Multimodal understanding
+                    </div>
+                    <p><strong>ChatGPT:</strong> Fastest app to 100M users (2 months!).</p>
+                    <p><strong>Impact:</strong> AI becomes a daily tool for millions, transforming work and creativity.</p>
+                    <p><strong>The Future:</strong> We're living through the most exciting time in AI history!</p>
+                `
+            }
+        };
+
+        // Make timeline items clickable
+        document.querySelectorAll('.timeline-content').forEach(item => {
+            item.addEventListener('click', function() {
+                const year = this.querySelector('.timeline-year').textContent;
+                const details = timelineDetails[year];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        // Era cards details
+        const eraDetails = {
+            '1950s-1970s': {
+                title: 'The Symbolic AI Era',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Philosophy:</strong> Intelligence is symbol manipulation
+                    </div>
+                    <p><strong>Approach:</strong> Hand-coded rules, logic, and expert knowledge.</p>
+                    <p><strong>Successes:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>• ELIZA (1966) - First chatbot</li>
+                        <li>• SHRDLU (1970) - Natural language understanding</li>
+                        <li>• Expert systems for medical diagnosis</li>
+                    </ul>
+                    <p><strong>Limitations:</strong> Couldn't handle uncertainty, required complete knowledge, brittle.</p>
+                    <p><strong>Legacy:</strong> Logic programming, knowledge representation, search algorithms.</p>
+                `
+            },
+            '1980s-2000s': {
+                title: 'The Statistical ML Era',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Philosophy:</strong> Let data speak through statistics
+                    </div>
+                    <p><strong>Key Algorithms:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>• Support Vector Machines (1995)</li>
+                        <li>• Random Forests (2001)</li>
+                        <li>• Boosting methods (AdaBoost, 1997)</li>
+                        <li>• Bayesian networks</li>
+                    </ul>
+                    <p><strong>Breakthrough:</strong> Could handle uncertainty and learn from data.</p>
+                    <p><strong>Applications:</strong> Spam filtering, credit scoring, recommendation systems.</p>
+                    <p><strong>Still Valuable:</strong> Often best for structured/tabular data!</p>
+                `
+            },
+            '2010s-Present': {
+                title: 'The Deep Learning Era',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Philosophy:</strong> Let neural networks learn representations
+                    </div>
+                    <p><strong>Game Changers:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>• Convolutional Neural Networks (Vision)</li>
+                        <li>• Recurrent Neural Networks (Sequences)</li>
+                        <li>• Transformers (Everything!)</li>
+                        <li>• Generative AI (Creation)</li>
+                    </ul>
+                    <p><strong>Enabling Factors:</strong> Big data, GPU computing, open-source frameworks.</p>
+                    <p><strong>Current State:</strong> Foundation models, multimodal AI, AGI discussions.</p>
+                    <p><strong>Your Role:</strong> You're entering the field at the most exciting time in history!</p>
+                `
+            }
+        };
+
+        // Make era cards clickable
+        document.querySelectorAll('.era-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const period = this.querySelector('.era-period').textContent;
+                const details = eraDetails[period];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week1_Slide2.html';
+            } else if ((e.key === 'ArrowRight' || e.key === ' ') && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week1_Slide4.html';
+            }
+        });
+
+        // Animate timeline items on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateX(0)';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.timeline-item').forEach(item => {
+            item.style.opacity = '0';
+            item.style.transform = 'translateX(-50px)';
+            item.style.transition = 'all 0.6s ease';
+            observer.observe(item);
+        });
+
+    </script>
+</body>
+</html>

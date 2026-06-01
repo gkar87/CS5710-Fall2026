@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Kernel Trick</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .concept-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .transformation-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .definition-box {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .key-insight {
+            background: linear-gradient(135deg, #fef3c7, #fbbf24);
+            color: #92400e;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #d97706;
+            font-weight: 600;
+        }
+
+        .kernel-steps {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .step-item {
+            padding: 20px;
+            margin: 15px 0;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .step-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .step-number {
+            position: absolute;
+            left: -15px;
+            top: 15px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .step-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+            margin-left: 20px;
+        }
+
+        .step-desc {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.5;
+            margin-left: 20px;
+        }
+
+        .transformation-demo {
+            width: 100%;
+            height: 450px;
+            background: #1e293b;
+            border-radius: 15px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .demo-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .demo-btn {
+            padding: 8px 15px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .demo-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 5px 15px rgba(13, 148, 136, 0.3);
+        }
+
+        .space-container {
+            position: absolute;
+            width: 160px;
+            height: 160px;
+            border: 2px solid #5eead4;
+            border-radius: 10px;
+            background: rgba(94, 234, 212, 0.1);
+        }
+
+        .input-space {
+            top: 50px;
+            left: 20px;
+        }
+
+        .feature-space {
+            top: 50px;
+            right: 20px;
+        }
+
+        .space-label {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #5eead4;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .data-point-demo {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            transition: all 1s ease;
+        }
+
+        .class-1 { background: #ef4444; }
+        .class-2 { background: #3b82f6; }
+
+        .transform-arrow {
+            position: absolute;
+            top: 130px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #fbbf24;
+            font-size: 2em;
+            animation: pulse 2s infinite;
+        }
+
+        .decision-boundary-demo {
+            position: absolute;
+            height: 2px;
+            background: #5eead4;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .explanation-banner {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .formula-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .formula-card {
+            padding: 25px;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            border: 2px solid #cbd5e1;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .formula-card:hover {
+            border-color: #0d9488;
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+            transform: translateY(-3px);
+        }
+
+        .formula-title {
+            font-size: 1.2em;
+            color: #0d9488;
+            margin-bottom: 15px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .formula-content {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 15px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            text-align: center;
+            font-size: 0.9em;
+        }
+
+        .formula-explanation {
+            font-size: 0.85em;
+            color: #475569;
+            line-height: 1.4;
+            text-align: center;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.2); }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .formula-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    
+    <div class="course-info">CS5710 - Week 4</div>
+    <div class="slide-number">Slide 74 of 80</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">The Kernel Trick</h1>
+        
+        <div class="content-layout">
+            <div class="concept-section">
+                <h2 class="section-title">What is the Kernel Trick?</h2>
+                
+                <div class="definition-box">
+                    The <strong>Kernel Trick</strong> allows SVMs to find non-linear decision boundaries by implicitly mapping data to higher-dimensional spaces without explicitly computing the transformation.
+                </div>
+                
+                <div class="key-insight">
+                    💡 <strong>Key Insight:</strong> Instead of φ(x₁)·φ(x₂), compute K(x₁,x₂) directly!
+                </div>
+                
+                <ul class="kernel-steps">
+                    <li class="step-item">
+                        <div class="step-number">1</div>
+                        <div class="step-title">Non-linear Problem</div>
+                        <div class="step-desc">Data not linearly separable in original space</div>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-number">2</div>
+                        <div class="step-title">Implicit Mapping</div>
+                        <div class="step-desc">Use kernel function instead of explicit transformation</div>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-number">3</div>
+                        <div class="step-title">Higher Dimensions</div>
+                        <div class="step-desc">Find linear boundary in transformed space</div>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-number">4</div>
+                        <div class="step-title">Non-linear Result</div>
+                        <div class="step-desc">Maps back to non-linear boundary in original space</div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="transformation-section">
+                <h2 class="section-title">Transformation Visualization</h2>
+                
+                <div class="transformation-demo" id="transformDemo">
+                    <div class="demo-controls">
+                        <button class="demo-btn" onclick="showLinear()">Linear</button>
+                        <button class="demo-btn" onclick="showPolynomial()">Polynomial</button>
+                        <button class="demo-btn" onclick="showRBF()">RBF</button>
+                        <button class="demo-btn" onclick="resetDemo()">Reset</button>
+                    </div>
+                    
+                    <!-- Input Space -->
+                    <div class="space-container input-space">
+                        <div class="space-label">Input Space (2D)</div>
+                        
+                        <!-- Class 1 points (red) - circular pattern -->
+                        <div class="data-point-demo class-1" style="top: 75px; left: 75px;" data-original="75,75"></div>
+                        <div class="data-point-demo class-1" style="top: 60px; left: 90px;" data-original="60,90"></div>
+                        <div class="data-point-demo class-1" style="top: 90px; left: 60px;" data-original="90,60"></div>
+                        <div class="data-point-demo class-1" style="top: 90px; left: 90px;" data-original="90,90"></div>
+                        
+                        <!-- Class 2 points (blue) - surrounding pattern -->
+                        <div class="data-point-demo class-2" style="top: 20px; left: 20px;" data-original="20,20"></div>
+                        <div class="data-point-demo class-2" style="top: 20px; left: 130px;" data-original="20,130"></div>
+                        <div class="data-point-demo class-2" style="top: 130px; left: 20px;" data-original="130,20"></div>
+                        <div class="data-point-demo class-2" style="top: 130px; left: 130px;" data-original="130,130"></div>
+                        <div class="data-point-demo class-2" style="top: 75px; left: 20px;" data-original="75,20"></div>
+                        <div class="data-point-demo class-2" style="top: 75px; left: 130px;" data-original="75,130"></div>
+                    </div>
+                    
+                    <div class="transform-arrow">🔄</div>
+                    
+                    <!-- Feature Space -->
+                    <div class="space-container feature-space">
+                        <div class="space-label">Feature Space (3D→2D view)</div>
+                        <div class="decision-boundary-demo" id="featureBoundary" style="top: 80px; left: 0; width: 160px;"></div>
+                    </div>
+                    
+                    <div style="position: absolute; bottom: 20px; left: 20px; color: #5eead4; font-size: 0.9em;">
+                        🔴 Class 1 (Inner) &nbsp;&nbsp; 🔵 Class 2 (Outer)
+                    </div>
+                    
+                    <div style="position: absolute; bottom: 20px; right: 20px; color: #fbbf24; font-size: 0.8em;" id="kernelInfo">
+                        Select a kernel to see transformation
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                    <strong>How it works:</strong><br>
+                    1. Original data not linearly separable<br>
+                    2. Kernel maps to higher dimensions<br>
+                    3. Linear separation possible in new space<br>
+                    4. Decision boundary curves back in original space
+                </div>
+            </div>
+        </div>
+
+        <div class="explanation-banner">
+            <h2 class="section-title">Mathematical Foundation</h2>
+            <p style="text-align: center; color: #475569; margin-bottom: 20px; font-size: 1.1em;">
+                The kernel trick replaces dot products in high-dimensional feature spaces with kernel functions
+            </p>
+            
+            <div class="formula-grid">
+                <div class="formula-card">
+                    <div class="formula-title">Without Kernel</div>
+                    <div class="formula-content">
+                        f(x) = Σ αᵢyᵢ(φ(xᵢ)·φ(x)) + b
+                    </div>
+                    <div class="formula-explanation">Requires explicit feature mapping φ(x) - can be computationally expensive</div>
+                </div>
+                
+                <div class="formula-card">
+                    <div class="formula-title">With Kernel Trick</div>
+                    <div class="formula-content">
+                        f(x) = Σ αᵢyᵢK(xᵢ,x) + b
+                    </div>
+                    <div class="formula-explanation">Direct kernel computation K(x₁,x₂) = φ(x₁)·φ(x₂) - much more efficient!</div>
+                </div>
+                
+                <div class="formula-card">
+                    <div class="formula-title">Kernel Condition</div>
+                    <div class="formula-content">
+                        K must be positive<br>semi-definite (Mercer's theorem)
+                    </div>
+                    <div class="formula-explanation">Ensures kernel corresponds to a valid dot product in some space</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week4_Slide73.html" class="nav-btn">← Previous</a>
+        <a href="Week4_Slide75.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive step items
+        document.querySelectorAll('.step-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const title = this.querySelector('.step-title').textContent;
+                const desc = this.querySelector('.step-desc').textContent;
+                const step = this.querySelector('.step-number').textContent;
+                
+                const details = {
+                    'Non-linear Problem': {
+                        detail: 'Many real-world datasets are not linearly separable in their original feature space.',
+                        example: 'XOR problem: (0,0)→0, (0,1)→1, (1,0)→1, (1,1)→0 cannot be separated by any straight line',
+                        solution: 'Traditional approach requires manual feature engineering or polynomial expansions'
+                    },
+                    'Implicit Mapping': {
+                        detail: 'Instead of explicitly computing high-dimensional features φ(x), use kernel functions directly.',
+                        example: 'Polynomial kernel K(x,y) = (x·y + 1)ᵈ implicitly maps to all polynomial terms up to degree d',
+                        solution: 'Kernel trick avoids the computational cost of explicit high-dimensional mappings'
+                    },
+                    'Higher Dimensions': {
+                        detail: 'The kernel implicitly works in a higher-dimensional space where linear separation is possible.',
+                        example: 'RBF kernel works in infinite-dimensional space, polynomial kernel in (n+d choose d) dimensions',
+                        solution: 'Find the maximum-margin linear separator in this transformed space'
+                    },
+                    'Non-linear Result': {
+                        detail: 'The linear decision boundary in feature space becomes non-linear in the original space.',
+                        example: 'A line in 3D polynomial space becomes a curve/circle in 2D input space',
+                        solution: 'Complex decision boundaries without explicit complexity!'
+                    }
+                };
+                
+                const info = details[title];
+                modal.show(`Step ${step}: ${title}`, `
+                    <div class="modal-highlight">
+                        <strong>${desc}</strong>
+                    </div>
+                    <p>${info.detail}</p>
+                    <div class="modal-code">
+                        <strong>Example:</strong><br>
+                        ${info.example}
+                    </div>
+                    <p><strong>Key Advantage:</strong> ${info.solution}</p>
+                `);
+            });
+        });
+
+        // Demo functions
+        function showLinear() {
+            const points = document.querySelectorAll('.data-point-demo');
+            const boundary = document.getElementById('featureBoundary');
+            const info = document.getElementById('kernelInfo');
+            
+            // Reset points to original positions
+            points.forEach(point => {
+                const original = point.getAttribute('data-original').split(',');
+                point.style.top = original[1] + 'px';
+                point.style.left = original[0] + 'px';
+            });
+            
+            boundary.style.opacity = '0';
+            info.textContent = 'Linear kernel: K(x,y) = x·y';
+            
+            modal.show('Linear Kernel Demonstration', `
+                <div class="modal-highlight">
+                    <strong>K(x,y) = x·y</strong>
+                </div>
+                <p>The linear kernel is equivalent to no transformation - it works in the original input space.</p>
+                <p><strong>Result:</strong> Cannot separate the circular pattern with a straight line.</p>
+                <p><strong>Use case:</strong> When data is already linearly separable, or for very high-dimensional data.</p>
+                <div style="margin-top: 20px; padding: 15px; background: rgba(239, 68, 68, 0.1); border-radius: 10px;">
+                    <strong>❌ Limitation:</strong> This pattern requires non-linear separation!
+                </div>
+            `);
+        }
+
+        function showPolynomial() {
+            const points = document.querySelectorAll('.data-point-demo');
+            const boundary = document.getElementById('featureBoundary');
+            const info = document.getElementById('kernelInfo');
+            
+            // Transform points for polynomial kernel (degree 2)
+            points.forEach(point => {
+                const original = point.getAttribute('data-original').split(',');
+                const x = parseInt(original[0]);
+                const y = parseInt(original[1]);
+                
+                // Simplified 2D projection of polynomial transformation
+                const newX = Math.max(10, Math.min(150, x + (x-75)*(y-75)*0.01));
+                const newY = Math.max(10, Math.min(150, y + (x*y*0.001)));
+                
+                point.style.left = newX + 'px';
+                point.style.top = newY + 'px';
+            });
+            
+            boundary.style.opacity = '1';
+            info.textContent = 'Polynomial kernel: K(x,y) = (x·y + 1)²';
+            
+            modal.show('Polynomial Kernel Transformation', `
+                <div class="modal-highlight">
+                    <strong>K(x,y) = (x·y + c)ᵈ</strong>
+                </div>
+                <p>Polynomial kernel of degree d implicitly maps to all polynomial combinations up to degree d.</p>
+                <div class="modal-code">
+                    For degree 2 in 2D: φ(x₁,x₂) = [1, x₁, x₂, x₁x₂, x₁², x₂²]<br>
+                    6 dimensions from 2 original dimensions!
+                </div>
+                <p><strong>Effect:</strong> Points are separated by curved boundaries (circles, ellipses, parabolas).</p>
+                <p><strong>Use case:</strong> When decision boundary should be smooth curves.</p>
+            `);
+        }
+
+        function showRBF() {
+            const points = document.querySelectorAll('.data-point-demo');
+            const boundary = document.getElementById('featureBoundary');
+            const info = document.getElementById('kernelInfo');
+            
+            // Transform points for RBF kernel
+            points.forEach(point => {
+                const original = point.getAttribute('data-original').split(',');
+                const x = parseInt(original[0]);
+                const y = parseInt(original[1]);
+                
+                // RBF transformation simulation
+                const centerX = 75, centerY = 75;
+                const distance = Math.sqrt((x-centerX)**2 + (y-centerY)**2);
+                const rbfValue = Math.exp(-distance*distance / (2*30*30));
+                
+                // Map based on RBF response
+                const newX = Math.max(10, Math.min(150, 80 + (x-75) * rbfValue));
+                const newY = Math.max(10, Math.min(150, 80 + (y-75) * rbfValue + distance * 0.5));
+                
+                point.style.left = newX + 'px';
+                point.style.top = newY + 'px';
+            });
+            
+            boundary.style.opacity = '1';
+            info.textContent = 'RBF kernel: K(x,y) = exp(-γ||x-y||²)';
+            
+            modal.show('RBF Kernel Transformation', `
+                <div class="modal-highlight">
+                    <strong>K(x,y) = exp(-γ||x-y||²)</strong>
+                </div>
+                <p>Radial Basis Function kernel maps to infinite-dimensional space based on distance between points.</p>
+                <div class="modal-code">
+                    γ (gamma) controls the "reach" of each training example<br>
+                    High γ: tight boundaries, low γ: smooth boundaries
+                </div>
+                <p><strong>Effect:</strong> Can create very complex, localized decision boundaries.</p>
+                <p><strong>Use case:</strong> Most popular kernel - works well for most problems!</p>
+                <div style="margin-top: 20px; padding: 15px; background: rgba(16, 185, 129, 0.1); border-radius: 10px;">
+                    <strong>✅ Perfect fit:</strong> RBF can separate complex patterns like this circular data!
+                </div>
+            `);
+        }
+
+        function resetDemo() {
+            const points = document.querySelectorAll('.data-point-demo');
+            const boundary = document.getElementById('featureBoundary');
+            const info = document.getElementById('kernelInfo');
+            
+            // Reset to original positions
+            points.forEach(point => {
+                const original = point.getAttribute('data-original').split(',');
+                point.style.top = original[1] + 'px';
+                point.style.left = original[0] + 'px';
+            });
+            
+            boundary.style.opacity = '0';
+            info.textContent = 'Select a kernel to see transformation';
+        }
+
+        // Interactive formula cards
+        document.querySelectorAll('.formula-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('.formula-title').textContent;
+                const formula = this.querySelector('.formula-content').textContent;
+                const explanation = this.querySelector('.formula-explanation').textContent;
+                
+                const details = {
+                    'Without Kernel': {
+                        problem: 'Computing φ(x) explicitly can be extremely expensive or even impossible.',
+                        example: 'RBF kernel maps to infinite dimensions - impossible to compute directly!',
+                        complexity: 'For polynomial kernel degree d in n dimensions: O(n^d) feature computation'
+                    },
+                    'With Kernel Trick': {
+                        problem: 'Kernel functions compute dot products in feature space without explicit mapping.',
+                        example: 'RBF kernel: just one exponential calculation regardless of feature space dimension!',
+                        complexity: 'Kernel computation: typically O(n) where n is input dimension'
+                    },
+                    'Kernel Condition': {
+                        problem: 'Not every function can be used as a kernel - must satisfy Mercer\'s theorem.',
+                        example: 'Valid kernels: polynomial, RBF, sigmoid. Invalid: arbitrary functions that aren\'t PSD.',
+                        complexity: 'Mercer\'s theorem ensures the kernel matrix is positive semi-definite'
+                    }
+                };
+                
+                const info = details[title];
+                modal.show(title, `
+                    <div class="modal-highlight">
+                        ${explanation}
+                    </div>
+                    <div class="modal-code">
+                        ${formula}
+                    </div>
+                    <p><strong>Key Issue:</strong> ${info.problem}</p>
+                    <p><strong>Example:</strong> ${info.example}</p>
+                    <p><strong>Complexity:</strong> ${info.complexity}</p>
+                `);
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week4_Slide73.html';
+            } else if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week4_Slide75.html';
+            }
+        });
+    </script>
+</body>
+</html>

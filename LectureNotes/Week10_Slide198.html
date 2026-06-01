@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Transformer Architecture Introduction</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .overview-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .advantages-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .key-concept {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .advantage-list {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .advantage-item {
+            padding: 20px;
+            margin: 15px 0;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .advantage-item:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .advantage-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .advantage-desc {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .architecture-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .transformer-diagram {
+            background: #1e293b;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .architecture-container {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 30px;
+            align-items: start;
+        }
+
+        .encoder-stack, .decoder-stack {
+            background: rgba(13, 148, 136, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            min-height: 400px;
+        }
+
+        .stack-title {
+            color: #5eead4;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+        }
+
+        .transformer-layer {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .transformer-layer:hover {
+            background: rgba(13, 148, 136, 0.2);
+            border-color: #0d9488;
+            transform: scale(1.02);
+        }
+
+        .layer-name {
+            color: #5eead4;
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+
+        .layer-desc {
+            color: #94a3b8;
+            font-size: 0.8em;
+            line-height: 1.3;
+        }
+
+        .connection-arrow {
+            align-self: center;
+            text-align: center;
+            color: #5eead4;
+            font-size: 2em;
+            font-weight: 600;
+        }
+
+        .position-encoding {
+            background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .position-encoding:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.4);
+        }
+
+        .attention-demo {
+            background: rgba(13, 148, 136, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            border: 2px solid rgba(13, 148, 136, 0.3);
+        }
+
+        .attention-matrix {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 5px;
+            margin: 15px 0;
+        }
+
+        .attention-cell {
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .attention-cell:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: scale(1.1);
+            border-color: #5eead4;
+        }
+
+        .attention-cell.highlighted {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: float 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .architecture-container { grid-template-columns: 1fr; }
+            .attention-matrix { grid-template-columns: repeat(3, 1fr); }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 10</div>
+    <div class="slide-number">Slide 198 of 200</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Transformer Architecture Introduction</h1>
+        
+        <div class="content-layout">
+            <div class="overview-section">
+                <h2 class="section-title">What is a Transformer?</h2>
+                
+                <div class="key-concept">
+                    <strong>Transformers</strong> are a neural network architecture that relies entirely on attention mechanisms, eliminating the need for recurrence and convolution.
+                </div>
+                
+                <div style="font-size: 1.1em; line-height: 1.7; color: #1e293b;">
+                    <strong>Key Innovation:</strong><br>
+                    • <strong>Self-Attention:</strong> Every position can attend to all positions<br>
+                    • <strong>Parallelization:</strong> No sequential dependencies<br>
+                    • <strong>Long-Range Dependencies:</strong> Direct connections across sequence<br>
+                    • <strong>Positional Encoding:</strong> Inject sequence order information<br><br>
+                    
+                    <strong>Paper:</strong> "Attention Is All You Need" (2017)<br>
+                    Revolutionized NLP and beyond
+                </div>
+
+                <div class="position-encoding" onclick="showPositionalEncoding()">
+                    <strong>🧮 Positional Encoding</strong><br>
+                    <small>How Transformers understand sequence order</small>
+                </div>
+            </div>
+
+            <div class="advantages-section">
+                <h2 class="section-title">Advantages over RNNs</h2>
+                
+                <ul class="advantage-list">
+                    <li class="advantage-item" onclick="showAdvantage('parallelization')">
+                        <div class="advantage-title">⚡ Parallelization</div>
+                        <div class="advantage-desc">All positions processed simultaneously</div>
+                    </li>
+                    <li class="advantage-item" onclick="showAdvantage('dependencies')">
+                        <div class="advantage-title">🔗 Long-Range Dependencies</div>
+                        <div class="advantage-desc">Direct connections between distant tokens</div>
+                    </li>
+                    <li class="advantage-item" onclick="showAdvantage('gradient')">
+                        <div class="advantage-title">📈 Gradient Flow</div>
+                        <div class="advantage-desc">No vanishing gradient problem</div>
+                    </li>
+                    <li class="advantage-item" onclick="showAdvantage('scalability')">
+                        <div class="advantage-title">📊 Scalability</div>
+                        <div class="advantage-desc">Scales better with model size and data</div>
+                    </li>
+                    <li class="advantage-item" onclick="showAdvantage('interpretation')">
+                        <div class="advantage-title">🔍 Interpretability</div>
+                        <div class="advantage-desc">Attention weights provide insights</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="architecture-section">
+            <h2 class="section-title">Transformer Architecture</h2>
+            
+            <div class="transformer-diagram">
+                <div class="architecture-container">
+                    <div class="encoder-stack">
+                        <div class="stack-title">Encoder Stack</div>
+                        
+                        <div class="transformer-layer" onclick="showLayer('encoder-attention')">
+                            <div class="layer-name">Multi-Head Self-Attention</div>
+                            <div class="layer-desc">Attends to all encoder positions</div>
+                        </div>
+                        
+                        <div class="transformer-layer" onclick="showLayer('add-norm1')">
+                            <div class="layer-name">Add & Norm</div>
+                            <div class="layer-desc">Residual connection + layer norm</div>
+                        </div>
+                        
+                        <div class="transformer-layer" onclick="showLayer('ffn')">
+                            <div class="layer-name">Feed Forward Network</div>
+                            <div class="layer-desc">Position-wise fully connected</div>
+                        </div>
+                        
+                        <div class="transformer-layer" onclick="showLayer('add-norm2')">
+                            <div class="layer-name">Add & Norm</div>
+                            <div class="layer-desc">Residual connection + layer norm</div>
+                        </div>
+                        
+                        <div style="text-align: center; color: #5eead4; margin-top: 15px; font-size: 0.9em;">
+                            ↑ Repeated N=6 times
+                        </div>
+                    </div>
+                    
+                    <div class="connection-arrow">→</div>
+                    
+                    <div class="decoder-stack">
+                        <div class="stack-title">Decoder Stack</div>
+                        
+                        <div class="transformer-layer" onclick="showLayer('decoder-self-attention')">
+                            <div class="layer-name">Masked Multi-Head Attention</div>
+                            <div class="layer-desc">Prevents looking ahead</div>
+                        </div>
+                        
+                        <div class="transformer-layer" onclick="showLayer('decoder-add-norm1')">
+                            <div class="layer-name">Add & Norm</div>
+                            <div class="layer-desc">Residual connection + layer norm</div>
+                        </div>
+                        
+                        <div class="transformer-layer" onclick="showLayer('cross-attention')">
+                            <div class="layer-name">Multi-Head Cross-Attention</div>
+                            <div class="layer-desc">Attends to encoder output</div>
+                        </div>
+                        
+                        <div class="transformer-layer" onclick="showLayer('decoder-add-norm2')">
+                            <div class="layer-name">Add & Norm</div>
+                            <div class="layer-desc">Residual connection + layer norm</div>
+                        </div>
+                        
+                        <div class="transformer-layer" onclick="showLayer('decoder-ffn')">
+                            <div class="layer-name">Feed Forward Network</div>
+                            <div class="layer-desc">Position-wise fully connected</div>
+                        </div>
+                        
+                        <div class="transformer-layer" onclick="showLayer('decoder-add-norm3')">
+                            <div class="layer-name">Add & Norm</div>
+                            <div class="layer-desc">Residual connection + layer norm</div>
+                        </div>
+                        
+                        <div style="text-align: center; color: #5eead4; margin-top: 15px; font-size: 0.9em;">
+                            ↑ Repeated N=6 times
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="attention-demo">
+                <h3 style="color: #0d9488; margin-bottom: 15px;">Interactive Attention Pattern</h3>
+                <p style="margin-bottom: 15px; color: #1e293b;">Click on words to see attention weights:</p>
+                
+                <div style="margin-bottom: 15px; text-align: center;">
+                    <span style="font-weight: 600; color: #0d9488;">Input Sequence:</span>
+                    <span style="margin-left: 10px;">"The cat sat on the mat"</span>
+                </div>
+                
+                <div class="attention-matrix" id="attentionMatrix">
+                    <!-- Generated by JavaScript -->
+                </div>
+                
+                <div style="text-align: center; margin-top: 15px; color: #475569; font-size: 0.9em;">
+                    Attention weights show how much each word focuses on every other word
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week10_Slide197.html" class="nav-btn">← Previous</a>
+        <a href="Week10_Slide199.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Attention matrix data
+        const words = ["The", "cat", "sat", "on", "the", "mat"];
+        const attentionWeights = [
+            [0.2, 0.1, 0.1, 0.1, 0.4, 0.1],  // The
+            [0.1, 0.3, 0.2, 0.1, 0.1, 0.2],  // cat
+            [0.1, 0.2, 0.3, 0.2, 0.1, 0.1],  // sat
+            [0.1, 0.1, 0.2, 0.2, 0.2, 0.2],  // on
+            [0.4, 0.1, 0.1, 0.1, 0.2, 0.1],  // the
+            [0.1, 0.2, 0.1, 0.2, 0.1, 0.3]   // mat
+        ];
+
+        // Create attention matrix
+        function createAttentionMatrix() {
+            const matrix = document.getElementById('attentionMatrix');
+            matrix.innerHTML = '';
+            
+            for (let i = 0; i < words.length; i++) {
+                for (let j = 0; j < words.length; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'attention-cell';
+                    cell.textContent = attentionWeights[i][j].toFixed(1);
+                    cell.style.opacity = 0.3 + attentionWeights[i][j] * 0.7;
+                    cell.onclick = () => highlightAttention(i, j);
+                    matrix.appendChild(cell);
+                }
+            }
+        }
+
+        function highlightAttention(sourceIdx, targetIdx) {
+            // Clear previous highlights
+            document.querySelectorAll('.attention-cell').forEach(cell => {
+                cell.classList.remove('highlighted');
+            });
+            
+            // Highlight the row for the source word
+            for (let j = 0; j < words.length; j++) {
+                const cellIdx = sourceIdx * words.length + j;
+                document.querySelectorAll('.attention-cell')[cellIdx].classList.add('highlighted');
+            }
+            
+            // Show attention explanation
+            modal.show(`Attention: "${words[sourceIdx]}" → "${words[targetIdx]}"`, `
+                <div class="modal-highlight">
+                    Attention weight: ${attentionWeights[sourceIdx][targetIdx].toFixed(3)}
+                </div>
+                <p>This shows how much the word "<strong>${words[sourceIdx]}</strong>" pays attention to the word "<strong>${words[targetIdx]}</strong>" when being processed.</p>
+                
+                <h4>Full attention pattern for "${words[sourceIdx]}":</h4>
+                <div class="modal-code">
+${words.map((word, idx) => 
+    `${word.padEnd(8)}: ${attentionWeights[sourceIdx][idx].toFixed(3)} ${idx === targetIdx ? '← Selected' : ''}`
+).join('\n')}
+                </div>
+                
+                <p><strong>Interpretation:</strong> Higher weights indicate stronger relationships. The model learns these patterns during training.</p>
+            `);
+        }
+
+        // Advantage details
+        function showAdvantage(advantage) {
+            const advantages = {
+                'parallelization': {
+                    title: 'Parallelization Advantage',
+                    content: `
+                        <div class="modal-highlight">
+                            Transformers can process all positions simultaneously
+                        </div>
+                        <h4>RNN Sequential Processing:</h4>
+                        <div class="modal-code">
+# RNN must process sequentially
+for t in range(sequence_length):
+    h[t] = RNN(x[t], h[t-1])  # Depends on previous state
+# Total time: O(sequence_length)
+                        </div>
+                        <h4>Transformer Parallel Processing:</h4>
+                        <div class="modal-code">
+# Transformer processes all positions at once
+attention_weights = softmax(Q @ K.T / sqrt(d_k))
+output = attention_weights @ V
+# Total time: O(1) with sufficient parallelization
+                        </div>
+                        <p><strong>Impact:</strong> Massive speedup on modern GPUs with parallel compute units</p>
+                    `
+                },
+                'dependencies': {
+                    title: 'Long-Range Dependencies',
+                    content: `
+                        <div class="modal-highlight">
+                            Direct connections between any two positions in the sequence
+                        </div>
+                        <h4>RNN Path Length:</h4>
+                        <div class="modal-code">
+# To connect position 1 to position 100:
+# Information must pass through 99 intermediate states
+path_length = |i - j|  # Linear in distance
+                        </div>
+                        <h4>Transformer Path Length:</h4>
+                        <div class="modal-code">
+# Direct connection between any two positions:
+attention[i, j] = softmax(Q[i] @ K[j] / sqrt(d_k))
+path_length = 1  # Constant, regardless of distance
+                        </div>
+                        <p><strong>Result:</strong> Better capture of long-range dependencies in text, especially important for tasks requiring understanding of distant word relationships.</p>
+                    `
+                },
+                'gradient': {
+                    title: 'Gradient Flow',
+                    content: `
+                        <div class="modal-highlight">
+                            No vanishing gradient problem thanks to residual connections
+                        </div>
+                        <h4>RNN Gradient Vanishing:</h4>
+                        <div class="modal-code">
+# Gradient flow through time:
+grad *= W^t  # Exponential decay/explosion
+# For long sequences: grad → 0 (vanishing)
+                        </div>
+                        <h4>Transformer Gradient Flow:</h4>
+                        <div class="modal-code">
+# Residual connections provide direct paths:
+output = layer(input) + input  # Skip connection
+# Gradient flows directly through skip connections
+# No multiplicative effect over sequence length
+                        </div>
+                        <p><strong>Benefit:</strong> Stable training for very long sequences and deep networks</p>
+                    `
+                },
+                'scalability': {
+                    title: 'Scalability',
+                    content: `
+                        <div class="modal-highlight">
+                            Transformers scale better with increased model size and data
+                        </div>
+                        <h4>Scaling Laws:</h4>
+                        <ul>
+                            <li>Performance improves predictably with model size</li>
+                            <li>Parallel processing enables larger models</li>
+                            <li>Attention scales to longer sequences</li>
+                            <li>Transfer learning works exceptionally well</li>
+                        </ul>
+                        <div class="modal-code">
+# Model scaling progression:
+GPT-1:   117M parameters
+GPT-2:   1.5B parameters  
+GPT-3:   175B parameters
+GPT-4:   ~1T parameters (estimated)
+                        </div>
+                        <p><strong>Key insight:</strong> Transformer architecture enables the training of increasingly large models that continue to improve performance</p>
+                    `
+                },
+                'interpretation': {
+                    title: 'Interpretability',
+                    content: `
+                        <div class="modal-highlight">
+                            Attention weights provide interpretable insights into model behavior
+                        </div>
+                        <h4>What Attention Reveals:</h4>
+                        <ul>
+                            <li><strong>Syntactic patterns:</strong> Subject-verb relationships</li>
+                            <li><strong>Semantic relationships:</strong> Pronoun resolution</li>
+                            <li><strong>Long-distance dependencies:</strong> Across clauses</li>
+                            <li><strong>Multi-head specialization:</strong> Different heads learn different patterns</li>
+                        </ul>
+                        <div class="modal-code">
+# Example attention pattern analysis:
+"The cat that lived in the house was hungry"
+# Head 1: "cat" attends to "was" (subject-verb)
+# Head 2: "that" attends to "cat" (relative pronoun)
+# Head 3: "house" attends to "lived" (location-action)
+                        </div>
+                        <p><strong>Applications:</strong> Model debugging, bias detection, linguistic analysis</p>
+                    `
+                }
+            };
+            
+            const info = advantages[advantage];
+            modal.show(info.title, info.content);
+        }
+
+        // Layer details
+        function showLayer(layer) {
+            const layers = {
+                'encoder-attention': {
+                    title: 'Multi-Head Self-Attention (Encoder)',
+                    content: `
+                        <div class="modal-highlight">
+                            Each position attends to all positions in the input sequence
+                        </div>
+                        <h4>How it works:</h4>
+                        <div class="modal-code">
+# For each attention head h:
+Q_h = X @ W_Q_h  # Query matrix
+K_h = X @ W_K_h  # Key matrix  
+V_h = X @ W_V_h  # Value matrix
+
+# Compute attention weights
+A_h = softmax(Q_h @ K_h.T / sqrt(d_k))
+
+# Apply attention to values
+H_h = A_h @ V_h
+
+# Concatenate heads and project
+output = concat(H_1, ..., H_8) @ W_O
+                        </div>
+                        <p><strong>Purpose:</strong> Allows each word to gather information from all other words in the sequence based on learned relationships</p>
+                    `
+                },
+                'cross-attention': {
+                    title: 'Multi-Head Cross-Attention (Decoder)',
+                    content: `
+                        <div class="modal-highlight">
+                            Decoder attends to encoder representations
+                        </div>
+                        <h4>Cross-attention mechanism:</h4>
+                        <div class="modal-code">
+# Queries come from decoder, Keys/Values from encoder
+Q = decoder_hidden @ W_Q      # From decoder
+K = encoder_output @ W_K      # From encoder
+V = encoder_output @ W_V      # From encoder
+
+attention = softmax(Q @ K.T / sqrt(d_k))
+output = attention @ V
+                        </div>
+                        <p><strong>Example in translation:</strong> When generating "gato" (Spanish), the decoder attends to "cat" in the English encoder output</p>
+                        <p><strong>Purpose:</strong> Enables the decoder to focus on relevant parts of the input when generating each output token</p>
+                    `
+                },
+                'add-norm1': {
+                    title: 'Add & Norm Layer',
+                    content: `
+                        <div class="modal-highlight">
+                            Residual connection followed by layer normalization
+                        </div>
+                        <h4>Implementation:</h4>
+                        <div class="modal-code">
+# Residual connection
+residual = input
+attention_output = multi_head_attention(input)
+output_with_residual = attention_output + residual
+
+# Layer normalization
+normalized = layer_norm(output_with_residual)
+                        </div>
+                        <h4>Benefits:</h4>
+                        <ul>
+                            <li><strong>Residual:</strong> Enables deep networks, stable gradients</li>
+                            <li><strong>Layer Norm:</strong> Normalizes activations, faster training</li>
+                            <li><strong>Combined:</strong> Allows very deep transformer stacks</li>
+                        </ul>
+                    `
+                },
+                'ffn': {
+                    title: 'Feed Forward Network',
+                    content: `
+                        <div class="modal-highlight">
+                            Position-wise fully connected layers with ReLU activation
+                        </div>
+                        <h4>Architecture:</h4>
+                        <div class="modal-code">
+# Two linear transformations with ReLU
+FFN(x) = ReLU(x @ W1 + b1) @ W2 + b2
+
+# Typical dimensions:
+# d_model = 512 (input/output)
+# d_ff = 2048 (hidden layer, 4x larger)
+                        </div>
+                        <h4>Purpose:</h4>
+                        <ul>
+                            <li>Adds non-linearity to the model</li>
+                            <li>Processes each position independently</li>
+                            <li>Increases model capacity</li>
+                            <li>Provides position-wise transformation</li>
+                        </ul>
+                        <p><strong>Note:</strong> Same network applied to each position, but different from attention which mixes positions</p>
+                    `
+                },
+                'decoder-self-attention': {
+                    title: 'Masked Multi-Head Attention',
+                    content: `
+                        <div class="modal-highlight">
+                            Self-attention with masking to prevent looking at future tokens
+                        </div>
+                        <h4>Masking mechanism:</h4>
+                        <div class="modal-code">
+# Create lower triangular mask
+mask = torch.tril(torch.ones(seq_len, seq_len))
+
+# Apply mask before softmax
+scores = Q @ K.T / sqrt(d_k)
+scores = scores.masked_fill(mask == 0, -inf)
+attention = softmax(scores)
+                        </div>
+                        <h4>Why masking?</h4>
+                        <p>During training, we have the full target sequence, but we need to simulate autoregressive generation where each token can only see previous tokens.</p>
+                        <p><strong>Example:</strong> When predicting "world" in "Hello world", the model can only see "Hello" and previous tokens, not future ones.</p>
+                    `
+                }
+            };
+            
+            const info = layers[layer];
+            if (info) {
+                modal.show(info.title, info.content);
+            }
+        }
+
+        // Positional encoding explanation
+        function showPositionalEncoding() {
+            modal.show('Positional Encoding', `
+                <div class="modal-highlight">
+                    Since Transformers have no inherent notion of sequence order, we inject positional information
+                </div>
+                <h4>Sinusoidal Positional Encoding:</h4>
+                <div class="modal-code">
+# For position pos and dimension i:
+PE(pos, 2i) = sin(pos / 10000^(2i/d_model))
+PE(pos, 2i+1) = cos(pos / 10000^(2i/d_model))
+
+# Add to input embeddings:
+input_with_position = word_embedding + positional_encoding
+                </div>
+                <h4>Why this formula?</h4>
+                <ul>
+                    <li><strong>Different frequencies:</strong> Each dimension has a different wavelength</li>
+                    <li><strong>Deterministic:</strong> Same position always gets same encoding</li>
+                    <li><strong>Relative distances:</strong> Model can learn relative positions</li>
+                    <li><strong>Extrapolation:</strong> Can handle sequences longer than training</li>
+                </ul>
+                <h4>Alternatives:</h4>
+                <p><strong>Learned embeddings:</strong> Some models learn positional embeddings instead of using sinusoidal patterns</p>
+            `);
+        }
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 30; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Initialize components
+        createFloatingElements();
+        createAttentionMatrix();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (!modal.overlay.classList.contains('active')) {
+                if (e.key === 'ArrowRight' || e.key === ' ') {
+                    window.location.href = 'Week10_Slide199.html';
+                } else if (e.key === 'ArrowLeft') {
+                    window.location.href = 'Week10_Slide197.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

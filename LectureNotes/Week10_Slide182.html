@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Vanilla RNN Architecture</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .architecture-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .equations-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .rnn-diagram {
+            background: #1e293b;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            text-align: center;
+            color: #5eead4;
+            font-family: 'Courier New', monospace;
+        }
+
+        .equation-box {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+            font-size: 1.2em;
+            text-align: center;
+        }
+
+        .component-list {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .component-item {
+            padding: 20px;
+            margin: 15px 0;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .component-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .code-block {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .implementation-banner {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    
+    <div class="course-info">CS5710 - Week 10</div>
+    <div class="slide-number">Slide 182 of 200</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Vanilla RNN Architecture</h1>
+        
+        <div class="content-layout">
+            <div class="architecture-section">
+                <h2 class="section-title">RNN Structure</h2>
+                
+                <div class="rnn-diagram">
+                    <pre>
+    Time Step:     t-1        t         t+1
+                     ↓         ↓          ↓
+    Input:         x[t-1]    x[t]      x[t+1]
+                     ↓         ↓          ↓
+    Hidden:    h[t-1] → → h[t] → → h[t+1]
+                     ↓         ↓          ↓
+    Output:        y[t-1]    y[t]      y[t+1]
+                    </pre>
+                </div>
+                
+                <ul class="component-list">
+                    <li class="component-item">
+                        <strong>Input Layer (x)</strong><br>
+                        Receives sequential data at each time step
+                    </li>
+                    <li class="component-item">
+                        <strong>Hidden State (h)</strong><br>
+                        Maintains memory from previous time steps
+                    </li>
+                    <li class="component-item">
+                        <strong>Output Layer (y)</strong><br>
+                        Produces predictions at each time step
+                    </li>
+                    <li class="component-item">
+                        <strong>Recurrent Connection</strong><br>
+                        Feeds hidden state back to itself
+                    </li>
+                </ul>
+            </div>
+
+            <div class="equations-section">
+                <h2 class="section-title">Mathematical Formulation</h2>
+                
+                <div class="equation-box">
+                    <strong>Hidden State Update:</strong><br><br>
+                    h[t] = tanh(W<sub>hh</sub>·h[t-1] + W<sub>xh</sub>·x[t] + b<sub>h</sub>)
+                </div>
+                
+                <div class="equation-box">
+                    <strong>Output Calculation:</strong><br><br>
+                    y[t] = W<sub>hy</sub>·h[t] + b<sub>y</sub>
+                </div>
+                
+                <div style="margin-top: 30px; padding: 20px; background: rgba(13, 148, 136, 0.1); border-radius: 15px;">
+                    <strong>Weight Matrices:</strong><br><br>
+                    • W<sub>xh</sub>: Input to hidden weights<br>
+                    • W<sub>hh</sub>: Hidden to hidden weights (recurrent)<br>
+                    • W<sub>hy</sub>: Hidden to output weights<br>
+                    • b<sub>h</sub>, b<sub>y</sub>: Bias vectors
+                </div>
+                
+                <div style="margin-top: 20px; font-size: 1.1em; line-height: 1.7;">
+                    <strong>Key Properties:</strong><br><br>
+                    • <strong>Parameter Sharing:</strong> Same weights across all time steps<br>
+                    • <strong>Temporal Processing:</strong> Processes one element at a time<br>
+                    • <strong>Memory:</strong> Hidden state carries information forward
+                </div>
+            </div>
+        </div>
+
+        <div class="implementation-banner">
+            <h2 class="section-title">Simple RNN Implementation</h2>
+            
+            <div class="code-block">
+import numpy as np
+
+class VanillaRNN:
+    def __init__(self, input_size, hidden_size, output_size):
+        # Initialize weights
+        self.Wxh = np.random.randn(hidden_size, input_size) * 0.01
+        self.Whh = np.random.randn(hidden_size, hidden_size) * 0.01
+        self.Why = np.random.randn(output_size, hidden_size) * 0.01
+        self.bh = np.zeros((hidden_size, 1))
+        self.by = np.zeros((output_size, 1))
+        
+    def forward(self, inputs):
+        h = np.zeros((self.Whh.shape[0], 1))  # Initial hidden state
+        outputs = []
+        
+        for x in inputs:
+            # Update hidden state
+            h = np.tanh(np.dot(self.Wxh, x) + np.dot(self.Whh, h) + self.bh)
+            # Compute output
+            y = np.dot(self.Why, h) + self.by
+            outputs.append(y)
+            
+        return outputs, h
+            </div>
+            
+            <div style="margin-top: 30px; padding: 25px; background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%); border-radius: 15px;">
+                <strong>Advantages:</strong> Simple architecture, fewer parameters than fully connected networks<br><br>
+                <strong>Limitations:</strong> Difficulty learning long-term dependencies, vanishing/exploding gradients
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week10_Slide181.html" class="nav-btn">← Previous</a>
+        <a href="Week10_Slide183.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive component items with modal
+        document.querySelectorAll('.component-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const title = this.querySelector('strong').textContent;
+                
+                const details = {
+                    'Input Layer (x)': {
+                        detail: 'The input layer receives one element of the sequence at each time step. For text, this might be a word embedding; for time series, a feature vector.',
+                        example: 'Text: "Hello" → Word embedding: [0.2, -0.5, 0.8, ...]<br>Time series: Stock price at time t: [price, volume, volatility]',
+                        dimension: 'Dimension depends on input representation (e.g., 300 for word embeddings)'
+                    },
+                    'Hidden State (h)': {
+                        detail: 'The hidden state is the memory of the RNN. It encodes information about all previous inputs in the sequence.',
+                        example: 'h[0] = initial state (usually zeros)<br>h[1] = f(x[1], h[0])<br>h[2] = f(x[2], h[1]) contains info about x[1] and x[2]',
+                        dimension: 'Typically 128, 256, or 512 units (hyperparameter)'
+                    },
+                    'Output Layer (y)': {
+                        detail: 'The output layer produces predictions based on the current hidden state. Output can be produced at each time step or only at the end.',
+                        example: 'Classification: Softmax probabilities<br>Regression: Continuous values<br>Language model: Next word probabilities',
+                        dimension: 'Depends on task (vocab size for language models, number of classes for classification)'
+                    },
+                    'Recurrent Connection': {
+                        detail: 'The recurrent connection allows information to persist by feeding the hidden state back to itself at the next time step.',
+                        example: 'h[t] depends on h[t-1]<br>This creates a chain of dependencies<br>Information can flow across many time steps',
+                        dimension: 'Hidden-to-hidden weight matrix: (hidden_size × hidden_size)'
+                    }
+                };
+                
+                const info = details[title];
+                if (info) {
+                    modal.show(title, `
+                        <div class="modal-highlight">
+                            <strong>Component Details</strong>
+                        </div>
+                        <p>${info.detail}</p>
+                        <div class="modal-code">
+                            <strong>Example:</strong><br>
+                            ${info.example}
+                        </div>
+                        <p><strong>Typical Dimensions:</strong> ${info.dimension}</p>
+                    `);
+                }
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week10_Slide183.html';
+            } else if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week10_Slide181.html';
+            }
+        });
+
+    </script>
+</body>
+</html>

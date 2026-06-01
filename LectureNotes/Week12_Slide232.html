@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - SHAP Values</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .theory-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .visualization-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .shap-formula {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid #0d9488;
+        }
+
+        .shap-formula:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.2);
+        }
+
+        .formula-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 15px;
+        }
+
+        .formula-content {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            text-align: center;
+        }
+
+        .formula-explanation {
+            color: #475569;
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+
+        .waterfall-chart {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            height: 350px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .waterfall-chart:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .chart-bar {
+            position: absolute;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .chart-bar:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(13, 148, 136, 0.3);
+        }
+
+        .positive-bar {
+            background: linear-gradient(135deg, #059669, #10b981);
+        }
+
+        .negative-bar {
+            background: linear-gradient(135deg, #dc2626, #ef4444);
+        }
+
+        .applications-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .application-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .application-card {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 15px;
+            padding: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .application-card:hover {
+            transform: translateY(-5px);
+            border-color: #0d9488;
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.2);
+        }
+
+        .app-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .app-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 10px;
+        }
+
+        .app-description {
+            color: #64748b;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .app-example {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            color: #475569;
+            font-style: italic;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .application-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 12</div>
+    <div class="slide-number">Slide 232 of 240</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">SHAP Values</h1>
+        
+        <div class="content-layout">
+            <div class="theory-section">
+                <h2 class="section-title">Shapley Values Theory</h2>
+                
+                <div class="shap-formula">
+                    <div class="formula-title">Core SHAP Formula</div>
+                    <div class="formula-content">
+                        φᵢ(f, x) = Σ (|S|!(n-|S|-1)! / n!) [f(S ∪ {i}) - f(S)]
+                    </div>
+                    <div class="formula-explanation">
+                        Where φᵢ is the Shapley value for feature i, representing its contribution to the prediction difference from the average.
+                    </div>
+                </div>
+
+                <div class="shap-formula">
+                    <div class="formula-title">SHAP Properties</div>
+                    <div class="formula-explanation">
+                        <strong>Efficiency:</strong> Sum of all SHAP values equals prediction difference<br>
+                        <strong>Symmetry:</strong> Equal features get equal attributions<br>
+                        <strong>Dummy:</strong> Irrelevant features get zero attribution<br>
+                        <strong>Additivity:</strong> Values compose across models
+                    </div>
+                </div>
+
+                <div class="shap-formula">
+                    <div class="formula-title">Intuitive Understanding</div>
+                    <div class="formula-explanation">
+                        Think of SHAP as answering: "How much does each player contribute to the team's success?" 
+                        It considers all possible coalitions and fairly distributes credit.
+                    </div>
+                </div>
+            </div>
+
+            <div class="visualization-section">
+                <h2 class="section-title">SHAP Waterfall Plot</h2>
+                
+                <div class="waterfall-chart" id="waterfallChart">
+                    <div style="text-align: center; margin-bottom: 20px; color: #0d9488; font-weight: 600;">
+                        Loan Approval Prediction: 0.73 (Approved)
+                    </div>
+                    
+                    <!-- Base value -->
+                    <div style="position: absolute; left: 20px; top: 60px; font-size: 0.9em; color: #64748b;">
+                        Base: 0.45
+                    </div>
+                    
+                    <!-- Feature contributions -->
+                    <div class="chart-bar positive-bar" style="left: 80px; top: 80px; width: 60px; height: 30px;" data-feature="Credit Score" data-value="+0.15">
+                        Credit +0.15
+                    </div>
+                    
+                    <div class="chart-bar positive-bar" style="left: 150px; top: 110px; width: 50px; height: 25px;" data-feature="Income" data-value="+0.12">
+                        Income +0.12
+                    </div>
+                    
+                    <div class="chart-bar negative-bar" style="left: 210px; top: 140px; width: 40px; height: 20px;" data-feature="Debt Ratio" data-value="-0.08">
+                        Debt -0.08
+                    </div>
+                    
+                    <div class="chart-bar positive-bar" style="left: 260px; top: 170px; width: 45px; height: 22px;" data-feature="Employment" data-value="+0.10">
+                        Job +0.10
+                    </div>
+                    
+                    <div class="chart-bar negative-bar" style="left: 315px; top: 200px; width: 35px; height: 18px;" data-feature="Age" data-value="-0.06">
+                        Age -0.06
+                    </div>
+                    
+                    <div class="chart-bar positive-bar" style="left: 360px; top: 230px; width: 30px; height: 15px;" data-feature="Education" data-value="+0.05">
+                        Edu +0.05
+                    </div>
+                    
+                    <!-- Final prediction -->
+                    <div style="position: absolute; right: 20px; bottom: 40px; font-size: 1.1em; color: #0d9488; font-weight: 600;">
+                        Final: 0.73
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 15px; color: #64748b; font-style: italic;">
+                    Click on bars to explore feature contributions
+                </div>
+            </div>
+        </div>
+
+        <div class="applications-section">
+            <h2 class="section-title">SHAP Applications & Visualizations</h2>
+            
+            <div class="application-grid">
+                <div class="application-card">
+                    <div class="app-icon">📊</div>
+                    <div class="app-title">Summary Plots</div>
+                    <div class="app-description">
+                        Global view of feature importance and impact distribution across all samples
+                    </div>
+                    <div class="app-example">
+                        "Show me which features matter most and how they typically affect predictions"
+                    </div>
+                </div>
+                
+                <div class="application-card">
+                    <div class="app-icon">💧</div>
+                    <div class="app-title">Waterfall Charts</div>
+                    <div class="app-description">
+                        Step-by-step breakdown of individual predictions from base to final value
+                    </div>
+                    <div class="app-example">
+                        "Why was this specific loan application approved with 73% confidence?"
+                    </div>
+                </div>
+                
+                <div class="application-card">
+                    <div class="app-icon">🌡️</div>
+                    <div class="app-title">Force Plots</div>
+                    <div class="app-description">
+                        Interactive visualization showing features pushing prediction higher or lower
+                    </div>
+                    <div class="app-example">
+                        "Visualize the 'tug of war' between positive and negative feature influences"
+                    </div>
+                </div>
+                
+                <div class="application-card">
+                    <div class="app-icon">🔥</div>
+                    <div class="app-title">Heatmaps</div>
+                    <div class="app-description">
+                        Matrix view of SHAP values across multiple samples and features
+                    </div>
+                    <div class="app-example">
+                        "Compare feature contributions across different customer segments"
+                    </div>
+                </div>
+                
+                <div class="application-card">
+                    <div class="app-icon">📈</div>
+                    <div class="app-title">Dependence Plots</div>
+                    <div class="app-description">
+                        Show how feature values relate to their SHAP contributions
+                    </div>
+                    <div class="app-example">
+                        "How does the impact of credit score change as its value increases?"
+                    </div>
+                </div>
+                
+                <div class="application-card">
+                    <div class="app-icon">🎯</div>
+                    <div class="app-title">Decision Plots</div>
+                    <div class="app-description">
+                        Trace the cumulative effect of features from average to final prediction
+                    </div>
+                    <div class="app-example">
+                        "Follow the decision path and see where the model 'changes its mind'"
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week12_Slide231.html" class="nav-btn">← Previous</a>
+        <a href="Week12_Slide233.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // SHAP formula click handlers
+        document.querySelectorAll('.shap-formula').forEach(formula => {
+            formula.addEventListener('click', function() {
+                const title = this.querySelector('.formula-title').textContent;
+                
+                const formulaInfo = {
+                    'Core SHAP Formula': {
+                        explanation: 'The mathematical foundation of SHAP values based on cooperative game theory',
+                        breakdown: 'For each feature i, sum over all possible subsets S (coalitions), weighted by coalition size probability, the marginal contribution when adding feature i',
+                        intuition: 'Like calculating fair salary for each team member based on all possible team combinations',
+                        example: 'If removing "credit score" from any team decreases performance by average 0.15, then φ_credit = 0.15'
+                    },
+                    'SHAP Properties': {
+                        explanation: 'Four axioms that make SHAP values mathematically sound and intuitive',
+                        breakdown: 'Efficiency ensures all credit is distributed, Symmetry treats equal features equally, Dummy ignores irrelevant features, Additivity allows model composition',
+                        intuition: 'Like rules for fair team credit distribution - everyone gets their due share, no more, no less',
+                        example: 'If model predicts 0.8 and base rate is 0.5, then sum of all SHAP values = 0.3'
+                    },
+                    'Intuitive Understanding': {
+                        explanation: 'SHAP answers "What is the fair contribution of each feature to this prediction?"',
+                        breakdown: 'Considers every possible way features could combine, calculates average marginal contribution',
+                        intuition: 'Like determining each player\'s value by seeing how much worse the team performs without them across all possible lineups',
+                        example: 'Credit score might contribute +0.2 in one context but +0.1 in another, SHAP averages across all contexts'
+                    }
+                };
+                
+                const info = formulaInfo[title];
+                modal.show(title, `
+                    <div class="modal-highlight">
+                        <strong>${title}</strong>
+                    </div>
+                    <p><strong>What it means:</strong> ${info.explanation}</p>
+                    <p><strong>Mathematical breakdown:</strong> ${info.breakdown}</p>
+                    <p><strong>Intuitive analogy:</strong> ${info.intuition}</p>
+                    <p><strong>Concrete example:</strong> ${info.example}</p>
+                    
+                    <div class="modal-code">
+                        Python Implementation:
+                        
+                        import shap
+                        
+                        # Initialize explainer for tree models
+                        explainer = shap.TreeExplainer(model)
+                        
+                        # Calculate SHAP values
+                        shap_values = explainer.shap_values(X_test)
+                        
+                        # Verify efficiency property
+                        base_value = explainer.expected_value
+                        prediction = model.predict(X_test[0:1])[0]
+                        shap_sum = shap_values[0].sum()
+                        
+                        print(f"Base: {base_value:.3f}")
+                        print(f"SHAP sum: {shap_sum:.3f}")  
+                        print(f"Prediction: {prediction:.3f}")
+                        print(f"Base + SHAP = {base_value + shap_sum:.3f}")
+                    </div>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                        <strong>💡 Key Insight:</strong><br>
+                        SHAP is the only explanation method that satisfies all four desirable properties simultaneously, making it both mathematically sound and practically useful!
+                    </div>
+                `);
+            });
+        });
+
+        // Chart bar click handlers
+        document.querySelectorAll('.chart-bar').forEach(bar => {
+            bar.addEventListener('click', function() {
+                const feature = this.dataset.feature;
+                const value = this.dataset.value;
+                
+                const featureDetails = {
+                    'Credit Score': {
+                        description: 'Credit score contributes positively to loan approval',
+                        interpretation: 'Higher credit scores increase approval probability',
+                        value_meaning: '+0.15 means this applicant\'s credit score adds 15 percentage points to approval probability',
+                        context: 'This person has a credit score of 720, which is above average (650) for our dataset'
+                    },
+                    'Income': {
+                        description: 'Annual income level shows positive contribution',
+                        interpretation: 'Higher income increases ability to repay loan',
+                        value_meaning: '+0.12 means income level adds 12 percentage points to approval probability',
+                        context: 'Annual income of $85,000 is higher than dataset average of $65,000'
+                    },
+                    'Debt Ratio': {
+                        description: 'Debt-to-income ratio contributes negatively',
+                        interpretation: 'Higher debt ratio increases default risk',
+                        value_meaning: '-0.08 means this debt ratio reduces approval probability by 8 percentage points',
+                        context: 'Debt ratio of 0.35 is slightly above the recommended 0.30 threshold'
+                    },
+                    'Employment': {
+                        description: 'Employment status and stability contribute positively',
+                        interpretation: 'Stable employment indicates reliable income',
+                        value_meaning: '+0.10 means employment situation adds 10 percentage points to approval',
+                        context: '5+ years at current job with professional occupation'
+                    },
+                    'Age': {
+                        description: 'Age contributes slightly negatively in this case',
+                        interpretation: 'Younger applicants might be seen as higher risk',
+                        value_meaning: '-0.06 means age reduces approval probability by 6 percentage points',
+                        context: 'Age 25 is below average applicant age of 35 in our dataset'
+                    },
+                    'Education': {
+                        description: 'Education level contributes positively',
+                        interpretation: 'Higher education correlates with income stability',
+                        value_meaning: '+0.05 means education adds 5 percentage points to approval',
+                        context: 'Bachelor\'s degree vs high school diploma baseline'
+                    }
+                };
+                
+                const info = featureDetails[feature];
+                modal.show(`${feature}: ${value}`, `
+                    <div class="modal-highlight">
+                        <strong>Feature Contribution: ${feature} (${value})</strong>
+                    </div>
+                    <p><strong>What it means:</strong> ${info.description}</p>
+                    <p><strong>Interpretation:</strong> ${info.interpretation}</p>
+                    <p><strong>Value meaning:</strong> ${info.value_meaning}</p>
+                    <p><strong>Context:</strong> ${info.context}</p>
+                    
+                    <div class="modal-code">
+                        SHAP Calculation Process:
+                        
+                        1. Base prediction (average): 0.45
+                        2. Add ${feature}: ${value}
+                        3. Current cumulative effect
+                        4. Continue with remaining features
+                        5. Final prediction: 0.73
+                        
+                        Verification:
+                        0.45 + 0.15 + 0.12 - 0.08 + 0.10 - 0.06 + 0.05 = 0.73 ✓
+                    </div>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                        <strong>🎯 Business Impact:</strong><br>
+                        This breakdown helps loan officers understand exactly why each application was approved or rejected, enabling better customer communication and fairer lending practices.
+                    </div>
+                `);
+            });
+        });
+
+        // Application card click handlers
+        document.querySelectorAll('.application-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('.app-title').textContent;
+                
+                const appInfo = {
+                    'Summary Plots': {
+                        purpose: 'Provide global overview of feature importance and value distributions',
+                        how_to_read: 'X-axis shows SHAP values, Y-axis shows features ranked by importance, color shows feature values',
+                        insights: 'Identify most important features, see if high feature values generally increase or decrease predictions',
+                        code_example: 'shap.summary_plot(shap_values, X_test, feature_names=feature_names)'
+                    },
+                    'Waterfall Charts': {
+                        purpose: 'Explain individual predictions step-by-step from base value to final prediction',
+                        how_to_read: 'Start from base value, each bar shows contribution of one feature, ending at final prediction',
+                        insights: 'See exactly which features pushed prediction up or down and by how much',
+                        code_example: 'shap.waterfall_plot(explainer.expected_value[0], shap_values[0][0], X_test.iloc[0])'
+                    },
+                    'Force Plots': {
+                        purpose: 'Interactive visualization showing positive and negative feature contributions',
+                        how_to_read: 'Features pushing prediction higher (red) vs lower (blue), thickness indicates magnitude',
+                        insights: 'Visualize the balance of forces affecting a single prediction',
+                        code_example: 'shap.force_plot(explainer.expected_value[0], shap_values[0][0], X_test.iloc[0])'
+                    },
+                    'Heatmaps': {
+                        purpose: 'Show SHAP values across multiple samples and features as a color-coded matrix',
+                        how_to_read: 'Rows are samples, columns are features, color intensity shows SHAP magnitude',
+                        insights: 'Compare patterns across different samples, identify feature consistency',
+                        code_example: 'shap.plots.heatmap(shap_values[:100], max_display=10)'
+                    },
+                    'Dependence Plots': {
+                        purpose: 'Show relationship between feature values and their SHAP contributions',
+                        how_to_read: 'X-axis is feature value, Y-axis is SHAP value, color shows interaction effects',
+                        insights: 'Understand how feature impact changes across its value range',
+                        code_example: 'shap.dependence_plot(0, shap_values, X_test, feature_names=feature_names)'
+                    },
+                    'Decision Plots': {
+                        purpose: 'Trace cumulative feature effects from base value to final prediction',
+                        how_to_read: 'Follow path from left (base) to right (prediction), slope indicates feature contribution',
+                        insights: 'See decision progression and identify critical decision points',
+                        code_example: 'shap.decision_plot(explainer.expected_value[0], shap_values[0][:5], X_test.iloc[:5])'
+                    }
+                };
+                
+                const info = appInfo[title];
+                modal.show(`SHAP Visualization: ${title}`, `
+                    <div class="modal-highlight">
+                        <strong>${title}</strong>
+                    </div>
+                    <p><strong>Purpose:</strong> ${info.purpose}</p>
+                    <p><strong>How to read:</strong> ${info.how_to_read}</p>
+                    <p><strong>Key insights:</strong> ${info.insights}</p>
+                    
+                    <div class="modal-code">
+                        Python Code Example:
+                        ${info.code_example}
+                        
+                        # Common setup for all plots
+                        import shap
+                        explainer = shap.TreeExplainer(model)
+                        shap_values = explainer.shap_values(X_test)
+                        
+                        # Customize appearance
+                        shap.plots.beeswarm(shap_values, max_display=15)
+                        plt.tight_layout()
+                        plt.show()
+                    </div>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(239, 68, 68, 0.1); border-radius: 10px;">
+                        <strong>⚠️ Pro Tip:</strong><br>
+                        Use different visualization types for different audiences: waterfall plots for individual case explanations, summary plots for model overview, dependence plots for data scientists!
+                    </div>
+                `);
+            });
+        });
+
+        // Waterfall chart click handler
+        document.getElementById('waterfallChart').addEventListener('click', function(e) {
+            if (!e.target.classList.contains('chart-bar')) {
+                modal.show('SHAP Waterfall Chart Explained', `
+                    <div class="modal-highlight">
+                        <strong>Reading the Waterfall Chart</strong>
+                    </div>
+                    <h4>Structure:</h4>
+                    <ul style="margin: 20px 0; line-height: 1.8;">
+                        <li><strong>Base Value (0.45):</strong> Average prediction across all training data</li>
+                        <li><strong>Feature Bars:</strong> Each shows contribution (+/-) of that feature</li>
+                        <li><strong>Green bars:</strong> Push prediction higher (positive contribution)</li>
+                        <li><strong>Red bars:</strong> Pull prediction lower (negative contribution)</li>
+                        <li><strong>Final Value (0.73):</strong> Actual model prediction for this instance</li>
+                    </ul>
+                    
+                    <h4>Mathematical Verification:</h4>
+                    <div class="modal-code">
+                        Base Value:        0.45
+                        + Credit Score:  +0.15
+                        + Income:        +0.12  
+                        + Debt Ratio:    -0.08
+                        + Employment:    +0.10
+                        + Age:           -0.06
+                        + Education:     +0.05
+                        ___________________
+                        Final Prediction: 0.73
+                        
+                        Sum check: 0.45 + 0.28 = 0.73 ✓
+                    </div>
+                    
+                    <h4>Business Interpretation:</h4>
+                    <p>This loan application was <strong>approved</strong> primarily due to excellent credit score and high income, despite slightly elevated debt ratio and young age. The net positive contributions outweighed the negatives.</p>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                        <strong>💼 Use Case:</strong><br>
+                        Perfect for explaining individual decisions to customers, loan officers, or regulatory auditors. Shows exact reasoning behind each approval/rejection.
+                    </div>
+                `);
+            }
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week12_Slide231.html';
+            } else if (e.key === 'ArrowRight' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week12_Slide233.html';
+            }
+        });
+    </script>
+</body>
+</html>

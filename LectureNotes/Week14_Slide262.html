@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Bias in Machine Learning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .types-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .sources-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .intro-text {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .bias-list {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .bias-item {
+            padding: 20px;
+            margin: 15px 0;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .bias-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .bias-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .bias-desc {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .examples-banner {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            text-align: center;
+        }
+
+        .examples-text {
+            font-size: 1.4em;
+            color: #0d9488;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .case-studies {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 25px;
+        }
+
+        .case-card {
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border: 2px solid #14b8a6;
+        }
+
+        .case-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .case-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+
+        .case-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #0d9488;
+        }
+
+        .case-desc {
+            font-size: 0.85em;
+            color: #475569;
+            line-height: 1.4;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: ethicsFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .modal-example {
+            background: rgba(13, 148, 136, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 3px solid #0d9488;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes ethicsFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .case-studies { grid-template-columns: 1fr; }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    
+    <div class="course-info">CS5710 - Week 14</div>
+    <div class="slide-number">Slide 262 of 280</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Bias in Machine Learning</h1>
+        
+        <div class="content-layout">
+            <div class="types-section">
+                <h2 class="section-title">Types of Bias</h2>
+                
+                <div class="intro-text">
+                    <strong>ML Bias</strong> occurs when algorithms produce systematically prejudiced results due to erroneous assumptions in the learning process.
+                </div>
+                
+                <ul class="bias-list">
+                    <li class="bias-item" data-type="historical">
+                        <div class="bias-title">📜 Historical Bias</div>
+                        <div class="bias-desc">Bias that already exists in the world and is reflected in data</div>
+                    </li>
+                    <li class="bias-item" data-type="representation">
+                        <div class="bias-title">👥 Representation Bias</div>
+                        <div class="bias-desc">Failure to sample from population equally</div>
+                    </li>
+                    <li class="bias-item" data-type="measurement">
+                        <div class="bias-title">📏 Measurement Bias</div>
+                        <div class="bias-desc">Features and labels are proxies for desired quantities</div>
+                    </li>
+                    <li class="bias-item" data-type="aggregation">
+                        <div class="bias-title">🔄 Aggregation Bias</div>
+                        <div class="bias-desc">One-size-fits-all models fail for diverse groups</div>
+                    </li>
+                    <li class="bias-item" data-type="evaluation">
+                        <div class="bias-title">✓ Evaluation Bias</div>
+                        <div class="bias-desc">Benchmark data doesn't represent actual use population</div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="sources-section">
+                <h2 class="section-title">Sources & Impact</h2>
+                
+                <ul class="bias-list">
+                    <li class="bias-item" data-source="data">
+                        <div class="bias-title">💾 Data Collection</div>
+                        <div class="bias-desc">Sampling methods, selection criteria, historical records</div>
+                    </li>
+                    <li class="bias-item" data-source="labeling">
+                        <div class="bias-title">🏷️ Labeling Process</div>
+                        <div class="bias-desc">Annotator bias, subjective judgments, inconsistent standards</div>
+                    </li>
+                    <li class="bias-item" data-source="features">
+                        <div class="bias-title">🎯 Feature Selection</div>
+                        <div class="bias-desc">Proxy variables, correlated attributes, missing factors</div>
+                    </li>
+                    <li class="bias-item" data-source="algorithm">
+                        <div class="bias-title">⚙️ Algorithm Design</div>
+                        <div class="bias-desc">Optimization objectives, regularization, architecture choices</div>
+                    </li>
+                    <li class="bias-item" data-source="feedback">
+                        <div class="bias-title">🔁 Feedback Loops</div>
+                        <div class="bias-desc">Self-reinforcing predictions, confirmation bias</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="examples-banner">
+            <div class="examples-text">
+                <strong>Real-World Cases of ML Bias</strong>
+            </div>
+            
+            <div class="case-studies">
+                <div class="case-card" data-case="hiring">
+                    <div class="case-icon">💼</div>
+                    <div class="case-title">Hiring Algorithms</div>
+                    <div class="case-desc">Amazon's AI recruiting tool showed bias against women</div>
+                </div>
+                
+                <div class="case-card" data-case="facial">
+                    <div class="case-icon">👤</div>
+                    <div class="case-title">Facial Recognition</div>
+                    <div class="case-desc">Higher error rates for darker-skinned individuals</div>
+                </div>
+                
+                <div class="case-card" data-case="criminal">
+                    <div class="case-icon">⚖️</div>
+                    <div class="case-title">Criminal Justice</div>
+                    <div class="case-desc">COMPAS recidivism prediction showed racial disparities</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week14_Slide261.html" class="nav-btn">← Previous</a>
+        <a href="Week14_Slide263.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Bias type details
+        const biasDetails = {
+            'historical': {
+                title: '📜 Historical Bias',
+                definition: 'Bias that exists in the world and gets encoded into data through accurate sampling.',
+                example: 'Medical datasets historically underrepresenting certain demographics because those groups had less access to healthcare.',
+                impact: 'Even with perfect sampling and feature selection, the model learns and perpetuates existing societal inequalities.',
+                mitigation: `
+                    <strong>Mitigation Strategies:</strong><br>
+                    • Collect more representative data over time<br>
+                    • Use reweighting techniques<br>
+                    • Apply fairness constraints during training<br>
+                    • Consider counterfactual data augmentation
+                `
+            },
+            'representation': {
+                title: '👥 Representation Bias',
+                definition: 'Occurs when the development sample under-represents some part of the population.',
+                example: 'ImageNet dataset containing mostly Western-centric images, leading to poor performance on non-Western contexts.',
+                impact: 'Model performs poorly for underrepresented groups, potentially excluding them from benefits of the technology.',
+                mitigation: `
+                    <strong>Mitigation Strategies:</strong><br>
+                    • Stratified sampling techniques<br>
+                    • Active learning to identify gaps<br>
+                    • Diverse data collection teams<br>
+                    • Geographic and demographic diversity audits
+                `
+            },
+            'measurement': {
+                title: '📏 Measurement Bias',
+                definition: 'When the data collected for training differs from the relevant data for deployment.',
+                example: 'Using arrest rates as a proxy for crime rates, which reflects policing patterns rather than actual crime.',
+                impact: 'Model optimizes for the wrong objective, leading to systematic errors that affect certain groups disproportionately.',
+                mitigation: `
+                    <strong>Mitigation Strategies:</strong><br>
+                    • Identify and validate proxy variables<br>
+                    • Collect direct measurements when possible<br>
+                    • Use multiple measurement sources<br>
+                    • Document measurement limitations
+                `
+            },
+            'aggregation': {
+                title: '🔄 Aggregation Bias',
+                definition: 'Assuming one model can work for all groups, ignoring relevant differences.',
+                example: 'Medical diagnosis models trained on aggregate data missing important variations across ethnicities.',
+                impact: 'Suboptimal performance for groups with distinct characteristics, potentially causing harm in critical applications.',
+                mitigation: `
+                    <strong>Mitigation Strategies:</strong><br>
+                    • Build separate models for distinct groups<br>
+                    • Use mixture of experts approaches<br>
+                    • Include group-specific features<br>
+                    • Perform subgroup analysis
+                `
+            },
+            'evaluation': {
+                title: '✓ Evaluation Bias',
+                definition: 'Using benchmark datasets that don\'t represent the target population.',
+                example: 'Evaluating a global product using only US-based test data.',
+                impact: 'Overestimating model performance, missing failures that will occur in deployment.',
+                mitigation: `
+                    <strong>Mitigation Strategies:</strong><br>
+                    • Create diverse evaluation sets<br>
+                    • Use multiple benchmarks<br>
+                    • Perform A/B testing in production<br>
+                    • Continuous monitoring post-deployment
+                `
+            }
+        };
+
+        // Source details
+        const sourceDetails = {
+            'data': {
+                title: '💾 Data Collection Bias',
+                description: 'Bias introduced during the data gathering process.',
+                examples: `
+                    <strong>Common Examples:</strong><br>
+                    • Convenience sampling (using easily available data)<br>
+                    • Self-selection bias in surveys<br>
+                    • Survivorship bias in historical records<br>
+                    • Geographic limitations in data collection
+                `,
+                prevention: `
+                    <strong>Prevention Methods:</strong><br>
+                    • Design inclusive data collection protocols<br>
+                    • Use random sampling when possible<br>
+                    • Document data collection methodology<br>
+                    • Audit for representation gaps
+                `
+            },
+            'labeling': {
+                title: '🏷️ Labeling Process Bias',
+                description: 'Bias from human annotators or labeling procedures.',
+                examples: `
+                    <strong>Common Examples:</strong><br>
+                    • Subjective interpretation of ambiguous cases<br>
+                    • Cultural differences in perception<br>
+                    • Fatigue and consistency issues<br>
+                    • Anchoring bias from guidelines
+                `,
+                prevention: `
+                    <strong>Prevention Methods:</strong><br>
+                    • Use multiple annotators<br>
+                    • Calculate inter-rater reliability<br>
+                    • Provide clear annotation guidelines<br>
+                    • Regular calibration sessions
+                `
+            },
+            'features': {
+                title: '🎯 Feature Selection Bias',
+                description: 'Bias from choosing which attributes to include or exclude.',
+                examples: `
+                    <strong>Common Examples:</strong><br>
+                    • Using zip code as proxy for race<br>
+                    • Including gender-correlated features unnecessarily<br>
+                    • Missing important contextual features<br>
+                    • Over-relying on easily measurable attributes
+                `,
+                prevention: `
+                    <strong>Prevention Methods:</strong><br>
+                    • Causal analysis of feature relationships<br>
+                    • Feature importance analysis<br>
+                    • Fairness-aware feature selection<br>
+                    • Domain expert consultation
+                `
+            },
+            'algorithm': {
+                title: '⚙️ Algorithm Design Bias',
+                description: 'Bias from model architecture and training choices.',
+                examples: `
+                    <strong>Common Examples:</strong><br>
+                    • Optimizing for overall accuracy ignoring subgroups<br>
+                    • Regularization affecting groups differently<br>
+                    • Architecture assumptions (e.g., linearity)<br>
+                    • Class imbalance handling methods
+                `,
+                prevention: `
+                    <strong>Prevention Methods:</strong><br>
+                    • Use fairness-aware objectives<br>
+                    • Multi-objective optimization<br>
+                    • Adversarial debiasing<br>
+                    • Regular fairness audits
+                `
+            },
+            'feedback': {
+                title: '🔁 Feedback Loop Bias',
+                description: 'Bias that reinforces itself through system deployment.',
+                examples: `
+                    <strong>Common Examples:</strong><br>
+                    • Predictive policing increasing arrests in targeted areas<br>
+                    • Recommendation systems creating filter bubbles<br>
+                    • Resume screening perpetuating hiring patterns<br>
+                    • Credit scoring creating poverty traps
+                `,
+                prevention: `
+                    <strong>Prevention Methods:</strong><br>
+                    • Exploration vs exploitation balance<br>
+                    • Periodic model retraining<br>
+                    • Human-in-the-loop validation<br>
+                    • Counterfactual evaluation
+                `
+            }
+        };
+
+        // Case study details
+        const caseStudies = {
+            'hiring': {
+                title: 'Amazon Recruiting Tool Case',
+                background: 'Amazon developed an AI recruiting tool to review job applications and rate candidates.',
+                problem: `
+                    <strong>What Went Wrong:</strong><br>
+                    • Trained on 10 years of historical resumes (mostly male)<br>
+                    • Penalized resumes with "women's" (e.g., women's chess club)<br>
+                    • Downgraded graduates from all-women colleges<br>
+                    • Learned to prefer masculine language patterns
+                `,
+                impact: 'Project was scrapped in 2018 after discovering unfixable bias issues.',
+                lessons: `
+                    <strong>Key Lessons:</strong><br>
+                    • Historical data can encode past discrimination<br>
+                    • Removing explicit gender indicators isn't enough<br>
+                    • Proxy variables can maintain bias<br>
+                    • Need diverse teams to spot issues early
+                `
+            },
+            'facial': {
+                title: 'Facial Recognition Bias',
+                background: 'Multiple studies found commercial facial recognition systems have demographic biases.',
+                problem: `
+                    <strong>Research Findings:</strong><br>
+                    • Error rates up to 34% higher for darker-skinned women<br>
+                    • Best performance on lighter-skinned males<br>
+                    • Training data predominantly from certain demographics<br>
+                    • Lighting and camera technology optimized for lighter skin
+                `,
+                impact: 'Led to wrongful arrests, exclusion from services, and calls for regulation.',
+                lessons: `
+                    <strong>Key Lessons:</strong><br>
+                    • Need diverse benchmark datasets<br>
+                    • Importance of disaggregated accuracy metrics<br>
+                    • Technical standards must consider all users<br>
+                    • Some applications may be too high-risk
+                `
+            },
+            'criminal': {
+                title: 'COMPAS Recidivism Prediction',
+                background: 'COMPAS is a tool used in US courts to assess likelihood of reoffending.',
+                problem: `
+                    <strong>ProPublica Investigation:</strong><br>
+                    • Black defendants twice as likely to be falsely labeled high-risk<br>
+                    • White defendants mislabeled as low-risk more often<br>
+                    • Used proxy variables correlated with race<br>
+                    • Accuracy only around 65% overall
+                `,
+                impact: 'Influences bail, sentencing, and parole decisions affecting thousands.',
+                lessons: `
+                    <strong>Key Lessons:</strong><br>
+                    • Fairness metrics can conflict with each other<br>
+                    • Transparency crucial for high-stakes decisions<br>
+                    • Need for algorithmic accountability<br>
+                    • Human oversight remains essential
+                `
+            }
+        };
+
+        // Interactive bias items
+        document.querySelectorAll('.bias-item[data-type]').forEach(item => {
+            item.addEventListener('click', function() {
+                const type = this.dataset.type;
+                const details = biasDetails[type];
+                if (details) {
+                    modal.show(details.title, `
+                        <div class="modal-highlight">
+                            <strong>Definition:</strong> ${details.definition}
+                        </div>
+                        <div class="modal-example">
+                            <strong>Real Example:</strong><br>
+                            ${details.example}
+                        </div>
+                        <p><strong>Impact:</strong> ${details.impact}</p>
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.05); border-radius: 10px;">
+                            ${details.mitigation}
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Interactive source items
+        document.querySelectorAll('.bias-item[data-source]').forEach(item => {
+            item.addEventListener('click', function() {
+                const source = this.dataset.source;
+                const details = sourceDetails[source];
+                if (details) {
+                    modal.show(details.title, `
+                        <div class="modal-highlight">
+                            ${details.description}
+                        </div>
+                        <div class="modal-example">
+                            ${details.examples}
+                        </div>
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.05); border-radius: 10px;">
+                            ${details.prevention}
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Interactive case cards
+        document.querySelectorAll('.case-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const caseType = this.dataset.case;
+                const study = caseStudies[caseType];
+                if (study) {
+                    modal.show(study.title, `
+                        <div class="modal-highlight">
+                            <strong>Background:</strong> ${study.background}
+                        </div>
+                        <div class="modal-example">
+                            ${study.problem}
+                        </div>
+                        <p><strong>Impact:</strong> ${study.impact}</p>
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.05); border-radius: 10px;">
+                            ${study.lessons}
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week14_Slide261.html';
+            } else if ((e.key === 'ArrowRight' || e.key === ' ') && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week14_Slide263.html';
+            }
+        });
+    </script>
+</body>
+</html>

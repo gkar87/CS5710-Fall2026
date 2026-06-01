@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Choosing Number of Components</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .methods-section {
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,253,250,0.95) 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .visualization-section {
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,253,250,0.95) 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .method-card {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 15px 0;
+            border-left: 4px solid #0d9488;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+
+        .method-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 10px 20px rgba(13, 148, 136, 0.2);
+        }
+
+        .method-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 10px;
+        }
+
+        .method-desc {
+            color: #134e4a;
+            line-height: 1.6;
+        }
+
+        .scree-plot {
+            width: 100%;
+            height: 350px;
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            border-radius: 15px;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #14b8a6;
+            padding: 20px;
+        }
+
+        .interactive-selector {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,253,250,0.95) 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.5s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .selector-title {
+            font-size: 2em;
+            color: #0d9488;
+            margin-bottom: 30px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .variance-slider {
+            width: 100%;
+            margin: 30px 0;
+        }
+
+        .slider-container {
+            position: relative;
+            padding: 20px 0;
+        }
+
+        .slider-input {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: linear-gradient(to, right, #14b8a6 0%, #14b8a6 var(--value), #e2e8f0 var(--value), #e2e8f0 100%);
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+
+        .slider-input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #0d9488;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(13, 148, 136, 0.3);
+            transition: transform 0.2s ease;
+        }
+
+        .slider-input::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            color: #64748b;
+            font-size: 0.9em;
+        }
+
+        .variance-display {
+            background: linear-gradient(135deg, #ccfbf1, #99f6e4);
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: center;
+            border: 2px solid #14b8a6;
+        }
+
+        .variance-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #0d9488;
+            margin: 10px 0;
+        }
+
+        .components-count {
+            font-size: 1.3em;
+            color: #134e4a;
+            margin-top: 15px;
+        }
+
+        .comparison-table {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,253,250,0.95) 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.7s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #334155;
+        }
+
+        tr:hover {
+            background: rgba(204, 251, 241, 0.3);
+        }
+
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            height: 200px;
+            gap: 10px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .bar {
+            flex: 1;
+            background: linear-gradient(to, top, #0d9488, #14b8a6);
+            border-radius: 5px 5px 0 0;
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .bar:hover {
+            opacity: 0.8;
+            transform: scaleY(1.05);
+        }
+
+        .bar-label {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.9em;
+            color: #64748b;
+        }
+
+        .bar-value {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.9em;
+            font-weight: bold;
+            color: #0d9488;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number, .course-info {
+            position: fixed;
+            top: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .slide-number { right: 30px; }
+        .course-info { left: 30px; }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #334155;
+        }
+
+        @media (max-width: 1024px) {
+            .content-layout { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .slide-title { font-size: 2.5em; }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 7</div>
+    <div class="slide-number">Slide 126 of 140</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">📊 Choosing Number of Components</h1>
+        
+        <div class="content-layout">
+            <div class="methods-section">
+                <h2 class="section-title">🎯 Selection Methods</h2>
+                
+                <div class="method-card" onclick="showModal('kaiser')">
+                    <div class="method-title">1️⃣ Kaiser Criterion</div>
+                    <div class="method-desc">
+                        Keep components with eigenvalues > 1 (for standardized data)
+                    </div>
+                </div>
+                
+                <div class="method-card" onclick="showModal('variance')">
+                    <div class="method-title">2️⃣ Cumulative Variance</div>
+                    <div class="method-desc">
+                        Retain components until 85-95% of variance is explained
+                    </div>
+                </div>
+                
+                <div class="method-card" onclick="showModal('elbow')">
+                    <div class="method-title">3️⃣ Elbow Method</div>
+                    <div class="method-desc">
+                        Look for "elbow" in scree plot where eigenvalues level off
+                    </div>
+                </div>
+                
+                <div class="method-card" onclick="showModal('parallel')">
+                    <div class="method-title">4️⃣ Parallel Analysis</div>
+                    <div class="method-desc">
+                        Compare eigenvalues to those from random data
+                    </div>
+                </div>
+                
+                <div class="method-card" onclick="showModal('cross-validation')">
+                    <div class="method-title">5️⃣ Cross-Validation</div>
+                    <div class="method-desc">
+                        Choose components that minimize reconstruction error
+                    </div>
+                </div>
+            </div>
+
+            <div class="visualization-section">
+                <h2 class="section-title">📈 Scree Plot Visualization</h2>
+                
+                <div class="scree-plot">
+                    <canvas id="screePlot" width="400" height="310"></canvas>
+                </div>
+                
+                <p style="text-align: center; color: #64748b; font-size: 0.9em; margin-top: 10px;">
+                    <em>The "elbow" appears around component 3-4</em>
+                </p>
+            </div>
+        </div>
+
+        <div class="interactive-selector">
+            <h2 class="selector-title">🎛️ Interactive Variance Threshold Selector</h2>
+            
+            <div class="slider-container">
+                <label style="color: #0d9488; font-weight: 600; margin-bottom: 10px; display: block;">
+                    Select Minimum Variance to Retain:
+                </label>
+                <input type="range" class="slider-input" id="varianceSlider" 
+                       min="70" max="99" value="85" 
+                       style="--value: 85%;">
+                <div class="slider-labels">
+                    <span>70%</span>
+                    <span>80%</span>
+                    <span>90%</span>
+                    <span>99%</span>
+                </div>
+            </div>
+            
+            <div class="variance-display">
+                <div style="color: #64748b; font-size: 1.1em;">Target Variance:</div>
+                <div class="variance-value" id="varianceValue">85%</div>
+                <div class="components-count" id="componentsCount">
+                    Required Components: <strong>3</strong> out of 10
+                </div>
+            </div>
+            
+            <div class="bar-chart" id="barChart">
+                <!-- Bars will be generated by JavaScript -->
+            </div>
+        </div>
+
+        <div class="comparison-table">
+            <h2 class="section-title">📋 Method Comparison</h2>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Pros</th>
+                            <th>Cons</th>
+                            <th>Best For</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr onclick="showModal('kaiser')">
+                            <td><strong>Kaiser Criterion</strong></td>
+                            <td>Simple, fast</td>
+                            <td>Can overestimate</td>
+                            <td>Quick decisions</td>
+                        </tr>
+                        <tr onclick="showModal('variance')">
+                            <td><strong>Cumulative Variance</strong></td>
+                            <td>Interpretable, flexible</td>
+                            <td>Arbitrary threshold</td>
+                            <td>Most applications</td>
+                        </tr>
+                        <tr onclick="showModal('elbow')">
+                            <td><strong>Elbow Method</strong></td>
+                            <td>Visual, intuitive</td>
+                            <td>Subjective</td>
+                            <td>Exploratory analysis</td>
+                        </tr>
+                        <tr onclick="showModal('parallel')">
+                            <td><strong>Parallel Analysis</strong></td>
+                            <td>Statistical rigor</td>
+                            <td>Computationally intensive</td>
+                            <td>Research settings</td>
+                        </tr>
+                        <tr onclick="showModal('cross-validation')">
+                            <td><strong>Cross-Validation</strong></td>
+                            <td>Task-specific</td>
+                            <td>Time-consuming</td>
+                            <td>Production systems</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week7_Slide125.html" class="nav-btn">← Previous</a>
+        <a href="Week7_Slide127.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Modal content database
+        const modalContent = {
+            'kaiser': {
+                title: 'Kaiser Criterion (Eigenvalue > 1 Rule)',
+                content: `
+                    <div style="background: linear-gradient(135deg, #ccfbf1, #99f6e4); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                        <h3 style="color: #0d9488;">The Kaiser-Guttman Rule</h3>
+                        <p style="margin-top: 10px;">Keep principal components with eigenvalues greater than 1.0</p>
+                    </div>
+                    
+                    <h4 style="color: #0d9488; margin: 20px 0;">Rationale:</h4>
+                    <ul style="line-height: 2;">
+                        <li>In standardized data, average eigenvalue = 1</li>
+                        <li>Components with λ > 1 explain more variance than a single variable</li>
+                        <li>Components with λ < 1 explain less variance than original variables</li>
+                    </ul>
+                    
+                    <h4 style="color: #0d9488; margin: 20px 0;">When to Use:</h4>
+                    <ul style="line-height: 2;">
+                        <li>✅ Quick initial assessment</li>
+                        <li>✅ Standardized/correlation matrix</li>
+                        <li>❌ May overestimate with many variables</li>
+                        <li>❌ Not suitable for covariance matrix</li>
+                    </ul>
+                `
+            },
+            'variance': {
+                title: 'Cumulative Variance Explained',
+                content: `
+                    <div style="background: linear-gradient(135deg, #ccfbf1, #99f6e4); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                        <h3 style="color: #0d9488;">Variance Threshold Method</h3>
+                        <p style="margin-top: 10px;">Retain enough components to explain a target percentage of total variance</p>
+                    </div>
+                    
+                    <h4 style="color: #0d9488; margin: 20px 0;">Common Thresholds:</h4>
+                    <ul style="line-height: 2;">
+                        <li><strong>70-80%:</strong> Aggressive reduction, loss of information</li>
+                        <li><strong>85-90%:</strong> Balanced approach (most common)</li>
+                        <li><strong>95%+:</strong> Conservative, retains most information</li>
+                    </ul>
+                    
+                    <h4 style="color: #0d9488; margin: 20px 0;">Domain-Specific Guidelines:</h4>
+                    <ul style="line-height: 2;">
+                        <li>🧬 <strong>Genomics:</strong> Often 90-95% due to noise</li>
+                        <li>🖼️ <strong>Image Processing:</strong> Can use 80-85%</li>
+                        <li>💰 <strong>Finance:</strong> Typically 95%+ for risk models</li>
+                        <li>📊 <strong>Marketing:</strong> 85-90% for customer segmentation</li>
+                    </ul>
+                `
+            },
+            'elbow': {
+                title: 'Elbow Method (Scree Plot)',
+                content: `
+                    <div style="background: linear-gradient(135deg, #ccfbf1, #99f6e4); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                        <h3 style="color: #0d9488;">Visual Inspection Approach</h3>
+                        <p style="margin-top: 10px;">Look for the "elbow" where eigenvalues start to level off</p>
+                    </div>
+                    
+                    <h4 style="color: #0d9488; margin: 20px 0;">How to Identify the Elbow:</h4>
+                    <ol style="line-height: 2;">
+                        <li>Plot eigenvalues (or % variance) vs component number</li>
+                        <li>Look for point where curve flattens</li>
+                        <li>Keep components before the elbow</li>
+                        <li>Components after elbow are "scree" (noise)</li>
+                    </ol>
+                    
+                    <h4 style="color: #0d9488; margin: 20px 0;">Advantages & Limitations:</h4>
+                    <ul style="line-height: 2;">
+                        <li>✅ Intuitive and visual</li>
+                        <li>✅ Works well with clear separation</li>
+                        <li>❌ Subjective interpretation</li>
+                        <li>❌ May not have clear elbow</li>
+                    </ul>
+                `
+            },
+            'parallel': {
+                title: 'Parallel Analysis',
+                content: `
+                    <div style="background: linear-gradient(135deg, #ccfbf1, #99f6e4); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                        <h3 style="color: #0d9488;">Statistical Significance Testing</h3>
+                        <p style="margin-top: 10px;">Compare actual eigenvalues to those from random data</p>
+                    </div>
+                    
+                    <h4 style="color: #0d9488; margin: 20px 0;">Algorithm:</h4>
+                    <ol style="line-height: 2;">
+                        <li>Generate random data matrices (same size as original)</li>
+                        <li>Compute eigenvalues for each random matrix</li>
+                        <li>Calculate 95th percentile of random eigenvalues</li>
+                        <li>Keep components where actual λ > random 95th percentile</li>
+                    </ol>
+                    
+                    <h4 style="color: #0d9488; margin: 20px 0;">Why It's Better:</h4>
+                    <ul style="line-height: 2;">
+                        <li>Accounts for sampling variability</li>
+                        <li>Statistically rigorous</li>
+                        <li>Often more accurate than Kaiser criterion</li>
+                        <li>Recommended for research publications</li>
+                    </ul>
+                `
+            },
+            'cross-validation': {
+                title: 'Cross-Validation Approach',
+                content: `
+                    <div style="background: linear-gradient(135deg, #ccfbf1, #99f6e4); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                        <h3 style="color: #0d9488;">Task-Specific Optimization</h3>
+                        <p style="margin-top: 10px;">Choose components that optimize downstream task performance</p>
+                    </div>
+                    
+                    <h4 style="color: #0d9488; margin: 20px 0;">Procedure:</h4>
+                    <ol style="line-height: 2;">
+                        <li>Split data into train/validation sets</li>
+                        <li>For k = 1 to max_components:</li>
+                        <li>&nbsp;&nbsp;• Apply PCA with k components</li>
+                        <li>&nbsp;&nbsp;• Train model on transformed data</li>
+                        <li>&nbsp;&nbsp;• Evaluate on validation set</li>
+                        <li>Select k with best validation performance</li>
+                    </ol>
+                    
+                    <h4 style="color: #0d9488; margin: 20px 0;">Metrics to Optimize:</h4>
+                    <ul style="line-height: 2;">
+                        <li><strong>Reconstruction Error:</strong> For compression tasks</li>
+                        <li><strong>Classification Accuracy:</strong> For supervised learning</li>
+                        <li><strong>Clustering Quality:</strong> For unsupervised tasks</li>
+                    </ul>
+                `
+            }
+        };
+
+        function showModal(key) {
+            const content = modalContent[key];
+            if (content) {
+                modal.show(content.title, content.content);
+            }
+        }
+
+        // Draw Scree Plot
+        function drawScreePlot() {
+            const canvas = document.getElementById('screePlot');
+            const ctx = canvas.getContext('2d');
+            
+            // Sample eigenvalues (decreasing)
+            const eigenvalues = [4.2, 2.8, 1.9, 0.8, 0.5, 0.3, 0.2, 0.15, 0.1, 0.05];
+            const cumulative = [];
+            let sum = eigenvalues.reduce((a, b) => a + b, 0);
+            let cumSum = 0;
+            
+            eigenvalues.forEach(val => {
+                cumSum += val;
+                cumulative.push((cumSum / sum) * 100);
+            });
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw axes
+            ctx.strokeStyle = '#cbd5e1';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(40, 270);
+            ctx.lineTo(360, 270);
+            ctx.moveTo(40, 270);
+            ctx.lineTo(40, 30);
+            ctx.stroke();
+            
+            // Draw eigenvalue bars and line
+            ctx.strokeStyle = '#0d9488';
+            ctx.fillStyle = 'rgba(13, 148, 136, 0.3)';
+            ctx.lineWidth = 3;
+            
+            eigenvalues.forEach((val, i) => {
+                const x = 60 + i * 30;
+                const height = (val / 5) * 200;
+                
+                // Bar
+                ctx.fillRect(x - 10, 270 - height, 20, height);
+                
+                // Connect points
+                if (i > 0) {
+                    ctx.beginPath();
+                    ctx.moveTo(60 + (i-1) * 30, 270 - (eigenvalues[i-1] / 5) * 200);
+                    ctx.lineTo(x, 270 - height);
+                    ctx.stroke();
+                }
+                
+                // Draw point
+                ctx.beginPath();
+                ctx.arc(x, 270 - height, 5, 0, Math.PI * 2);
+                ctx.fillStyle = '#0d9488';
+                ctx.fill();
+                ctx.fillStyle = 'rgba(13, 148, 136, 0.3)';
+            });
+            
+            // Draw cumulative line
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            cumulative.forEach((val, i) => {
+                const x = 60 + i * 30;
+                const y = 270 - (val / 100) * 200;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Labels
+            ctx.fillStyle = '#64748b';
+            ctx.font = '12px Arial';
+            ctx.fillText('Components', 180, 295);
+            ctx.save();
+            ctx.translate(15, 150);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('Eigenvalue', 0, 0);
+            ctx.restore();
+            
+            // Draw elbow indicator
+            ctx.strokeStyle = '#ef4444';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(120, 270 - (eigenvalues[2] / 5) * 200, 15, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.fillStyle = '#ef4444';
+            ctx.font = '14px Arial';
+            ctx.fillText('Elbow', 135, 270 - (eigenvalues[2] / 5) * 200 + 5);
+        }
+
+        // Initialize bar chart
+        function initBarChart() {
+            const container = document.getElementById('barChart');
+            const variances = [25, 20, 15, 10, 8, 6, 5, 4, 4, 3];
+            
+            container.innerHTML = '';
+            variances.forEach((val, i) => {
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+                bar.style.height = `${(val / 25) * 100}%`;
+                bar.dataset.component = i + 1;
+                bar.dataset.variance = val;
+                
+                const label = document.createElement('div');
+                label.className = 'bar-label';
+                label.textContent = `PC${i + 1}`;
+                bar.appendChild(label);
+                
+                const value = document.createElement('div');
+                value.className = 'bar-value';
+                value.textContent = `${val}%`;
+                bar.appendChild(value);
+                
+                container.appendChild(bar);
+            });
+        }
+
+        // Variance slider functionality
+        document.getElementById('varianceSlider').addEventListener('input', function(e) {
+            const value = e.target.value;
+            this.style.setProperty('--value', `${value}%`);
+            document.getElementById('varianceValue').textContent = `${value}%`;
+            
+            // Calculate required components
+            const variances = [25, 20, 15, 10, 8, 6, 5, 4, 4, 3];
+            let cumSum = 0;
+            let components = 0;
+            
+            for (let i = 0; i < variances.length; i++) {
+                cumSum += variances[i];
+                components++;
+                if (cumSum >= value) break;
+            }
+            
+            document.getElementById('componentsCount').innerHTML = 
+                `Required Components: <strong>${components}</strong> out of 10`;
+            
+            // Update bar chart highlighting
+            document.querySelectorAll('.bar').forEach((bar, i) => {
+                if (i < components) {
+                    bar.style.opacity = '1';
+                    bar.style.background = 'linear-gradient(to, top, #0d9488, #14b8a6)';
+                } else {
+                    bar.style.opacity = '0.3';
+                    bar.style.background = 'linear-gradient(to, top, #cbd5e1, #e2e8f0)';
+                }
+            });
+        });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (modal.overlay.classList.contains('active')) return;
+            
+            if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week7_Slide125.html';
+            } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                window.location.href = 'Week7_Slide127.html';
+            }
+        });
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            drawScreePlot();
+            initBarChart();
+            
+            // Trigger initial slider update
+            document.getElementById('varianceSlider').dispatchEvent(new Event('input'));
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Filters and Feature Maps</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px 25px;
+            border-radius: 25px;
+            font-weight: 600;
+            color: #0d9488;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            font-size: 1.1em;
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px 25px;
+            border-radius: 25px;
+            font-weight: 600;
+            color: #0d9488;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            font-size: 1.1em;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.2em;
+            text-align: center;
+            margin-bottom: 40px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        @keyframes slideInFromTop {
+            0% { transform: translateY(-50px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 35px;
+            margin-bottom: 30px;
+        }
+
+        .content-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            padding: 30px;
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(13, 148, 136, 0.1);
+            border: 2px solid rgba(13, 148, 136, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .content-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(13, 148, 136, 0.2);
+        }
+
+        .section-title {
+            font-size: 1.9em;
+            color: #0d9488;
+            margin-bottom: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .filter-gallery {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .filter-card {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 15px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .filter-card:hover {
+            border-color: #0d9488;
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(13, 148, 136, 0.2);
+        }
+
+        .filter-name {
+            font-weight: 600;
+            color: #0d9488;
+            font-size: 1.1em;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .filter-matrix {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #1e293b;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 8px 0;
+            line-height: 1.4;
+        }
+
+        .filter-desc {
+            color: #64748b;
+            font-size: 0.85em;
+            text-align: center;
+            line-height: 1.3;
+        }
+
+        .feature-hierarchy {
+            list-style: none;
+        }
+
+        .hierarchy-item {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid #0d9488;
+        }
+
+        .hierarchy-item:hover {
+            transform: translateX(8px);
+            box-shadow: 0 8px 20px rgba(13, 148, 136, 0.15);
+        }
+
+        .hierarchy-level {
+            font-weight: 600;
+            color: #0d9488;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+
+        .hierarchy-desc {
+            color: #1e293b;
+            font-size: 0.95em;
+            line-height: 1.4;
+        }
+
+        .visualization-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            padding: 30px;
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(13, 148, 136, 0.1);
+            border: 2px solid rgba(13, 148, 136, 0.1);
+            text-align: center;
+        }
+
+        .feature-canvas {
+            width: 100%;
+            height: 250px;
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 15px;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            margin: 15px 0;
+            cursor: pointer;
+        }
+
+        .canvas-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .control-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(13, 148, 136, 0.3);
+        }
+
+        .control-btn.active {
+            background: linear-gradient(135deg, #f59e0b, #f97316);
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(13, 148, 136, 0.3);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(13, 148, 136, 0.4);
+        }
+
+        .floating-elements {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .floating-element {
+            position: absolute;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) rotate(0deg); }
+            100% { transform: translateY(-100px) rotate(360deg); }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .code-block {
+            background: #1e293b;
+            color: #14b8a6;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+
+        @media (max-width: 768px) {
+            .main-content { grid-template-columns: 1fr; }
+            .filter-gallery { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.4em; }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <div class="course-info">CS5710 - Week 9</div>
+    <div class="slide-number">Slide 165 of 180</div>
+
+    <div class="slide-container">
+        <h1 class="slide-title">🔧 Filters and Feature Maps</h1>
+        
+        <div class="main-content">
+            <div class="content-section">
+                <h2 class="section-title">🎨 Filter Gallery</h2>
+                
+                <div class="filter-gallery">
+                    <div class="filter-card" data-modal="edge-detection">
+                        <div class="filter-name">Edge Detection</div>
+                        <div class="filter-matrix">[-1 -1 -1]<br>[0  0  0]<br>[1  1  1]</div>
+                        <div class="filter-desc">Detects horizontal edges</div>
+                    </div>
+                    
+                    <div class="filter-card" data-modal="sobel">
+                        <div class="filter-name">Sobel Filter</div>
+                        <div class="filter-matrix">[-1  0  1]<br>[-2  0  2]<br>[-1  0  1]</div>
+                        <div class="filter-desc">Vertical edge detection</div>
+                    </div>
+                    
+                    <div class="filter-card" data-modal="gaussian-blur">
+                        <div class="filter-name">Gaussian Blur</div>
+                        <div class="filter-matrix">[1  2  1]<br>[2  4  2]<br>[1  2  1]</div>
+                        <div class="filter-desc">Smoothing and noise reduction</div>
+                    </div>
+                    
+                    <div class="filter-card" data-modal="sharpen">
+                        <div class="filter-name">Sharpen</div>
+                        <div class="filter-matrix">[0 -1  0]<br>[-1 5 -1]<br>[0 -1  0]</div>
+                        <div class="filter-desc">Enhance edges and details</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <h2 class="section-title">🏗️ Feature Hierarchy</h2>
+                
+                <ul class="feature-hierarchy">
+                    <li class="hierarchy-item" data-modal="layer1">
+                        <div class="hierarchy-level">Layer 1 - Low Level</div>
+                        <div class="hierarchy-desc">Edges, corners, basic shapes and textures</div>
+                    </li>
+                    
+                    <li class="hierarchy-item" data-modal="layer2">
+                        <div class="hierarchy-level">Layer 2 - Mid Level</div>
+                        <div class="hierarchy-desc">Simple patterns, combinations of edges</div>
+                    </li>
+                    
+                    <li class="hierarchy-item" data-modal="layer3">
+                        <div class="hierarchy-level">Layer 3 - Object Parts</div>
+                        <div class="hierarchy-desc">Wheels, eyes, windows, distinctive parts</div>
+                    </li>
+                    
+                    <li class="hierarchy-item" data-modal="layer4">
+                        <div class="hierarchy-level">Layer 4 - Objects</div>
+                        <div class="hierarchy-desc">Cars, faces, animals, complete objects</div>
+                    </li>
+                    
+                    <li class="hierarchy-item" data-modal="layer5">
+                        <div class="hierarchy-level">Layer 5 - Concepts</div>
+                        <div class="hierarchy-desc">Scene understanding, abstract concepts</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="visualization-section">
+            <h2 class="section-title">📊 Feature Map Visualization</h2>
+            <canvas class="feature-canvas" id="featureCanvas" data-modal="visualization">
+                <p style="padding: 50px; color: #64748b;">
+                    Interactive feature map visualization
+                </p>
+            </canvas>
+            
+            <div class="canvas-controls">
+                <button class="control-btn active" id="btn-input">Input Image</button>
+                <button class="control-btn" id="btn-layer1">Layer 1</button>
+                <button class="control-btn" id="btn-layer2">Layer 2</button>
+                <button class="control-btn" id="btn-layer3">Layer 3</button>
+            </div>
+            
+            <p style="color: #64748b; font-style: italic; margin-top: 15px;">
+                Click buttons above to see how features evolve through CNN layers
+            </p>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week9_Slide164.html" class="nav-btn">← Previous</a>
+        <a href="Week9_Slide166.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            open(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Modal content definitions
+        const modalContents = {
+            "edge-detection": {
+                title: "Edge Detection Filters",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Finding Boundaries in Images</strong><br>
+                        Edge detection filters highlight sudden changes in pixel intensity.
+                    </div>
+                    <p><strong>How Edge Detection Works:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Intensity Gradients:</strong> Edges occur where pixel values change rapidly</li>
+                        <li><strong>Filter Response:</strong> High values indicate strong edges</li>
+                        <li><strong>Direction Specific:</strong> Different filters detect different edge orientations</li>
+                        <li><strong>Foundation:</strong> Basis for more complex feature detection</li>
+                    </ul>
+                    <div class="code-block">
+# Edge detection filters
+import numpy as np
+import cv2
+
+# Horizontal edge detection
+horizontal_edge = np.array([[-1, -1, -1],
+                           [0,  0,  0],
+                           [1,  1,  1]])
+
+# Vertical edge detection
+vertical_edge = np.array([[-1, 0, 1],
+                         [-1, 0, 1],
+                         [-1, 0, 1]])
+
+# Apply filter
+edges = cv2.filter2D(image, -1, horizontal_edge)
+
+# In CNN
+conv_layer = tf.keras.layers.Conv2D(32, (3,3), activation='relu')
+# CNN learns edge detectors automatically!
+                    </div>
+                    <div class="modal-highlight" style="background: rgba(59, 130, 246, 0.1); border-left-color: #3b82f6;">
+                        <strong>CNN Discovery:</strong><br>
+                        The first CNN layers almost always learn edge detection filters, even without explicit programming - it's the natural foundation for visual recognition.
+                    </div>
+                `
+            },
+            sobel: {
+                title: "Sobel Edge Detection",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Advanced Edge Detection</strong><br>
+                        Sobel filters provide more sophisticated edge detection with gradient magnitude and direction.
+                    </div>
+                    <p><strong>Sobel Advantages:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Weighted Centers:</strong> Center pixels have more influence (weight=2)</li>
+                        <li><strong>Noise Reduction:</strong> Built-in smoothing reduces noise sensitivity</li>
+                        <li><strong>Gradient Calculation:</strong> Can compute edge magnitude and direction</li>
+                        <li><strong>Orthogonal Pair:</strong> X and Y filters work together</li>
+                    </ul>
+                    <div class="code-block">
+# Sobel filter implementation
+sobel_x = np.array([[-1, 0, 1],
+                   [-2, 0, 2],
+                   [-1, 0, 1]])
+
+sobel_y = np.array([[-1, -2, -1],
+                   [0,  0,  0],
+                   [1,  2,  1]])
+
+# Apply both filters
+grad_x = cv2.filter2D(image, -1, sobel_x)
+grad_y = cv2.filter2D(image, -1, sobel_y)
+
+# Calculate magnitude and direction
+magnitude = np.sqrt(grad_x**2 + grad_y**2)
+direction = np.arctan2(grad_y, grad_x)
+
+# Or use OpenCV
+grad_x = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=3)
+grad_y = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=3)
+                    </code>
+                    <div class="modal-highlight" style="background: rgba(16, 185, 129, 0.1); border-left-color: #10b981;">
+                        <strong>Historical Impact:</strong><br>
+                        Sobel filters were crucial in early computer vision systems and remain important for understanding how CNNs automatically discover similar patterns.
+                    </div>
+                `
+            },
+            "gaussian-blur": {
+                title: "Gaussian Blur and Smoothing",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Smoothing and Noise Reduction</strong><br>
+                        Gaussian blur removes noise and creates smooth transitions between pixels.
+                    </div>
+                    <p><strong>Gaussian Filter Properties:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Bell Curve:</strong> Based on Gaussian probability distribution</li>
+                        <li><strong>Center Weighted:</strong> Center pixel has highest weight</li>
+                        <li><strong>Smooth Falloff:</strong> Weights decrease smoothly with distance</li>
+                        <li><strong>Separable:</strong> Can be computed as two 1D convolutions</li>
+                    </ul>
+                    <p><strong>Applications:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Preprocessing:</strong> Remove noise before edge detection</li>
+                        <li><strong>Multi-scale:</strong> Create image pyramids for analysis</li>
+                        <li><strong>Artistic Effect:</strong> Create soft, dreamy appearances</li>
+                        <li><strong>CNN Context:</strong> Larger receptive fields with smoothing</li>
+                    </ul>
+                    <div class="code-block">
+# Gaussian blur implementation
+def gaussian_kernel(size, sigma):
+    kernel = np.zeros((size, size))
+    center = size // 2
+    
+    for i in range(size):
+        for j in range(size):
+            x, y = i - center, j - center
+            kernel[i, j] = np.exp(-(x**2 + y**2) / (2 * sigma**2))
+    
+    # Normalize so weights sum to 1
+    return kernel / kernel.sum()
+
+# 5x5 Gaussian with sigma=1
+gaussian_5x5 = gaussian_kernel(5, 1.0)
+
+# Apply blur
+blurred = cv2.filter2D(image, -1, gaussian_5x5)
+
+# Or use OpenCV
+blurred = cv2.GaussianBlur(image, (5,5), 1.0)
+
+# In deep learning
+# Some CNN architectures use Gaussian-like filters for downsampling
+                    </div>
+                    <div class="modal-highlight" style="background: rgba(139, 92, 246, 0.1); border-left-color: #8b5cf6;">
+                        <strong>CNN Connection:</strong><br>
+                        While CNNs learn their own smoothing filters, understanding Gaussian blur helps interpret why certain learned filters resemble smoothing operations.
+                    </div>
+                `
+            },
+            sharpen: {
+                title: "Sharpening Filters",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Enhancing Details and Edges</strong><br>
+                        Sharpening filters enhance edges and fine details in images.
+                    </div>
+                    <p><strong>Sharpening Mechanism:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>High-Pass Filter:</strong> Emphasizes rapid changes (high frequencies)</li>
+                        <li><strong>Center Positive:</strong> Large positive weight in center</li>
+                        <li><strong>Neighbors Negative:</strong> Negative weights around center</li>
+                        <li><strong>Enhancement:</strong> Increases contrast at edges</li>
+                    </ul>
+                    <p><strong>Unsharp Masking:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Step 1:</strong> Create blurred version of image</li>
+                        <li><strong>Step 2:</strong> Subtract blurred from original</li>
+                        <li><strong>Step 3:</strong> Add result back to original</li>
+                        <li><strong>Result:</strong> Enhanced edges without noise amplification</li>
+                    </ul>
+                    <div class="code-block">
+# Simple sharpening filter
+sharpen_filter = np.array([[0, -1, 0],
+                          [-1, 5, -1],
+                          [0, -1, 0]])
+
+sharpened = cv2.filter2D(image, -1, sharpen_filter)
+
+# Unsharp masking (more sophisticated)
+def unsharp_mask(image, sigma=1.0, amount=1.0):
+    blurred = cv2.GaussianBlur(image, (0,0), sigma)
+    mask = image - blurred
+    sharpened = image + amount * mask
+    return np.clip(sharpened, 0, 255)
+
+# Apply unsharp mask
+enhanced = unsharp_mask(image, sigma=1.0, amount=0.5)
+
+# In CNNs
+# Networks might learn sharpening-like filters in early layers
+# to enhance important features for recognition
+                    </div>
+                    <div class="modal-highlight" style="background: rgba(236, 72, 153, 0.1); border-left-color: #ec4899;">
+                        <strong>Balance Required:</strong><br>
+                        Too much sharpening can amplify noise and create artifacts. CNNs learn optimal amounts of enhancement for their specific tasks.
+                    </div>
+                `
+            },
+            layer1: {
+                title: "Layer 1: Low-Level Features",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Building Blocks of Vision</strong><br>
+                        First CNN layer learns fundamental visual primitives.
+                    </div>
+                    <p><strong>What Layer 1 Detects:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Edges:</strong> Horizontal, vertical, diagonal boundaries</li>
+                        <li><strong>Corners:</strong> L-shaped and T-shaped junctions</li>
+                        <li><strong>Blobs:</strong> Circular or elliptical regions</li>
+                        <li><strong>Textures:</strong> Simple repeated patterns</li>
+                        <li><strong>Color Gradients:</strong> Smooth color transitions</li>
+                    </ul>
+                    <p><strong>Biological Inspiration:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>V1 Cortex:</strong> Similar to simple cells in visual cortex</li>
+                        <li><strong>Orientation Tuning:</strong> Neurons respond to specific angles</li>
+                        <li><strong>Spatial Frequency:</strong> Different scales of detail</li>
+                        <li><strong>Receptive Fields:</strong> Small, localized detection regions</li>
+                    </ul>
+                    <div class="code-block">
+# Typical Layer 1 learned filters (examples)
+# These emerge naturally through training
+
+# Edge detectors at different angles
+edge_0_deg = [[ 1,  1,  1],
+              [ 0,  0,  0],
+              [-1, -1, -1]]
+
+edge_45_deg = [[ 0,  1,  1],
+               [-1,  0,  1],
+               [-1, -1,  0]]
+
+# Blob detector
+blob = [[-1, -1, -1],
+        [-1,  8, -1],
+        [-1, -1, -1]]
+
+# Corner detector
+corner = [[ 1,  0, -1],
+          [ 0,  0,  0],
+          [-1,  0,  1]]
+
+# CNNs learn these automatically!
+first_layer = tf.keras.layers.Conv2D(64, (3,3), activation='relu')
+                    </div>
+                    <div class="modal-highlight" style="background: rgba(34, 197, 94, 0.1); border-left-color: #22c55e;">
+                        <strong>Universal Patterns:</strong><br>
+                        Remarkably, Layer 1 filters are similar across different CNN architectures and tasks - these low-level features are fundamental to visual processing.
+                    </div>
+                `
+            },
+            layer2: {
+                title: "Layer 2: Mid-Level Features",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Combining Basic Features</strong><br>
+                        Layer 2 combines Layer 1 outputs to detect more complex patterns.
+                    </div>
+                    <p><strong>Mid-Level Feature Examples:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Textures:</strong> Wood grain, fabric patterns, fur</li>
+                        <li><strong>Simple Shapes:</strong> Rectangles, circles, triangles</li>
+                        <li><strong>Junctions:</strong> T-junctions, Y-junctions, crosses</li>
+                        <li><strong>Contours:</strong> Curved lines, boundaries</li>
+                        <li><strong>Patterns:</strong> Stripes, dots, gradients</li>
+                    </ul>
+                    <p><strong>How Combination Works:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Multiple Inputs:</strong> Receives multiple Layer 1 feature maps</li>
+                        <li><strong>Spatial Combination:</strong> Combines features from nearby locations</li>
+                        <li><strong>Larger Receptive Field:</strong> Sees bigger image regions</li>
+                        <li><strong>Non-linear Activation:</strong> Creates complex feature combinations</li>
+                    </ul>
+                    <div class="code-block">
+# Layer 2 conceptual example
+# Input: 64 feature maps from Layer 1 (edges, corners, etc.)
+# Process: Each Layer 2 filter looks at all 64 input channels
+
+layer2 = tf.keras.layers.Conv2D(
+    filters=128,        # 128 different mid-level features
+    kernel_size=(3,3),  # 3x3 spatial combination
+    activation='relu'
+)
+
+# Each of the 128 filters has:
+# - 3×3×64 = 576 weights (plus 1 bias)
+# - Combines spatial patterns from all 64 Layer 1 features
+
+# Example combinations:
+# Filter 1: Vertical edge + horizontal edge = corner
+# Filter 2: Multiple edges in sequence = texture
+# Filter 3: Blob + edge = curve or boundary
+# Filter 4: Repeated pattern = texture recognition
+                    </div>
+                    <div class="modal-highlight" style="background: rgba(59, 130, 246, 0.1); border-left-color: #3b82f6;">
+                        <strong>Emergent Complexity:</strong><br>
+                        Layer 2 features emerge from the interaction of simpler Layer 1 features - this is where the "magic" of hierarchical learning begins to appear.
+                    </div>
+                `
+            },
+            layer3: {
+                title: "Layer 3: Object Parts",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Recognizable Object Components</strong><br>
+                        Layer 3 detects distinctive parts that make up complete objects.
+                    </div>
+                    <p><strong>Object Part Examples:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Faces:</strong> Eyes, nose, mouth, eyebrows</li>
+                        <li><strong>Cars:</strong> Wheels, headlights, grilles, windows</li>
+                        <li><strong>Animals:</strong> Ears, paws, tails, fur patterns</li>
+                        <li><strong>Buildings:</strong> Doors, windows, rooflines, columns</li>
+                        <li><strong>Nature:</strong> Leaves, petals, branches, clouds</li>
+                    </ul>
+                    <p><strong>Part Detection Properties:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Semantic Meaning:</strong> Parts have recognizable function/identity</li>
+                        <li><strong>Translation Invariant:</strong> Detected regardless of position</li>
+                        <li><strong>Scale Robust:</strong> Can handle different sizes</li>
+                        <li><strong>Viewpoint Tolerance:</strong> Work across viewing angles</li>
+                    </ul>
+                    <div class="code-block">
+# Layer 3 processing characteristics
+layer3 = tf.keras.layers.Conv2D(
+    filters=256,        # 256 different object parts
+    kernel_size=(3,3),  # Still local processing
+    activation='relu'
+)
+
+# At this point:
+# - Receptive field: ~20-30 pixels
+# - Input: 128 mid-level feature maps
+# - Output: 256 part-level features
+# - Each filter combines many textures/shapes into meaningful parts
+
+# Example part detectors might respond to:
+# - Circular shapes with internal structure (eyes)
+# - Elongated shapes with specific textures (legs)
+# - Rectangular shapes with internal patterns (windows)
+# - Curved boundaries with specific orientations (car outlines)
+
+# Visualization techniques can reveal what parts are detected:
+# - Activation maximization
+# - Feature visualization
+# - Grad-CAM attention maps
+                    </code>
+                    <div class="modal-highlight" style="background: rgba(168, 85, 247, 0.1); border-left-color: #a855f7;">
+                        <strong>Human-Interpretable:</strong><br>
+                        Layer 3 features are often interpretable to humans - we can recognize what parts they detect, unlike the abstract patterns in deeper layers.
+                    </div>
+                `
+            },
+            layer4: {
+                title: "Layer 4: Complete Objects",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Whole Object Recognition</strong><br>
+                        Layer 4 combines object parts into complete, recognizable entities.
+                    </div>
+                    <p><strong>Complete Object Detection:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Faces:</strong> Complete face detection from arranged features</li>
+                        <li><strong>Vehicles:</strong> Cars, trucks, motorcycles as whole objects</li>
+                        <li><strong>Animals:</strong> Dogs, cats, birds with all their parts</li>
+                        <li><strong>Common Objects:</strong> Chairs, tables, phones, laptops</li>
+                        <li><strong>Natural Objects:</strong> Trees, flowers, mountains</li>
+                    </ul>
+                    <p><strong>Object-Level Properties:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Spatial Relationships:</strong> Parts in correct relative positions</li>
+                        <li><strong>Gestalt Principles:</strong> Whole is more than sum of parts</li>
+                        <li><strong>Context Integration:</strong> Uses surrounding information</li>
+                        <li><strong>Invariance:</strong> Robust to lighting, pose, partial occlusion</li>
+                    </ul>
+                    <div class="code-block">
+# Layer 4 object-level processing
+layer4 = tf.keras.layers.Conv2D(
+    filters=512,        # 512 different object types/variants
+    kernel_size=(3,3),  # Final spatial integration
+    activation='relu'
+)
+
+# Followed by global pooling and classification
+global_pool = tf.keras.layers.GlobalAveragePooling2D()
+classifier = tf.keras.layers.Dense(1000, activation='softmax')
+
+# At this stage:
+# - Receptive field covers most of the image
+# - Rich representation encoding complete objects
+# - Ready for final classification decision
+
+# Object detection at this level involves:
+# 1. Spatial arrangement verification (are parts in right places?)
+# 2. Context consistency checking (does this make sense?)
+# 3. Multi-scale integration (combine fine and coarse details)
+# 4. Confidence estimation (how sure is the detection?)
+
+model = tf.keras.Sequential([
+    # Layers 1-3: Feature extraction
+    # Layer 4: Object integration
+    layer4,
+    global_pool,
+    classifier  # Final decision
+])
+                    </code>
+                    <div class="modal-highlight" style="background: rgba(6, 182, 212, 0.1); border-left-color: #06b6d4;">
+                        <strong>Decision Ready:</strong><br>
+                        Layer 4 features are rich enough for final classification - they encode complete object understanding suitable for making categorical decisions.
+                    </div>
+                `
+            },
+            layer5: {
+                title: "Layer 5: Abstract Concepts",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>High-Level Scene Understanding</strong><br>
+                        Deep layers in very large networks capture abstract concepts and scene-level understanding.
+                    </div>
+                    <p><strong>Abstract Concept Examples:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Scene Types:</strong> Indoor/outdoor, urban/nature, formal/casual</li>
+                        <li><strong>Activities:</strong> Sports, dining, working, entertainment</li>
+                        <li><strong>Emotions:</strong> Happy, sad, excited, calm expressions/scenes</li>
+                        <li><strong>Relationships:</strong> Parent-child, predator-prey, cause-effect</li>
+                        <li><strong>Abstract Properties:</strong> Luxury, danger, beauty, age</li>
+                    </ul>
+                    <p><strong>Very Deep Network Capabilities:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Contextual Understanding:</strong> What's happening in the scene</li>
+                        <li><strong>Semantic Relationships:</strong> How objects relate to each other</li>
+                        <li><strong>Cultural Knowledge:</strong> Understanding social/cultural contexts</li>
+                        <li><strong>Temporal Understanding:</strong> Before/after, cause/effect</li>
+                    </ul>
+                    <div class="code-block">
+# Very deep networks (ResNet-152, EfficientNet-B7)
+# can have 5+ levels of abstraction
+
+# Example progression in scene understanding:
+# Layer 1: Edges, textures
+# Layer 2: Simple patterns, shapes  
+# Layer 3: Object parts (doors, windows, wheels)
+# Layer 4: Complete objects (cars, buildings, people)
+# Layer 5: Scene understanding (busy street, park, office)
+
+# Modern architectures with abstract reasoning:
+model = tf.keras.applications.EfficientNetB7(
+    weights='imagenet',
+    include_top=True,
+    classes=1000
+)
+
+# Or custom deep architecture:
+deep_model = tf.keras.Sequential([
+    # ... many convolutional layers ...
+    tf.keras.layers.Conv2D(1024, (3,3)),  # Very abstract features
+    tf.keras.layers.GlobalAveragePooling2D(),
+    tf.keras.layers.Dense(512),
+    tf.keras.layers.Dense(num_classes, activation='softmax')
+])
+
+# Applications requiring abstract understanding:
+# - Image captioning ("A busy street scene with people and cars")
+# - Visual question answering ("What activity is happening?")
+# - Scene graph generation (object relationships)
+# - Aesthetic quality assessment
+                    </code>
+                    <div class="modal-highlight" style="background: rgba(239, 68, 68, 0.1); border-left-color: #ef4444;">
+                        <strong>Approaching Human-Level:</strong><br>
+                        Layer 5+ representations in modern deep networks approach human-level abstract understanding of visual scenes and concepts.
+                    </div>
+                `
+            },
+            visualization: {
+                title: "Feature Map Visualization Techniques",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Seeing Inside the Black Box</strong><br>
+                        Visualization helps us understand what CNNs learn at each layer.
+                    </div>
+                    <p><strong>Visualization Methods:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Activation Maps:</strong> Show which features fire for specific inputs</li>
+                        <li><strong>Filter Visualization:</strong> Show what patterns maximize filter responses</li>
+                        <li><strong>Grad-CAM:</strong> Highlight image regions important for decisions</li>
+                        <li><strong>Layer-wise Analysis:</strong> Track feature evolution through network</li>
+                    </ul>
+                    <p><strong>What Visualizations Reveal:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Learning Progression:</strong> Simple to complex feature hierarchy</li>
+                        <li><strong>Redundancy:</strong> Similar filters learning same patterns</li>
+                        <li><strong>Dead Filters:</strong> Filters that never activate</li>
+                        <li><strong>Bias Detection:</strong> Unexpected patterns or shortcuts</li>
+                    </ul>
+                    <div class="code-block">
+# Feature map visualization code
+import matplotlib.pyplot as plt
+
+# Extract feature maps from trained model
+def get_feature_maps(model, layer_name, image):
+    # Create feature extractor
+    extractor = tf.keras.Model(inputs=model.input,
+                              outputs=model.get_layer(layer_name).output)
+    
+    # Get feature maps
+    features = extractor(image[np.newaxis, ...])
+    return features[0]  # Remove batch dimension
+
+# Visualize feature maps
+def visualize_features(features, num_filters=16):
+    fig, axes = plt.subplots(4, 4, figsize=(12, 12))
+    
+    for i in range(num_filters):
+        row, col = i // 4, i % 4
+        axes[row, col].imshow(features[:, :, i], cmap='viridis')
+        axes[row, col].set_title(f'Filter {i+1}')
+        axes[row, col].axis('off')
+    
+    plt.tight_layout()
+    plt.show()
+
+# Usage example
+model = tf.keras.applications.VGG16(weights='imagenet')
+image = preprocess_image('example.jpg')
+
+# Visualize different layers
+conv1_features = get_feature_maps(model, 'block1_conv1', image)
+conv2_features = get_feature_maps(model, 'block2_conv1', image)
+conv5_features = get_feature_maps(model, 'block5_conv3', image)
+
+visualize_features(conv1_features)  # Low-level features
+visualize_features(conv5_features)  # High-level features
+                    </code>
+                    <div class="modal-highlight" style="background: rgba(34, 197, 94, 0.1); border-left-color: #22c55e;">
+                        <strong>Debugging Tool:</strong><br>
+                        Feature visualization is crucial for debugging CNN architectures, understanding model behavior, and building trust in AI systems.
+                    </div>
+                `
+            }
+        };
+
+        // Feature visualization state
+        let currentLayer = 'input';
+        
+        // Feature visualization drawing
+        function drawFeatureVisualization() {
+            const canvas = document.getElementById('featureCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.offsetWidth;
+            canvas.height = 250;
+            
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, width, height);
+            
+            // Draw based on current layer
+            switch(currentLayer) {
+                case 'input':
+                    drawInputImage(ctx, width, height);
+                    break;
+                case 'layer1':
+                    drawLayer1Features(ctx, width, height);
+                    break;
+                case 'layer2':
+                    drawLayer2Features(ctx, width, height);
+                    break;
+                case 'layer3':
+                    drawLayer3Features(ctx, width, height);
+                    break;
+            }
+        }
+        
+        function drawInputImage(ctx, width, height) {
+            // Draw a simple input image (house)
+            ctx.fillStyle = '#87CEEB';
+            ctx.fillRect(0, 0, width, height/3); // Sky
+            
+            ctx.fillStyle = '#90EE90';
+            ctx.fillRect(0, height/3, width, height*2/3); // Ground
+            
+            // House
+            const houseX = width/2 - 60;
+            const houseY = height/2 - 40;
+            
+            ctx.fillStyle = '#D2B48C';
+            ctx.fillRect(houseX, houseY, 120, 80); // House body
+            
+            ctx.fillStyle = '#8B4513';
+            ctx.beginPath();
+            ctx.moveTo(houseX - 10, houseY);
+            ctx.lineTo(houseX + 60, houseY - 30);
+            ctx.lineTo(houseX + 130, houseY);
+            ctx.fill(); // Roof
+            
+            ctx.fillStyle = '#4169E1';
+            ctx.fillRect(houseX + 20, houseY + 20, 30, 30); // Window
+            
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(houseX + 70, houseY + 40, 25, 40); // Door
+            
+            // Label
+            ctx.fillStyle = '#1e293b';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Input Image (House)', width/2, height - 20);
+        }
+        
+        function drawLayer1Features(ctx, width, height) {
+            // Draw edge detection results
+            const features = [
+                {name: 'Vertical Edges', color: '#ef4444', x: width/6, y: height/3},
+                {name: 'Horizontal Edges', color: '#10b981', x: width/2, y: height/3},
+                {name: 'Diagonal Edges', color: '#3b82f6', x: 5*width/6, y: height/3},
+                {name: 'Corners', color: '#f59e0b', x: width/3, y: 2*height/3},
+                {name: 'Textures', color: '#8b5cf6', x: 2*width/3, y: 2*height/3}
+            ];
+            
+            features.forEach(feature => {
+                ctx.fillStyle = feature.color;
+                ctx.fillRect(feature.x - 40, feature.y - 30, 80, 60);
+                
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(feature.name, feature.x, feature.y);
+            });
+            
+            ctx.fillStyle = '#1e293b';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Layer 1: Low-Level Features (Edges, Corners)', width/2, height - 20);
+        }
+        
+        function drawLayer2Features(ctx, width, height) {
+            // Draw pattern combinations
+            const features = [
+                {name: 'Roof Pattern', x: width/4, y: height/3},
+                {name: 'Wall Texture', x: 3*width/4, y: height/3},
+                {name: 'Window Shape', x: width/4, y: 2*height/3},
+                {name: 'Door Shape', x: 3*width/4, y: 2*height/3}
+            ];
+            
+            features.forEach(feature => {
+                ctx.fillStyle = '#0d9488';
+                ctx.fillRect(feature.x - 50, feature.y - 35, 100, 70);
+                
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(feature.name, feature.x, feature.y);
+            });
+            
+            ctx.fillStyle = '#1e293b';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Layer 2: Mid-Level Features (Patterns, Shapes)', width/2, height - 20);
+        }
+        
+        function drawLayer3Features(ctx, width, height) {
+            // Draw object parts
+            ctx.fillStyle = '#14b8a6';
+            ctx.fillRect(width/2 - 80, height/2 - 60, 160, 120);
+            
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Complete House Object', width/2, height/2);
+            
+            ctx.fillStyle = '#1e293b';
+            ctx.font = 'bold 16px Arial';
+            ctx.fillText('Layer 3: Object Parts → Complete Objects', width/2, height - 20);
+        }
+
+        // Control button handlers
+        function setupControls() {
+            const buttons = document.querySelectorAll('.control-btn');
+            
+            buttons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // Remove active class from all buttons
+                    buttons.forEach(btn => btn.classList.remove('active'));
+                    
+                    // Add active class to clicked button
+                    button.classList.add('active');
+                    
+                    // Update current layer
+                    currentLayer = button.id.replace('btn-', '');
+                    
+                    // Redraw visualization
+                    drawFeatureVisualization();
+                });
+            });
+        }
+
+        // Add click handlers to interactive elements
+        document.querySelectorAll('[data-modal]').forEach(item => {
+            item.addEventListener('click', () => {
+                const modalKey = item.dataset.modal;
+                const content = modalContents[modalKey];
+                if (content) {
+                    modal.open(content.title, content.content);
+                }
+            });
+        });
+
+        // Floating elements animation
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            const elementCount = 12;
+            
+            for (let i = 0; i < elementCount; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                
+                const size = Math.random() * 6 + 3;
+                const left = Math.random() * 100;
+                const delay = Math.random() * 20;
+                const duration = Math.random() * 10 + 15;
+                
+                element.style.width = size + 'px';
+                element.style.height = size + 'px';
+                element.style.left = left + '%';
+                element.style.animationDelay = delay + 's';
+                element.style.animationDuration = duration + 's';
+                
+                container.appendChild(element);
+            }
+        }
+
+        // Initialize
+        createFloatingElements();
+        drawFeatureVisualization();
+        setupControls();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (!e.target.closest('input, textarea')) {
+                if (e.key === 'ArrowLeft') {
+                    window.location.href = 'Week9_Slide164.html';
+                } else if (e.key === 'ArrowRight') {
+                    window.location.href = 'Week9_Slide166.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

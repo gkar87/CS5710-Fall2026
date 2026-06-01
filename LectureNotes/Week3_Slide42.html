@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Binary vs Multi-class Classification</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%); min-height: 100vh; display: flex; flex-direction: column; color: #134e4a; overflow-x: hidden; }
+        .slide-container { flex: 1; padding: 40px; max-width: 1400px; margin: 0 auto; position: relative; }
+        .slide-title { font-size: 3.2em; text-align: center; margin-bottom: 40px; color: #0d9488; text-shadow: 2px 2px 4px rgba(0,0,0,0.1); animation: slideInFromTop 1.2s ease-out; font-weight: 700; }
+        .content-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 30px; }
+        .concept-section, .comparison-section { background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%); border-radius: 20px; padding: 35px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); animation: slideInFromLeft 1s ease-out 0.3s both; border: 1px solid rgba(13, 148, 136, 0.1); }
+        .comparison-section { animation: slideInFromRight 1s ease-out 0.3s both; }
+        .section-title { font-size: 1.6em; color: #0d9488; margin-bottom: 20px; font-weight: 600; position: relative; }
+        .section-title::after { content: ''; position: absolute; bottom: -8px; left: 0; width: 60px; height: 3px; background: linear-gradient(90deg, #0d9488, #14b8a6); border-radius: 2px; }
+        .definition-text { font-size: 1.1em; line-height: 1.7; color: #1e293b; margin-bottom: 25px; padding: 20px; background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%); border-radius: 15px; border-left: 4px solid #0d9488; }
+        .formula-box { background: #1e293b; color: #5eead4; padding: 25px; border-radius: 15px; margin: 20px 0; font-family: 'Courier New', monospace; text-align: center; font-size: 1.3em; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
+        .formula-main { font-size: 1.4em; padding-bottom: 15px; border-bottom: 1px solid rgba(94, 234, 212, 0.2); margin-bottom: 15px; }
+        .formula-detail { font-size: 0.85em; color: #94a3b8; line-height: 1.5; }
+        .where-section { margin-top: 20px; font-size: 0.95em; line-height: 1.6; color: #1e293b; }
+        .where-section strong { color: #0d9488; }
+        .method-card { padding: 20px; border-radius: 15px; text-align: center; transition: all 0.3s ease; cursor: pointer; border: 2px solid; margin: 15px 0; }
+        .method-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.1); }
+        .binary-card { background: linear-gradient(135deg, #fef3c7, #fde68a); border-color: #f59e0b; color: #92400e; }
+        .multiclass-card { background: linear-gradient(135deg, #f0fdfa, #ccfbf1); border-color: #14b8a6; color: #0d9488; }
+        .method-icon { font-size: 2.5em; margin-bottom: 10px; }
+        .method-title { font-size: 1.2em; font-weight: 600; margin-bottom: 10px; }
+        .method-features { list-style: none; text-align: left; font-size: 0.85em; }
+        .method-features li { margin: 6px 0; padding: 6px 0; border-bottom: 1px solid rgba(0,0,0,0.1); }
+        .method-features li:last-child { border-bottom: none; }
+        .examples-section { grid-column: 1 / -1; background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%); border-radius: 20px; padding: 35px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); animation: slideInFromBottom 1s ease-out 0.6s both; border: 1px solid rgba(13, 148, 136, 0.1); }
+        .example-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-top: 25px; }
+        .example-card { padding: 25px; border-radius: 15px; text-align: center; transition: all 0.3s ease; cursor: pointer; border: 2px solid; }
+        .example-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.15); }
+        .two-class-card { background: linear-gradient(135deg, #fef2f2, #fecaca); border-color: #ef4444; color: #991b1b; }
+        .multi-class-card { background: linear-gradient(135deg, #f0f9ff, #bae6fd); border-color: #0ea5e9; color: #075985; }
+        .example-icon { font-size: 2.5em; margin-bottom: 12px; }
+        .example-title { font-size: 1.1em; font-weight: 600; margin-bottom: 8px; }
+        .example-desc { font-size: 0.85em; color: #475569; line-height: 1.5; }
+        .navigation { position: fixed; bottom: 30px; right: 30px; display: flex; gap: 15px; }
+        .nav-btn { padding: 15px 25px; background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9)); border: 2px solid rgba(13, 148, 136, 0.2); border-radius: 30px; color: #134e4a; text-decoration: none; transition: all 0.3s ease; backdrop-filter: blur(20px); font-weight: 600; }
+        .nav-btn:hover { background: linear-gradient(135deg, #0d9488, #14b8a6); color: white; transform: translateY(-3px); box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4); }
+        .slide-number { position: fixed; top: 30px; right: 30px; background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9)); padding: 12px 20px; border-radius: 25px; backdrop-filter: blur(20px); border: 1px solid rgba(13, 148, 136, 0.2); color: #134e4a; font-weight: 600; }
+        .course-info { position: fixed; top: 30px; left: 30px; background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9)); padding: 12px 20px; border-radius: 25px; backdrop-filter: blur(20px); border: 1px solid rgba(13, 148, 136, 0.2); color: #134e4a; font-weight: 600; }
+        @keyframes slideInFromTop { from { transform: translateY(-80px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes slideInFromLeft { from { transform: translateX(-60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideInFromRight { from { transform: translateX(60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideInFromBottom { from { transform: translateY(60px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @media (max-width: 768px) { .content-layout { grid-template-columns: 1fr; } .slide-title { font-size: 2.5em; } .example-grid { grid-template-columns: 1fr; } }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.3s ease; backdrop-filter: blur(5px); }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-container { background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%); border-radius: 25px; padding: 40px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; transform: scale(0.9) translateY(20px); transition: transform 0.3s ease; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3); border: 2px solid rgba(13, 148, 136, 0.2); }
+        .modal-overlay.active .modal-container { transform: scale(1) translateY(0); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid rgba(13, 148, 136, 0.1); }
+        .modal-title { font-size: 1.6em; color: #0d9488; font-weight: 600; }
+        .modal-close { background: none; border: none; font-size: 1.4em; color: #64748b; cursor: pointer; transition: all 0.3s ease; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .modal-close:hover { background: rgba(13, 148, 136, 0.1); color: #0d9488; transform: rotate(90deg); }
+        .modal-content { font-size: 1.05em; line-height: 1.7; color: #1e293b; }
+        .modal-highlight { background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%); padding: 18px; border-radius: 12px; margin: 15px 0; border-left: 4px solid #0d9488; }
+        .modal-formula { background: #1e293b; color: #5eead4; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; margin: 12px 0; }
+    </style>
+    <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="modal-overlay" id="modalOverlay"><div class="modal-container"><div class="modal-header"><h3 class="modal-title" id="modalTitle">Title</h3><button class="modal-close" id="modalClose">×</button></div><div class="modal-content" id="modalContent">Content</div></div></div></div>
+    <div class="course-info">CS5710 - Week 3</div>
+    <div class="slide-number">Slide 42 of 60</div>
+    <div class="slide-container">
+        <h1 class="slide-title">Binary vs Multi-class Classification</h1>
+        <div class="content-layout">
+            <div class="concept-section">
+                <h2 class="section-title">Binary Classification</h2>
+                <div class="definition-text"><strong>Binary Classification</strong> is the simplest form where we predict one of two possible outcomes. The model learns to distinguish between two classes, typically labeled as positive (1) or negative (0).</div>
+                <div class="formula-box"><div class="formula-main">y ∈ {0, 1}</div><div class="formula-detail">Two possible class labels</div></div>
+                <div class="where-section"><strong>Common Examples:</strong><br>• Spam or Not Spam<br>• Fraud or Legitimate<br>• Malignant or Benign<br>• Buy or Don't Buy</div>
+            </div>
+            <div class="comparison-section">
+                <h2 class="section-title">Multi-class Classification</h2>
+                <div class="definition-text"><strong>Multi-class Classification</strong> extends binary classification to handle more than two classes. The model assigns each input to one of K possible categories where K > 2.</div>
+                <div class="formula-box"><div class="formula-main">y ∈ {1, 2, 3, ..., K}</div><div class="formula-detail">K possible class labels (K > 2)</div></div>
+                <div class="where-section"><strong>Common Examples:</strong><br>• Digits: 0-9 (10 classes)<br>• Image categories (1000+ classes)<br>• Text sentiment (5 classes)<br>• Species identification</div>
+            </div>
+        </div>
+        <div class="examples-section">
+            <h2 class="section-title">Comparison: Binary vs Multi-class</h2>
+            <div class="example-grid">
+                <div class="example-card two-class-card" onclick="showModal('Binary Classification', binaryContent)"><div class="example-icon">2️⃣</div><div class="example-title">Binary Classification</div><div class="example-desc">Two classes: Yes/No, True/False, Positive/Negative</div></div>
+                <div class="example-card multi-class-card" onclick="showModal('Multi-class Classification', multiclassContent)"><div class="example-icon">🔢</div><div class="example-title">Multi-class Classification</div><div class="example-desc">3+ classes: Multiple categories to choose from</div></div>
+                <div class="example-card two-class-card" onclick="showModal('One-vs-All Strategy', ovrContent)"><div class="example-icon">🎯</div><div class="example-title">One-vs-All (OvA)</div><div class="example-desc">Convert multi-class to multiple binary problems</div></div>
+            </div>
+        </div>
+        <div class="pros-cons-section" style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 30px; grid-column: 1 / -1;">
+            <div class="concept-section" style="animation: slideInFromBottom 1s ease-out 0.9s both;"><h2 class="section-title" style="color: #10b981;">Binary Advantages</h2><ul class="method-features"><li onclick="showModal('Simplicity', simplContent)">✓ Simpler model</li><li onclick="showModal('Interpretability', interpContent)">✓ Easier interpretation</li><li onclick="showModal('Less Data', lessDataContent)">✓ Less data needed</li><li onclick="showModal('Fast Training', fastContent)">✓ Faster training</li></ul></div>
+            <div class="comparison-section" style="animation: slideInFromBottom 1s ease-out 0.9s both;"><h2 class="section-title" style="color: #0ea5e9;">Multi-class Advantages</h2><ul class="method-features"><li onclick="showModal('Natural Representation', naturalContent)">✓ More natural for real-world</li><li onclick="showModal('Joint Modeling', jointContent)">✓ Joint probability modeling</li><li onclick="showModal('Feature Learning', featureLearnContent)">✓ Learns class relationships</li><li onclick="showModal('Softmax Output', softmaxContent)">✓ Probabilities sum to 1</li></ul></div>
+        </div>
+    </div>
+    <div class="navigation"><a href="Week3_Slide41.html" class="nav-btn">← Previous</a><a href="Week3_Slide43.html" class="nav-btn">Next →</a></div>
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;"><strong>Prepared by Dr. Gorkem Kar</strong></div>
+    <script>
+        const binaryContent = `<p><strong>Binary Classification</strong> classifies samples into exactly two classes. This is the simplest form of classification.</p><div class="modal-highlight"><p><strong>Characteristics:</strong></p><ul><li>Two possible outputs: 0 or 1</li><li>Decision boundary separates the classes</li><li>Simple threshold-based decisions</li><li>Many algorithms naturally binary</li></ul></div><p><strong>Output:</strong> Probability p(y=1|x) - the probability of the positive class</p>`;
+        const multiclassContent = `<p><strong>Multi-class Classification</strong> handles K > 2 classes in a single problem.</p><div class="modal-highlight"><p><strong>Approaches:</strong></p><ul><li><strong>Native Multi-class:</strong> Decision Trees, Random Forests, Neural Networks</li><li><strong>One-vs-All:</strong> Train K binary classifiers</li><li><strong>One-vs-One:</strong> Train K(K-1)/2 binary classifiers</li></ul></div><p><strong>Challenge:</strong> Class separability, class imbalance, computational complexity</p>`;
+        const ovrContent = `<p><strong>One-vs-All (OvA)</strong> converts multi-class to binary by training one classifier per class.</p><div class="modal-highlight"><p><strong>Process:</strong></p><ol><li>For class k: positive = samples in class k</li><li>Negative = all other samples</li><li>Train K binary classifiers</li><li>At prediction: pick class with highest probability</li></ol></div><p><strong>Output:</strong> K probability values; select argmax</p><p><strong>Note:</strong> Can suffer from class imbalance</p>`;
+        const simplContent = `<p>Binary classification has simpler decision boundaries - just a single threshold.</p><div class="modal-highlight"><p><strong>Benefits:</strong></p><ul><li>Simpler optimization</li><li>Less hyperparameter tuning</li><li>Clear decision rationale</li></ul></div>`;
+        const interpContent = `<p>Binary models are easier to interpret and explain.</p><div class="modal-highlight"><p><strong>Interpretability:</strong></p><ul><li>Feature importance clear</li><li>Decision rules explicit</li><li>Useful for explanations</li></ul></div>`;
+        const lessDataContent = `<p>Binary classifiers need less data to achieve good performance.</p><div class="modal-highlight"><p><strong>Data Requirements:</strong></p><ul><li>Fewer parameters to estimate</li><li>Smaller sample complexity</li><li>Faster convergence</li></ul></div>`;
+        const fastContent = `<p>Binary classification is computationally faster.</p><div class="modal-highlight"><p><strong>Speed Benefits:</strong></p><ul><li>Simpler objective function</li><li>Faster convergence</li><li>Lower memory usage</li></ul></div>`;
+        const naturalContent = `<p>Many real-world problems are naturally multi-class.</p><div class="modal-highlight"><p><strong>Examples:</strong></p><ul><li>Image classification (1000 classes)</li><li>Language identification (100+ languages)</li><li>Handwritten digit recognition (10 classes)</li></ul></div>`;
+        const jointContent = `<p>Multi-class models can learn relationships between classes.</p><div class="modal-highlight"><p><strong>Benefits:</strong></p><ul><li>Learns class similarities</li><li>Better probability estimates</li><li>Captures hierarchical relationships</li></ul></div>`;
+        const featureLearnContent = `<p>Multi-class learning can discover discriminative features.</p><div class="modal-highlight"><p><strong>Feature Learning:</strong></p><ul><li>Learns what distinguishes each class</li><li>Can identify sub-classes</li><li>Discovers feature correlations</li></ul></div>`;
+        const softmaxContent = `<p>Softmax provides valid probability distributions.</p><div class="modal-formula">P(y=k|x) = exp(z_k) / Σexp(z_j)</div><p>All probabilities sum to 1</p>`;
+        class ModalSystem { constructor() { this.overlay = document.getElementById('modalOverlay'); this.title = document.getElementById('modalTitle'); this.content = document.getElementById('modalContent'); this.closeBtn = document.getElementById('modalClose'); this.closeBtn.addEventListener('click', () => this.close()); this.overlay.addEventListener('click', (e) => { if (e.target === this.overlay) this.close(); }); document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && this.overlay.classList.contains('active')) this.close(); }); } show(title, content) { this.title.textContent = title; this.content.innerHTML = content; this.overlay.classList.add('active'); document.body.style.overflow = 'hidden'; } close() { this.overlay.classList.remove('active'); document.body.style.overflow = ''; } }
+        const modal = new ModalSystem(); function showModal(title, content) { modal.show(title, content); }
+        document.addEventListener('keydown', function(e) { if (!document.getElementById('modalOverlay').classList.contains('active')) { if (e.key === 'ArrowLeft') window.location.href = 'Week3_Slide41.html'; else if (e.key === 'ArrowRight' || e.key === ' ') window.location.href = 'Week3_Slide43.html'; } });
+    </script>
+</body>
+</html>

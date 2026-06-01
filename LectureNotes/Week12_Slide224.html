@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Stratified K-Fold</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .concept-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .implementation-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .key-concept {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .fold-visualization {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .fold-row {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .fold-label {
+            width: 60px;
+            font-weight: 600;
+            color: #0d9488;
+        }
+
+        .data-segment {
+            flex: 1;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 5px;
+            font-size: 0.9em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .train-segment {
+            background: linear-gradient(135deg, #99f6e4 0%, #5eead4 100%);
+            color: #134e4a;
+        }
+
+        .test-segment {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: #78350f;
+        }
+
+        .data-segment:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .advantages-section {
+            background: linear-gradient(135deg, #f0fdfa 0%, #e6fffa 100%);
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 30px;
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+        }
+
+        .advantage-list {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .advantage-item {
+            background: white;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 12px;
+            border-left: 4px solid #14b8a6;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .advantage-item:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 25px rgba(20, 184, 166, 0.2);
+        }
+
+        .advantage-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .advantage-desc {
+            color: #64748b;
+            line-height: 1.6;
+        }
+
+        .code-example {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+            overflow-x: auto;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .code-example:hover {
+            box-shadow: 0 10px 30px rgba(30, 41, 59, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .floating-elements {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.8em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            color: #334155;
+            line-height: 1.8;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+            overflow-x: auto;
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    <div class="course-info">CS5710 - Machine Learning</div>
+    <div class="slide-number">Slide 224 of 240</div>
+
+    <div class="slide-container">
+        <h1 class="slide-title">Stratified K-Fold Cross-Validation</h1>
+
+        <div class="content-layout">
+            <div class="concept-section">
+                <h2 class="section-title">Understanding Stratified K-Fold</h2>
+                <div class="key-concept">
+                    Stratified K-Fold ensures each fold preserves the percentage of samples for each class, maintaining the same class distribution as the original dataset.
+                </div>
+
+                <div class="fold-visualization">
+                    <div class="fold-row">
+                        <div class="fold-label">Fold 1:</div>
+                        <div class="data-segment test-segment" onclick="showFoldDetail(1, 'test')">Test</div>
+                        <div class="data-segment train-segment" onclick="showFoldDetail(1, 'train')">Train</div>
+                        <div class="data-segment train-segment" onclick="showFoldDetail(1, 'train')">Train</div>
+                        <div class="data-segment train-segment" onclick="showFoldDetail(1, 'train')">Train</div>
+                        <div class="data-segment train-segment" onclick="showFoldDetail(1, 'train')">Train</div>
+                    </div>
+                    <div class="fold-row">
+                        <div class="fold-label">Fold 2:</div>
+                        <div class="data-segment train-segment" onclick="showFoldDetail(2, 'train')">Train</div>
+                        <div class="data-segment test-segment" onclick="showFoldDetail(2, 'test')">Test</div>
+                        <div class="data-segment train-segment" onclick="showFoldDetail(2, 'train')">Train</div>
+                        <div class="data-segment train-segment" onclick="showFoldDetail(2, 'train')">Train</div>
+                        <div class="data-segment train-segment" onclick="showFoldDetail(2, 'train')">Train</div>
+                    </div>
+                    <div class="fold-row">
+                        <div class="fold-label">Fold 3:</div>
+                        <div class="data-segment train-segment" onclick="showFoldDetail(3, 'train')">Train</div>
+                        <div class="data-segment train-segment" onclick="showFoldDetail(3, 'train')">Train</div>
+                        <div class="data-segment test-segment" onclick="showFoldDetail(3, 'test')">Test</div>
+                        <div class="data-segment train-segment" onclick="showFoldDetail(3, 'train')">Train</div>
+                        <div class="data-segment train-segment" onclick="showFoldDetail(3, 'train')">Train</div>
+                    </div>
+                    <div class="fold-row">
+                        <div class="fold-label">Fold 4:</div>
+                        <div class="data-segment train-segment" onclick="showFoldDetail(4, 'train')">Train</div>
+                        <div class="data-segment train-segment" onclick="showFoldDetail(4, 'train')">Train</div>
+                        <div class="data-segment train-segment" onclick="showFoldDetail(4, 'train')">Train</div>
+                        <div class="data-segment test-segment" onclick="showFoldDetail(4, 'test')">Test</div>
+                        <div class="data-segment train-segment" onclick="showFoldDetail(4, 'train')">Train</div>
+                    </div>
+                    <div class="fold-row">
+                        <div class="fold-label">Fold 5:</div>
+                        <div class="data-segment train-segment" onclick="showFoldDetail(5, 'train')">Train</div>
+                        <div class="data-segment train-segment" onclick="showFoldDetail(5, 'train')">Train</div>
+                        <div class="data-segment train-segment" onclick="showFoldDetail(5, 'train')">Train</div>
+                        <div class="data-segment train-segment" onclick="showFoldDetail(5, 'train')">Train</div>
+                        <div class="data-segment test-segment" onclick="showFoldDetail(5, 'test')">Test</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="implementation-section">
+                <h2 class="section-title">Implementation & Code</h2>
+                
+                <div class="code-example" onclick="showCodeDetail()">
+<pre>from sklearn.model_selection import StratifiedKFold
+from sklearn.metrics import accuracy_score
+import numpy as np
+
+# Initialize Stratified K-Fold
+skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+
+# Perform cross-validation
+scores = []
+for train_idx, test_idx in skf.split(X, y):
+    X_train, X_test = X[train_idx], X[test_idx]
+    y_train, y_test = y[train_idx], y[test_idx]
+    
+    # Train model
+    model.fit(X_train, y_train)
+    
+    # Evaluate
+    y_pred = model.predict(X_test)
+    scores.append(accuracy_score(y_test, y_pred))
+
+print(f"CV Score: {np.mean(scores):.3f} ± {np.std(scores):.3f}")</pre>
+                </div>
+
+                <div class="advantages-section">
+                    <h3 style="color: #0d9488; margin-bottom: 15px;">Key Advantages</h3>
+                    <ul class="advantage-list">
+                        <li class="advantage-item" onclick="showAdvantageDetail('balance')">
+                            <div class="advantage-title">✓ Class Balance Preservation</div>
+                            <div class="advantage-desc">Maintains original class distribution in each fold</div>
+                        </li>
+                        <li class="advantage-item" onclick="showAdvantageDetail('imbalanced')">
+                            <div class="advantage-title">✓ Ideal for Imbalanced Datasets</div>
+                            <div class="advantage-desc">Ensures minority classes are represented in all folds</div>
+                        </li>
+                        <li class="advantage-item" onclick="showAdvantageDetail('reliability')">
+                            <div class="advantage-title">✓ More Reliable Estimates</div>
+                            <div class="advantage-desc">Reduces variance in performance metrics</div>
+                        </li>
+                        <li class="advantage-item" onclick="showAdvantageDetail('consistency')">
+                            <div class="advantage-title">✓ Consistent Evaluation</div>
+                            <div class="advantage-desc">Each fold is representative of the whole dataset</div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week12_Slide223.html" class="nav-btn">← Previous</a>
+        <a href="Week12_Slide225.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Modal Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">
+                Modal content will appear here...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Fold detail modal
+        function showFoldDetail(foldNum, type) {
+            const content = type === 'test' ? 
+                `<div class="modal-highlight">
+                    <strong>Test Set for Fold ${foldNum}</strong>
+                </div>
+                <h4>Purpose of Test Fold:</h4>
+                <ul>
+                    <li><strong>Validation:</strong> This fold serves as the test set for evaluation</li>
+                    <li><strong>Size:</strong> Typically 20% of data (for 5-fold CV)</li>
+                    <li><strong>Class Distribution:</strong> Maintains same proportion of classes as original dataset</li>
+                </ul>
+                <h4>What Happens in This Fold:</h4>
+                <ol>
+                    <li>Model is trained on the other 4 folds</li>
+                    <li>Predictions are made on this fold</li>
+                    <li>Performance metrics are calculated</li>
+                    <li>Results contribute to overall CV score</li>
+                </ol>
+                <div class="modal-code">
+# Example class distribution in test fold
+# Original: 70% Class A, 30% Class B
+# Test Fold ${foldNum}: ~70% Class A, ~30% Class B
+test_classes = y[test_indices]
+print(f"Class distribution: {np.bincount(test_classes)}")
+                </div>` :
+                `<div class="modal-highlight">
+                    <strong>Training Set for Fold ${foldNum}</strong>
+                </div>
+                <h4>Training Data Characteristics:</h4>
+                <ul>
+                    <li><strong>Size:</strong> 80% of total data (for 5-fold CV)</li>
+                    <li><strong>Composition:</strong> All folds except the test fold</li>
+                    <li><strong>Class Balance:</strong> Preserves original class proportions</li>
+                </ul>
+                <h4>Training Process:</h4>
+                <ol>
+                    <li>Combine all non-test folds</li>
+                    <li>Train model on combined data</li>
+                    <li>Apply same preprocessing to all training data</li>
+                    <li>Use same hyperparameters across all folds</li>
+                </ol>
+                <div class="modal-code">
+# Training on fold ${foldNum}
+X_train = X[train_indices]
+y_train = y[train_indices]
+
+# Verify stratification
+for class_label in np.unique(y_train):
+    proportion = np.mean(y_train == class_label)
+    print(f"Class {class_label}: {proportion:.2%}")
+                </div>`;
+            
+            modal.show(`Fold ${foldNum} - ${type === 'test' ? 'Test' : 'Training'} Set`, content);
+        }
+
+        // Code detail modal
+        function showCodeDetail() {
+            modal.show('Complete Stratified K-Fold Implementation', `
+                <div class="modal-highlight">
+                    <strong>Full implementation with evaluation metrics and visualization</strong>
+                </div>
+                <h4>Complete Working Example:</h4>
+                <div class="modal-code">
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.model_selection import StratifiedKFold
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, precision_score, recall_score
+from sklearn.datasets import make_classification
+
+# Generate imbalanced dataset
+X, y = make_classification(n_samples=1000, n_features=20, 
+                          n_informative=15, n_redundant=5,
+                          n_classes=3, weights=[0.7, 0.2, 0.1],
+                          random_state=42)
+
+# Initialize model and cross-validator
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+
+# Store metrics for each fold
+accuracies = []
+precisions = []
+recalls = []
+fold_num = 1
+
+# Perform stratified cross-validation
+for train_idx, test_idx in skf.split(X, y):
+    # Split data
+    X_train, X_test = X[train_idx], X[test_idx]
+    y_train, y_test = y[train_idx], y[test_idx]
+    
+    # Verify stratification
+    print(f"\\nFold {fold_num}:")
+    print(f"  Train distribution: {np.bincount(y_train)}")
+    print(f"  Test distribution: {np.bincount(y_test)}")
+    
+    # Train model
+    model.fit(X_train, y_train)
+    
+    # Make predictions
+    y_pred = model.predict(X_test)
+    
+    # Calculate metrics
+    acc = accuracy_score(y_test, y_pred)
+    prec = precision_score(y_test, y_pred, average='weighted')
+    rec = recall_score(y_test, y_pred, average='weighted')
+    
+    accuracies.append(acc)
+    precisions.append(prec)
+    recalls.append(rec)
+    
+    print(f"  Accuracy: {acc:.3f}")
+    print(f"  Precision: {prec:.3f}")
+    print(f"  Recall: {rec:.3f}")
+    
+    fold_num += 1
+
+# Print summary statistics
+print("\\n" + "="*50)
+print("CROSS-VALIDATION RESULTS:")
+print("="*50)
+print(f"Accuracy:  {np.mean(accuracies):.3f} ± {np.std(accuracies):.3f}")
+print(f"Precision: {np.mean(precisions):.3f} ± {np.std(precisions):.3f}")
+print(f"Recall:    {np.mean(recalls):.3f} ± {np.std(recalls):.3f}")
+
+# Visualize results
+fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+
+metrics = [accuracies, precisions, recalls]
+names = ['Accuracy', 'Precision', 'Recall']
+colors = ['#0d9488', '#14b8a6', '#5eead4']
+
+for ax, metric, name, color in zip(axes, metrics, names, colors):
+    ax.bar(range(1, 6), metric, color=color, alpha=0.7)
+    ax.axhline(y=np.mean(metric), color='red', linestyle='--', 
+               label=f'Mean: {np.mean(metric):.3f}')
+    ax.set_xlabel('Fold Number')
+    ax.set_ylabel(name)
+    ax.set_title(f'{name} per Fold')
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.show()
+                </div>
+                <h4>Key Implementation Notes:</h4>
+                <ul>
+                    <li><strong>Random State:</strong> Set for reproducibility</li>
+                    <li><strong>Shuffle:</strong> Randomize data before splitting</li>
+                    <li><strong>Stratification:</strong> Automatically maintains class proportions</li>
+                    <li><strong>Metrics:</strong> Calculate multiple metrics for comprehensive evaluation</li>
+                </ul>
+            `);
+        }
+
+        // Advantage detail modal
+        function showAdvantageDetail(type) {
+            const advantages = {
+                'balance': {
+                    title: 'Class Balance Preservation',
+                    content: `
+                        <div class="modal-highlight">
+                            <strong>Maintaining original class distribution is crucial for reliable model evaluation</strong>
+                        </div>
+                        <h4>How It Works:</h4>
+                        <p>Stratified K-Fold ensures that each fold has approximately the same percentage of samples of each target class as the complete dataset.</p>
+                        
+                        <h4>Example Scenario:</h4>
+                        <div class="modal-code">
+# Original dataset distribution
+Total samples: 1000
+Class A: 700 samples (70%)
+Class B: 200 samples (20%)
+Class C: 100 samples (10%)
+
+# Each fold maintains these proportions
+Fold 1: 140 Class A, 40 Class B, 20 Class C
+Fold 2: 140 Class A, 40 Class B, 20 Class C
+Fold 3: 140 Class A, 40 Class B, 20 Class C
+Fold 4: 140 Class A, 40 Class B, 20 Class C
+Fold 5: 140 Class A, 40 Class B, 20 Class C
+                        </div>
+                        
+                        <h4>Benefits:</h4>
+                        <ul>
+                            <li>Prevents bias in model evaluation</li>
+                            <li>Ensures each fold is representative</li>
+                            <li>Reduces variance in performance metrics</li>
+                            <li>More reliable for small datasets</li>
+                        </ul>
+                    `
+                },
+                'imbalanced': {
+                    title: 'Handling Imbalanced Datasets',
+                    content: `
+                        <div class="modal-highlight">
+                            <strong>Essential for datasets where some classes are rare</strong>
+                        </div>
+                        <h4>The Problem with Regular K-Fold:</h4>
+                        <p>In imbalanced datasets, regular K-Fold might create folds that:</p>
+                        <ul>
+                            <li>Don't contain minority class samples</li>
+                            <li>Have vastly different class distributions</li>
+                            <li>Lead to unreliable performance estimates</li>
+                        </ul>
+                        
+                        <h4>Stratified K-Fold Solution:</h4>
+                        <div class="modal-code">
+# Highly imbalanced dataset
+# Class distribution: [950, 30, 20]
+
+# Regular K-Fold might produce:
+Fold 1: [200, 0, 0]    # No minority classes!
+Fold 2: [190, 10, 0]   # Missing Class C
+Fold 3: [180, 15, 5]   # Unbalanced
+Fold 4: [190, 5, 5]    # Different distribution
+Fold 5: [190, 0, 10]   # Missing Class B
+
+# Stratified K-Fold guarantees:
+Fold 1: [190, 6, 4]    # Proportional
+Fold 2: [190, 6, 4]    # Proportional
+Fold 3: [190, 6, 4]    # Proportional
+Fold 4: [190, 6, 4]    # Proportional
+Fold 5: [190, 6, 4]    # Proportional
+                        </div>
+                        
+                        <h4>Real-World Applications:</h4>
+                        <ul>
+                            <li><strong>Fraud Detection:</strong> Fraudulent transactions are rare</li>
+                            <li><strong>Disease Diagnosis:</strong> Rare diseases have few positive cases</li>
+                            <li><strong>Customer Churn:</strong> Most customers don't churn</li>
+                            <li><strong>Manufacturing Defects:</strong> Defects are typically rare</li>
+                        </ul>
+                    `
+                },
+                'reliability': {
+                    title: 'More Reliable Performance Estimates',
+                    content: `
+                        <div class="modal-highlight">
+                            <strong>Reduces variance in cross-validation scores</strong>
+                        </div>
+                        <h4>Statistical Reliability:</h4>
+                        <p>Stratified K-Fold provides more stable and reliable performance estimates by ensuring consistent evaluation conditions across all folds.</p>
+                        
+                        <h4>Variance Reduction Example:</h4>
+                        <div class="modal-code">
+# Comparison of CV score variance
+import numpy as np
+
+# Regular K-Fold scores (high variance)
+regular_scores = [0.85, 0.92, 0.78, 0.95, 0.80]
+regular_mean = np.mean(regular_scores)  # 0.86
+regular_std = np.std(regular_scores)    # 0.067 (high!)
+
+# Stratified K-Fold scores (low variance)
+stratified_scores = [0.87, 0.88, 0.86, 0.87, 0.89]
+stratified_mean = np.mean(stratified_scores)  # 0.874
+stratified_std = np.std(stratified_scores)    # 0.011 (low!)
+
+# Confidence intervals (95%)
+regular_ci = 1.96 * regular_std / np.sqrt(5)     # ±0.059
+stratified_ci = 1.96 * stratified_std / np.sqrt(5)  # ±0.010
+
+print(f"Regular K-Fold: {regular_mean:.3f} ± {regular_ci:.3f}")
+print(f"Stratified K-Fold: {stratified_mean:.3f} ± {stratified_ci:.3f}")
+                        </div>
+                        
+                        <h4>Why Lower Variance Matters:</h4>
+                        <ul>
+                            <li><strong>Model Selection:</strong> More confident in choosing best model</li>
+                            <li><strong>Hyperparameter Tuning:</strong> Reliable comparison of settings</li>
+                            <li><strong>Performance Reporting:</strong> Tighter confidence intervals</li>
+                            <li><strong>Production Readiness:</strong> Better estimate of real-world performance</li>
+                        </ul>
+                    `
+                },
+                'consistency': {
+                    title: 'Consistent Evaluation Across Folds',
+                    content: `
+                        <div class="modal-highlight">
+                            <strong>Each fold is a miniature representation of the entire dataset</strong>
+                        </div>
+                        <h4>Ensuring Fairness in Evaluation:</h4>
+                        <p>Every model trained during cross-validation faces the same challenge - maintaining performance across all classes.</p>
+                        
+                        <h4>Consistency Benefits:</h4>
+                        <div class="modal-code">
+# Each fold presents same learning challenge
+for fold_num, (train_idx, test_idx) in enumerate(skf.split(X, y), 1):
+    train_dist = np.bincount(y[train_idx]) / len(train_idx)
+    test_dist = np.bincount(y[test_idx]) / len(test_idx)
+    
+    print(f"Fold {fold_num}:")
+    print(f"  Train distribution: {train_dist}")
+    print(f"  Test distribution: {test_dist}")
+    print(f"  Difference: {np.abs(train_dist - test_dist).max():.3f}")
+    
+# Output shows minimal difference between distributions
+# Maximum difference < 0.01 for all folds
+                        </div>
+                        
+                        <h4>Impact on Different Algorithms:</h4>
+                        <ul>
+                            <li><strong>Decision Trees:</strong> Consistent split decisions</li>
+                            <li><strong>Neural Networks:</strong> Stable gradient updates</li>
+                            <li><strong>SVM:</strong> Reliable margin calculations</li>
+                            <li><strong>Ensemble Methods:</strong> Balanced base learner training</li>
+                        </ul>
+                        
+                        <h4>Best Practices:</h4>
+                        <ul>
+                            <li>Always use stratified for classification problems</li>
+                            <li>Essential for multi-class problems</li>
+                            <li>Critical for small datasets (< 1000 samples)</li>
+                            <li>Recommended even for balanced datasets</li>
+                        </ul>
+                    `
+                }
+            };
+            
+            const info = advantages[type];
+            modal.show(info.title, info.content);
+        }
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 30; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week12_Slide223.html';
+            } else if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week12_Slide225.html';
+            }
+        });
+
+        // Initialize on load
+        window.addEventListener('load', createFloatingElements);
+    </script>
+</body>
+</html>

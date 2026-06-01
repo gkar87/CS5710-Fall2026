@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Word Embeddings (Word2Vec, GloVe)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .word2vec-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .glove-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .concept-text {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .embedding-demo {
+            margin: 25px 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 15px;
+            border: 2px solid #14b8a6;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .embedding-demo:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .demo-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .demo-content {
+            font-size: 0.9em;
+            color: #475569;
+            line-height: 1.5;
+            font-family: 'Courier New', monospace;
+        }
+
+        .algorithm-steps {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .step-item {
+            padding: 15px;
+            margin: 10px 0;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .step-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(13, 148, 136, 0.15);
+        }
+
+        .step-number {
+            font-weight: 600;
+            color: #0d9488;
+            margin-right: 10px;
+        }
+
+        .comparison-banner {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .comparison-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+        }
+
+        .comparison-card {
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .word2vec-card {
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            border: 2px solid #3b82f6;
+        }
+
+        .glove-card {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border: 2px solid #f59e0b;
+        }
+
+        .fasttext-card {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border: 2px solid #14b8a6;
+        }
+
+        .comparison-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .card-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #134e4a;
+        }
+
+        .card-features {
+            font-size: 0.9em;
+            color: #475569;
+            line-height: 1.4;
+            text-align: left;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .comparison-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    
+    <div class="course-info">CS5710 - Week 10</div>
+    <div class="slide-number">Slide 192 of 200</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Word Embeddings: Word2Vec & GloVe</h1>
+        
+        <div class="content-layout">
+            <div class="word2vec-section">
+                <h2 class="section-title">🧠 Word2Vec</h2>
+                
+                <div class="concept-text">
+                    <strong>Word2Vec</strong> learns dense vector representations by predicting words from context (CBOW) or context from words (Skip-gram).
+                </div>
+                
+                <div class="embedding-demo">
+                    <div class="demo-title">📊 Skip-gram Example</div>
+                    <div class="demo-content">
+Target: "learning"
+Context: ["machine", "is", "fun", "and"]
+→ Predict context words from target
+                    </div>
+                </div>
+
+                <div class="embedding-demo">
+                    <div class="demo-title">🎯 CBOW Example</div>
+                    <div class="demo-content">
+Context: ["machine", "is", "fun", "and"]  
+Target: "learning"
+→ Predict target from context words
+                    </div>
+                </div>
+
+                <ul class="algorithm-steps">
+                    <li class="step-item">
+                        <span class="step-number">1.</span>
+                        Initialize random word vectors
+                    </li>
+                    <li class="step-item">
+                        <span class="step-number">2.</span>
+                        Slide window over text corpus
+                    </li>
+                    <li class="step-item">
+                        <span class="step-number">3.</span>
+                        Train neural network to predict
+                    </li>
+                    <li class="step-item">
+                        <span class="step-number">4.</span>
+                        Extract learned word vectors
+                    </li>
+                </ul>
+            </div>
+
+            <div class="glove-section">
+                <h2 class="section-title">🌐 GloVe</h2>
+                
+                <div class="concept-text">
+                    <strong>GloVe</strong> combines global matrix factorization with local context windows to capture both global and local word statistics.
+                </div>
+
+                <div class="embedding-demo">
+                    <div class="demo-title">📈 Co-occurrence Matrix</div>
+                    <div class="demo-content">
+Count how often words appear together:
+X[i,j] = frequency of word i in context of j
+                    </div>
+                </div>
+
+                <div class="embedding-demo">
+                    <div class="demo-title">🔢 Objective Function</div>
+                    <div class="demo-content">
+Minimize:
+Σ f(X[i,j]) * (w[i]ᵀw[j] + b[i] + b[j] - log(X[i,j]))²
+                    </div>
+                </div>
+
+                <ul class="algorithm-steps">
+                    <li class="step-item">
+                        <span class="step-number">1.</span>
+                        Build word co-occurrence matrix
+                    </li>
+                    <li class="step-item">
+                        <span class="step-number">2.</span>
+                        Apply weighting function f(x)
+                    </li>
+                    <li class="step-item">
+                        <span class="step-number">3.</span>
+                        Optimize objective function
+                    </li>
+                    <li class="step-item">
+                        <span class="step-number">4.</span>
+                        Combine word + context vectors
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="comparison-banner">
+            <h2 class="comparison-title">📊 Embedding Methods Comparison</h2>
+            
+            <div class="comparison-grid">
+                <div class="comparison-card word2vec-card">
+                    <div class="card-icon">🧠</div>
+                    <div class="card-title">Word2Vec</div>
+                    <div class="card-features">
+                        • <strong>Method:</strong> Neural network prediction<br>
+                        • <strong>Training:</strong> Local context windows<br>
+                        • <strong>Speed:</strong> Fast training<br>
+                        • <strong>Memory:</strong> Efficient<br>
+                        • <strong>Best for:</strong> Large corpora, analogies
+                    </div>
+                </div>
+                
+                <div class="comparison-card glove-card">
+                    <div class="card-icon">🌐</div>
+                    <div class="card-title">GloVe</div>
+                    <div class="card-features">
+                        • <strong>Method:</strong> Matrix factorization<br>
+                        • <strong>Training:</strong> Global co-occurrence<br>
+                        • <strong>Speed:</strong> Medium training<br>
+                        • <strong>Memory:</strong> Higher usage<br>
+                        • <strong>Best for:</strong> Balanced global/local info
+                    </div>
+                </div>
+                
+                <div class="comparison-card fasttext-card">
+                    <div class="card-icon">⚡</div>
+                    <div class="card-title">FastText</div>
+                    <div class="card-features">
+                        • <strong>Method:</strong> Subword information<br>
+                        • <strong>Training:</strong> Character n-grams<br>
+                        • <strong>Speed:</strong> Very fast<br>
+                        • <strong>Memory:</strong> Compact<br>
+                        • <strong>Best for:</strong> OOV words, morphology
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week10_Slide191.html" class="nav-btn">← Previous</a>
+        <a href="Week10_Slide193.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive embedding demos with modal
+        document.querySelectorAll('.embedding-demo').forEach(demo => {
+            demo.addEventListener('click', function() {
+                const title = this.querySelector('.demo-title').textContent;
+                
+                const demoDetails = {
+                    '📊 Skip-gram Example': {
+                        explanation: 'Skip-gram predicts context words given a target word. It works well for infrequent words and large datasets.',
+                        architecture: `Input Layer: One-hot vector of target word
+Hidden Layer: Dense embedding (e.g., 300 dimensions)
+Output Layer: Softmax over vocabulary for each context position
+
+Training: Maximize log probability of context words`,
+                        example: `Sentence: "Machine learning is fun and rewarding"
+Window size: 2
+
+Target: "learning"
+Context windows:
+["Machine", "learning", "is"] → predict "Machine", "is"
+["learning", "is", "fun"] → predict "is", "fun"
+
+Neural Network Training:
+Input: one-hot("learning") → [0,0,1,0,0,0]
+Hidden: W₁ × input → embedding vector
+Output: W₂ × hidden → context probabilities
+Loss: -log P("Machine"|"learning") - log P("is"|"learning")`,
+                        advantages: 'Better for rare words, captures analogies well, efficient for large vocabularies with negative sampling'
+                    },
+                    '🎯 CBOW Example': {
+                        explanation: 'CBOW predicts target word from context words. It works well for frequent words and small datasets.',
+                        architecture: `Input Layer: Average of context word one-hot vectors
+Hidden Layer: Dense embedding (e.g., 300 dimensions)  
+Output Layer: Softmax over vocabulary for target word
+
+Training: Maximize log probability of target word`,
+                        example: `Sentence: "Machine learning is fun and rewarding"
+Window size: 2
+
+Context: ["Machine", "is", "fun", "and"]
+Target: "learning"
+
+Neural Network Training:
+Input: avg(one-hot("Machine"), one-hot("is"), one-hot("fun"), one-hot("and"))
+Hidden: W₁ × avg_input → embedding vector
+Output: W₂ × hidden → target word probabilities
+Loss: -log P("learning"|context)
+
+Context averaging:
+[1,0,0,0,0,0] + [0,0,1,0,0,0] + [0,0,0,1,0,0] + [0,0,0,0,1,0] / 4`,
+                        advantages: 'Faster training, better for frequent words, more stable gradients, good for smaller datasets'
+                    },
+                    '📈 Co-occurrence Matrix': {
+                        explanation: 'GloVe builds a global word co-occurrence matrix capturing how often words appear together across the entire corpus.',
+                        architecture: `Matrix Construction:
+X[i,j] = number of times word j appears in context of word i
+Context: fixed window around target word
+Symmetric: X[i,j] = X[j,i] for undirected contexts`,
+                        example: `Corpus: "I like machine learning. Machine learning is fun."
+
+Co-occurrence matrix (window=1):
+        I  like machine learning is  fun
+I       0    1      0       0     0   0
+like    1    0      1       0     0   0  
+machine 0    1      0       2     0   0
+learning 0   0      2       0     1   1
+is      0    0      0       1     0   1
+fun     0    0      0       1     1   0
+
+X["machine","learning"] = 2 (appears together twice)
+X["learning","is"] = 1 (appears together once)`,
+                        advantages: 'Captures global statistics, incorporates all corpus information, mathematically principled approach'
+                    },
+                    '🔢 Objective Function': {
+                        explanation: 'GloVe minimizes a weighted least squares objective that balances frequent and rare co-occurrences.',
+                        architecture: `Cost Function:
+J = Σᵢⱼ f(Xᵢⱼ)(wᵢᵀw̃ⱼ + bᵢ + b̃ⱼ - log Xᵢⱼ)²
+
+Where:
+- f(x): weighting function 
+- wᵢ, w̃ⱼ: word vectors
+- bᵢ, b̃ⱼ: bias terms`,
+                        example: `Weighting function f(x):
+f(x) = (x/x_max)^α  if x < x_max
+f(x) = 1            if x ≥ x_max
+
+Typical values: x_max=100, α=0.75
+
+Example calculation:
+If X["king","queen"] = 50:
+f(50) = (50/100)^0.75 = 0.59
+
+This reduces influence of very frequent pairs while not ignoring rare pairs entirely.
+
+The model learns that:
+w_king^T × w_queen + b_king + b_queen ≈ log(50) = 3.91`,
+                        advantages: 'Handles frequency imbalance, prevents overfitting to common pairs, computationally efficient'
+                    }
+                };
+                
+                const details = demoDetails[title];
+                if (details) {
+                    modal.show(title, `
+                        <div class="modal-highlight">
+                            <strong>Technical Overview</strong>
+                        </div>
+                        <p>${details.explanation}</p>
+                        
+                        <div class="modal-highlight">
+                            <strong>Architecture:</strong><br><br>
+                            ${details.architecture.replace(/\n/g, '<br>')}
+                        </div>
+                        
+                        <div class="modal-code">
+                            <strong>Detailed Example:</strong><br><br>
+                            ${details.example.replace(/\n/g, '<br>')}
+                        </div>
+                        
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                            <strong>💡 Key Advantages:</strong><br>
+                            ${details.advantages}
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Interactive comparison cards with modal
+        document.querySelectorAll('.comparison-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('.card-title').textContent;
+                
+                const comparisonDetails = {
+                    'Word2Vec': {
+                        description: 'Neural network-based approach that learns word representations through prediction tasks.',
+                        technical: `Two architectures:
+• Skip-gram: Predict context from target word
+• CBOW: Predict target from context words
+
+Key innovations:
+• Hierarchical softmax for efficiency
+• Negative sampling to avoid computing full softmax
+• Subsampling frequent words
+
+Mathematical foundation:
+Skip-gram objective: maximize Σ log P(wₒ|wᵢ)
+CBOW objective: maximize Σ log P(wᵢ|context)`,
+                        performance: `Training time: Fast (hours on large corpus)
+Memory usage: Low during training
+Vector quality: Excellent for analogies
+Typical dimensions: 100-300
+OOV handling: Cannot handle unknown words
+
+Benchmark results:
+• Word similarity: 0.65 Spearman correlation
+• Analogy tasks: 60%+ accuracy on Google dataset
+• Works well with 100M+ word corpora`,
+                        applications: 'Text classification, named entity recognition, machine translation, document similarity, recommendation systems'
+                    },
+                    'GloVe': {
+                        description: 'Global Vectors for Word Representation combines global matrix factorization with local context methods.',
+                        technical: `Algorithm steps:
+1. Construct global co-occurrence matrix X
+2. Define weighting function f(x) = (x/xₘₐₓ)^α
+3. Minimize weighted least squares objective
+4. Combine target and context vectors
+
+Mathematical foundation:
+J = Σᵢⱼ f(Xᵢⱼ)(wᵢᵀw̃ⱼ + bᵢ + b̃ⱼ - log Xᵢⱼ)²
+
+Key insight: Ratios of co-occurrence probabilities encode meaning`,
+                        performance: `Training time: Medium (matrix construction + optimization)
+Memory usage: High (stores co-occurrence matrix)
+Vector quality: Balanced global/local information
+Typical dimensions: 50-300
+OOV handling: Cannot handle unknown words
+
+Benchmark results:
+• Word similarity: 0.67 Spearman correlation
+• Analogy tasks: 65%+ accuracy on Google dataset
+• Better performance on word similarity tasks`,
+                        applications: 'Document classification, information retrieval, semantic similarity, text mining, knowledge graphs'
+                    },
+                    'FastText': {
+                        description: 'Extension of Word2Vec that incorporates subword information using character n-grams.',
+                        technical: `Key innovations:
+• Represents words as bags of character n-grams
+• Each word vector = sum of n-gram vectors
+• Can generate vectors for out-of-vocabulary words
+• Captures morphological information
+
+N-gram example:
+"learning" with n=3-6:
+<le, lea, ear, arn, rni, nin, ing, ng>
+<lea, lear, earn, arni, rnin, ning>
+... plus full word "learning"`,
+                        performance: `Training time: Very fast (optimized implementation)
+Memory usage: Low (compressed representations)
+Vector quality: Good + handles morphology
+Typical dimensions: 100-300
+OOV handling: Excellent (generates embeddings)
+
+Benchmark results:
+• Word similarity: 0.63 Spearman correlation
+• Analogy tasks: 55%+ accuracy (lower due to subwords)
+• Superior for morphologically rich languages
+• 10x faster training than Word2Vec`,
+                        applications: 'Multilingual NLP, morphologically rich languages, social media text, medical text, real-time applications'
+                    }
+                };
+                
+                const details = comparisonDetails[title];
+                if (details) {
+                    modal.show(`${title} Deep Dive`, `
+                        <div class="modal-highlight">
+                            <strong>Overview</strong>
+                        </div>
+                        <p>${details.description}</p>
+                        
+                        <div class="modal-code">
+                            <strong>Technical Details:</strong><br><br>
+                            ${details.technical.replace(/\n/g, '<br>')}
+                        </div>
+                        
+                        <div class="modal-highlight">
+                            <strong>Performance & Benchmarks:</strong><br><br>
+                            ${details.performance.replace(/\n/g, '<br>')}
+                        </div>
+                        
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                            <strong>🚀 Applications:</strong><br>
+                            ${details.applications}
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Interactive algorithm steps with modal
+        document.querySelectorAll('.step-item').forEach(step => {
+            step.addEventListener('click', function() {
+                const stepText = this.textContent.trim();
+                const stepNumber = this.querySelector('.step-number').textContent;
+                const stepContent = stepText.replace(stepNumber, '').trim();
+                
+                // Determine which section this step belongs to
+                const isWord2Vec = this.closest('.word2vec-section') !== null;
+                
+                const stepDetails = isWord2Vec ? {
+                    '1.': {
+                        title: 'Initialize Random Word Vectors',
+                        content: `Each word in vocabulary gets a random vector:
+
+Vocabulary size: V (e.g., 50,000 words)
+Embedding dimension: d (e.g., 300)
+Weight matrices:
+- W_in: V × d (input embeddings)
+- W_out: d × V (output embeddings)
+
+Initialization:
+W ~ Uniform(-0.5/d, 0.5/d) or Gaussian(0, 0.1)
+
+Example:
+"king" → [0.1, -0.3, 0.7, ..., 0.2]  (300 dimensions)
+"queen" → [-0.2, 0.4, -0.1, ..., 0.8]
+"man" → [0.5, 0.2, -0.4, ..., -0.1]`
+                    },
+                    '2.': {
+                        title: 'Slide Window Over Text Corpus',
+                        content: `Move a fixed-size window through text:
+
+Window size: typically 2-10 words each side
+Skip rare words or subsample frequent ones
+
+Example with window=2:
+Text: "Machine learning is fun and rewarding"
+
+Windows:
+[-, -, Machine, learning, is] → target: Machine
+[-, Machine, learning, is, fun] → target: learning  
+[Machine, learning, is, fun, and] → target: is
+[learning, is, fun, and, rewarding] → target: fun
+
+For each window, extract (target, context) pairs`
+                    },
+                    '3.': {
+                        title: 'Train Neural Network to Predict',
+                        content: `Skip-gram: predict context from target
+CBOW: predict target from context
+
+Training process:
+1. Convert words to one-hot vectors
+2. Forward pass through network
+3. Compute prediction probabilities  
+4. Calculate loss (negative log-likelihood)
+5. Backpropagate gradients
+6. Update word vectors
+
+Optimizations:
+- Negative sampling: only update a few negative examples
+- Hierarchical softmax: organize vocabulary in binary tree
+- Learning rate decay: start high, decrease over time`
+                    },
+                    '4.': {
+                        title: 'Extract Learned Word Vectors',
+                        content: `After training, extract final embeddings:
+
+Options:
+1. Use input embedding matrix W_in
+2. Use output embedding matrix W_out  
+3. Average: (W_in + W_out) / 2
+
+Quality check:
+- Similar words have similar vectors
+- Vector arithmetic works: king - man + woman ≈ queen
+- Cosine similarity captures semantic relationships
+
+Post-processing:
+- Normalize vectors to unit length
+- Filter by frequency thresholds
+- Save in standard formats (word2vec, GloVe)`
+                    }
+                } : {
+                    '1.': {
+                        title: 'Build Word Co-occurrence Matrix',
+                        content: `Count word co-occurrences across entire corpus:
+
+Matrix X where X[i,j] = frequency of word j in context of word i
+
+Algorithm:
+1. For each word w in vocabulary
+2. For each occurrence of w in corpus
+3. Examine context window around w
+4. Increment X[w, context_word] for each context word
+5. Apply distance weighting (closer words weighted more)
+
+Memory considerations:
+- Matrix is sparse (most entries are 0)
+- Use efficient sparse matrix representations
+- Store only non-zero entries`
+                    },
+                    '2.': {
+                        title: 'Apply Weighting Function f(x)',
+                        content: `Weight function balances frequent and rare co-occurrences:
+
+f(x) = (x/x_max)^α if x < x_max
+f(x) = 1 if x ≥ x_max
+
+Standard parameters:
+- x_max = 100 (cutoff for maximum weight)
+- α = 0.75 (controls rate of weighting)
+
+Effect:
+- Very frequent pairs (like "the", "of") get less weight
+- Moderately frequent pairs get full weight  
+- Rare pairs get some weight (not ignored)
+- Zero co-occurrences are excluded entirely`
+                    },
+                    '3.': {
+                        title: 'Optimize Objective Function',
+                        content: `Minimize weighted least squares cost:
+
+J = Σᵢⱼ f(Xᵢⱼ)(wᵢᵀw̃ⱼ + bᵢ + b̃ⱼ - log Xᵢⱼ)²
+
+Optimization details:
+- Use AdaGrad optimizer with adaptive learning rates
+- Initialize vectors randomly, biases to zero  
+- Typical learning rate: 0.05
+- Train for 25-100 iterations
+- Convergence when cost stops decreasing
+
+Gradients:
+∂J/∂wᵢ = 2 Σⱼ f(Xᵢⱼ)(wᵢᵀw̃ⱼ + bᵢ + b̃ⱼ - log Xᵢⱼ)w̃ⱼ`
+                    },
+                    '4.': {
+                        title: 'Combine Word + Context Vectors',
+                        content: `GloVe learns two sets of vectors per word:
+
+Word vectors: W (main embeddings)
+Context vectors: W̃ (auxiliary embeddings)
+
+Combination strategies:
+1. Sum: final_vector = w + w̃
+2. Average: final_vector = (w + w̃) / 2  
+3. Use only word vectors: final_vector = w
+
+Empirically, sum or average works best.
+
+Final processing:
+- Apply PCA to reduce dimensions if needed
+- Normalize vectors for cosine similarity
+- Evaluate on word similarity benchmarks
+- Save embeddings for downstream tasks`
+                    }
+                };
+                
+                const details = stepDetails[stepNumber];
+                if (details) {
+                    modal.show(`Step ${stepNumber}: ${details.title}`, `
+                        <div class="modal-highlight">
+                            <strong>${stepContent}</strong>
+                        </div>
+                        <div style="line-height: 1.8;">
+                            ${details.content.replace(/\n/g, '<br>')}
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week10_Slide193.html';
+            } else if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week10_Slide191.html';
+            }
+        });
+
+    </script>
+</body>
+</html>

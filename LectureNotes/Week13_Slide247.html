@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Federated Learning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .overview-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .architecture-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .concept-box {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+            font-size: 1.1em;
+            line-height: 1.8;
+        }
+
+        .feature-item {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid #14b8a6;
+        }
+
+        .feature-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .feature-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .feature-desc {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .process-flow {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .flow-steps {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .flow-step {
+            text-align: center;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1, #99f6e4);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .flow-step:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .step-number {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #0d9488;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .step-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+
+        .step-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 10px;
+        }
+
+        .step-desc {
+            font-size: 0.9em;
+            color: #475569;
+            line-height: 1.4;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: float 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .flow-steps { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    
+    <div class="course-info">CS5710 - Week 13</div>
+    <div class="slide-number">Slide 247 of 260</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Federated Learning</h1>
+        
+        <div class="content-layout">
+            <div class="overview-section">
+                <h2 class="section-title">What is Federated Learning?</h2>
+                
+                <div class="concept-box">
+                    <strong>Federated Learning</strong> is a machine learning technique that trains algorithms across decentralized edge devices or servers holding local data samples, without exchanging them.
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-title">🔐 Privacy-Preserving</div>
+                    <div class="feature-desc">Data never leaves the source device, ensuring user privacy</div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-title">🌐 Distributed Training</div>
+                    <div class="feature-desc">Model training happens across multiple devices simultaneously</div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-title">📱 Edge Computing</div>
+                    <div class="feature-desc">Leverages computational power of edge devices</div>
+                </div>
+            </div>
+
+            <div class="architecture-section">
+                <h2 class="section-title">Key Components</h2>
+                
+                <div class="feature-item">
+                    <div class="feature-title">🖥️ Central Server</div>
+                    <div class="feature-desc">Coordinates training and aggregates model updates</div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-title">📲 Client Devices</div>
+                    <div class="feature-desc">Phones, tablets, IoT devices that train on local data</div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-title">🔄 Model Updates</div>
+                    <div class="feature-desc">Only model parameters are shared, not raw data</div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-title">🔀 Aggregation Algorithm</div>
+                    <div class="feature-desc">Combines updates from multiple clients (e.g., FedAvg)</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="process-flow">
+            <h2 class="section-title">Federated Learning Process</h2>
+            
+            <div class="flow-steps">
+                <div class="flow-step">
+                    <div class="step-number">1</div>
+                    <div class="step-icon">📤</div>
+                    <div class="step-title">Model Distribution</div>
+                    <div class="step-desc">Server sends current model to selected clients</div>
+                </div>
+                
+                <div class="flow-step">
+                    <div class="step-number">2</div>
+                    <div class="step-icon">🏋️</div>
+                    <div class="step-title">Local Training</div>
+                    <div class="step-desc">Clients train model on their local data</div>
+                </div>
+                
+                <div class="flow-step">
+                    <div class="step-number">3</div>
+                    <div class="step-icon">📊</div>
+                    <div class="step-title">Update Sharing</div>
+                    <div class="step-desc">Clients send model updates back to server</div>
+                </div>
+                
+                <div class="flow-step">
+                    <div class="step-number">4</div>
+                    <div class="step-icon">🔗</div>
+                    <div class="step-title">Aggregation</div>
+                    <div class="step-desc">Server combines updates to improve global model</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week13_Slide246.html" class="nav-btn">← Previous</a>
+        <a href="Week13_Slide248.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive feature items with modal
+        document.querySelectorAll('.feature-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const title = this.querySelector('.feature-title').textContent;
+                const desc = this.querySelector('.feature-desc').textContent;
+                
+                const details = {
+                    '🔐 Privacy-Preserving': {
+                        detail: 'Federated Learning keeps sensitive data on the device where it was generated. Only model updates (gradients and weights) are shared with the central server, never the raw data itself.',
+                        example: `// Traditional ML: Data sent to server
+// Federated Learning: Only updates sent
+client_update = {
+    'gradients': computed_gradients,
+    'num_samples': local_data_size,
+    'client_id': anonymous_id
+}`,
+                        benefits: 'Complies with GDPR and other privacy regulations, reduces risk of data breaches, enables learning from sensitive data (health, financial)',
+                        challenges: 'Communication overhead, heterogeneous data distribution, client dropout'
+                    },
+                    '🌐 Distributed Training': {
+                        detail: 'Training happens simultaneously across thousands or millions of devices. Each device computes updates based on its local data, contributing to a global model without sharing the data.',
+                        example: `# FedAvg Algorithm (simplified)
+for round in range(num_rounds):
+    selected_clients = sample_clients()
+    for client in selected_clients:
+        local_model = train_on_device(global_model, client_data)
+        updates.append(local_model - global_model)
+    global_model = aggregate(updates)`,
+                        benefits: 'Scalable to billions of devices, leverages idle compute resources, reduces server infrastructure costs',
+                        challenges: 'Synchronization issues, varying compute capabilities, network reliability'
+                    },
+                    '📱 Edge Computing': {
+                        detail: 'Federated Learning leverages the computational power of edge devices (smartphones, tablets, IoT devices) to train models locally, reducing the need for centralized compute resources.',
+                        example: 'Google Keyboard (Gboard) uses federated learning to improve next-word prediction without uploading your typing data',
+                        benefits: 'Reduces latency, saves bandwidth, enables real-time personalization, works offline',
+                        challenges: 'Limited device resources, battery consumption, heterogeneous hardware'
+                    },
+                    '🖥️ Central Server': {
+                        detail: 'The central server orchestrates the federated learning process. It initializes the global model, selects clients for each round, and aggregates updates from participating devices.',
+                        example: `Server responsibilities:
+- Model initialization
+- Client selection strategy
+- Update aggregation (FedAvg, FedProx)
+- Convergence monitoring
+- Model evaluation`,
+                        benefits: 'Centralized coordination, consistent model updates, easier debugging and monitoring',
+                        challenges: 'Single point of failure, scalability bottleneck, trust assumptions'
+                    },
+                    '📲 Client Devices': {
+                        detail: 'Client devices are the edge nodes that hold local data and perform local training. They can be smartphones, laptops, IoT sensors, or any device with compute capability.',
+                        example: `Client training loop:
+1. Receive global model
+2. Train on local dataset (5-10 epochs)
+3. Compute model update (new_model - old_model)
+4. Encrypt and send update to server
+5. Delete local model copy`,
+                        benefits: 'Data stays local, personalized learning, diverse data sources',
+                        challenges: 'Unreliable connections, limited resources, data heterogeneity'
+                    },
+                    '🔄 Model Updates': {
+                        detail: 'Instead of sharing raw data, clients only share model updates (gradients or weight differences). These updates are often encrypted and can be further protected using differential privacy.',
+                        example: `# Secure aggregation example
+encrypted_update = encrypt(local_gradients, public_key)
+noisy_update = add_differential_privacy(encrypted_update)
+send_to_server(noisy_update)`,
+                        benefits: 'Preserves privacy, reduces communication costs, enables secure aggregation',
+                        challenges: 'Update compression, privacy-utility tradeoff, Byzantine attacks'
+                    },
+                    '🔀 Aggregation Algorithm': {
+                        detail: 'The aggregation algorithm combines updates from multiple clients to improve the global model. FedAvg is the most common, but others like FedProx, FedOpt exist for different scenarios.',
+                        example: `# Federated Averaging (FedAvg)
+def federated_averaging(client_updates):
+    total_samples = sum([u.num_samples for u in client_updates])
+    weighted_sum = 0
+    for update in client_updates:
+        weight = update.num_samples / total_samples
+        weighted_sum += weight * update.model_weights
+    return weighted_sum`,
+                        benefits: 'Simple and effective, handles non-IID data, robust to client failures',
+                        challenges: 'Convergence guarantees, handling malicious updates, optimization for heterogeneous data'
+                    }
+                };
+                
+                const info = details[title];
+                if (info) {
+                    modal.show(title, `
+                        <div class="modal-highlight">
+                            <strong>${desc}</strong>
+                        </div>
+                        <p><strong>📚 Detailed Explanation:</strong></p>
+                        <p>${info.detail}</p>
+                        <div class="modal-code">
+                            ${info.example}
+                        </div>
+                        <p><strong>✅ Benefits:</strong> ${info.benefits}</p>
+                        <p><strong>⚠️ Challenges:</strong> ${info.challenges}</p>
+                    `);
+                }
+            });
+        });
+
+        // Interactive flow steps with modal
+        document.querySelectorAll('.flow-step').forEach(step => {
+            step.addEventListener('click', function() {
+                const title = this.querySelector('.step-title').textContent;
+                
+                const stepDetails = {
+                    'Model Distribution': {
+                        description: 'The server selects a subset of available clients and sends them the current global model parameters.',
+                        details: `Selection Strategies:
+• Random sampling: Select K clients uniformly at random
+• Resource-aware: Prioritize clients with better resources
+• Data-aware: Select clients with diverse data distributions`,
+                        code: `# Client selection
+available_clients = get_online_clients()
+selected = random.sample(available_clients, k=100)
+for client in selected:
+    send_model(client, global_model)`,
+                        considerations: 'Network bandwidth, client availability, fairness in selection'
+                    },
+                    'Local Training': {
+                        description: 'Each selected client trains the model on its local dataset for a fixed number of epochs or until a local convergence criterion is met.',
+                        details: `Local Training Process:
+• Load global model weights
+• Create mini-batches from local data
+• Run SGD for E epochs (typically 1-10)
+• Track training metrics locally`,
+                        code: `# Local training on device
+def local_training(global_weights, local_data):
+    model = load_model(global_weights)
+    optimizer = SGD(model.parameters(), lr=0.01)
+    for epoch in range(local_epochs):
+        for batch in local_data:
+            loss = compute_loss(model, batch)
+            loss.backward()
+            optimizer.step()
+    return model.state_dict()`,
+                        considerations: 'Batch size selection, learning rate tuning, computation time limits'
+                    },
+                    'Update Sharing': {
+                        description: 'Clients compute the difference between their locally trained model and the initial global model, then send this update to the server.',
+                        details: `Update Computation:
+• Compute weight differences: Δw = w_local - w_global
+• Optional: Apply compression techniques
+• Optional: Add differential privacy noise
+• Encrypt before transmission`,
+                        code: `# Computing and sending updates
+model_update = {}
+for layer in model_layers:
+    model_update[layer] = local_weights[layer] - global_weights[layer]
+    
+# Optional: compression
+compressed = compress_update(model_update)
+# Optional: privacy
+private_update = add_dp_noise(compressed, epsilon=1.0)
+send_to_server(private_update)`,
+                        considerations: 'Communication efficiency, privacy guarantees, update verification'
+                    },
+                    'Aggregation': {
+                        description: 'The server collects updates from all participating clients and combines them to create an improved global model.',
+                        details: `Aggregation Methods:
+• FedAvg: Weighted average by data size
+• FedProx: Adds proximal term for heterogeneity
+• FedOpt: Server-side adaptive optimization
+• Robust aggregation: Byzantine-resilient methods`,
+                        code: `# Server aggregation
+def aggregate_updates(client_updates):
+    # FedAvg implementation
+    new_weights = {}
+    total_samples = sum([c.num_samples for c in client_updates])
+    
+    for layer in model_layers:
+        weighted_sum = 0
+        for client in client_updates:
+            weight = client.num_samples / total_samples
+            weighted_sum += weight * client.updates[layer]
+        new_weights[layer] = global_weights[layer] + weighted_sum
+    
+    return new_weights`,
+                        considerations: 'Handling stragglers, detecting malicious updates, convergence monitoring'
+                    }
+                };
+                
+                const details = stepDetails[title];
+                if (details) {
+                    modal.show(`Federated Learning: ${title}`, `
+                        <div class="modal-highlight">
+                            <strong>${details.description}</strong>
+                        </div>
+                        <p><strong>📋 Details:</strong></p>
+                        <p>${details.details}</p>
+                        <div class="modal-code">
+                            ${details.code}
+                        </div>
+                        <p><strong>🔍 Key Considerations:</strong> ${details.considerations}</p>
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                            <strong>💡 Real-World Applications:</strong><br>
+                            • Google Keyboard: Next-word prediction<br>
+                            • Apple Siri: Voice recognition improvements<br>
+                            • Healthcare: Disease prediction across hospitals<br>
+                            • Finance: Fraud detection across banks
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (!modal.overlay.classList.contains('active')) {
+                if (e.key === 'ArrowLeft') {
+                    window.location.href = 'Week13_Slide246.html';
+                } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                    window.location.href = 'Week13_Slide248.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

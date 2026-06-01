@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Learning Rate and Convergence</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .learning-rate-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .convergence-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .definition-text {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .lr-scenarios {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .scenario-item {
+            padding: 20px;
+            margin: 15px 0;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .scenario-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .scenario-item.too-high {
+            border-left-color: #ef4444;
+        }
+
+        .scenario-item.too-low {
+            border-left-color: #f59e0b;
+        }
+
+        .scenario-item.just-right {
+            border-left-color: #10b981;
+        }
+
+        .scenario-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .scenario-desc {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .visualization-banner {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .rate-comparison {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .rate-card {
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .rate-card.high {
+            background: linear-gradient(135deg, #fef2f2, #fecaca);
+            border: 2px solid #ef4444;
+        }
+
+        .rate-card.low {
+            background: linear-gradient(135deg, #fffbeb, #fed7aa);
+            border: 2px solid #f59e0b;
+        }
+
+        .rate-card.optimal {
+            background: linear-gradient(135deg, #f0fdf4, #bbf7d0);
+            border: 2px solid #10b981;
+        }
+
+        .rate-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .rate-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .rate-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #0d9488;
+        }
+
+        .rate-desc {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.4;
+            margin-bottom: 15px;
+        }
+
+        .rate-value {
+            font-family: 'Courier New', monospace;
+            font-size: 1.2em;
+            font-weight: bold;
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.8);
+            margin-top: 10px;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .rate-comparison { grid-template-columns: 1fr; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 2</div>
+    <div class="slide-number">Slide 25 of 40</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Learning Rate and Convergence</h1>
+        
+        <div class="content-layout">
+            <div class="learning-rate-section">
+                <h2 class="section-title">⚡ Learning Rate (α)</h2>
+                
+                <div class="definition-text">
+                    The <strong>learning rate</strong> controls how big steps we take during gradient descent. It's arguably the most important hyperparameter to tune.
+                </div>
+                
+                <ul class="lr-scenarios">
+                    <li class="scenario-item too-high">
+                        <div class="scenario-title" style="color: #ef4444;">🚀 Too High (α > 0.1)</div>
+                        <div class="scenario-desc">Overshooting - may never converge, cost oscillates wildly</div>
+                    </li>
+                    <li class="scenario-item too-low">
+                        <div class="scenario-title" style="color: #f59e0b;">🐌 Too Low (α < 0.001)</div>
+                        <div class="scenario-desc">Very slow convergence - takes forever to reach minimum</div>
+                    </li>
+                    <li class="scenario-item just-right">
+                        <div class="scenario-title" style="color: #10b981;">🎯 Just Right (α ≈ 0.01)</div>
+                        <div class="scenario-desc">Smooth, steady convergence to optimal solution</div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="convergence-section">
+                <h2 class="section-title">📈 Convergence</h2>
+                
+                <div class="definition-text">
+                    <strong>Convergence</strong> occurs when gradient descent finds a minimum and the cost function stops decreasing significantly.
+                </div>
+
+                <div style="background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%); padding: 20px; border-radius: 15px; border-left: 4px solid #0d9488; margin-top: 20px;">
+                    <strong>Signs of Convergence:</strong>
+                    <br><br>
+                    ✅ Cost change < threshold (e.g., 1e-6)<br>
+                    ✅ Gradients approach zero<br>
+                    ✅ Parameters stabilize<br>
+                    ✅ Validation error stops improving<br><br>
+                    <strong>Stopping Criteria:</strong><br>
+                    • Maximum iterations reached<br>
+                    • Cost improvement below tolerance<br>
+                    • Gradient magnitude below threshold
+                </div>
+            </div>
+        </div>
+
+        <div class="visualization-banner">
+            <h2 class="section-title">🔄 Learning Rate Comparison</h2>
+            
+            <div class="rate-comparison">
+                <div class="rate-card high" onclick="showRateDetails('high')">
+                    <div class="rate-icon">🚀</div>
+                    <div class="rate-title">Too High</div>
+                    <div class="rate-desc">Overshoots the minimum, cost oscillates or diverges</div>
+                    <div class="rate-value">α = 1.0</div>
+                </div>
+                
+                <div class="rate-card optimal" onclick="showRateDetails('optimal')">
+                    <div class="rate-icon">🎯</div>
+                    <div class="rate-title">Optimal</div>
+                    <div class="rate-desc">Smooth convergence to global minimum</div>
+                    <div class="rate-value">α = 0.01</div>
+                </div>
+                
+                <div class="rate-card low" onclick="showRateDetails('low')">
+                    <div class="rate-icon">🐌</div>
+                    <div class="rate-title">Too Low</div>
+                    <div class="rate-desc">Very slow progress, takes many iterations</div>
+                    <div class="rate-value">α = 0.0001</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week2_Slide24.html" class="nav-btn">← Previous</a>
+        <a href="Week2_Slide26.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Learning rate details function
+        function showRateDetails(rateType) {
+            const rateDetails = {
+                high: {
+                    title: 'High Learning Rate - Overshooting',
+                    content: `
+                        <div class="modal-highlight">
+                            <strong>Problem: Learning rate too high (α > 0.1)</strong>
+                        </div>
+                        <p>When the learning rate is too high, gradient descent takes steps that are too large, causing it to overshoot the minimum.</p>
+                        <div class="modal-code">
+# Symptoms of high learning rate
+- Cost increases instead of decreasing
+- Cost oscillates wildly
+- Algorithm may diverge completely
+- Loss: 1000 → 5000 → 500 → 8000 → ...
+
+# Example with high learning rate
+alpha = 1.0  # Too high!
+for i in range(100):
+    gradients = compute_gradients(X, y, theta)
+    theta = theta - alpha * gradients
+    cost = compute_cost(X, y, theta)
+    print(f"Iteration {i}: Cost = {cost}")
+    # Output: Cost keeps increasing!
+                        </div>
+                        <p><strong>Solution:</strong> Reduce learning rate by 10x (try 0.1, then 0.01, then 0.001)</p>
+                        <p><strong>Visual:</strong> Imagine a ball bouncing back and forth across a valley, never settling at the bottom.</p>
+                    `
+                },
+                optimal: {
+                    title: 'Optimal Learning Rate - Goldilocks Zone',
+                    content: `
+                        <div class="modal-highlight">
+                            <strong>Perfect: Learning rate just right (α ≈ 0.01)</strong>
+                        </div>
+                        <p>The optimal learning rate provides smooth, steady convergence without overshooting or being too slow.</p>
+                        <div class="modal-code">
+# Signs of optimal learning rate
+- Cost decreases monotonically
+- Smooth convergence curve  
+- Reaches minimum in reasonable time
+- Loss: 1000 → 800 → 600 → 450 → 350 → ...
+
+# Finding optimal learning rate
+learning_rates = [0.1, 0.03, 0.01, 0.003, 0.001]
+for alpha in learning_rates:
+    theta, cost_history = gradient_descent(X, y, alpha)
+    plot_cost_history(cost_history, alpha)
+    
+# Choose the one with fastest smooth convergence
+                        </div>
+                        <p><strong>How to find:</strong> Try different values and plot cost curves. Look for fastest smooth convergence.</p>
+                        <p><strong>Common ranges:</strong> 0.001 to 0.1, often 0.01 works well as starting point.</p>
+                    `
+                },
+                low: {
+                    title: 'Low Learning Rate - Too Cautious',
+                    content: `
+                        <div class="modal-highlight">
+                            <strong>Problem: Learning rate too low (α < 0.001)</strong>
+                        </div>
+                        <p>When the learning rate is too low, gradient descent takes tiny steps and converges very slowly.</p>
+                        <div class="modal-code">
+# Symptoms of low learning rate
+- Very slow convergence
+- Cost decreases but tiny amounts each iteration
+- May need thousands of iterations
+- Loss: 1000 → 999 → 998.5 → 998.2 → ...
+
+# Example with low learning rate
+alpha = 0.00001  # Too low!
+for i in range(10000):  # Need many iterations!
+    gradients = compute_gradients(X, y, theta)
+    theta = theta - alpha * gradients
+    cost = compute_cost(X, y, theta)
+    if i % 1000 == 0:
+        print(f"Iteration {i}: Cost = {cost}")
+    # Very slow progress...
+                        </div>
+                        <p><strong>Solution:</strong> Increase learning rate by 10x until you find the sweet spot.</p>
+                        <p><strong>Trade-off:</strong> Safe but inefficient - like taking baby steps to cross a room.</p>
+                    `
+                }
+            };
+            
+            modal.show(rateDetails[rateType].title, rateDetails[rateType].content);
+        }
+
+        // Interactive scenario items
+        document.querySelectorAll('.scenario-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const title = this.querySelector('.scenario-title').textContent;
+                const desc = this.querySelector('.scenario-desc').textContent;
+                
+                let rateType;
+                if (this.classList.contains('too-high')) rateType = 'high';
+                else if (this.classList.contains('too-low')) rateType = 'low';
+                else rateType = 'optimal';
+                
+                showRateDetails(rateType);
+            });
+        });
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (!modal.overlay.classList.contains('active')) {
+                if (e.key === 'ArrowLeft') {
+                    window.location.href = 'Week2_Slide24.html';
+                } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                    window.location.href = 'Week2_Slide26.html';
+                }
+            }
+        });
+
+    </script>
+</body>
+</html>

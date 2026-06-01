@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Tree Pruning Techniques</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .overfitting-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .pruning-methods-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .problem-explanation {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            border-radius: 15px;
+            border-left: 4px solid #dc2626;
+        }
+
+        .solution-explanation {
+            font-size: 1.1em;
+            line-height: 1.7;
+            color: #1e293b;
+            margin-bottom: 25px;
+            padding: 20px;
+            background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+            border-radius: 15px;
+            border-left: 4px solid #16a34a;
+        }
+
+        .pruning-methods {
+            list-style: none;
+        }
+
+        .method-item {
+            padding: 25px;
+            margin: 20px 0;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .method-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .method-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 12px;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .method-desc {
+            font-size: 1em;
+            color: #475569;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .method-example {
+            font-size: 0.9em;
+            color: #64748b;
+            font-style: italic;
+            background: rgba(255, 255, 255, 0.5);
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .comparison-banner {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .tree-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-top: 30px;
+        }
+
+        .tree-visual {
+            background: #1e293b;
+            border-radius: 15px;
+            padding: 25px;
+            color: white;
+            text-align: center;
+            position: relative;
+            min-height: 300px;
+        }
+
+        .tree-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #5eead4;
+        }
+
+        .tree-node {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 8px;
+            padding: 10px;
+            margin: 5px;
+            display: inline-block;
+            font-size: 0.8em;
+            transition: all 0.3s ease;
+        }
+
+        .pruned-node {
+            background: linear-gradient(135deg, #dc2626, #ef4444);
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+
+        .tree-performance {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(13, 148, 136, 0.1);
+            border-radius: 10px;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .tree-comparison { grid-template-columns: 1fr; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 4</div>
+    <div class="slide-number">Slide 65 of 80</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Tree Pruning Techniques</h1>
+        
+        <div class="content-layout">
+            <div class="overfitting-section">
+                <h2 class="section-title">⚠️ The Overfitting Problem</h2>
+                
+                <div class="problem-explanation">
+                    <strong>Decision trees can grow very deep</strong>, memorizing training data rather than learning generalizable patterns. This leads to poor performance on new data.
+                </div>
+
+                <div class="solution-explanation">
+                    <strong>Pruning</strong> is the process of removing branches from a decision tree to reduce complexity and improve generalization.
+                </div>
+
+                <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 20px; border-radius: 15px; border-left: 4px solid #d97706; margin-top: 20px;">
+                    <h3 style="color: #92400e; margin-bottom: 10px;">🎯 Why Prune?</h3>
+                    <ul style="color: #78350f; line-height: 1.6;">
+                        <li>• Reduce overfitting</li>
+                        <li>• Improve generalization</li>
+                        <li>• Create simpler, interpretable models</li>
+                        <li>• Reduce computational cost</li>
+                        <li>• Handle noise in training data</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="pruning-methods-section">
+                <h2 class="section-title">✂️ Pruning Methods</h2>
+                
+                <ul class="pruning-methods">
+                    <li class="method-item">
+                        <div class="method-title">
+                            🔄 Pre-pruning (Early Stopping)
+                        </div>
+                        <div class="method-desc">
+                            Stop growing the tree during construction based on stopping criteria.
+                        </div>
+                        <div class="method-example">
+                            Examples: Maximum depth = 5, Minimum samples per leaf = 10, Minimum information gain = 0.01
+                        </div>
+                    </li>
+                    
+                    <li class="method-item">
+                        <div class="method-title">
+                            ✂️ Post-pruning (Backward Pruning)
+                        </div>
+                        <div class="method-desc">
+                            Build a full tree first, then remove branches that don't improve validation performance.
+                        </div>
+                        <div class="method-example">
+                            Build complete tree → Test each subtree removal → Keep changes that improve validation accuracy
+                        </div>
+                    </li>
+                    
+                    <li class="method-item">
+                        <div class="method-title">
+                            💰 Cost Complexity Pruning
+                        </div>
+                        <div class="method-desc">
+                            Balance tree accuracy against tree complexity using a complexity parameter (α).
+                        </div>
+                        <div class="method-example">
+                            Cost = Error Rate + α × Tree Complexity. Higher α = more pruning
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="comparison-banner">
+            <h2 class="section-title">🌳 Before vs After Pruning</h2>
+            
+            <div class="tree-comparison">
+                <div class="tree-visual">
+                    <div class="tree-title">Unpruned Tree (Overfitted)</div>
+                    <div>
+                        <div class="tree-node">Humidity ≤ 75%</div><br>
+                        <div class="tree-node">Temp ≤ 70°</div>
+                        <div class="tree-node">Wind ≤ 15mph</div><br>
+                        <div class="tree-node">Outlook = Sunny</div>
+                        <div class="tree-node">Pressure ≤ 30.1</div>
+                        <div class="tree-node">UV Index ≤ 7</div><br>
+                        <div class="tree-node">Cloud Cover ≤ 20%</div>
+                        <div class="tree-node">Humidity ≤ 65%</div>
+                        <div class="tree-node">Temp ≤ 68°</div>
+                    </div>
+                    <div class="tree-performance">
+                        Training Accuracy: 100%<br>
+                        Validation Accuracy: 72%<br>
+                        Depth: 8 levels
+                    </div>
+                </div>
+                
+                <div class="tree-visual">
+                    <div class="tree-title">Pruned Tree (Generalized)</div>
+                    <div>
+                        <div class="tree-node">Humidity ≤ 75%</div><br>
+                        <div class="tree-node">Temp ≤ 70°</div>
+                        <div class="tree-node">Wind ≤ 15mph</div><br>
+                        <div class="tree-node pruned-node">Outlook = Sunny</div>
+                        <div class="tree-node pruned-node">Pressure ≤ 30.1</div>
+                        <div class="tree-node pruned-node">UV Index ≤ 7</div><br>
+                        <div class="tree-node pruned-node">Cloud Cover ≤ 20%</div>
+                        <div class="tree-node pruned-node">Humidity ≤ 65%</div>
+                        <div class="tree-node pruned-node">Temp ≤ 68°</div>
+                    </div>
+                    <div class="tree-performance">
+                        Training Accuracy: 87%<br>
+                        Validation Accuracy: 84%<br>
+                        Depth: 3 levels
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week4_Slide64.html" class="nav-btn">← Previous</a>
+        <a href="Week4_Slide66.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive pruning methods with modal
+        document.querySelectorAll('.method-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const title = this.querySelector('.method-title').textContent.trim();
+                const desc = this.querySelector('.method-desc').textContent.trim();
+                
+                const methodDetails = {
+                    '🔄 Pre-pruning (Early Stopping)': {
+                        when: 'During tree construction - stops growth before completion',
+                        criteria: '• Maximum depth reached\n• Minimum samples per node/leaf\n• Minimum information gain threshold\n• Maximum number of leaf nodes\n• Minimum impurity decrease',
+                        advantages: 'Fast, prevents overfitting early, computationally efficient',
+                        disadvantages: 'May stop too early, might miss valuable patterns deeper in tree',
+                        example: 'If max_depth=3 is set, tree stops growing after 3 levels regardless of potential improvements'
+                    },
+                    '✂️ Post-pruning (Backward Pruning)': {
+                        when: 'After full tree is built - removes branches retrospectively',
+                        criteria: '• Cross-validation performance\n• Hold-out validation set performance\n• Statistical significance tests\n• Error reduction analysis',
+                        advantages: 'Can find optimal tree size, considers all possible structures, often better performance',
+                        disadvantages: 'Computationally expensive, requires additional validation data',
+                        example: 'Build full tree with 100 nodes → Test removing each subtree → Keep tree with 45 nodes that maximizes validation accuracy'
+                    },
+                    '💰 Cost Complexity Pruning': {
+                        when: 'Systematic approach used in CART algorithm',
+                        criteria: 'Cost = Error Rate + α × Number of Leaves\nα (alpha) controls trade-off between accuracy and complexity',
+                        advantages: 'Principled approach, generates sequence of optimal trees, cross-validation can find best α',
+                        disadvantages: 'Requires tuning α parameter, more complex to implement',
+                        example: 'α=0: Full tree, α=0.01: Moderate pruning, α=0.1: Heavy pruning. Cross-validation picks best α value.'
+                    }
+                };
+                
+                const details = methodDetails[title];
+                if (details) {
+                    modal.show(title, `
+                        <div class="modal-highlight">
+                            <strong>${desc}</strong>
+                        </div>
+                        <p><strong>⏰ When Applied:</strong> ${details.when}</p>
+                        <div class="modal-code">
+                            <strong>Stopping Criteria:</strong><br>
+                            ${details.criteria}
+                        </div>
+                        <p><strong>✅ Advantages:</strong> ${details.advantages}</p>
+                        <p><strong>⚠️ Disadvantages:</strong> ${details.disadvantages}</p>
+                        <div class="modal-highlight">
+                            <strong>Practical Example:</strong><br>
+                            ${details.example}
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Interactive tree visualization
+        document.querySelectorAll('.tree-visual').forEach(tree => {
+            tree.addEventListener('click', function() {
+                const title = this.querySelector('.tree-title').textContent;
+                const isUnpruned = title.includes('Unpruned');
+                
+                const treeDetails = {
+                    unpruned: {
+                        characteristics: 'Deep tree with many specific rules that memorize training examples',
+                        problems: '• High variance - small changes in data cause big changes in tree\n• Poor generalization to new data\n• Captures noise as signal\n• Difficult to interpret due to complexity',
+                        signs: 'Training accuracy much higher than validation accuracy (100% vs 72% in example)',
+                        rules: 'Very specific rules like:\nIF Humidity ≤ 75% AND Temp ≤ 70° AND Wind ≤ 15mph AND Outlook = Sunny AND Pressure ≤ 30.1 AND UV Index ≤ 7 THEN Play Tennis'
+                    },
+                    pruned: {
+                        characteristics: 'Simpler tree with general rules that capture main patterns',
+                        benefits: '• Better generalization (84% validation vs 72% unpruned)\n• More interpretable and explainable\n• Faster predictions\n• More robust to noise',
+                        process: 'Removed branches that didn\'t significantly improve validation performance',
+                        rules: 'General rules like:\nIF Humidity ≤ 75% AND Temp ≤ 70° AND Wind ≤ 15mph THEN Play Tennis'
+                    }
+                };
+                
+                const details = isUnpruned ? treeDetails.unpruned : treeDetails.pruned;
+                const modalTitle = isUnpruned ? 'Overfitted Decision Tree' : 'Properly Pruned Decision Tree';
+                
+                if (isUnpruned) {
+                    modal.show(modalTitle, `
+                        <div class="modal-highlight">
+                            ${details.characteristics}
+                        </div>
+                        <h4>🚨 Problems with Overfitting:</h4>
+                        <div class="modal-code">${details.problems}</div>
+                        <p><strong>Warning Signs:</strong> ${details.signs}</p>
+                        <div class="modal-highlight">
+                            <strong>Example Rule:</strong><br>
+                            ${details.rules}
+                        </div>
+                    `);
+                } else {
+                    modal.show(modalTitle, `
+                        <div class="modal-highlight">
+                            ${details.characteristics}
+                        </div>
+                        <h4>✅ Benefits of Pruning:</h4>
+                        <div class="modal-code">${details.benefits}</div>
+                        <p><strong>Pruning Process:</strong> ${details.process}</p>
+                        <div class="modal-highlight">
+                            <strong>Simplified Rule:</strong><br>
+                            ${details.rules}
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week4_Slide64.html';
+            } else if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week4_Slide66.html';
+            }
+        });
+    </script>
+</body>
+</html>

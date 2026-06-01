@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Interactive ML Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .intro-section {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: slideInFromTop 1s ease-out 0.3s both;
+        }
+
+        .intro-text {
+            font-size: 1.3em;
+            color: #1e293b;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .demo-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .demo-tab {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+        }
+
+        .demo-tab:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .demo-tab.active {
+            border-color: #0d9488;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.2);
+        }
+
+        .demo-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .demo-name {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+        }
+
+        .demo-description {
+            color: #64748b;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+
+        .demo-content {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            border: 2px solid #14b8a6;
+            min-height: 500px;
+            animation: slideInFromBottom 1s ease-out 0.9s both;
+        }
+
+        .demo-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .demo-title {
+            font-size: 2.2em;
+            color: #0d9488;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .demo-subtitle {
+            color: #64748b;
+            font-size: 1.1em;
+            line-height: 1.5;
+        }
+
+        .controls-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: rgba(240, 253, 250, 0.5);
+            border-radius: 15px;
+            border: 1px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-label {
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 0.9em;
+        }
+
+        .demo-slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e2e8f0;
+            outline: none;
+            cursor: pointer;
+            -webkit-appearance: none;
+        }
+
+        .demo-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .demo-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .control-value {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 0.8em;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .demo-button {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+        }
+
+        .demo-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(13, 148, 136, 0.3);
+        }
+
+        .visualization-area {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 25px;
+            margin-bottom: 20px;
+        }
+
+        .chart-container {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            padding: 20px;
+            min-height: 350px;
+            position: relative;
+        }
+
+        .chart-canvas {
+            width: 100%;
+            height: 300px;
+        }
+
+        .stats-panel {
+            background: rgba(240, 253, 250, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .stats-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+
+        .stat-name {
+            color: #64748b;
+            font-size: 0.9em;
+        }
+
+        .stat-value {
+            color: #0d9488;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .feature-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .highlight-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .highlight-text {
+            color: #1e293b;
+            line-height: 1.5;
+            font-size: 0.95em;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .demo-selector { grid-template-columns: 1fr; }
+            .visualization-area { grid-template-columns: 1fr; }
+            .controls-panel { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+        }
+
+        .demo-panel {
+            display: none;
+        }
+
+        .demo-panel.active {
+            display: block;
+        }
+    
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <div class="course-info">CS5710 - Week 1</div>
+    <div class="slide-number">Slide 19 of 20</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">🎮 Interactive ML Playground</h1>
+        
+        <div class="intro-section">
+            <div class="intro-text">
+                Experience machine learning in action! Choose from different ML algorithms below and see how they work with real-time interactive visualizations. Adjust parameters, generate new data, and watch the algorithms learn!
+            </div>
+        </div>
+        
+        <div class="demo-selector">
+            <div class="demo-tab active" data-demo="regression">
+                <span class="demo-icon">📈</span>
+                <div class="demo-name">Linear Regression</div>
+                <div class="demo-description">Predict continuous values with the best-fit line through your data points</div>
+            </div>
+            
+            <div class="demo-tab" data-demo="classification">
+                <span class="demo-icon">🎯</span>
+                <div class="demo-name">Classification</div>
+                <div class="demo-description">Separate data into distinct categories using decision boundaries</div>
+            </div>
+            
+            <div class="demo-tab" data-demo="clustering">
+                <span class="demo-icon">🔘</span>
+                <div class="demo-name">K-Means Clustering</div>
+                <div class="demo-description">Automatically group similar data points into clusters</div>
+            </div>
+        </div>
+
+        <div class="demo-content">
+            <!-- Regression Demo -->
+            <div id="regressionDemo" class="demo-panel active">
+                <div class="demo-header">
+                    <div class="demo-title">📈 Linear Regression Explorer</div>
+                    <div class="demo-subtitle">Watch how linear regression finds the best line through your data points</div>
+                </div>
+                
+                <div class="controls-panel">
+                    <div class="control-group">
+                        <label class="control-label">Data Points</label>
+                        <input type="range" min="10" max="50" value="25" class="demo-slider" id="regressionPoints">
+                        <div class="control-value" id="regressionPointsValue">25</div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Noise Level</label>
+                        <input type="range" min="0" max="30" value="15" class="demo-slider" id="regressionNoise">
+                        <div class="control-value" id="regressionNoiseValue">15%</div>
+                    </div>
+                    <div class="control-group">
+                        <button class="demo-button" onclick="generateNewData('regression')">🎲 New Data</button>
+                    </div>
+                </div>
+                
+                <div class="visualization-area">
+                    <div class="chart-container">
+                        <canvas id="regressionChart" class="chart-canvas"></canvas>
+                    </div>
+                    <div class="stats-panel">
+                        <div class="stats-title">📊 Model Performance</div>
+                        <div class="stat-item">
+                            <span class="stat-name">R² Score</span>
+                            <span class="stat-value" id="regR2">0.85</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-name">MSE</span>
+                            <span class="stat-value" id="regMSE">12.5</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-name">Slope</span>
+                            <span class="stat-value" id="regSlope">2.1</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-name">Intercept</span>
+                            <span class="stat-value" id="regIntercept">0.8</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="feature-highlight">
+                    <div class="highlight-title">🔍 What You're Seeing</div>
+                    <div class="highlight-text">
+                        The algorithm finds the line that minimizes the sum of squared errors. Blue dots are your data, the green line is the model's prediction. Try adjusting noise to see how it affects the R² score!
+                    </div>
+                </div>
+            </div>
+
+            <!-- Classification Demo -->
+            <div id="classificationDemo" class="demo-panel">
+                <div class="demo-header">
+                    <div class="demo-title">🎯 Binary Classification Explorer</div>
+                    <div class="demo-subtitle">See how algorithms create decision boundaries to separate different classes</div>
+                </div>
+                
+                <div class="controls-panel">
+                    <div class="control-group">
+                        <label class="control-label">Points per Class</label>
+                        <input type="range" min="20" max="80" value="40" class="demo-slider" id="classificationPoints">
+                        <div class="control-value" id="classificationPointsValue">40</div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Separation</label>
+                        <input type="range" min="1" max="5" step="0.1" value="2.5" class="demo-slider" id="classificationSeparation">
+                        <div class="control-value" id="classificationSeparationValue">2.5</div>
+                    </div>
+                    <div class="control-group">
+                        <button class="demo-button" onclick="generateNewData('classification')">🎲 New Data</button>
+                    </div>
+                </div>
+                
+                <div class="visualization-area">
+                    <div class="chart-container">
+                        <canvas id="classificationChart" class="chart-canvas"></canvas>
+                    </div>
+                    <div class="stats-panel">
+                        <div class="stats-title">📊 Classification Results</div>
+                        <div class="stat-item">
+                            <span class="stat-name">Accuracy</span>
+                            <span class="stat-value" id="classAccuracy">95%</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-name">Class A Count</span>
+                            <span class="stat-value" id="classACount">40</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-name">Class B Count</span>
+                            <span class="stat-value" id="classBCount">40</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-name">Margin</span>
+                            <span class="stat-value" id="marginWidth">1.2</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="feature-highlight">
+                    <div class="highlight-title">🔍 Understanding Classification</div>
+                    <div class="highlight-text">
+                        The algorithm creates a decision boundary (purple line) that best separates the two classes. Red and blue points represent different categories. Adjust separation to make the problem easier or harder!
+                    </div>
+                </div>
+            </div>
+
+            <!-- Clustering Demo -->
+            <div id="clusteringDemo" class="demo-panel">
+                <div class="demo-header">
+                    <div class="demo-title">🔘 K-Means Clustering Explorer</div>
+                    <div class="demo-subtitle">Watch the algorithm automatically discover groups in your data</div>
+                </div>
+                
+                <div class="controls-panel">
+                    <div class="control-group">
+                        <label class="control-label">Data Points</label>
+                        <input type="range" min="50" max="200" value="120" class="demo-slider" id="clusteringPoints">
+                        <div class="control-value" id="clusteringPointsValue">120</div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Clusters (K)</label>
+                        <input type="range" min="2" max="6" value="3" class="demo-slider" id="clusteringK">
+                        <div class="control-value" id="clusteringKValue">3</div>
+                    </div>
+                    <div class="control-group">
+                        <button class="demo-button" onclick="runClustering()">▶️ Run K-Means</button>
+                    </div>
+                </div>
+                
+                <div class="visualization-area">
+                    <div class="chart-container">
+                        <canvas id="clusteringChart" class="chart-canvas"></canvas>
+                    </div>
+                    <div class="stats-panel">
+                        <div class="stats-title">📊 Clustering Analysis</div>
+                        <div class="stat-item">
+                            <span class="stat-name">Iterations</span>
+                            <span class="stat-value" id="clusterIterations">8</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-name">Inertia</span>
+                            <span class="stat-value" id="clusterInertia">145.2</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-name">Largest Cluster</span>
+                            <span class="stat-value" id="largestCluster">45 pts</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-name">Smallest Cluster</span>
+                            <span class="stat-value" id="smallestCluster">32 pts</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="feature-highlight">
+                    <div class="highlight-title">🔍 K-Means in Action</div>
+                    <div class="highlight-text">
+                        K-Means groups data points by minimizing the distance to cluster centers (large dots). Colors represent different clusters. Try different K values to see how it affects the grouping!
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week1_Slide18.html" class="nav-btn">← Previous</a>
+        <a href="Week1_Slide20.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Global variables
+        let currentDemo = 'regression';
+        let demoInstances = {};
+
+        // Demo Management System
+        class DemoManager {
+            constructor() {
+                this.setupTabs();
+            }
+            
+            setupTabs() {
+                document.querySelectorAll('.demo-tab').forEach(tab => {
+                    tab.addEventListener('click', (e) => {
+                        const demoType = tab.dataset.demo;
+                        this.switchDemo(demoType);
+                    });
+                });
+            }
+            
+            switchDemo(demoType) {
+                // Update tab appearance
+                document.querySelectorAll('.demo-tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                document.querySelector(`[data-demo="${demoType}"]`).classList.add('active');
+                
+                // Show/hide demo panels
+                document.querySelectorAll('.demo-panel').forEach(panel => {
+                    panel.classList.remove('active');
+                });
+                document.getElementById(`${demoType}Demo`).classList.add('active');
+                
+                currentDemo = demoType;
+                
+                // Lazy initialization - create demo instance if it doesn't exist
+                if (!demoInstances[demoType]) {
+                    console.log(`Initializing ${demoType} demo...`);
+                    // Small delay to ensure panel is visible before canvas setup
+                    setTimeout(() => {
+                        this.initializeDemo(demoType);
+                    }, 100);
+                } else {
+                    // Refresh existing demo
+                    demoInstances[demoType].refresh();
+                }
+            }
+            
+            initializeDemo(demoType) {
+                try {
+                    switch(demoType) {
+                        case 'regression':
+                            demoInstances[demoType] = new RegressionDemo();
+                            break;
+                        case 'classification':
+                            demoInstances[demoType] = new ClassificationDemo();
+                            break;
+                        case 'clustering':
+                            demoInstances[demoType] = new ClusteringDemo();
+                            break;
+                        default:
+                            console.error(`Unknown demo type: ${demoType}`);
+                    }
+                    console.log(`${demoType} demo initialized successfully`);
+                } catch (error) {
+                    console.error(`Failed to initialize ${demoType} demo:`, error);
+                }
+            }
+        }
+
+        // Regression Demo
+        class RegressionDemo {
+            constructor() {
+                this.canvas = document.getElementById('regressionChart');
+                
+                if (!this.canvas) {
+                    console.error('RegressionDemo: Canvas element not found');
+                    return;
+                }
+                
+                this.ctx = this.canvas.getContext('2d');
+                if (!this.ctx) {
+                    console.error('RegressionDemo: Unable to get 2D context');
+                    return;
+                }
+                
+                this.setupCanvas();
+                this.setupControls();
+                this.data = { x: [], y: [] };
+                this.model = { slope: 2, intercept: 0 };
+                this.generateData();
+                this.draw();
+            }
+            
+            setupCanvas() {
+                const rect = this.canvas.getBoundingClientRect();
+                this.canvas.width = rect.width * devicePixelRatio;
+                this.canvas.height = rect.height * devicePixelRatio;
+                this.ctx.scale(devicePixelRatio, devicePixelRatio);
+                this.width = rect.width;
+                this.height = rect.height;
+            }
+            
+            setupControls() {
+                const pointsSlider = document.getElementById('regressionPoints');
+                const noiseSlider = document.getElementById('regressionNoise');
+                
+                if (pointsSlider) {
+                    pointsSlider.addEventListener('input', (e) => {
+                        document.getElementById('regressionPointsValue').textContent = e.target.value;
+                        this.generateData();
+                        this.draw();
+                    });
+                }
+                
+                if (noiseSlider) {
+                    noiseSlider.addEventListener('input', (e) => {
+                        document.getElementById('regressionNoiseValue').textContent = e.target.value + '%';
+                        this.generateData();
+                        this.draw();
+                    });
+                }
+            }
+            
+            generateData() {
+                const numPoints = parseInt(document.getElementById('regressionPoints').value);
+                const noiseLevel = parseInt(document.getElementById('regressionNoise').value) / 100;
+                
+                this.data.x = [];
+                this.data.y = [];
+                
+                for (let i = 0; i < numPoints; i++) {
+                    const x = Math.random() * 10;
+                    const y = 2 * x + 1 + (Math.random() - 0.5) * noiseLevel * 10;
+                    this.data.x.push(x);
+                    this.data.y.push(y);
+                }
+                
+                this.fitModel();
+                this.updateStats();
+            }
+            
+            fitModel() {
+                const n = this.data.x.length;
+                const sumX = this.data.x.reduce((a, b) => a + b, 0);
+                const sumY = this.data.y.reduce((a, b) => a + b, 0);
+                const sumXY = this.data.x.reduce((sum, x, i) => sum + x * this.data.y[i], 0);
+                const sumX2 = this.data.x.reduce((sum, x) => sum + x * x, 0);
+                
+                this.model.slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+                this.model.intercept = (sumY - this.model.slope * sumX) / n;
+            }
+            
+            updateStats() {
+                const predictions = this.data.x.map(x => this.model.slope * x + this.model.intercept);
+                const yMean = this.data.y.reduce((a, b) => a + b, 0) / this.data.y.length;
+                
+                const totalSumSquares = this.data.y.reduce((sum, y) => sum + Math.pow(y - yMean, 2), 0);
+                const residualSumSquares = this.data.y.reduce((sum, y, i) => sum + Math.pow(y - predictions[i], 2), 0);
+                
+                const r2 = Math.max(0, 1 - (residualSumSquares / totalSumSquares));
+                const mse = residualSumSquares / this.data.x.length;
+                
+                document.getElementById('regR2').textContent = r2.toFixed(3);
+                document.getElementById('regMSE').textContent = mse.toFixed(1);
+                document.getElementById('regSlope').textContent = this.model.slope.toFixed(2);
+                document.getElementById('regIntercept').textContent = this.model.intercept.toFixed(2);
+            }
+            
+            draw() {
+                this.ctx.clearRect(0, 0, this.width, this.height);
+                
+                if (this.data.x.length === 0) return;
+                
+                const padding = 40;
+                const chartWidth = this.width - 2 * padding;
+                const chartHeight = this.height - 2 * padding;
+                
+                const minX = Math.min(...this.data.x);
+                const maxX = Math.max(...this.data.x);
+                const minY = Math.min(...this.data.y);
+                const maxY = Math.max(...this.data.y);
+                
+                const xRange = maxX - minX || 1;
+                const yRange = maxY - minY || 1;
+                
+                const xToCanvas = (x) => padding + ((x - minX) / xRange) * chartWidth;
+                const yToCanvas = (y) => this.height - padding - ((y - minY) / yRange) * chartHeight;
+                
+                // Draw grid
+                this.ctx.strokeStyle = '#e2e8f0';
+                this.ctx.lineWidth = 1;
+                
+                for (let i = 0; i <= 5; i++) {
+                    const x = padding + (i / 5) * chartWidth;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(x, padding);
+                    this.ctx.lineTo(x, this.height - padding);
+                    this.ctx.stroke();
+                    
+                    const y = padding + (i / 5) * chartHeight;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(padding, y);
+                    this.ctx.lineTo(this.width - padding, y);
+                    this.ctx.stroke();
+                }
+                
+                // Draw regression line
+                this.ctx.strokeStyle = '#10b981';
+                this.ctx.lineWidth = 3;
+                this.ctx.beginPath();
+                const startY = this.model.slope * minX + this.model.intercept;
+                const endY = this.model.slope * maxX + this.model.intercept;
+                this.ctx.moveTo(xToCanvas(minX), yToCanvas(startY));
+                this.ctx.lineTo(xToCanvas(maxX), yToCanvas(endY));
+                this.ctx.stroke();
+                
+                // Draw data points
+                this.ctx.fillStyle = '#3b82f6';
+                this.data.x.forEach((x, i) => {
+                    this.ctx.beginPath();
+                    this.ctx.arc(xToCanvas(x), yToCanvas(this.data.y[i]), 4, 0, Math.PI * 2);
+                    this.ctx.fill();
+                });
+            }
+            
+            refresh() {
+                this.generateData();
+                this.draw();
+            }
+        }
+
+        // Classification Demo
+        class ClassificationDemo {
+            constructor() {
+                this.canvas = document.getElementById('classificationChart');
+                
+                if (!this.canvas) {
+                    console.error('ClassificationDemo: Canvas element not found');
+                    return;
+                }
+                
+                this.ctx = this.canvas.getContext('2d');
+                if (!this.ctx) {
+                    console.error('ClassificationDemo: Unable to get 2D context');
+                    return;
+                }
+                
+                this.setupCanvas();
+                this.setupControls();
+                this.data = { classA: [], classB: [] };
+                this.generateData();
+                this.draw();
+            }
+            
+            setupCanvas() {
+                const rect = this.canvas.getBoundingClientRect();
+                // Ensure minimum dimensions for hidden canvases
+                const width = Math.max(rect.width, 400);
+                const height = Math.max(rect.height, 300);
+                
+                this.canvas.width = width * devicePixelRatio;
+                this.canvas.height = height * devicePixelRatio;
+                this.ctx.scale(devicePixelRatio, devicePixelRatio);
+                this.width = width;
+                this.height = height;
+            }
+            
+            setupControls() {
+                const pointsSlider = document.getElementById('classificationPoints');
+                const separationSlider = document.getElementById('classificationSeparation');
+                
+                if (pointsSlider) {
+                    pointsSlider.addEventListener('input', (e) => {
+                        document.getElementById('classificationPointsValue').textContent = e.target.value;
+                        this.generateData();
+                        this.draw();
+                    });
+                }
+                
+                if (separationSlider) {
+                    separationSlider.addEventListener('input', (e) => {
+                        document.getElementById('classificationSeparationValue').textContent = parseFloat(e.target.value).toFixed(1);
+                        this.generateData();
+                        this.draw();
+                    });
+                }
+            }
+            
+            generateData() {
+                const pointsPerClass = parseInt(document.getElementById('classificationPoints').value);
+                const separation = parseFloat(document.getElementById('classificationSeparation').value);
+                
+                this.data.classA = [];
+                this.data.classB = [];
+                
+                // Generate Class A (red)
+                for (let i = 0; i < pointsPerClass; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const radius = Math.random() * 1.5;
+                    const x = Math.cos(angle) * radius - separation/2;
+                    const y = Math.sin(angle) * radius;
+                    this.data.classA.push({ x, y });
+                }
+                
+                // Generate Class B (blue)
+                for (let i = 0; i < pointsPerClass; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const radius = Math.random() * 1.5;
+                    const x = Math.cos(angle) * radius + separation/2;
+                    const y = Math.sin(angle) * radius;
+                    this.data.classB.push({ x, y });
+                }
+                
+                this.updateStats();
+            }
+            
+            updateStats() {
+                document.getElementById('classAccuracy').textContent = Math.round(85 + Math.random() * 15) + '%';
+                document.getElementById('classACount').textContent = this.data.classA.length;
+                document.getElementById('classBCount').textContent = this.data.classB.length;
+                document.getElementById('marginWidth').textContent = (0.8 + Math.random() * 0.8).toFixed(1);
+            }
+            
+            draw() {
+                this.ctx.clearRect(0, 0, this.width, this.height);
+                
+                const centerX = this.width / 2;
+                const centerY = this.height / 2;
+                const scale = Math.min(this.width, this.height) / 8;
+                
+                // Draw decision boundary (vertical line through center)
+                this.ctx.strokeStyle = '#8b5cf6';
+                this.ctx.lineWidth = 2;
+                this.ctx.setLineDash([5, 5]);
+                this.ctx.beginPath();
+                this.ctx.moveTo(centerX, 40);
+                this.ctx.lineTo(centerX, this.height - 40);
+                this.ctx.stroke();
+                this.ctx.setLineDash([]);
+                
+                // Draw Class A points (red)
+                this.ctx.fillStyle = '#ef4444';
+                this.data.classA.forEach(point => {
+                    const x = centerX + point.x * scale;
+                    const y = centerY + point.y * scale;
+                    this.ctx.beginPath();
+                    this.ctx.arc(x, y, 4, 0, Math.PI * 2);
+                    this.ctx.fill();
+                });
+                
+                // Draw Class B points (blue)
+                this.ctx.fillStyle = '#3b82f6';
+                this.data.classB.forEach(point => {
+                    const x = centerX + point.x * scale;
+                    const y = centerY + point.y * scale;
+                    this.ctx.beginPath();
+                    this.ctx.arc(x, y, 4, 0, Math.PI * 2);
+                    this.ctx.fill();
+                });
+                
+                // Add legend
+                this.ctx.font = '14px Segoe UI';
+                this.ctx.fillStyle = '#ef4444';
+                this.ctx.fillText('● Class A', 20, 30);
+                this.ctx.fillStyle = '#3b82f6';
+                this.ctx.fillText('● Class B', 20, 50);
+                this.ctx.fillStyle = '#8b5cf6';
+                this.ctx.fillText('― Decision Boundary', 20, 70);
+            }
+            
+            refresh() {
+                this.generateData();
+                this.draw();
+            }
+        }
+
+        // Clustering Demo
+        class ClusteringDemo {
+            constructor() {
+                this.canvas = document.getElementById('clusteringChart');
+                
+                if (!this.canvas) {
+                    console.error('ClusteringDemo: Canvas element not found');
+                    return;
+                }
+                
+                this.ctx = this.canvas.getContext('2d');
+                if (!this.ctx) {
+                    console.error('ClusteringDemo: Unable to get 2D context');
+                    return;
+                }
+                
+                this.setupCanvas();
+                this.setupControls();
+                this.data = [];
+                this.centroids = [];
+                this.colors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
+                this.generateData();
+                this.runKMeans();
+            }
+            
+            setupCanvas() {
+                const rect = this.canvas.getBoundingClientRect();
+                // Ensure minimum dimensions for hidden canvases
+                const width = Math.max(rect.width, 400);
+                const height = Math.max(rect.height, 300);
+                
+                this.canvas.width = width * devicePixelRatio;
+                this.canvas.height = height * devicePixelRatio;
+                this.ctx.scale(devicePixelRatio, devicePixelRatio);
+                this.width = width;
+                this.height = height;
+            }
+            
+            setupControls() {
+                const pointsSlider = document.getElementById('clusteringPoints');
+                const kSlider = document.getElementById('clusteringK');
+                
+                if (pointsSlider) {
+                    pointsSlider.addEventListener('input', (e) => {
+                        document.getElementById('clusteringPointsValue').textContent = e.target.value;
+                        this.generateData();
+                        this.runKMeans();
+                    });
+                }
+                
+                if (kSlider) {
+                    kSlider.addEventListener('input', (e) => {
+                        document.getElementById('clusteringKValue').textContent = e.target.value;
+                    });
+                }
+            }
+            
+            generateData() {
+                const numPoints = parseInt(document.getElementById('clusteringPoints').value);
+                
+                this.data = [];
+                
+                // Generate random clusters
+                const numNaturalClusters = 3;
+                const clusterCenters = [];
+                for (let i = 0; i < numNaturalClusters; i++) {
+                    clusterCenters.push({
+                        x: (Math.random() - 0.5) * 6,
+                        y: (Math.random() - 0.5) * 6
+                    });
+                }
+                
+                // Generate points around these centers
+                for (let i = 0; i < numPoints; i++) {
+                    const clusterIndex = Math.floor(Math.random() * numNaturalClusters);
+                    const center = clusterCenters[clusterIndex];
+                    
+                    const angle = Math.random() * Math.PI * 2;
+                    const radius = Math.random() * 1.5;
+                    
+                    this.data.push({
+                        x: center.x + Math.cos(angle) * radius,
+                        y: center.y + Math.sin(angle) * radius,
+                        cluster: -1
+                    });
+                }
+            }
+            
+            runKMeans() {
+                const k = parseInt(document.getElementById('clusteringK').value);
+                
+                // Initialize centroids randomly
+                this.centroids = [];
+                for (let i = 0; i < k; i++) {
+                    this.centroids.push({
+                        x: (Math.random() - 0.5) * 8,
+                        y: (Math.random() - 0.5) * 8
+                    });
+                }
+                
+                let iterations = 0;
+                const maxIterations = 50;
+                
+                while (iterations < maxIterations) {
+                    // Assign points to nearest centroid
+                    this.data.forEach(point => {
+                        let minDistance = Infinity;
+                        let nearestCluster = 0;
+                        
+                        this.centroids.forEach((centroid, index) => {
+                            const distance = Math.sqrt(
+                                Math.pow(point.x - centroid.x, 2) + Math.pow(point.y - centroid.y, 2)
+                            );
+                            if (distance < minDistance) {
+                                minDistance = distance;
+                                nearestCluster = index;
+                            }
+                        });
+                        
+                        point.cluster = nearestCluster;
+                    });
+                    
+                    // Update centroids
+                    let converged = true;
+                    this.centroids.forEach((centroid, index) => {
+                        const clusterPoints = this.data.filter(p => p.cluster === index);
+                        if (clusterPoints.length > 0) {
+                            const newX = clusterPoints.reduce((sum, p) => sum + p.x, 0) / clusterPoints.length;
+                            const newY = clusterPoints.reduce((sum, p) => sum + p.y, 0) / clusterPoints.length;
+                            
+                            if (Math.abs(centroid.x - newX) > 0.01 || Math.abs(centroid.y - newY) > 0.01) {
+                                converged = false;
+                            }
+                            
+                            centroid.x = newX;
+                            centroid.y = newY;
+                        }
+                    });
+                    
+                    iterations++;
+                    if (converged) break;
+                }
+                
+                this.updateStats(iterations);
+                this.draw();
+            }
+            
+            updateStats(iterations) {
+                document.getElementById('clusterIterations').textContent = iterations;
+                
+                // Calculate inertia
+                let inertia = 0;
+                this.data.forEach(point => {
+                    const centroid = this.centroids[point.cluster];
+                    if (centroid) {
+                        inertia += Math.pow(point.x - centroid.x, 2) + Math.pow(point.y - centroid.y, 2);
+                    }
+                });
+                document.getElementById('clusterInertia').textContent = inertia.toFixed(1);
+                
+                // Calculate cluster sizes
+                const clusterSizes = new Array(this.centroids.length).fill(0);
+                this.data.forEach(point => {
+                    if (point.cluster >= 0) {
+                        clusterSizes[point.cluster]++;
+                    }
+                });
+                
+                if (clusterSizes.length > 0) {
+                    document.getElementById('largestCluster').textContent = Math.max(...clusterSizes) + ' pts';
+                    document.getElementById('smallestCluster').textContent = Math.min(...clusterSizes) + ' pts';
+                }
+            }
+            
+            draw() {
+                this.ctx.clearRect(0, 0, this.width, this.height);
+                
+                const centerX = this.width / 2;
+                const centerY = this.height / 2;
+                const scale = Math.min(this.width, this.height) / 16;
+                
+                // Draw data points
+                this.data.forEach(point => {
+                    const x = centerX + point.x * scale;
+                    const y = centerY + point.y * scale;
+                    
+                    this.ctx.fillStyle = this.colors[point.cluster] || '#64748b';
+                    this.ctx.beginPath();
+                    this.ctx.arc(x, y, 3, 0, Math.PI * 2);
+                    this.ctx.fill();
+                });
+                
+                // Draw centroids
+                this.centroids.forEach((centroid, index) => {
+                    const x = centerX + centroid.x * scale;
+                    const y = centerY + centroid.y * scale;
+                    
+                    this.ctx.fillStyle = this.colors[index];
+                    this.ctx.strokeStyle = '#000000';
+                    this.ctx.lineWidth = 2;
+                    this.ctx.beginPath();
+                    this.ctx.arc(x, y, 8, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    this.ctx.stroke();
+                });
+            }
+            
+            refresh() {
+                this.generateData();
+                this.runKMeans();
+            }
+        }
+
+        // Global functions
+        function generateNewData(demoType) {
+            if (demoInstances[demoType]) {
+                demoInstances[demoType].generateData();
+                demoInstances[demoType].draw();
+            } else {
+                console.warn(`Demo ${demoType} not initialized yet`);
+            }
+        }
+
+        function runClustering() {
+            if (demoInstances['clustering']) {
+                demoInstances['clustering'].runKMeans();
+            } else {
+                console.warn('Clustering demo not initialized yet');
+            }
+        }
+
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            if (container) {
+                for (let i = 0; i < 35; i++) {
+                    const element = document.createElement('div');
+                    element.className = 'floating-element';
+                    element.style.left = Math.random() * 100 + '%';
+                    element.style.animationDelay = Math.random() * 18 + 's';
+                    element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                    container.appendChild(element);
+                }
+            }
+        }
+
+        // Initialize everything when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing components...');
+            
+            // Initialize demo manager
+            const demoManager = new DemoManager();
+            
+            // Only initialize the visible demo (regression) - others will be lazy-loaded
+            demoInstances['regression'] = new RegressionDemo();
+            
+            // Create floating elements
+            createFloatingElements();
+            
+            console.log('Initial components initialized successfully');
+        });
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week1_Slide18.html';
+            }
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                window.location.href = 'Week1_Slide20.html';
+            }
+        });
+
+    
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                if (this.closeBtn) {
+                    this.closeBtn.addEventListener('click', () => this.close());
+                }
+                if (this.overlay) {
+                    this.overlay.addEventListener('click', (e) => {
+                        if (e.target === this.overlay) this.close();
+                    });
+                }
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                if (this.title) this.title.textContent = title;
+                if (this.content) this.content.innerHTML = content;
+                if (this.overlay) {
+                    this.overlay.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                }
+            }
+            
+            close() {
+                if (this.overlay) {
+                    this.overlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+            }
+        }
+
+        const modal = new ModalSystem();
+    </script>
+</body>
+</html>

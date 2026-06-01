@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Voting Classifiers</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .voting-types {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .voting-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            animation: slideInFromBottom 1s ease-out calc(0.3s * var(--index)) both;
+        }
+
+        .voting-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .voting-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .voting-name {
+            font-size: 2em;
+            color: #0d9488;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .voting-formula {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 15px;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+            margin: 20px 0;
+            font-size: 1.1em;
+        }
+
+        .demo-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            animation: slideInFromBottom 1s ease-out 0.8s both;
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+            text-align: center;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .demo-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .classifier-panel {
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            border-radius: 15px;
+            padding: 25px;
+        }
+
+        .classifier-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .classifier-box {
+            background: linear-gradient(135deg, #ccfbf1, #99f6e4);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            border: 2px solid #14b8a6;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .classifier-box:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(13, 148, 136, 0.3);
+        }
+
+        .classifier-name {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+        }
+
+        .classifier-prediction {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #134e4a;
+        }
+
+        .voting-result {
+            background: #1e293b;
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .result-title {
+            color: #5eead4;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+
+        .result-value {
+            font-size: 1.5em;
+            font-weight: 700;
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .control-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(13, 148, 136, 0.3);
+        }
+
+        .implementation-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            animation: slideInFromBottom 1s ease-out 1s both;
+            margin-top: 40px;
+        }
+
+        .code-example {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+            line-height: 1.6;
+        }
+
+        .code-comment {
+            color: #94a3b8;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 1200px) {
+            .voting-types { grid-template-columns: 1fr; }
+            .demo-container { grid-template-columns: 1fr; }
+            .classifier-grid { grid-template-columns: 1fr 1fr; }
+        }
+    
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <div class="course-info">CS5710 - Week 4</div>
+    <div class="slide-number">Slide 79 of 80</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Voting Classifiers</h1>
+        
+        <div class="voting-types">
+            <div class="voting-card" style="--index: 1;">
+                <div class="voting-header">
+                    <div class="voting-icon">🗳️</div>
+                    <div class="voting-name">Hard Voting</div>
+                </div>
+                
+                <div class="voting-formula">
+                    ŷ = mode{h₁(x), h₂(x), ..., hₘ(x)}
+                </div>
+                
+                <div style="color: #475569; line-height: 1.6; text-align: center;">
+                    <strong>Majority Rule:</strong> Each classifier votes for a class, and the class with the most votes wins. Simple democratic approach.
+                    <br><br>
+                    <strong>Example:</strong> If 3 classifiers predict [Cat, Dog, Cat], the final prediction is Cat (2 votes vs 1).
+                </div>
+            </div>
+            
+            <div class="voting-card" style="--index: 2;">
+                <div class="voting-header">
+                    <div class="voting-icon">📊</div>
+                    <div class="voting-name">Soft Voting</div>
+                </div>
+                
+                <div class="voting-formula">
+                    ŷ = argmax Σᵢ pᵢ(class)
+                </div>
+                
+                <div style="color: #475569; line-height: 1.6; text-align: center;">
+                    <strong>Probability Average:</strong> Averages class probabilities from all classifiers, then picks the class with highest average probability.
+                    <br><br>
+                    <strong>Example:</strong> Average probabilities [Cat: 0.7, Dog: 0.3] across all models, then predict the class with max average.
+                </div>
+            </div>
+        </div>
+        
+        <div class="demo-section">
+            <h2 class="section-title">Interactive Voting Demo</h2>
+            
+            <div class="demo-container">
+                <div class="classifier-panel">
+                    <h3 style="color: #0d9488; text-align: center; margin-bottom: 20px;">Base Classifiers</h3>
+                    
+                    <div class="classifier-grid">
+                        <div class="classifier-box" data-classifier="svm">
+                            <div class="classifier-name">SVM</div>
+                            <div class="classifier-prediction" id="svm-pred">Cat</div>
+                        </div>
+                        
+                        <div class="classifier-box" data-classifier="rf">
+                            <div class="classifier-name">Random Forest</div>
+                            <div class="classifier-prediction" id="rf-pred">Dog</div>
+                        </div>
+                        
+                        <div class="classifier-box" data-classifier="nb">
+                            <div class="classifier-name">Naive Bayes</div>
+                            <div class="classifier-prediction" id="nb-pred">Cat</div>
+                        </div>
+                        
+                        <div class="classifier-box" data-classifier="lr">
+                            <div class="classifier-name">Logistic Reg.</div>
+                            <div class="classifier-prediction" id="lr-pred">Cat</div>
+                        </div>
+                        
+                        <div class="classifier-box" data-classifier="knn">
+                            <div class="classifier-name">k-NN</div>
+                            <div class="classifier-prediction" id="knn-pred">Dog</div>
+                        </div>
+                        
+                        <div class="classifier-box" data-classifier="dt">
+                            <div class="classifier-name">Decision Tree</div>
+                            <div class="classifier-prediction" id="dt-pred">Bird</div>
+                        </div>
+                    </div>
+                    
+                    <div class="control-buttons">
+                        <button class="control-btn" onclick="randomizePredictions()">New Sample</button>
+                        <button class="control-btn" onclick="updateVoting()">Update Vote</button>
+                    </div>
+                </div>
+                
+                <div class="classifier-panel">
+                    <h3 style="color: #0d9488; text-align: center; margin-bottom: 20px;">Voting Results</h3>
+                    
+                    <div class="voting-result">
+                        <div class="result-title">Hard Voting Result</div>
+                        <div class="result-value" id="hard-result">Cat (3 votes)</div>
+                    </div>
+                    
+                    <div class="voting-result">
+                        <div class="result-title">Soft Voting Result</div>
+                        <div class="result-value" id="soft-result">Cat (0.65 prob)</div>
+                    </div>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px; text-align: center; color: #0d9488;">
+                        <strong>Vote Breakdown:</strong><br>
+                        <span id="vote-breakdown">Cat: 3, Dog: 2, Bird: 1</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="implementation-section">
+            <h2 class="section-title">Implementation Example</h2>
+            
+            <div class="code-example">
+<span class="code-comment"># Voting Classifier Implementation</span>
+from sklearn.ensemble import VotingClassifier
+from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.naive_bayes import GaussianNB
+
+<span class="code-comment"># Define base classifiers</span>
+classifiers = [
+    ('svm', SVC(probability=True)),      <span class="code-comment"># Need probability=True for soft voting</span>
+    ('rf', RandomForestClassifier()),
+    ('lr', LogisticRegression()),
+    ('nb', GaussianNB())
+]
+
+<span class="code-comment"># Hard Voting Classifier</span>
+hard_voting_clf = VotingClassifier(
+    estimators=classifiers,
+    voting='hard'  <span class="code-comment"># Majority vote</span>
+)
+
+<span class="code-comment"># Soft Voting Classifier (usually performs better)</span>
+soft_voting_clf = VotingClassifier(
+    estimators=classifiers,
+    voting='soft'  <span class="code-comment"># Average probabilities</span>
+)
+
+<span class="code-comment"># Train the ensemble</span>
+hard_voting_clf.fit(X_train, y_train)
+soft_voting_clf.fit(X_train, y_train)
+
+<span class="code-comment"># Make predictions</span>
+hard_predictions = hard_voting_clf.predict(X_test)
+soft_predictions = soft_voting_clf.predict(X_test)
+
+<span class="code-comment"># Compare performance</span>
+print(f"Hard Voting Accuracy: {hard_voting_clf.score(X_test, y_test):.3f}")
+print(f"Soft Voting Accuracy: {soft_voting_clf.score(X_test, y_test):.3f}")
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week4_Slide78.html" class="nav-btn">← Previous</a>
+        <a href="Week4_Slide80.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Sample predictions data
+        const classifiers = ['svm', 'rf', 'nb', 'lr', 'knn', 'dt'];
+        const classes = ['Cat', 'Dog', 'Bird'];
+        const probabilities = {
+            'Cat': [0.8, 0.6, 0.7, 0.9, 0.4, 0.3],
+            'Dog': [0.15, 0.35, 0.2, 0.08, 0.5, 0.2],
+            'Bird': [0.05, 0.05, 0.1, 0.02, 0.1, 0.5]
+        };
+
+        function randomizePredictions() {
+            classifiers.forEach(clf => {
+                // Random class prediction
+                const randomClass = classes[Math.floor(Math.random() * classes.length)];
+                document.getElementById(`${clf}-pred`).textContent = randomClass;
+            });
+            
+            // Randomize probabilities
+            classes.forEach(cls => {
+                probabilities[cls] = classifiers.map(() => Math.random());
+                // Normalize probabilities for each classifier
+                for (let i = 0; i < classifiers.length; i++) {
+                    let sum = 0;
+                    classes.forEach(c => sum += probabilities[c][i]);
+                    classes.forEach(c => probabilities[c][i] /= sum);
+                }
+            });
+            
+            updateVoting();
+        }
+
+        function updateVoting() {
+            // Hard voting - count votes
+            const votes = { 'Cat': 0, 'Dog': 0, 'Bird': 0 };
+            classifiers.forEach(clf => {
+                const prediction = document.getElementById(`${clf}-pred`).textContent;
+                votes[prediction]++;
+            });
+            
+            // Find winner for hard voting
+            const hardWinner = Object.keys(votes).reduce((a, b) => votes[a] > votes[b] ? a : b);
+            document.getElementById('hard-result').textContent = `${hardWinner} (${votes[hardWinner]} votes)`;
+            
+            // Soft voting - average probabilities
+            const avgProbs = {};
+            classes.forEach(cls => {
+                avgProbs[cls] = probabilities[cls].reduce((sum, prob) => sum + prob, 0) / classifiers.length;
+            });
+            
+            // Find winner for soft voting
+            const softWinner = Object.keys(avgProbs).reduce((a, b) => avgProbs[a] > avgProbs[b] ? a : b);
+            document.getElementById('soft-result').textContent = `${softWinner} (${avgProbs[softWinner].toFixed(2)} prob)`;
+            
+            // Update vote breakdown
+            const breakdown = Object.keys(votes)
+                .map(cls => `${cls}: ${votes[cls]}`)
+                .join(', ');
+            document.getElementById('vote-breakdown').textContent = breakdown;
+        }
+
+        // Initialize components
+        createFloatingElements();
+        updateVoting();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week4_Slide78.html';
+            } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                window.location.href = 'Week4_Slide80.html';
+            }
+        });
+    
+        // Generic click handler for interactive elements
+        document.querySelectorAll('[style*="cursor: pointer"], .clickable, [cursor]').forEach(el => {
+            if (!el.onclick && !el.dataset.clickHandlerAttached) {
+                el.addEventListener('click', function() {
+                    if (this.classList.contains('nav-btn')) return; // Skip nav buttons
+                    console.log('Element clicked:', this.className);
+                });
+                this.dataset.clickHandlerAttached = 'true';
+            }
+        });
+    
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                if (this.closeBtn) {
+                    this.closeBtn.addEventListener('click', () => this.close());
+                }
+                if (this.overlay) {
+                    this.overlay.addEventListener('click', (e) => {
+                        if (e.target === this.overlay) this.close();
+                    });
+                }
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                if (this.title) this.title.textContent = title;
+                if (this.content) this.content.innerHTML = content;
+                if (this.overlay) {
+                    this.overlay.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                }
+            }
+            
+            close() {
+                if (this.overlay) {
+                    this.overlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+            }
+        }
+
+        const modal = new ModalSystem();
+    </script>
+</body>
+</html>

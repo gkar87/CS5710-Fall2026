@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - REST APIs for ML Models</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .framework-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .api-example-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .framework-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .framework-card {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            padding: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid #0d9488;
+        }
+
+        .framework-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.2);
+        }
+
+        .framework-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .framework-logo {
+            font-size: 2.5em;
+            margin-right: 15px;
+        }
+
+        .framework-name {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: #0d9488;
+        }
+
+        .framework-tagline {
+            color: #64748b;
+            font-style: italic;
+            margin-bottom: 15px;
+        }
+
+        .framework-features {
+            list-style: none;
+        }
+
+        .framework-features li {
+            padding: 5px 0;
+            color: #475569;
+            position: relative;
+            padding-left: 20px;
+        }
+
+        .framework-features li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #059669;
+            font-weight: 600;
+        }
+
+        .api-demo {
+            background: #1e293b;
+            color: #e2e8f0;
+            border-radius: 15px;
+            padding: 25px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .api-demo:hover {
+            border-color: #0d9488;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.2);
+        }
+
+        .code-comment {
+            color: #64748b;
+        }
+
+        .code-string {
+            color: #10b981;
+        }
+
+        .code-keyword {
+            color: #3b82f6;
+        }
+
+        .code-function {
+            color: #8b5cf6;
+        }
+
+        .endpoint-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .endpoint-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .endpoint-card {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 15px;
+            padding: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .endpoint-card:hover {
+            transform: translateY(-5px);
+            border-color: #0d9488;
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.2);
+        }
+
+        .http-method {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .method-post {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .method-get {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .method-put {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .method-delete {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .endpoint-path {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 10px;
+        }
+
+        .endpoint-description {
+            color: #64748b;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .endpoint-example {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            border-left: 3px solid #0d9488;
+        }
+
+        .best-practices-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            margin-top: 30px;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .practices-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .practice-card {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 15px;
+            padding: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .practice-card:hover {
+            transform: translateY(-5px);
+            border-color: #0d9488;
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.2);
+        }
+
+        .practice-icon {
+            font-size: 2.5em;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .practice-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .practice-description {
+            color: #64748b;
+            line-height: 1.5;
+            text-align: center;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 900px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .framework-comparison { grid-template-columns: 1fr; }
+            .endpoint-grid { grid-template-columns: 1fr; }
+            .practices-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 12</div>
+    <div class="slide-number">Slide 236 of 240</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">REST APIs for ML Models</h1>
+        
+        <div class="content-layout">
+            <div class="framework-section">
+                <h2 class="section-title">Framework Comparison</h2>
+                
+                <div class="framework-comparison">
+                    <div class="framework-card">
+                        <div class="framework-header">
+                            <div class="framework-logo">⚡</div>
+                            <div class="framework-name">FastAPI</div>
+                        </div>
+                        <div class="framework-tagline">Modern, fast web framework for building APIs</div>
+                        <ul class="framework-features">
+                            <li>Automatic API documentation</li>
+                            <li>Type hints and validation</li>
+                            <li>Async support</li>
+                            <li>High performance</li>
+                            <li>Modern Python features</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="framework-card">
+                        <div class="framework-header">
+                            <div class="framework-logo">🌶️</div>
+                            <div class="framework-name">Flask</div>
+                        </div>
+                        <div class="framework-tagline">Lightweight and flexible micro-framework</div>
+                        <ul class="framework-features">
+                            <li>Simple and minimalist</li>
+                            <li>Large ecosystem</li>
+                            <li>Flexible and customizable</li>
+                            <li>Well-documented</li>
+                            <li>Mature and stable</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div style="margin-top: 25px; padding: 20px; background: linear-gradient(135deg, #f0fdfa, #ccfbf1); border-radius: 12px;">
+                    <strong style="color: #0d9488;">Quick Comparison:</strong><br>
+                    <span style="color: #475569;">
+                        <strong>FastAPI:</strong> Better for new projects, automatic docs, type safety<br>
+                        <strong>Flask:</strong> More mature ecosystem, greater flexibility, easier learning curve
+                    </span>
+                </div>
+            </div>
+
+            <div class="api-example-section">
+                <h2 class="section-title">FastAPI Example</h2>
+                
+                <div class="api-demo">
+<span class="code-keyword">from</span> <span class="code-string">fastapi</span> <span class="code-keyword">import</span> FastAPI, HTTPException
+<span class="code-keyword">from</span> <span class="code-string">pydantic</span> <span class="code-keyword">import</span> BaseModel
+<span class="code-keyword">import</span> <span class="code-string">joblib</span>
+<span class="code-keyword">import</span> <span class="code-string">numpy</span> <span class="code-keyword">as</span> np
+
+<span class="code-comment"># Initialize FastAPI app</span>
+app = <span class="code-function">FastAPI</span>(title=<span class="code-string">"ML Model API"</span>)
+
+<span class="code-comment"># Load trained model</span>
+model = joblib.<span class="code-function">load</span>(<span class="code-string">"loan_model.pkl"</span>)
+
+<span class="code-comment"># Request/Response schemas</span>
+<span class="code-keyword">class</span> <span class="code-function">PredictionRequest</span>(BaseModel):
+    credit_score: <span class="code-keyword">float</span>
+    annual_income: <span class="code-keyword">float</span>
+    debt_to_income: <span class="code-keyword">float</span>
+    employment_length: <span class="code-keyword">int</span>
+
+<span class="code-keyword">class</span> <span class="code-function">PredictionResponse</span>(BaseModel):
+    prediction: <span class="code-keyword">str</span>
+    probability: <span class="code-keyword">float</span>
+    confidence: <span class="code-keyword">str</span>
+
+<span class="code-comment"># Prediction endpoint</span>
+<span class="code-keyword">@app.post</span>(<span class="code-string">"/predict"</span>, 
+           response_model=PredictionResponse)
+<span class="code-keyword">async def</span> <span class="code-function">predict</span>(request: PredictionRequest):
+    <span class="code-keyword">try</span>:
+        features = np.<span class="code-function">array</span>([[
+            request.credit_score,
+            request.annual_income,
+            request.debt_to_income,
+            request.employment_length
+        ]])
+        
+        prediction = model.<span class="code-function">predict</span>(features)[0]
+        probability = model.<span class="code-function">predict_proba</span>(features)[0].max()
+        
+        <span class="code-keyword">return</span> PredictionResponse(
+            prediction=<span class="code-string">"approved"</span> <span class="code-keyword">if</span> prediction == 1 <span class="code-keyword">else</span> <span class="code-string">"rejected"</span>,
+            probability=probability,
+            confidence=<span class="code-string">"high"</span> <span class="code-keyword">if</span> probability > 0.8 <span class="code-keyword">else</span> <span class="code-string">"low"</span>
+        )
+    
+    <span class="code-keyword">except</span> Exception <span class="code-keyword">as</span> e:
+        <span class="code-keyword">raise</span> <span class="code-function">HTTPException</span>(status_code=500, 
+                              detail=<span class="code-function">str</span>(e))
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint-section">
+            <h2 class="section-title">Common ML API Endpoints</h2>
+            
+            <div class="endpoint-grid">
+                <div class="endpoint-card">
+                    <div class="http-method method-post">POST</div>
+                    <div class="endpoint-path">/predict</div>
+                    <div class="endpoint-description">
+                        Make predictions on new data. Primary endpoint for inference requests.
+                    </div>
+                    <div class="endpoint-example">
+                        curl -X POST /predict \
+  -H "Content-Type: application/json" \
+  -d '{"features": [0.5, 1.2, 0.8]}'
+                    </div>
+                </div>
+
+                <div class="endpoint-card">
+                    <div class="http-method method-post">POST</div>
+                    <div class="endpoint-path">/predict/batch</div>
+                    <div class="endpoint-description">
+                        Process multiple predictions in a single request for efficiency.
+                    </div>
+                    <div class="endpoint-example">
+                        curl -X POST /predict/batch \
+  -H "Content-Type: application/json" \
+  -d '{"samples": [[0.5,1.2], [0.8,0.3]]}'
+                    </div>
+                </div>
+
+                <div class="endpoint-card">
+                    <div class="http-method method-get">GET</div>
+                    <div class="endpoint-path">/model/info</div>
+                    <div class="endpoint-description">
+                        Get model metadata, version, and feature information.
+                    </div>
+                    <div class="endpoint-example">
+                        curl -X GET /model/info
+                        
+Response: {"version": "1.2.0", 
+          "features": ["age", "income"]}
+                    </div>
+                </div>
+
+                <div class="endpoint-card">
+                    <div class="http-method method-get">GET</div>
+                    <div class="endpoint-path">/health</div>
+                    <div class="endpoint-description">
+                        Health check endpoint for monitoring and load balancer status.
+                    </div>
+                    <div class="endpoint-example">
+                        curl -X GET /health
+                        
+Response: {"status": "healthy", 
+          "model_loaded": true}
+                    </div>
+                </div>
+
+                <div class="endpoint-card">
+                    <div class="http-method method-post">POST</div>
+                    <div class="endpoint-path">/explain</div>
+                    <div class="endpoint-description">
+                        Get model explanations for individual predictions using SHAP or LIME.
+                    </div>
+                    <div class="endpoint-example">
+                        curl -X POST /explain \
+  -H "Content-Type: application/json" \
+  -d '{"features": [0.5, 1.2], 
+       "method": "shap"}'
+                    </div>
+                </div>
+
+                <div class="endpoint-card">
+                    <div class="http-method method-get">GET</div>
+                    <div class="endpoint-path">/metrics</div>
+                    <div class="endpoint-description">
+                        Expose metrics for monitoring system performance and model drift.
+                    </div>
+                    <div class="endpoint-example">
+                        curl -X GET /metrics
+                        
+Response: {"requests_per_minute": 150,
+          "avg_latency_ms": 45}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="best-practices-section">
+            <h2 class="section-title">API Best Practices</h2>
+            
+            <div class="practices-grid">
+                <div class="practice-card">
+                    <div class="practice-icon">🔒</div>
+                    <div class="practice-title">Authentication & Security</div>
+                    <div class="practice-description">
+                        Implement API keys, JWT tokens, or OAuth. Use HTTPS, validate inputs, and rate limit requests.
+                    </div>
+                </div>
+                
+                <div class="practice-card">
+                    <div class="practice-icon">📋</div>
+                    <div class="practice-title">Input Validation</div>
+                    <div class="practice-description">
+                        Validate data types, ranges, and required fields. Use schema validation (Pydantic, Marshmallow).
+                    </div>
+                </div>
+                
+                <div class="practice-card">
+                    <div class="practice-icon">⚡</div>
+                    <div class="practice-title">Performance Optimization</div>
+                    <div class="practice-description">
+                        Use async operations, batch processing, caching, and connection pooling for better throughput.
+                    </div>
+                </div>
+                
+                <div class="practice-card">
+                    <div class="practice-icon">🚨</div>
+                    <div class="practice-title">Error Handling</div>
+                    <div class="practice-description">
+                        Return meaningful error codes, detailed messages, and consistent error response format.
+                    </div>
+                </div>
+                
+                <div class="practice-card">
+                    <div class="practice-icon">📖</div>
+                    <div class="practice-title">Documentation</div>
+                    <div class="practice-description">
+                        Auto-generate API docs (OpenAPI/Swagger), provide examples, and maintain changelog.
+                    </div>
+                </div>
+                
+                <div class="practice-card">
+                    <div class="practice-icon">📊</div>
+                    <div class="practice-title">Monitoring & Logging</div>
+                    <div class="practice-description">
+                        Log requests/responses, monitor latency, track error rates, and implement health checks.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week12_Slide235.html" class="nav-btn">← Previous</a>
+        <a href="Week12_Slide237.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Framework card click handlers
+        document.querySelectorAll('.framework-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const name = this.querySelector('.framework-name').textContent;
+                
+                const frameworkInfo = {
+                    'FastAPI': {
+                        overview: 'Modern, fast web framework for building APIs with Python 3.6+ based on standard Python type hints',
+                        advantages: 'Automatic documentation, type validation, async support, high performance, modern Python features',
+                        disadvantages: 'Newer ecosystem, fewer third-party extensions, requires Python 3.6+',
+                        use_cases: 'New ML projects, high-performance APIs, automatic documentation needs, type-safe applications',
+                        performance: 'One of the fastest Python frameworks, comparable to NodeJS and Go',
+                        learning_curve: 'Easy if familiar with modern Python, type hints, and async programming'
+                    },
+                    'Flask': {
+                        overview: 'Lightweight WSGI web application framework that provides flexibility and simplicity',
+                        advantages: 'Simple and minimalist, huge ecosystem, very flexible, well-documented, mature',
+                        disadvantages: 'No built-in validation, manual documentation, synchronous by default',
+                        use_cases: 'Legacy integration, custom requirements, when flexibility is key, prototyping',
+                        performance: 'Good performance, can be enhanced with Gunicorn, nginx, and caching',
+                        learning_curve: 'Very easy to get started, gentle learning curve, lots of tutorials'
+                    }
+                };
+                
+                const info = frameworkInfo[name];
+                modal.show(`Framework: ${name}`, `
+                    <div class="modal-highlight">
+                        <strong>${name}</strong>
+                    </div>
+                    <p><strong>Overview:</strong> ${info.overview}</p>
+                    <p><strong>Key advantages:</strong> ${info.advantages}</p>
+                    <p><strong>Limitations:</strong> ${info.disadvantages}</p>
+                    <p><strong>Best use cases:</strong> ${info.use_cases}</p>
+                    <p><strong>Performance:</strong> ${info.performance}</p>
+                    <p><strong>Learning curve:</strong> ${info.learning_curve}</p>
+                    
+                    <div class="modal-code">
+                        ${name} ML API Example:
+                        
+                        ${name === 'FastAPI' ? `
+                        from fastapi import FastAPI
+                        from pydantic import BaseModel
+                        
+                        app = FastAPI(title="ML Model API", version="1.0.0")
+                        
+                        class PredictionRequest(BaseModel):
+                            features: List[float]
+                            
+                        @app.post("/predict")
+                        async def predict(request: PredictionRequest):
+                            # Automatic validation and documentation
+                            result = model.predict([request.features])
+                            return {"prediction": result[0]}
+                        
+                        # Automatic OpenAPI docs at /docs` : `
+                        from flask import Flask, request, jsonify
+                        
+                        app = Flask(__name__)
+                        
+                        @app.route('/predict', methods=['POST'])
+                        def predict():
+                            data = request.get_json()
+                            
+                            # Manual validation needed
+                            if 'features' not in data:
+                                return jsonify({'error': 'Missing features'}), 400
+                                
+                            result = model.predict([data['features']])
+                            return jsonify({'prediction': result[0]})
+                        
+                        if __name__ == '__main__':
+                            app.run(debug=True)`}
+                    </div>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                        <strong>💡 Decision Factors:</strong><br>
+                        Choose ${name} when: ${name === 'FastAPI' ? 'You want modern Python features, automatic documentation, high performance, and type safety. Great for new projects and microservices.' : 'You need maximum flexibility, have existing Flask knowledge, want a mature ecosystem, or are integrating with legacy systems.'}
+                    </div>
+                `);
+            });
+        });
+
+        // API demo click handler
+        document.querySelector('.api-demo').addEventListener('click', function() {
+            modal.show('FastAPI ML Model Implementation', `
+                <div class="modal-highlight">
+                    <strong>Complete FastAPI ML Model Service</strong>
+                </div>
+                <h4>Key Features Demonstrated:</h4>
+                <ul style="margin: 20px 0; line-height: 1.8;">
+                    <li><strong>Type Safety:</strong> Pydantic models ensure data validation</li>
+                    <li><strong>Automatic Documentation:</strong> OpenAPI/Swagger generated automatically</li>
+                    <li><strong>Error Handling:</strong> Structured exception handling with HTTP status codes</li>
+                    <li><strong>Async Support:</strong> Non-blocking request handling for better performance</li>
+                    <li><strong>Response Models:</strong> Structured and validated API responses</li>
+                </ul>
+                
+                <h4>Production Enhancements:</h4>
+                <div class="modal-code">
+                    # Additional production features
+                    
+                    from fastapi import FastAPI, HTTPException, Depends
+                    from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+                    from fastapi.middleware.cors import CORSMiddleware
+                    import redis
+                    import logging
+                    
+                    # Security
+                    security = HTTPBearer()
+                    
+                    # Caching
+                    cache = redis.Redis(host='localhost', port=6379, db=0)
+                    
+                    # CORS middleware
+                    app.add_middleware(
+                        CORSMiddleware,
+                        allow_origins=["*"],
+                        allow_methods=["*"],
+                        allow_headers=["*"],
+                    )
+                    
+                    # Authentication dependency
+                    def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+                        if not validate_token(credentials.credentials):
+                            raise HTTPException(status_code=401, detail="Invalid token")
+                    
+                    # Enhanced prediction with caching and auth
+                    @app.post("/predict", dependencies=[Depends(verify_token)])
+                    async def predict_with_cache(request: PredictionRequest):
+                        # Check cache first
+                        cache_key = f"prediction:{hash(str(request.dict()))}"
+                        cached_result = cache.get(cache_key)
+                        
+                        if cached_result:
+                            return json.loads(cached_result)
+                        
+                        # Make prediction
+                        result = await make_prediction(request)
+                        
+                        # Cache result (expire in 1 hour)
+                        cache.setex(cache_key, 3600, json.dumps(result))
+                        
+                        return result
+                </div>
+                
+                <h4>Running the Service:</h4>
+                <div class="modal-code">
+                    # Install dependencies
+                    pip install fastapi uvicorn python-multipart
+                    
+                    # Run development server
+                    uvicorn main:app --reload --host 0.0.0.0 --port 8000
+                    
+                    # Production deployment with Gunicorn
+                    gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000
+                    
+                    # Access automatic documentation at:
+                    # http://localhost:8000/docs (Swagger UI)
+                    # http://localhost:8000/redoc (ReDoc)
+                </div>
+            `);
+        });
+
+        // Endpoint card click handlers
+        document.querySelectorAll('.endpoint-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const method = this.querySelector('.http-method').textContent;
+                const path = this.querySelector('.endpoint-path').textContent;
+                const description = this.querySelector('.endpoint-description').textContent;
+                
+                const endpointDetails = {
+                    'POST /predict': {
+                        purpose: 'Primary inference endpoint for single predictions',
+                        request_format: 'JSON body with feature values matching model training schema',
+                        response_format: 'Prediction result with confidence scores and metadata',
+                        implementation_notes: 'Validate input schema, handle preprocessing, return structured response with error handling',
+                        example_use: 'Real-time predictions for user interfaces, mobile apps, or real-time decision systems'
+                    },
+                    'POST /predict/batch': {
+                        purpose: 'Efficient batch processing for multiple predictions',
+                        request_format: 'JSON array of feature vectors or structured batch request',
+                        response_format: 'Array of predictions maintaining input order',
+                        implementation_notes: 'Optimize for throughput, implement batching logic, handle partial failures gracefully',
+                        example_use: 'Processing uploaded CSV files, batch scoring for campaigns, offline analysis'
+                    },
+                    'GET /model/info': {
+                        purpose: 'Provide model metadata and API information',
+                        request_format: 'No body, optional query parameters for detail level',
+                        response_format: 'Model version, features, training date, performance metrics',
+                        implementation_notes: 'Include model version, feature schema, expected input format, performance statistics',
+                        example_use: 'Client validation, debugging, API discovery, model governance'
+                    },
+                    'GET /health': {
+                        purpose: 'Health check for load balancers and monitoring systems',
+                        request_format: 'Simple GET request with no parameters',
+                        response_format: 'Status indicator and service health details',
+                        implementation_notes: 'Check model loading, database connections, external dependencies',
+                        example_use: 'Kubernetes liveness/readiness probes, load balancer health checks, monitoring alerts'
+                    },
+                    'POST /explain': {
+                        purpose: 'Provide interpretable explanations for model predictions',
+                        request_format: 'Feature vector plus explanation method preference',
+                        response_format: 'Feature importance scores, explanation text, visualization data',
+                        implementation_notes: 'Integrate SHAP/LIME libraries, cache explanations for performance',
+                        example_use: 'Regulatory compliance, debugging model behavior, building user trust'
+                    },
+                    'GET /metrics': {
+                        purpose: 'Expose operational metrics for monitoring and alerting',
+                        request_format: 'GET request, optional time range parameters',
+                        response_format: 'Prometheus-format metrics or JSON performance data',
+                        implementation_notes: 'Track prediction latency, throughput, error rates, model drift metrics',
+                        example_use: 'Grafana dashboards, alerting systems, performance optimization, capacity planning'
+                    }
+                };
+                
+                const details = endpointDetails[`${method} ${path}`];
+                modal.show(`API Endpoint: ${method} ${path}`, `
+                    <div class="modal-highlight">
+                        <strong>${method} ${path}</strong><br>
+                        <em>${description}</em>
+                    </div>
+                    <p><strong>Purpose:</strong> ${details.purpose}</p>
+                    <p><strong>Request format:</strong> ${details.request_format}</p>
+                    <p><strong>Response format:</strong> ${details.response_format}</p>
+                    <p><strong>Implementation notes:</strong> ${details.implementation_notes}</p>
+                    <p><strong>Example use:</strong> ${details.example_use}</p>
+                    
+                    <div class="modal-code">
+                        Implementation Example:
+                        
+                        ${method === 'POST' && path === '/predict' ? `
+                        @app.post("/predict")
+                        async def predict(request: PredictionRequest):
+                            try:
+                                # Input validation (automatic with Pydantic)
+                                features = np.array([request.dict().values()])
+                                
+                                # Preprocessing
+                                features_scaled = scaler.transform(features)
+                                
+                                # Prediction
+                                prediction = model.predict(features_scaled)[0]
+                                probability = model.predict_proba(features_scaled)[0].max()
+                                
+                                # Response
+                                return {
+                                    "prediction": int(prediction),
+                                    "probability": float(probability),
+                                    "model_version": "1.2.0",
+                                    "timestamp": datetime.utcnow().isoformat()
+                                }
+                            except Exception as e:
+                                logger.error(f"Prediction error: {str(e)}")
+                                raise HTTPException(status_code=500, detail="Prediction failed")` : ''}
+                        
+                        ${method === 'POST' && path === '/predict/batch' ? `
+                        @app.post("/predict/batch")
+                        async def predict_batch(request: BatchPredictionRequest):
+                            try:
+                                features = np.array(request.samples)
+                                
+                                # Batch preprocessing
+                                features_scaled = scaler.transform(features)
+                                
+                                # Batch prediction
+                                predictions = model.predict(features_scaled)
+                                probabilities = model.predict_proba(features_scaled)
+                                
+                                return {
+                                    "predictions": predictions.tolist(),
+                                    "probabilities": probabilities.max(axis=1).tolist(),
+                                    "batch_size": len(predictions),
+                                    "processing_time_ms": time.time() - start_time
+                                }
+                            except Exception as e:
+                                raise HTTPException(status_code=500, detail="Batch prediction failed")` : ''}
+                        
+                        ${method === 'GET' && path === '/health' ? `
+                        @app.get("/health")
+                        async def health_check():
+                            health_status = {
+                                "status": "healthy",
+                                "timestamp": datetime.utcnow().isoformat(),
+                                "model_loaded": model is not None,
+                                "dependencies": {}
+                            }
+                            
+                            # Check database connection
+                            try:
+                                db.execute("SELECT 1")
+                                health_status["dependencies"]["database"] = "healthy"
+                            except:
+                                health_status["dependencies"]["database"] = "unhealthy"
+                                health_status["status"] = "degraded"
+                            
+                            # Check model inference
+                            try:
+                                test_features = np.array([[0.5, 0.5, 0.5]])
+                                model.predict(test_features)
+                                health_status["dependencies"]["model"] = "healthy"
+                            except:
+                                health_status["dependencies"]["model"] = "unhealthy"
+                                health_status["status"] = "unhealthy"
+                            
+                            status_code = 200 if health_status["status"] == "healthy" else 503
+                            return JSONResponse(content=health_status, status_code=status_code)` : ''}
+                    </div>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                        <strong>🔧 Best Practices:</strong><br>
+                        ${method === 'POST' ? 'Always validate input data, implement proper error handling, log prediction requests for monitoring, consider rate limiting for abuse prevention.' : 'Implement proper caching headers, ensure fast response times, include meaningful status information, follow REST conventions for response codes.'}
+                    </div>
+                `);
+            });
+        });
+
+        // Practice card click handlers
+        document.querySelectorAll('.practice-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('.practice-title').textContent;
+                
+                const practiceDetails = {
+                    'Authentication & Security': {
+                        importance: 'Critical for protecting your ML models and preventing unauthorized access',
+                        methods: 'API Keys, JWT tokens, OAuth 2.0, mutual TLS, IP whitelisting',
+                        implementation: 'Use FastAPI security utilities, implement middleware for auth validation',
+                        considerations: 'Token expiration, rate limiting, secure storage, audit logging'
+                    },
+                    'Input Validation': {
+                        importance: 'Prevents malicious inputs and ensures model receives expected data format',
+                        methods: 'Schema validation (Pydantic), type checking, range validation, sanitization',
+                        implementation: 'Define strict input schemas, validate data types and ranges, sanitize strings',
+                        considerations: 'Feature drift detection, handling missing values, data type consistency'
+                    },
+                    'Performance Optimization': {
+                        importance: 'Essential for meeting latency SLAs and handling production traffic',
+                        methods: 'Async operations, connection pooling, caching, batch processing, model optimization',
+                        implementation: 'Use async/await, Redis for caching, optimize model inference, load balancing',
+                        considerations: 'Memory usage, CPU optimization, GPU utilization, network latency'
+                    },
+                    'Error Handling': {
+                        importance: 'Provides clear feedback and helps with debugging and monitoring',
+                        methods: 'Structured error responses, HTTP status codes, detailed logging, graceful degradation',
+                        implementation: 'Custom exception handlers, consistent error format, comprehensive logging',
+                        considerations: 'Error code standardization, sensitive information exposure, error recovery'
+                    },
+                    'Documentation': {
+                        importance: 'Essential for API adoption and developer experience',
+                        methods: 'OpenAPI/Swagger, interactive docs, code examples, SDKs, tutorials',
+                        implementation: 'Auto-generated docs (FastAPI), comprehensive examples, versioning info',
+                        considerations: 'Keep docs updated, provide working examples, explain business context'
+                    },
+                    'Monitoring & Logging': {
+                        importance: 'Critical for production operations, debugging, and performance optimization',
+                        methods: 'Application logs, metrics collection, distributed tracing, alerting, dashboards',
+                        implementation: 'Structured logging, Prometheus metrics, health checks, error tracking',
+                        considerations: 'Log storage costs, PII in logs, alerting thresholds, dashboard design'
+                    }
+                };
+                
+                const details = practiceDetails[title];
+                modal.show(`Best Practice: ${title}`, `
+                    <div class="modal-highlight">
+                        <strong>${title}</strong>
+                    </div>
+                    <p><strong>Why it's important:</strong> ${details.importance}</p>
+                    <p><strong>Common methods:</strong> ${details.methods}</p>
+                    <p><strong>Implementation approach:</strong> ${details.implementation}</p>
+                    <p><strong>Key considerations:</strong> ${details.considerations}</p>
+                    
+                    <div class="modal-code">
+                        Implementation Example:
+                        
+                        ${title === 'Authentication & Security' ? `
+                        from fastapi import Depends, HTTPException, status
+                        from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+                        
+                        security = HTTPBearer()
+                        
+                        def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+                            token = credentials.credentials
+                            
+                            try:
+                                payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+                                username = payload.get("sub")
+                                if username is None:
+                                    raise HTTPException(status_code=401, detail="Invalid token")
+                                return username
+                            except jwt.PyJWTError:
+                                raise HTTPException(status_code=401, detail="Invalid token")
+                        
+                        @app.post("/predict")
+                        async def predict(request: PredictionRequest, 
+                                        user: str = Depends(verify_token)):
+                            # Prediction logic here
+                            return {"prediction": result, "user": user}` : ''}
+                        
+                        ${title === 'Input Validation' ? `
+                        from pydantic import BaseModel, validator, Field
+                        
+                        class PredictionRequest(BaseModel):
+                            credit_score: float = Field(..., ge=300, le=850, description="FICO credit score")
+                            income: float = Field(..., gt=0, description="Annual income in USD")
+                            age: int = Field(..., ge=18, le=100, description="Age in years")
+                            
+                            @validator('credit_score')
+                            def validate_credit_score(cls, v):
+                                if not 300 <= v <= 850:
+                                    raise ValueError('Credit score must be between 300-850')
+                                return v
+                            
+                            @validator('income')
+                            def validate_income(cls, v):
+                                if v <= 0:
+                                    raise ValueError('Income must be positive')
+                                return v
+                        
+                        @app.post("/predict")
+                        async def predict(request: PredictionRequest):
+                            # Validation happens automatically
+                            return {"prediction": model.predict([request.dict().values()])}` : ''}
+                        
+                        ${title === 'Performance Optimization' ? `
+                        import asyncio
+                        from functools import lru_cache
+                        import redis
+                        
+                        # Connection pooling
+                        redis_pool = redis.ConnectionPool(host='localhost', port=6379, db=0)
+                        cache = redis.Redis(connection_pool=redis_pool)
+                        
+                        # Model caching
+                        @lru_cache(maxsize=1000)
+                        def get_cached_prediction(features_hash):
+                            return model.predict([features])
+                        
+                        # Batch processing
+                        @app.post("/predict/batch")
+                        async def predict_batch(requests: List[PredictionRequest]):
+                            # Process in parallel
+                            tasks = [make_prediction(req) for req in requests]
+                            results = await asyncio.gather(*tasks)
+                            return {"predictions": results}
+                        
+                        # Async prediction with caching
+                        async def make_prediction(request: PredictionRequest):
+                            cache_key = f"pred:{hash(str(request.dict()))}"
+                            
+                            # Check cache
+                            cached = await cache.get(cache_key)
+                            if cached:
+                                return json.loads(cached)
+                            
+                            # Make prediction
+                            result = model.predict([request.dict().values()])
+                            
+                            # Cache result
+                            await cache.setex(cache_key, 300, json.dumps(result))
+                            return result` : ''}
+                    </div>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(239, 68, 68, 0.1); border-radius: 10px;">
+                        <strong>⚠️ Common Pitfalls:</strong><br>
+                        ${title === 'Authentication & Security' ? 'Storing secrets in code, using weak tokens, not implementing rate limiting, exposing sensitive data in logs.' : ''}
+                        ${title === 'Input Validation' ? 'Trusting client-side validation, not handling edge cases, poor error messages, allowing SQL injection.' : ''}
+                        ${title === 'Performance Optimization' ? 'Premature optimization, not monitoring actual bottlenecks, memory leaks, blocking I/O operations.' : ''}
+                        ${title === 'Error Handling' ? 'Generic error messages, exposing stack traces, not logging errors, inconsistent error formats.' : ''}
+                        ${title === 'Documentation' ? 'Outdated documentation, missing examples, poor organization, not explaining business context.' : ''}
+                        ${title === 'Monitoring & Logging' ? 'Logging sensitive data, poor log structure, no alerting, overwhelming dashboards, ignoring important metrics.' : ''}
+                    </div>
+                `);
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week12_Slide235.html';
+            } else if (e.key === 'ArrowRight' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week12_Slide237.html';
+            }
+        });
+    </script>
+</body>
+</html>

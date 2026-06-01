@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - ML in Finance</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .finance-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .finance-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInScale 0.8s ease-out;
+            animation-fill-mode: both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .finance-card:nth-child(1) { animation-delay: 0.2s; }
+        .finance-card:nth-child(2) { animation-delay: 0.3s; }
+        .finance-card:nth-child(3) { animation-delay: 0.4s; }
+        .finance-card:nth-child(4) { animation-delay: 0.5s; }
+
+        .finance-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 25px 50px rgba(13, 148, 136, 0.2);
+        }
+
+        .finance-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, transparent 50%, rgba(13, 148, 136, 0.05) 50%);
+            transform: translate(50%, -50%);
+        }
+
+        .finance-icon {
+            font-size: 3em;
+            margin-bottom: 20px;
+            display: inline-block;
+            animation: pulse 2s infinite;
+        }
+
+        .finance-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .finance-description {
+            font-size: 1.1em;
+            line-height: 1.6;
+            color: #1e293b;
+            margin-bottom: 20px;
+        }
+
+        .finance-metrics {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .metric-badge {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #0d9488;
+        }
+
+        .explore-more {
+            margin-top: 20px;
+            color: #14b8a6;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .market-impact {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            margin-top: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .market-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .market-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 25px;
+            text-align: center;
+        }
+
+        .market-item {
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            position: relative;
+        }
+
+        .market-item:hover {
+            transform: scale(1.1);
+        }
+
+        .market-value {
+            font-size: 2.5em;
+            font-weight: 700;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .market-label {
+            font-size: 0.9em;
+            color: #64748b;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        .tech-list {
+            list-style: none;
+            margin: 20px 0;
+        }
+
+        .tech-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .tech-list li:last-child {
+            border-bottom: none;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInScale {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .finance-grid { grid-template-columns: 1fr; }
+            .market-stats { grid-template-columns: repeat(2, 1fr); }
+            .slide-title { font-size: 2.5em; }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 13</div>
+    <div class="slide-number">Slide 258 of 260</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">💰 ML in Finance</h1>
+        
+        <div class="finance-grid">
+            <div class="finance-card" data-app="fraud-detection">
+                <div class="finance-icon">🛡️</div>
+                <h3 class="finance-title">Fraud Detection & Prevention</h3>
+                <p class="finance-description">
+                    Real-time transaction monitoring using anomaly detection algorithms 
+                    identifies fraudulent activities within milliseconds.
+                </p>
+                <div class="finance-metrics">
+                    <span class="metric-badge">99.9% Accuracy</span>
+                    <span class="metric-badge">< 50ms Response</span>
+                    <span class="metric-badge">$25B Saved/Year</span>
+                </div>
+                <div class="explore-more">Click to explore →</div>
+            </div>
+
+            <div class="finance-card" data-app="algorithmic-trading">
+                <div class="finance-icon">📈</div>
+                <h3 class="finance-title">Algorithmic Trading</h3>
+                <p class="finance-description">
+                    High-frequency trading systems execute millions of trades per second 
+                    using predictive models and market sentiment analysis.
+                </p>
+                <div class="finance-metrics">
+                    <span class="metric-badge">70% of Trades</span>
+                    <span class="metric-badge">Microsecond Speed</span>
+                    <span class="metric-badge">15-20% Returns</span>
+                </div>
+                <div class="explore-more">Click to explore →</div>
+            </div>
+
+            <div class="finance-card" data-app="credit-scoring">
+                <div class="finance-icon">💳</div>
+                <h3 class="finance-title">Credit Scoring & Lending</h3>
+                <p class="finance-description">
+                    Alternative data sources and ML models enable more accurate credit 
+                    assessments and inclusive lending decisions.
+                </p>
+                <div class="finance-metrics">
+                    <span class="metric-badge">40% More Approvals</span>
+                    <span class="metric-badge">25% Lower Default</span>
+                    <span class="metric-badge">Instant Decision</span>
+                </div>
+                <div class="explore-more">Click to explore →</div>
+            </div>
+
+            <div class="finance-card" data-app="risk-management">
+                <div class="finance-icon">⚖️</div>
+                <h3 class="finance-title">Risk Management</h3>
+                <p class="finance-description">
+                    Portfolio optimization and stress testing using deep learning 
+                    models predict and mitigate financial risks.
+                </p>
+                <div class="finance-metrics">
+                    <span class="metric-badge">30% Risk Reduction</span>
+                    <span class="metric-badge">Real-time Analysis</span>
+                    <span class="metric-badge">Regulatory Compliance</span>
+                </div>
+                <div class="explore-more">Click to explore →</div>
+            </div>
+        </div>
+
+        <div class="market-impact">
+            <h2 class="market-title">Global Financial Impact</h2>
+            <div class="market-stats">
+                <div class="market-item" data-stat="market-value">
+                    <span class="market-value">$7T</span>
+                    <span class="market-label">Daily Trading Volume</span>
+                </div>
+                <div class="market-item" data-stat="cost-savings">
+                    <span class="market-value">$450B</span>
+                    <span class="market-label">Annual Cost Savings</span>
+                </div>
+                <div class="market-item" data-stat="efficiency">
+                    <span class="market-value">80%</span>
+                    <span class="market-label">Process Automation</span>
+                </div>
+                <div class="market-item" data-stat="adoption">
+                    <span class="market-value">95%</span>
+                    <span class="market-label">Bank ML Adoption</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week13_Slide257.html" class="nav-btn">← Previous</a>
+        <a href="Week13_Slide259.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.body;
+            for (let i = 0; i < 15; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (18 + Math.random() * 10) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Finance application details
+        const financeDetails = {
+            'fraud-detection': {
+                title: 'Fraud Detection & Prevention',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>🛡️ AI-Powered Financial Security</strong>
+                    </div>
+                    
+                    <h4>How ML Detects Fraud:</h4>
+                    <p>Machine learning models analyze transaction patterns, user behavior, and network 
+                    relationships to identify anomalies in real-time. These systems learn from millions 
+                    of transactions to distinguish legitimate from fraudulent activities.</p>
+                    
+                    <div class="modal-code">
+# Real-time Fraud Detection Pipeline
+from sklearn.ensemble import IsolationForest
+import xgboost as xgb
+
+# Feature extraction from transaction
+features = extract_features(transaction)
+# Anomaly detection
+anomaly_score = isolation_forest.decision_function(features)
+# Fraud probability
+fraud_prob = xgb_model.predict_proba(features)
+
+if fraud_prob > 0.95 or anomaly_score < -0.5:
+    block_transaction()
+    alert_security_team()
+                    </div>
+                    
+                    <h4>Key Technologies:</h4>
+                    <ul class="tech-list">
+                        <li><strong>🔍 Anomaly Detection:</strong> Identifies unusual patterns using Isolation Forests and Autoencoders</li>
+                        <li><strong>🕸️ Graph Analytics:</strong> Detects fraud rings through network analysis</li>
+                        <li><strong>🤖 Deep Learning:</strong> RNNs analyze sequential transaction patterns</li>
+                        <li><strong>⚡ Real-time Processing:</strong> Apache Kafka + Spark process millions of transactions/second</li>
+                    </ul>
+                    
+                    <div class="modal-highlight">
+                        <strong>Impact:</strong> PayPal's ML system reviews 17 million transactions daily, 
+                        preventing $700M in fraud annually with 0.32% false positive rate.
+                    </div>
+                `
+            },
+            'algorithmic-trading': {
+                title: 'Algorithmic Trading',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>📈 High-Frequency Trading with AI</strong>
+                    </div>
+                    
+                    <h4>ML in Trading Systems:</h4>
+                    <p>Advanced algorithms analyze market data, news sentiment, and technical indicators 
+                    to execute trades at superhuman speeds. These systems adapt to market conditions 
+                    in real-time using reinforcement learning.</p>
+                    
+                    <div class="modal-code">
+# Trading Strategy using LSTM
+import tensorflow as tf
+from ta import momentum, trend
+
+# Market prediction model
+lstm_model = tf.keras.Sequential([
+    tf.keras.layers.LSTM(128, return_sequences=True),
+    tf.keras.layers.LSTM(64),
+    tf.keras.layers.Dense(3, activation='softmax')
+    # Output: [buy, hold, sell] probabilities
+])
+
+# Execute trade based on prediction
+prediction = lstm_model.predict(market_data)
+if prediction[0] > 0.7:  # Strong buy signal
+    execute_order('BUY', calculate_position_size())
+                    </div>
+                    
+                    <h4>Trading Strategies:</h4>
+                    <ul class="tech-list">
+                        <li><strong>📊 Market Making:</strong> Provides liquidity using bid-ask spread optimization</li>
+                        <li><strong>🎯 Arbitrage:</strong> Exploits price differences across markets in microseconds</li>
+                        <li><strong>📰 Sentiment Trading:</strong> NLP analyzes news/social media for market signals</li>
+                        <li><strong>🧮 Quantitative Strategies:</strong> Statistical models identify profitable patterns</li>
+                    </ul>
+                    
+                    <div class="modal-highlight">
+                        <strong>Performance:</strong> Renaissance Technologies' Medallion Fund uses ML 
+                        to achieve 66% annual returns before fees over 30 years - the best track record in investing.
+                    </div>
+                `
+            },
+            'credit-scoring': {
+                title: 'Credit Scoring & Lending',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>💳 Democratizing Access to Credit</strong>
+                    </div>
+                    
+                    <h4>Alternative Credit Scoring:</h4>
+                    <p>ML models incorporate non-traditional data sources like utility payments, 
+                    mobile phone usage, and social media activity to assess creditworthiness, 
+                    enabling financial inclusion for billions of unbanked individuals.</p>
+                    
+                    <div class="modal-code">
+# Alternative Credit Scoring Model
+import lightgbm as lgb
+from feature_engine import encoding
+
+# Traditional + Alternative features
+features = {
+    'traditional': ['income', 'employment', 'credit_history'],
+    'alternative': ['utility_payments', 'mobile_usage', 
+                   'social_connections', 'education_level'],
+    'behavioral': ['app_usage_pattern', 'payment_timing']
+}
+
+# Gradient boosting model
+model = lgb.LGBMClassifier(
+    objective='binary',
+    metric='auc',
+    n_estimators=500
+)
+credit_score = model.predict_proba(applicant_data)
+loan_decision = automated_underwriting(credit_score)
+                    </div>
+                    
+                    <h4>Innovation Areas:</h4>
+                    <ul class="tech-list">
+                        <li><strong>📱 Mobile Data:</strong> Phone usage patterns predict repayment behavior</li>
+                        <li><strong>🌐 Social Scoring:</strong> Network analysis assesses financial reliability</li>
+                        <li><strong>💡 Psychometric Testing:</strong> Personality traits correlate with default risk</li>
+                        <li><strong>⏱️ Real-time Decisioning:</strong> Instant loan approvals using automated underwriting</li>
+                    </ul>
+                    
+                    <div class="modal-highlight">
+                        <strong>Success Story:</strong> Ant Financial's MYbank uses ML to approve loans 
+                        in 3 minutes with zero human intervention, serving 20M+ small businesses with 
+                        default rates below 1%.
+                    </div>
+                `
+            },
+            'risk-management': {
+                title: 'Risk Management',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>⚖️ Predictive Risk Analytics</strong>
+                    </div>
+                    
+                    <h4>ML-Driven Risk Assessment:</h4>
+                    <p>Deep learning models simulate millions of market scenarios to quantify risk 
+                    exposure, optimize portfolios, and ensure regulatory compliance. These systems 
+                    provide early warning signals for potential financial crises.</p>
+                    
+                    <div class="modal-code">
+# Portfolio Risk Optimization
+import cvxpy as cp
+from pypfopt import risk_models, expected_returns
+
+# Calculate risk metrics
+returns = expected_returns.mean_historical_return(prices)
+cov_matrix = risk_models.sample_cov(prices)
+
+# ML-enhanced risk prediction
+risk_forecast = neural_network.predict(market_features)
+adjusted_cov = cov_matrix * risk_forecast
+
+# Optimize portfolio allocation
+weights = cp.Variable(n_assets)
+risk = cp.quad_form(weights, adjusted_cov)
+return_obj = returns @ weights
+
+problem = cp.Problem(
+    cp.Maximize(return_obj - risk_aversion * risk),
+    [cp.sum(weights) == 1, weights >= 0]
+)
+                    </div>
+                    
+                    <h4>Risk Management Applications:</h4>
+                    <ul class="tech-list">
+                        <li><strong>📉 Market Risk:</strong> VAR models predict maximum portfolio losses</li>
+                        <li><strong>🏦 Credit Risk:</strong> Default probability models for loan portfolios</li>
+                        <li><strong>⚙️ Operational Risk:</strong> Anomaly detection prevents system failures</li>
+                        <li><strong>📜 Regulatory Compliance:</strong> Automated stress testing and reporting</li>
+                    </ul>
+                    
+                    <div class="modal-highlight">
+                        <strong>Case Study:</strong> JP Morgan's LOXM uses reinforcement learning for 
+                        optimal trade execution, reducing market impact by 10% and saving clients 
+                        hundreds of millions annually.
+                    </div>
+                `
+            }
+        };
+
+        // Market impact details
+        const marketDetails = {
+            'market-value': {
+                title: 'Daily Trading Volume',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>$7 Trillion Daily Trading Volume Powered by ML</strong>
+                    </div>
+                    
+                    <h4>Market Breakdown:</h4>
+                    <ul class="tech-list">
+                        <li><strong>Forex Markets:</strong> $6.6 trillion/day (88% algorithmic)</li>
+                        <li><strong>Stock Markets:</strong> $200 billion/day (75% algorithmic)</li>
+                        <li><strong>Derivatives:</strong> $150 billion/day (90% algorithmic)</li>
+                        <li><strong>Cryptocurrencies:</strong> $50 billion/day (95% algorithmic)</li>
+                    </ul>
+                    
+                    <p>Machine learning algorithms now dominate global financial markets, 
+                    executing the vast majority of trades with speeds and precision impossible 
+                    for human traders.</p>
+                `
+            },
+            'cost-savings': {
+                title: 'Annual Cost Savings',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>$450 Billion in Annual Operational Savings</strong>
+                    </div>
+                    
+                    <h4>Savings Breakdown:</h4>
+                    <ul class="tech-list">
+                        <li><strong>Process Automation:</strong> $200 billion saved in operational costs</li>
+                        <li><strong>Fraud Prevention:</strong> $100 billion in prevented losses</li>
+                        <li><strong>Risk Management:</strong> $80 billion in avoided losses</li>
+                        <li><strong>Improved Lending:</strong> $70 billion from better credit decisions</li>
+                    </ul>
+                    
+                    <p>These savings allow financial institutions to offer better rates to customers 
+                    while maintaining profitability and stability.</p>
+                `
+            },
+            'efficiency': {
+                title: 'Process Automation',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>80% of Financial Processes Now Automated</strong>
+                    </div>
+                    
+                    <h4>Automated Processes:</h4>
+                    <ul class="tech-list">
+                        <li><strong>KYC/AML Compliance:</strong> 90% automated customer verification</li>
+                        <li><strong>Document Processing:</strong> 85% of documents processed by AI</li>
+                        <li><strong>Customer Service:</strong> 70% of queries handled by chatbots</li>
+                        <li><strong>Trade Settlement:</strong> 95% straight-through processing</li>
+                    </ul>
+                    
+                    <p>Automation has reduced processing times from days to seconds while 
+                    improving accuracy and compliance.</p>
+                `
+            },
+            'adoption': {
+                title: 'Bank ML Adoption',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>95% of Financial Institutions Use ML</strong>
+                    </div>
+                    
+                    <h4>Adoption by Sector:</h4>
+                    <ul class="tech-list">
+                        <li><strong>Investment Banks:</strong> 100% adoption for trading and risk</li>
+                        <li><strong>Retail Banks:</strong> 95% for fraud and customer service</li>
+                        <li><strong>Insurance Companies:</strong> 90% for underwriting and claims</li>
+                        <li><strong>FinTech Startups:</strong> 100% ML-native operations</li>
+                    </ul>
+                    
+                    <p>Financial institutions that don't adopt ML risk becoming obsolete as 
+                    competitors offer faster, cheaper, and more personalized services.</p>
+                `
+            }
+        };
+
+        // Add click handlers for finance cards
+        document.querySelectorAll('.finance-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const app = this.dataset.app;
+                const details = financeDetails[app];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        // Add click handlers for market statistics
+        document.querySelectorAll('.market-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const stat = this.dataset.stat;
+                const details = marketDetails[stat];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        // Initialize floating elements
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week13_Slide257.html';
+            } else if (e.key === 'ArrowRight' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week13_Slide259.html';
+            }
+        });
+    </script>
+</body>
+</html>

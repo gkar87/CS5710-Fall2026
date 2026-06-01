@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Stochastic Gradient Descent (SGD)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .concept-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .algorithm-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .definition-text {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .characteristics-list {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .characteristic-item {
+            padding: 15px 20px;
+            margin: 12px 0;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 0.95em;
+            line-height: 1.5;
+            color: #475569;
+        }
+
+        .characteristic-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .characteristic-item::before {
+            content: "⚡";
+            margin-right: 8px;
+            font-size: 1.1em;
+        }
+
+        .formula-box {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+            font-size: 1.2em;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        .algorithm-steps {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .step-item {
+            padding: 20px;
+            margin: 15px 0;
+            background: linear-gradient(135deg, #fef3c7, #fde047);
+            border-radius: 12px;
+            border-left: 4px solid #f59e0b;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .step-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(245, 158, 11, 0.15);
+        }
+
+        .step-number {
+            font-weight: 700;
+            color: #92400e;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .step-desc {
+            font-size: 0.95em;
+            color: #78350f;
+            line-height: 1.5;
+        }
+
+        .comparison-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 30px;
+            margin-top: 25px;
+        }
+
+        .batch-card, .sgd-card, .mini-card {
+            padding: 25px;
+            border-radius: 15px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .batch-card {
+            background: linear-gradient(135deg, #e0f2fe, #b3e5fc);
+            border: 2px solid #0288d1;
+        }
+
+        .sgd-card {
+            background: linear-gradient(135deg, #f3e5f5, #e1bee7);
+            border: 2px solid #8e24aa;
+        }
+
+        .mini-card {
+            background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
+            border: 2px solid #43a047;
+        }
+
+        .batch-card:hover, .sgd-card:hover, .mini-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .card-title {
+            font-size: 1.4em;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .batch-card .card-title {
+            color: #01579b;
+        }
+
+        .sgd-card .card-title {
+            color: #4a148c;
+        }
+
+        .mini-card .card-title {
+            color: #1b5e20;
+        }
+
+        .card-feature {
+            display: block;
+            margin: 8px 0;
+            font-size: 0.9em;
+            padding: 5px 10px;
+            border-radius: 20px;
+        }
+
+        .batch-card .card-feature {
+            background: rgba(1, 87, 155, 0.1);
+            color: #01579b;
+        }
+
+        .sgd-card .card-feature {
+            background: rgba(74, 20, 140, 0.1);
+            color: #4a148c;
+        }
+
+        .mini-card .card-feature {
+            background: rgba(27, 94, 32, 0.1);
+            color: #1b5e20;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .comparison-grid { grid-template-columns: 1fr; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    
+    <div class="course-info">CS5710 - Week 2</div>
+    <div class="slide-number">Slide 27 of 40</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Stochastic Gradient Descent (SGD)</h1>
+        
+        <div class="content-layout">
+            <div class="concept-section">
+                <h2 class="section-title">What is SGD?</h2>
+                
+                <div class="definition-text">
+                    <strong>Stochastic Gradient Descent</strong> updates parameters using the gradient computed from a single randomly selected training example at each iteration, rather than the entire dataset.
+                </div>
+                
+                <div class="formula-box">
+                    θ = θ - α · ∇ℓ(hθ(x⁽ⁱ⁾), y⁽ⁱ⁾)
+                    <br><br>
+                    where (x⁽ⁱ⁾, y⁽ⁱ⁾) is randomly sampled
+                </div>
+                
+                <ul class="characteristics-list">
+                    <li class="characteristic-item">Updates parameters after every single sample</li>
+                    <li class="characteristic-item">Much faster iterations than batch gradient descent</li>
+                    <li class="characteristic-item">Noisy gradient estimates with high variance</li>
+                    <li class="characteristic-item">Can escape local minima due to noise</li>
+                    <li class="characteristic-item">Enables online learning from streaming data</li>
+                    <li class="characteristic-item">Memory efficient - processes one sample at a time</li>
+                </ul>
+            </div>
+
+            <div class="algorithm-section">
+                <h2 class="section-title">SGD Algorithm</h2>
+                
+                <ul class="algorithm-steps">
+                    <li class="step-item">
+                        <div class="step-number">Step 1: Initialize</div>
+                        <div class="step-desc">Set θ to random values, choose learning rate α</div>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-number">Step 2: Shuffle Data</div>
+                        <div class="step-desc">Randomly shuffle training examples for each epoch</div>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-number">Step 3: Select Sample</div>
+                        <div class="step-desc">Pick one training example (x⁽ⁱ⁾, y⁽ⁱ⁾) randomly</div>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-number">Step 4: Compute Gradient</div>
+                        <div class="step-desc">Calculate ∇ℓ(hθ(x⁽ⁱ⁾), y⁽ⁱ⁾) for this sample only</div>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-number">Step 5: Update Parameters</div>
+                        <div class="step-desc">θ = θ - α · gradient (immediate update!)</div>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-number">Step 6: Repeat</div>
+                        <div class="step-desc">Continue until convergence or max iterations</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="comparison-section">
+            <h2 class="section-title">🔄 Gradient Descent Variants Comparison</h2>
+            
+            <div class="comparison-grid">
+                <div class="batch-card">
+                    <div class="card-title">Batch GD</div>
+                    <span class="card-feature">Uses all m samples</span>
+                    <span class="card-feature">Stable convergence</span>
+                    <span class="card-feature">Slow for large datasets</span>
+                    <span class="card-feature">High memory usage</span>
+                    <span class="card-feature">Exact gradients</span>
+                </div>
+                
+                <div class="sgd-card">
+                    <div class="card-title">SGD</div>
+                    <span class="card-feature">Uses 1 sample</span>
+                    <span class="card-feature">Noisy but fast</span>
+                    <span class="card-feature">Escapes local minima</span>
+                    <span class="card-feature">Memory efficient</span>
+                    <span class="card-feature">Online learning</span>
+                </div>
+                
+                <div class="mini-card">
+                    <div class="card-title">Mini-batch GD</div>
+                    <span class="card-feature">Uses k samples</span>
+                    <span class="card-feature">Balance of both</span>
+                    <span class="card-feature">Vectorization benefits</span>
+                    <span class="card-feature">Moderate memory</span>
+                    <span class="card-feature">Most popular choice</span>
+                </div>
+            </div>
+            
+            <div style="margin-top: 30px; padding: 25px; background: rgba(142, 36, 170, 0.1); border-radius: 15px; text-align: center;">
+                <strong>💡 SGD Trade-off:</strong><br>
+                Speed and memory efficiency vs. stability and convergence smoothness. The noise in SGD can be both a blessing (escapes local minima) and a curse (never fully converges).
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week2_Slide26.html" class="nav-btn">← Previous</a>
+        <a href="Week2_Slide28.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive characteristic items
+        document.querySelectorAll('.characteristic-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const text = this.textContent.trim();
+                
+                const details = {
+                    'Updates parameters after every single sample': {
+                        detail: 'Unlike batch GD which waits for all samples, SGD updates immediately after each sample, making it much more responsive.',
+                        example: 'Process sample 1 → update θ → process sample 2 → update θ → ...',
+                        impact: 'Enables real-time adaptation and faster initial learning.'
+                    },
+                    'Much faster iterations than batch gradient descent': {
+                        detail: 'Each iteration processes only one sample vs. all m samples, reducing computation from O(m) to O(1) per update.',
+                        example: 'Batch GD: 1M samples → 1 update\nSGD: 1M samples → 1M updates',
+                        impact: 'Can make significant progress early in training when gradients are large.'
+                    },
+                    'Noisy gradient estimates with high variance': {
+                        detail: 'Single-sample gradients are noisy approximations of the true gradient, leading to zigzag convergence paths.',
+                        example: 'True gradient: [2.1, -1.5]\nSGD estimates: [3.2, -0.8], [1.1, -2.3], [2.7, -1.1]',
+                        impact: 'Requires learning rate decay to converge properly.'
+                    },
+                    'Can escape local minima due to noise': {
+                        detail: 'The inherent noise in SGD helps escape shallow local minima that batch GD might get stuck in.',
+                        example: 'Noise kicks the optimizer out of local minima, potentially finding better solutions.',
+                        impact: 'Particularly valuable for non-convex optimization problems.'
+                    },
+                    'Enables online learning from streaming data': {
+                        detail: 'Can process data samples as they arrive without storing the entire dataset, perfect for real-time systems.',
+                        example: 'Stock price prediction: Update model as each new price comes in',
+                        impact: 'Critical for applications with continuous data streams.'
+                    },
+                    'Memory efficient - processes one sample at a time': {
+                        detail: 'Memory usage is O(1) with respect to dataset size, only storing current sample and gradients.',
+                        example: 'Dataset: 10GB, Memory usage: ~10MB for model parameters',
+                        impact: 'Enables training on devices with limited memory.'
+                    }
+                };
+                
+                const info = details[text];
+                if (info) {
+                    modal.show('SGD Characteristic', `
+                        <div class="modal-highlight">
+                            <strong>${text}</strong>
+                        </div>
+                        <p>${info.detail}</p>
+                        <div class="modal-code">
+                            ${info.example}
+                        </div>
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(142, 36, 170, 0.1); border-radius: 10px;">
+                            <strong>💡 Why it matters:</strong><br>
+                            ${info.impact}
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Interactive algorithm steps
+        document.querySelectorAll('.step-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const stepNumber = this.querySelector('.step-number').textContent;
+                const stepDesc = this.querySelector('.step-desc').textContent;
+                
+                const details = {
+                    'Step 1: Initialize': {
+                        detail: 'Initialize parameters θ and set learning rate α. For SGD, learning rate is typically higher than batch GD initially.',
+                        code: 'theta = np.random.normal(0, 0.01, size=(n_features,))\nalpha = 0.1  # higher than batch GD',
+                        tip: 'SGD can handle larger learning rates due to its noisy nature.'
+                    },
+                    'Step 2: Shuffle Data': {
+                        detail: 'Randomly shuffle training data at the start of each epoch to ensure unbiased sampling.',
+                        code: 'indices = np.random.permutation(m)\nX_shuffled = X[indices]\ny_shuffled = y[indices]',
+                        tip: 'Shuffling prevents the model from learning the order of examples.'
+                    },
+                    'Step 3: Select Sample': {
+                        detail: 'Pick one training example randomly (or sequentially from shuffled data) for the current iteration.',
+                        code: 'i = np.random.randint(0, m)\nx_i, y_i = X[i], y[i]',
+                        tip: 'Each sample gets equal probability of being selected.'
+                    },
+                    'Step 4: Compute Gradient': {
+                        detail: 'Calculate gradient using only the selected sample. This is much faster but noisier than using all samples.',
+                        code: 'prediction = x_i @ theta\nerror = prediction - y_i\ngradient = x_i * error',
+                        tip: 'Single-sample gradient is an unbiased estimator of the true gradient.'
+                    },
+                    'Step 5: Update Parameters': {
+                        detail: 'Update parameters immediately using the computed gradient. No averaging or waiting for other samples.',
+                        code: 'theta = theta - alpha * gradient',
+                        tip: 'Immediate updates allow for rapid adaptation to training data.'
+                    },
+                    'Step 6: Repeat': {
+                        detail: 'Continue the process until convergence criteria are met or maximum iterations reached.',
+                        code: 'for epoch in range(max_epochs):\n    for i in range(m):\n        # Steps 3-5',
+                        tip: 'Convergence is typically checked less frequently due to noisy updates.'
+                    }
+                };
+                
+                const info = details[stepNumber];
+                if (info) {
+                    modal.show(stepNumber, `
+                        <div class="modal-highlight">
+                            <strong>${stepDesc}</strong>
+                        </div>
+                        <p>${info.detail}</p>
+                        <div class="modal-code">
+                            ${info.code}
+                        </div>
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(245, 158, 11, 0.1); border-radius: 10px;">
+                            <strong>💡 Pro Tip:</strong><br>
+                            ${info.tip}
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Interactive comparison cards
+        document.querySelectorAll('.batch-card, .sgd-card, .mini-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const isBatch = this.classList.contains('batch-card');
+                const isSGD = this.classList.contains('sgd-card');
+                const isMini = this.classList.contains('mini-card');
+                
+                let title, content;
+                
+                if (isBatch) {
+                    title = 'Batch Gradient Descent';
+                    content = `
+                        <div class="modal-highlight">
+                            <strong>The Traditional Approach</strong>
+                        </div>
+                        <p><strong>🎯 How it works:</strong> Uses entire dataset (all m samples) to compute gradient at each iteration.</p>
+                        <p><strong>⚡ Performance:</strong> Slow iterations but stable convergence path.</p>
+                        <div class="modal-code">
+                            # Pseudo-code
+                            for epoch in range(max_epochs):
+                                gradient = compute_gradient_all_samples(X, y, theta)
+                                theta = theta - alpha * gradient
+                        </div>
+                        <p><strong>✅ Best for:</strong> Small datasets, need for precision, theoretical analysis.</p>
+                        <p><strong>❌ Limitations:</strong> Scales poorly with dataset size, memory intensive.</p>
+                    `;
+                } else if (isSGD) {
+                    title = 'Stochastic Gradient Descent';
+                    content = `
+                        <div class="modal-highlight">
+                            <strong>The Speed Demon</strong>
+                        </div>
+                        <p><strong>🎯 How it works:</strong> Uses single random sample to compute gradient at each iteration.</p>
+                        <p><strong>⚡ Performance:</strong> Very fast iterations but noisy convergence.</p>
+                        <div class="modal-code">
+                            # Pseudo-code
+                            for epoch in range(max_epochs):
+                                for i in random_permutation(m):
+                                    gradient = compute_gradient_single(X[i], y[i], theta)
+                                    theta = theta - alpha * gradient
+                        </div>
+                        <p><strong>✅ Best for:</strong> Large datasets, online learning, escaping local minima.</p>
+                        <p><strong>❌ Limitations:</strong> Noisy updates, requires learning rate scheduling.</p>
+                    `;
+                } else if (isMini) {
+                    title = 'Mini-batch Gradient Descent';
+                    content = `
+                        <div class="modal-highlight">
+                            <strong>The Goldilocks Solution</strong>
+                        </div>
+                        <p><strong>🎯 How it works:</strong> Uses small batch of k samples (typically 32-512) to compute gradient.</p>
+                        <p><strong>⚡ Performance:</strong> Balance between speed and stability.</p>
+                        <div class="modal-code">
+                            # Pseudo-code
+                            for epoch in range(max_epochs):
+                                for batch in create_batches(X, y, batch_size):
+                                    gradient = compute_gradient_batch(batch, theta)
+                                    theta = theta - alpha * gradient
+                        </div>
+                        <p><strong>✅ Best for:</strong> Most practical applications, leverages GPU parallelization.</p>
+                        <p><strong>❌ Limitations:</strong> Still requires tuning batch size and learning rate.</p>
+                    `;
+                }
+                
+                modal.show(title, content);
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week2_Slide26.html';
+            } else if ((e.key === 'ArrowRight' || e.key === ' ') && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week2_Slide28.html';
+            }
+        });
+
+    </script>
+</body>
+</html>

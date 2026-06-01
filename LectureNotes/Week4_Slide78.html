@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Ensemble Methods Overview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .intro-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromTop 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .big-idea {
+            font-size: 1.4em;
+            line-height: 1.8;
+            color: #1e293b;
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .methods-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin: 40px 0;
+        }
+
+        .method-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            animation: slideInFromBottom 1s ease-out calc(0.2s * var(--index)) both;
+        }
+
+        .method-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 25px 50px rgba(13, 148, 136, 0.15);
+        }
+
+        .method-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .method-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .method-name {
+            font-size: 1.4em;
+            color: #0d9488;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .method-description {
+            color: #475569;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .method-formula {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 15px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+            margin: 15px 0;
+            font-size: 0.9em;
+        }
+
+        .why-ensembles {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.8s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+            text-align: center;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .benefit-item {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            padding: 20px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .benefit-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(13, 148, 136, 0.15);
+        }
+
+        .benefit-icon {
+            font-size: 1.8em;
+            margin-right: 10px;
+            float: left;
+        }
+
+        .benefit-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .benefit-desc {
+            color: #475569;
+            line-height: 1.4;
+        }
+
+        .comparison-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 1s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            margin-top: 25px;
+        }
+
+        .comparison-table th {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .comparison-table td {
+            background: #ffffff;
+            padding: 18px;
+            text-align: center;
+            border-bottom: 1px solid #e5e7eb;
+            vertical-align: middle;
+            transition: all 0.3s ease;
+        }
+
+        .comparison-table tr:hover td {
+            background: rgba(13, 148, 136, 0.05);
+        }
+
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .method-label {
+            font-weight: 600;
+            color: #0d9488;
+            text-align: left;
+        }
+
+        .rating {
+            font-size: 1.2em;
+        }
+
+        .rating.high { color: #10b981; }
+        .rating.medium { color: #f59e0b; }
+        .rating.low { color: #ef4444; }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @media (max-width: 1200px) {
+            .methods-grid { grid-template-columns: 1fr; }
+            .benefits-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    
+    <div class="course-info">CS5710 - Week 4</div>
+    <div class="slide-number">Slide 78 of 80</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Ensemble Methods Overview</h1>
+        
+        <div class="intro-section">
+            <div class="big-idea">
+                <strong>"Wisdom of Crowds":</strong> Ensemble methods combine multiple learning algorithms to create a stronger learner than any individual algorithm alone. Like a panel of experts, diverse models working together often outperform any single model.
+            </div>
+        </div>
+        
+        <div class="methods-grid">
+            <div class="method-card" style="--index: 1;" onclick="showModal('Click for details', '<p>Details about this method.</p>')">
+                <div class="method-header">
+                    <div class="method-icon">🗳️</div>
+                    <div class="method-name">Voting Methods</div>
+                </div>
+                
+                <div class="method-description">
+                    Combine predictions from multiple diverse models using majority vote or weighted averaging.
+                </div>
+                
+                <div class="method-formula">
+                    Hard Voting: argmax Σ votes<br>
+                    Soft Voting: argmax Σ probabilities
+                </div>
+            </div>
+            
+            <div class="method-card" style="--index: 2;" onclick="showModal('Click for details', '<p>Details about this method.</p>')">
+                <div class="method-header">
+                    <div class="method-icon">🎒</div>
+                    <div class="method-name">Bagging</div>
+                </div>
+                
+                <div class="method-description">
+                    Bootstrap Aggregating trains multiple models on different subsets of training data.
+                </div>
+                
+                <div class="method-formula">
+                    Random Forests = Bagging + Decision Trees<br>
+                    + Random Feature Selection
+                </div>
+            </div>
+            
+            <div class="method-card" style="--index: 3;" onclick="showModal('Click for details', '<p>Details about this method.</p>')">
+                <div class="method-header">
+                    <div class="method-icon">🚀</div>
+                    <div class="method-name">Boosting</div>
+                </div>
+                
+                <div class="method-description">
+                    Sequential learning where each model corrects errors of previous models.
+                </div>
+                
+                <div class="method-formula">
+                    AdaBoost, Gradient Boosting<br>
+                    XGBoost, LightGBM
+                </div>
+            </div>
+        </div>
+        
+        <div class="why-ensembles">
+            <h2 class="section-title">Why Ensembles Work</h2>
+            
+            <div class="benefits-grid">
+                <div class="benefit-item">
+                    <div class="benefit-icon">📊</div>
+                    <div class="benefit-title">Reduced Variance</div>
+                    <div class="benefit-desc">Averaging multiple models reduces overfitting and improves generalization</div>
+                </div>
+                
+                <div class="benefit-item">
+                    <div class="benefit-icon">🎯</div>
+                    <div class="benefit-title">Reduced Bias</div>
+                    <div class="benefit-desc">Combining weak learners can create a strong learner that captures complex patterns</div>
+                </div>
+                
+                <div class="benefit-item">
+                    <div class="benefit-icon">🛡️</div>
+                    <div class="benefit-title">Increased Robustness</div>
+                    <div class="benefit-desc">Less sensitive to outliers and noise in the training data</div>
+                </div>
+                
+                <div class="benefit-item">
+                    <div class="benefit-icon">🎪</div>
+                    <div class="benefit-title">Diversity Benefits</div>
+                    <div class="benefit-desc">Different models make different types of errors, so combining them improves overall accuracy</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="comparison-section">
+            <h2 class="section-title">Ensemble Methods Comparison</h2>
+            
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Method</th>
+                        <th>Training</th>
+                        <th>Variance Reduction</th>
+                        <th>Bias Reduction</th>
+                        <th>Interpretability</th>
+                        <th>Performance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="method-label">Voting</td>
+                        <td><span class="rating medium">★★☆</span> Parallel</td>
+                        <td><span class="rating high">★★★</span> High</td>
+                        <td><span class="rating medium">★★☆</span> Medium</td>
+                        <td><span class="rating low">★☆☆</span> Low</td>
+                        <td><span class="rating medium">★★☆</span> Good</td>
+                    </tr>
+                    <tr>
+                        <td class="method-label">Bagging</td>
+                        <td><span class="rating high">★★★</span> Parallel</td>
+                        <td><span class="rating high">★★★</span> High</td>
+                        <td><span class="rating low">★☆☆</span> Low</td>
+                        <td><span class="rating medium">★★☆</span> Medium</td>
+                        <td><span class="rating high">★★★</span> Excellent</td>
+                    </tr>
+                    <tr>
+                        <td class="method-label">Boosting</td>
+                        <td><span class="rating low">★☆☆</span> Sequential</td>
+                        <td><span class="rating medium">★★☆</span> Medium</td>
+                        <td><span class="rating high">★★★</span> High</td>
+                        <td><span class="rating low">★☆☆</span> Low</td>
+                        <td><span class="rating high">★★★</span> Excellent</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week4_Slide77.html" class="nav-btn">← Previous</a>
+        <a href="Week4_Slide79.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+    (function() {
+        const overlay = document.getElementById('modalOverlay');
+        const titleEl = document.getElementById('modalTitle');
+        const contentEl = document.getElementById('modalContent');
+        const closeBtn = document.getElementById('modalClose');
+        window.showModal = function(title, content) {
+            titleEl.textContent = title;
+            contentEl.innerHTML = content;
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        };
+        window.closeModal = function() {
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        };
+        closeBtn.addEventListener('click', window.closeModal);
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) window.closeModal(); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && overlay.classList.contains('active')) window.closeModal(); });
+    })();
+</script>
+</body>
+</html>

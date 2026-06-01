@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Backpropagation Through Time (BPTT)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .bptt-overview {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .algorithm-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .concept-text {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .algorithm-steps {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .algorithm-step {
+            background: linear-gradient(135deg, #f0fdfa 0%, #ffffff 100%);
+            margin-bottom: 20px;
+            padding: 25px;
+            border-radius: 15px;
+            border-left: 3px solid #14b8a6;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .algorithm-step:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 30px rgba(13, 148, 136, 0.15);
+        }
+
+        .step-number {
+            display: inline-block;
+            width: 35px;
+            height: 35px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            text-align: center;
+            line-height: 35px;
+            border-radius: 50%;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+
+        .step-title {
+            font-size: 1.3em;
+            color: #0d9488;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .step-description {
+            color: #64748b;
+            margin-left: 50px;
+            line-height: 1.6;
+        }
+
+        .formula-container {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 30px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            animation: fadeIn 1s ease-out 0.6s both;
+        }
+
+        .formula-title {
+            color: #99f6e4;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .formula {
+            font-size: 1.1em;
+            line-height: 1.8;
+            letter-spacing: 1px;
+        }
+
+        .visualization-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            margin-top: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.5s both;
+        }
+
+        .time-steps {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+            padding: 30px;
+            background: rgba(13, 148, 136, 0.05);
+            border-radius: 15px;
+        }
+
+        .time-step {
+            text-align: center;
+            flex: 1;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .time-step:hover {
+            transform: scale(1.1);
+        }
+
+        .time-step::after {
+            content: '→';
+            position: absolute;
+            right: -25px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5em;
+            color: #14b8a6;
+        }
+
+        .time-step:last-child::after {
+            display: none;
+        }
+
+        .time-box {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin: 0 auto 10px;
+            box-shadow: 0 5px 15px rgba(13, 148, 136, 0.3);
+        }
+
+        .time-label {
+            color: #475569;
+            font-size: 0.9em;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .nav-btn:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            color: #0d9488;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            color: #0d9488;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @keyframes slideInFromTop {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInFromLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInFromRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInFromBottom {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .clickable-term {
+            color: #0d9488;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: underline dotted;
+            transition: all 0.3s ease;
+        }
+
+        .clickable-term:hover {
+            color: #14b8a6;
+            text-decoration: underline solid;
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    
+    <div class="course-info">CS5710 - Week 10</div>
+    <div class="slide-number">Slide 183 of 200</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Backpropagation Through Time (BPTT)</h1>
+        
+        <div class="content-layout">
+            <div class="bptt-overview">
+                <h2 class="section-title">What is BPTT?</h2>
+                
+                <div class="concept-text">
+                    <span class="clickable-term" data-term="bptt-concept">Backpropagation Through Time</span> is the gradient computation method for training <span class="clickable-term" data-term="rnn-training">Recurrent Neural Networks</span>. It extends standard backpropagation by unrolling the RNN through time steps.
+                </div>
+                
+                <p style="font-size: 1.1em; line-height: 1.7; color: #1e293b; margin-top: 20px;">
+                    Key Insight: RNNs share parameters across all time steps, so we need to accumulate gradients from all time steps to update the weights.
+                </p>
+                
+                <div class="formula-container">
+                    <div class="formula-title">Gradient Accumulation:</div>
+                    <div class="formula">
+                        ∂L/∂W = Σ<sub>t=1</sub><sup>T</sup> ∂L<sub>t</sub>/∂W<br>
+                        <br>
+                        Where:<br>
+                        • L = Total loss over sequence<br>
+                        • L<sub>t</sub> = Loss at time step t<br>
+                        • W = Shared weight parameters<br>
+                        • T = Total number of time steps
+                    </div>
+                </div>
+            </div>
+
+            <div class="algorithm-section">
+                <h2 class="section-title">BPTT Algorithm Steps</h2>
+                
+                <ul class="algorithm-steps">
+                    <li class="algorithm-step" data-step="forward">
+                        <span class="step-number">1</span>
+                        <div class="step-title">Forward Pass</div>
+                        <div class="step-description">Process input sequence through all time steps, storing all hidden states and outputs</div>
+                    </li>
+                    
+                    <li class="algorithm-step" data-step="loss">
+                        <span class="step-number">2</span>
+                        <div class="step-title">Compute Loss</div>
+                        <div class="step-description">Calculate loss at each time step and sum for total sequence loss</div>
+                    </li>
+                    
+                    <li class="algorithm-step" data-step="backward">
+                        <span class="step-number">3</span>
+                        <div class="step-title">Backward Pass</div>
+                        <div class="step-description">Propagate gradients backward through time, from T to 1</div>
+                    </li>
+                    
+                    <li class="algorithm-step" data-step="accumulate">
+                        <span class="step-number">4</span>
+                        <div class="step-title">Accumulate Gradients</div>
+                        <div class="step-description">Sum gradients across all time steps for shared parameters</div>
+                    </li>
+                    
+                    <li class="algorithm-step" data-step="update">
+                        <span class="step-number">5</span>
+                        <div class="step-title">Update Weights</div>
+                        <div class="step-description">Apply accumulated gradients to update network parameters</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="visualization-section">
+            <h2 class="section-title">BPTT Unrolling Visualization</h2>
+            
+            <div class="time-steps">
+                <div class="time-step" data-time="t-2">
+                    <div class="time-box">h<sub>t-2</sub></div>
+                    <div class="time-label">Time t-2</div>
+                </div>
+                
+                <div class="time-step" data-time="t-1">
+                    <div class="time-box">h<sub>t-1</sub></div>
+                    <div class="time-label">Time t-1</div>
+                </div>
+                
+                <div class="time-step" data-time="t">
+                    <div class="time-box">h<sub>t</sub></div>
+                    <div class="time-label">Time t</div>
+                </div>
+                
+                <div class="time-step" data-time="t+1">
+                    <div class="time-box">h<sub>t+1</sub></div>
+                    <div class="time-label">Time t+1</div>
+                </div>
+                
+                <div class="time-step" data-time="t+2">
+                    <div class="time-box">h<sub>t+2</sub></div>
+                    <div class="time-label">Time t+2</div>
+                </div>
+            </div>
+            
+            <p style="text-align: center; margin-top: 20px; color: #64748b;">
+                Click on any time step to see how gradients flow backward through time
+            </p>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week10_Slide182.html" class="nav-btn">← Previous</a>
+        <a href="Week10_Slide184.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Clickable terms
+        document.querySelectorAll('.clickable-term').forEach(term => {
+            term.addEventListener('click', function() {
+                const termType = this.dataset.term;
+                
+                const explanations = {
+                    'bptt-concept': {
+                        title: 'Understanding BPTT',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>Why BPTT is Necessary</h4>
+                                <p>RNNs process sequences where each output depends on all previous computations. To train them, we need to account for how errors propagate through the entire sequence.</p>
+                            </div>
+                            
+                            <div class="modal-code">
+# BPTT Conceptual Implementation
+def bptt(inputs, targets, rnn_cell):
+    T = len(inputs)
+    
+    # Forward pass - store all states
+    hidden_states = [initial_state]
+    outputs = []
+    
+    for t in range(T):
+        h_t = rnn_cell(inputs[t], hidden_states[t])
+        hidden_states.append(h_t)
+        outputs.append(compute_output(h_t))
+    
+    # Backward pass - accumulate gradients
+    grad_W = 0
+    dh_next = 0
+    
+    for t in reversed(range(T)):
+        grad_output = compute_loss_gradient(outputs[t], targets[t])
+        grad_h = grad_output + dh_next
+        grad_W += compute_weight_gradient(grad_h, hidden_states[t])
+        dh_next = compute_hidden_gradient(grad_h)
+    
+    return grad_W
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                                <strong>💡 Key Insight:</strong><br>
+                                BPTT treats the RNN as a deep feedforward network with shared weights, where depth equals the sequence length.
+                            </div>
+                        `
+                    },
+                    'rnn-training': {
+                        title: 'RNN Training Challenges',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>Unique Aspects of RNN Training</h4>
+                                <p>Training RNNs presents special challenges due to their recurrent nature and parameter sharing across time steps.</p>
+                            </div>
+                            
+                            <h4 style="color: #0d9488; margin: 20px 0;">Main Challenges:</h4>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>1. Computational Cost</strong><br>
+                                • Must store all intermediate states<br>
+                                • Memory usage grows with sequence length<br>
+                                • Gradient computation is O(T²) for T time steps
+                            </div>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>2. Long-Range Dependencies</strong><br>
+                                • Gradients must flow through many time steps<br>
+                                • Information from early inputs can be lost<br>
+                                • Difficult to capture long-term patterns
+                            </div>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>3. Gradient Problems</strong><br>
+                                • Vanishing gradients (most common)<br>
+                                • Exploding gradients<br>
+                                • Both make training unstable
+                            </div>
+                            
+                            <div class="modal-code">
+# Truncated BPTT - Practical Solution
+def truncated_bptt(sequence, k=20):
+    """
+    Process sequence in chunks of k time steps
+    to limit memory usage and gradient flow
+    """
+    for i in range(0, len(sequence), k):
+        chunk = sequence[i:i+k]
+        gradients = compute_bptt(chunk)
+        update_weights(gradients)
+                            </div>
+                        `
+                    }
+                };
+                
+                const exp = explanations[termType];
+                if (exp) {
+                    modal.show(exp.title, exp.content);
+                }
+            });
+        });
+
+        // Algorithm steps
+        document.querySelectorAll('.algorithm-step').forEach(step => {
+            step.addEventListener('click', function() {
+                const stepType = this.dataset.step;
+                
+                const stepDetails = {
+                    'forward': {
+                        title: 'Forward Pass in Detail',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>Forward Propagation Through Time</h4>
+                                <p>Process the entire input sequence, computing and storing hidden states and outputs at each time step.</p>
+                            </div>
+                            
+                            <div class="modal-code">
+# Forward Pass Implementation
+def forward_pass(X, h0, Wx, Wh, Wy, by):
+    """
+    X: Input sequence [x1, x2, ..., xT]
+    h0: Initial hidden state
+    Returns: hidden_states, outputs
+    """
+    T = len(X)
+    hidden_states = [h0]
+    outputs = []
+    
+    for t in range(T):
+        # Compute new hidden state
+        h_t = tanh(Wx @ X[t] + Wh @ hidden_states[t] + bh)
+        hidden_states.append(h_t)
+        
+        # Compute output
+        y_t = softmax(Wy @ h_t + by)
+        outputs.append(y_t)
+    
+    return hidden_states, outputs
+                            </div>
+                            
+                            <div style="margin-top: 20px;">
+                                <strong>Memory Requirement:</strong><br>
+                                • Store all T hidden states: O(T × hidden_dim)<br>
+                                • Store all T outputs: O(T × output_dim)<br>
+                                • Total: O(T × (hidden_dim + output_dim))
+                            </div>
+                        `
+                    },
+                    'loss': {
+                        title: 'Loss Computation',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>Sequence Loss Calculation</h4>
+                                <p>Compute loss at each time step and aggregate for the total sequence loss.</p>
+                            </div>
+                            
+                            <div class="modal-code">
+# Loss Computation
+def compute_sequence_loss(outputs, targets):
+    """
+    outputs: Model predictions [y1, y2, ..., yT]
+    targets: True labels [t1, t2, ..., tT]
+    """
+    total_loss = 0
+    losses = []
+    
+    for t in range(len(outputs)):
+        # Cross-entropy loss at time t
+        loss_t = -log(outputs[t][targets[t]])
+        losses.append(loss_t)
+        total_loss += loss_t
+    
+    # Average loss over sequence
+    avg_loss = total_loss / len(outputs)
+    
+    return avg_loss, losses
+                            </div>
+                            
+                            <h4 style="color: #0d9488; margin: 20px 0;">Common Loss Functions:</h4>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px;">
+                                • <strong>Classification:</strong> Cross-entropy loss<br>
+                                • <strong>Regression:</strong> MSE or MAE<br>
+                                • <strong>Sequence-to-Sequence:</strong> Teacher forcing with cross-entropy<br>
+                                • <strong>Language Modeling:</strong> Perplexity (exp of cross-entropy)
+                            </div>
+                        `
+                    },
+                    'backward': {
+                        title: 'Backward Pass Through Time',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>Gradient Backpropagation</h4>
+                                <p>Propagate error gradients backward through the unrolled network, from the last time step to the first.</p>
+                            </div>
+                            
+                            <div class="modal-code">
+# Backward Pass Implementation
+def backward_pass(losses, hidden_states, outputs, Wh, Wy):
+    """
+    Compute gradients via BPTT
+    """
+    T = len(losses)
+    dWx = 0
+    dWh = 0
+    dWy = 0
+    
+    # Start from last time step
+    dh_next = 0
+    
+    for t in reversed(range(T)):
+        # Output layer gradient
+        dy = outputs[t] - targets[t]
+        dWy += dy @ hidden_states[t+1].T
+        
+        # Hidden layer gradient
+        dh = Wy.T @ dy + dh_next
+        dh_raw = (1 - hidden_states[t+1]**2) * dh
+        
+        # Input-to-hidden gradient
+        dWx += dh_raw @ inputs[t].T
+        
+        # Hidden-to-hidden gradient
+        dWh += dh_raw @ hidden_states[t].T
+        
+        # Gradient for next iteration
+        dh_next = Wh.T @ dh_raw
+    
+    return dWx, dWh, dWy
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(255, 152, 0, 0.1); border-radius: 10px;">
+                                <strong>⚠️ Gradient Flow Issue:</strong><br>
+                                The term dh_next = W<sub>h</sub><sup>T</sup> @ dh_raw is applied T times, leading to (W<sub>h</sub><sup>T</sup>)<sup>T</sup> which causes vanishing/exploding gradients!
+                            </div>
+                        `
+                    },
+                    'accumulate': {
+                        title: 'Gradient Accumulation',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>Accumulating Gradients Across Time</h4>
+                                <p>Since parameters are shared across all time steps, we sum gradients from each time step.</p>
+                            </div>
+                            
+                            <div class="modal-code">
+# Gradient Accumulation Process
+def accumulate_gradients(sequence_batch):
+    """
+    Accumulate gradients over a batch of sequences
+    """
+    total_dWx = 0
+                            total_dWh = 0
+    total_dWy = 0
+    
+    for sequence in sequence_batch:
+        # Compute gradients for this sequence
+        dWx, dWh, dWy = bptt(sequence)
+        
+        # Accumulate
+        total_dWx += dWx
+        total_dWh += dWh
+        total_dWy += dWy
+    
+    # Average over batch
+    batch_size = len(sequence_batch)
+    avg_dWx = total_dWx / batch_size
+    avg_dWh = total_dWh / batch_size
+    avg_dWy = total_dWy / batch_size
+    
+    return avg_dWx, avg_dWh, avg_dWy
+                            </div>
+                            
+                            <h4 style="color: #0d9488; margin: 20px 0;">Why Accumulation is Necessary:</h4>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px;">
+                                • <strong>Shared Parameters:</strong> W<sub>x</sub>, W<sub>h</sub>, W<sub>y</sub> are used at every time step<br>
+                                • <strong>Total Gradient:</strong> Sum of contributions from all time steps<br>
+                                • <strong>Batch Processing:</strong> Average gradients across sequences in batch<br>
+                                • <strong>Gradient Clipping:</strong> Often applied here to prevent exploding gradients
+                            </div>
+                        `
+                    },
+                    'update': {
+                        title: 'Weight Update Strategy',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>Parameter Update with Accumulated Gradients</h4>
+                                <p>Apply the accumulated gradients to update network parameters using an optimization algorithm.</p>
+                            </div>
+                            
+                            <div class="modal-code">
+# Weight Update with Gradient Clipping
+def update_weights(params, gradients, learning_rate=0.01, clip_value=5.0):
+    """
+    Update parameters with gradient clipping
+    """
+    # Gradient clipping to prevent exploding gradients
+    total_norm = 0
+    for grad in gradients:
+        total_norm += np.sum(grad ** 2)
+    total_norm = np.sqrt(total_norm)
+    
+    if total_norm > clip_value:
+        # Scale down gradients
+        scale = clip_value / total_norm
+        gradients = [grad * scale for grad in gradients]
+    
+    # Apply updates (SGD example)
+    for param, grad in zip(params, gradients):
+        param -= learning_rate * grad
+    
+    return params
+
+# Advanced optimizers for RNNs
+def adam_update(params, gradients, m, v, t, lr=0.001, beta1=0.9, beta2=0.999):
+    """
+    Adam optimizer - often works better for RNNs
+    """
+    eps = 1e-8
+    
+    for i, (param, grad) in enumerate(zip(params, gradients)):
+        # Update biased moments
+        m[i] = beta1 * m[i] + (1 - beta1) * grad
+        v[i] = beta2 * v[i] + (1 - beta2) * grad**2
+        
+        # Bias correction
+        m_hat = m[i] / (1 - beta1**t)
+        v_hat = v[i] / (1 - beta2**t)
+        
+        # Update parameters
+        param -= lr * m_hat / (np.sqrt(v_hat) + eps)
+                            </div>
+                            
+                            <h4 style="color: #0d9488; margin: 20px 0;">Best Practices for RNN Training:</h4>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px;">
+                                1. <strong>Gradient Clipping:</strong> Essential for preventing exploding gradients<br>
+                                2. <strong>Learning Rate Scheduling:</strong> Start high, decay over time<br>
+                                3. <strong>Optimizer Choice:</strong> Adam or RMSprop often better than SGD<br>
+                                4. <strong>Batch Normalization:</strong> Can help with training stability<br>
+                                5. <strong>Truncated BPTT:</strong> Limit gradient flow to k time steps
+                            </div>
+                        `
+                    }
+                };
+                
+                const detail = stepDetails[stepType];
+                if (detail) {
+                    modal.show(detail.title, detail.content);
+                }
+            });
+        });
+
+        // Time step visualization
+        document.querySelectorAll('.time-step').forEach(step => {
+            step.addEventListener('click', function() {
+                const timeStep = this.dataset.time;
+                
+                modal.show(`Gradient Flow at ${timeStep}`, `
+                    <div class="modal-highlight">
+                        <h4>Gradient Propagation at Time Step ${timeStep}</h4>
+                        <p>Understanding how gradients flow backward through this specific time step in the unrolled RNN.</p>
+                    </div>
+                    
+                    <div class="modal-code">
+# Gradient at time step ${timeStep}
+∂L/∂h_${timeStep} = ∂L_${timeStep}/∂h_${timeStep} + ∂L/∂h_${timeStep === 't+2' ? 'T' : timeStep.replace('t', 't+1')} × ∂h_${timeStep === 't+2' ? 'T' : timeStep.replace('t', 't+1')}/∂h_${timeStep}
+
+Components:
+1. Direct gradient: ∂L_${timeStep}/∂h_${timeStep}
+   - Gradient from loss at current time step
+   
+2. Indirect gradient: ∂L/∂h_${timeStep === 't+2' ? 'T' : timeStep.replace('t', 't+1')} × W_h^T
+   - Gradient flowing from future time steps
+   - Multiplied by recurrent weight matrix transpose
+                    </div>
+                    
+                    <h4 style="color: #0d9488; margin: 20px 0;">Gradient Magnitude at This Step:</h4>
+                    
+                    <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px;">
+                        ${timeStep === 't-2' ? 
+                        `• <strong>Early in sequence:</strong> Gradients have flowed through many steps<br>
+                        • <strong>Magnitude:</strong> Often very small (vanishing) or very large (exploding)<br>
+                        • <strong>Information:</strong> Most vulnerable to gradient problems` :
+                        timeStep === 't' ?
+                        `• <strong>Middle of sequence:</strong> Moderate gradient flow<br>
+                        • <strong>Magnitude:</strong> Usually stable if using gradient clipping<br>
+                        • <strong>Information:</strong> Balances past and future context` :
+                        `• <strong>Late in sequence:</strong> Fewer steps for gradient to flow through<br>
+                        • <strong>Magnitude:</strong> Generally more stable<br>
+                        • <strong>Information:</strong> Strongest gradient signal`}
+                    </div>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(255, 152, 0, 0.1); border-radius: 10px;">
+                        <strong>🔍 Observation:</strong><br>
+                        The gradient at ${timeStep} depends on all future time steps. This dependency chain is what makes RNN training challenging and motivates architectures like LSTM and GRU.
+                    </div>
+                `);
+            });
+        });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week10_Slide182.html';
+            } else if (e.key === 'ArrowRight') {
+                window.location.href = 'Week10_Slide184.html';
+            }
+        });
+    </script>
+</body>
+</html>

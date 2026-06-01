@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Filter Methods</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .concept-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .process-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .concept-text {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 25px;
+        }
+
+        .process-flow {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .flow-step {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            padding: 20px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .flow-step:hover {
+            transform: translateX(5px);
+            box-shadow: 0 8px 20px rgba(13, 148, 136, 0.15);
+        }
+
+        .step-number {
+            background: #0d9488;
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-right: 15px;
+        }
+
+        .step-title {
+            font-weight: 600;
+            color: #0d9488;
+            font-size: 1.1em;
+            margin-bottom: 8px;
+        }
+
+        .step-desc {
+            color: #475569;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .methods-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .methods-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .method-card {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            border: 2px solid #14b8a6;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .method-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.2);
+        }
+
+        .method-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .method-card:hover::before {
+            left: 100%;
+        }
+
+        .method-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .method-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #0d9488;
+        }
+
+        .method-desc {
+            font-size: 0.9em;
+            color: #475569;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .method-formula {
+            background: rgba(13, 148, 136, 0.1);
+            border-radius: 8px;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .methods-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 7</div>
+    <div class="slide-number">Slide 136 of 140</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Filter Methods</h1>
+        
+        <div class="content-layout">
+            <div class="concept-section">
+                <h2 class="section-title">What are Filter Methods?</h2>
+                
+                <div class="concept-text">
+                    <strong>Filter Methods</strong> evaluate features independently using statistical measures, without considering any specific machine learning algorithm. They act as a "filter" to remove irrelevant features before training.
+                </div>
+                
+                <div style="background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%); border-radius: 15px; padding: 25px; margin: 20px 0; border: 2px solid #0d9488;">
+                    <div style="text-align: center; font-size: 1.3em; font-weight: 600; color: #0d9488; margin-bottom: 15px;">
+                        🔍 Key Characteristics
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; font-size: 0.95em;">
+                        <div><strong>⚡ Fast:</strong> No model training needed</div>
+                        <div><strong>📊 Statistical:</strong> Uses mathematical measures</div>
+                        <div><strong>🔄 Reusable:</strong> Algorithm-independent</div>
+                        <div><strong>📈 Scalable:</strong> Works with large datasets</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="process-section">
+                <h2 class="section-title">Filter Process</h2>
+                
+                <div class="process-flow">
+                    <div class="flow-step">
+                        <div style="display: flex; align-items: center;">
+                            <span class="step-number">1</span>
+                            <div>
+                                <div class="step-title">Calculate Scores</div>
+                                <div class="step-desc">Compute statistical measure for each feature</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flow-step">
+                        <div style="display: flex; align-items: center;">
+                            <span class="step-number">2</span>
+                            <div>
+                                <div class="step-title">Rank Features</div>
+                                <div class="step-desc">Sort features by their scores</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flow-step">
+                        <div style="display: flex; align-items: center;">
+                            <span class="step-number">3</span>
+                            <div>
+                                <div class="step-title">Apply Threshold</div>
+                                <div class="step-desc">Select top-k or above-threshold features</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flow-step">
+                        <div style="display: flex; align-items: center;">
+                            <span class="step-number">4</span>
+                            <div>
+                                <div class="step-title">Use in Model</div>
+                                <div class="step-desc">Train any ML algorithm with selected features</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="methods-section">
+            <h2 class="section-title" style="text-align: center; margin-bottom: 30px;">Common Filter Methods</h2>
+            
+            <div class="methods-grid">
+                <div class="method-card" onclick="showModal('Click for details', '<p>Details about this method.</p>')">
+                    <span class="method-icon">📊</span>
+                    <div class="method-title">Correlation</div>
+                    <div class="method-desc">Measures linear relationship between feature and target variable</div>
+                    <div class="method-formula">r = cov(X,y) / (σ_X × σ_y)</div>
+                </div>
+                
+                <div class="method-card" onclick="showModal('Click for details', '<p>Details about this method.</p>')">
+                    <span class="method-icon">χ²</span>
+                    <div class="method-title">Chi-Square</div>
+                    <div class="method-desc">Tests independence between categorical features and target</div>
+                    <div class="method-formula">χ² = Σ((O-E)² / E)</div>
+                </div>
+                
+                <div class="method-card" onclick="showModal('Click for details', '<p>Details about this method.</p>')">
+                    <span class="method-icon">ℹ️</span>
+                    <div class="method-title">Mutual Information</div>
+                    <div class="method-desc">Measures how much information one variable provides about another</div>
+                    <div class="method-formula">I(X;Y) = H(X) - H(X|Y)</div>
+                </div>
+                
+                <div class="method-card" onclick="showModal('Click for details', '<p>Details about this method.</p>')">
+                    <span class="method-icon">📈</span>
+                    <div class="method-title">F-Score</div>
+                    <div class="method-desc">ANOVA F-test for measuring linear dependency</div>
+                    <div class="method-formula">F = MSB / MSW</div>
+                </div>
+                
+                <div class="method-card" onclick="showModal('Click for details', '<p>Details about this method.</p>')">
+                    <span class="method-icon">📉</span>
+                    <div class="method-title">Variance Threshold</div>
+                    <div class="method-desc">Removes features with low variance (near-constant values)</div>
+                    <div class="method-formula">Var(X) = E[(X-μ)²]</div>
+                </div>
+                
+                <div class="method-card" onclick="showModal('Click for details', '<p>Details about this method.</p>')">
+                    <span class="method-icon">🎯</span>
+                    <div class="method-title">Relief</div>
+                    <div class="method-desc">Estimates feature quality based on how well features distinguish between instances</div>
+                    <div class="method-formula">W[A] += diff(A,R,H) - diff(A,R,M)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week7_Slide135.html" class="nav-btn">← Previous</a>
+        <a href="Week7_Slide137.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 30; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive process flow steps
+        document.querySelectorAll('.flow-step').forEach(step => {
+            step.addEventListener('click', function() {
+                const stepTitle = this.querySelector('.step-title').textContent;
+                const stepNumber = this.querySelector('.step-number').textContent;
+                
+                const stepDetails = {
+                    'Calculate Scores': {
+                        detail: 'Apply statistical measures to evaluate each feature individually against the target variable.',
+                        example: 'Calculate correlation coefficient between each gene expression level and disease outcome',
+                        code: `from scipy.stats import pearsonr
+import numpy as np
+
+# Calculate correlation for each feature
+feature_scores = []
+for i in range(X.shape[1]):
+    corr, p_value = pearsonr(X[:, i], y)
+    feature_scores.append(abs(corr))  # Use absolute correlation
+    
+print(f"Feature scores: {feature_scores[:5]}")  # First 5 features`,
+                        time: 'O(n×m) where n=samples, m=features'
+                    },
+                    'Rank Features': {
+                        detail: 'Sort features from highest to lowest score to identify the most relevant ones.',
+                        example: 'Rank 10,000 genes by correlation with cancer diagnosis (highest correlation first)',
+                        code: `# Rank features by their scores
+feature_indices = np.argsort(feature_scores)[::-1]  # Descending order
+ranked_features = [(i, feature_scores[i]) for i in feature_indices]
+
+print("Top 5 features:")
+for i, (idx, score) in enumerate(ranked_features[:5]):
+    print(f"{i+1}. Feature {idx}: {score:.3f}")`,
+                        time: 'O(m log m) for sorting m features'
+                    },
+                    'Apply Threshold': {
+                        detail: 'Choose features based on a threshold value or select top-k highest scoring features.',
+                        example: 'Select top 100 genes or all genes with correlation > 0.3',
+                        code: `# Method 1: Select top-k features
+k = 100
+selected_indices = feature_indices[:k]
+
+# Method 2: Apply threshold
+threshold = 0.3
+selected_indices = [i for i in range(len(feature_scores)) 
+                   if feature_scores[i] > threshold]
+
+print(f"Selected {len(selected_indices)} features")`,
+                        time: 'O(m) for threshold, O(k) for top-k selection'
+                    },
+                    'Use in Model': {
+                        detail: 'Train machine learning models using only the selected features.',
+                        example: 'Train Random Forest classifier using selected 100 genes instead of all 10,000',
+                        code: `from sklearn.ensemble import RandomForestClassifier
+
+# Use selected features for training
+X_selected = X[:, selected_indices]
+
+# Train any ML model
+model = RandomForestClassifier(n_estimators=100)
+model.fit(X_selected, y)
+
+print(f"Model trained on {X_selected.shape[1]} features")
+print(f"Training accuracy: {model.score(X_selected, y):.3f}")`,
+                        time: 'Depends on chosen ML algorithm and selected features'
+                    }
+                };
+                
+                const details = stepDetails[stepTitle];
+                modal.show(`Step ${stepNumber}: ${stepTitle}`, `
+                    <div class="modal-highlight">
+                        <strong>${details.detail}</strong>
+                    </div>
+                    
+                    <p><strong>📝 Example:</strong> ${details.example}</p>
+                    
+                    <div class="modal-code">${details.code}</div>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                        <strong>⏱️ Time Complexity:</strong> ${details.time}
+                    </div>
+                `);
+            });
+        });
+
+        // Interactive method cards
+        document.querySelectorAll('.method-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('.method-title').textContent;
+                
+                const methodDetails = {
+                    'Correlation': {
+                        description: 'Pearson correlation coefficient measures linear relationships between continuous variables.',
+                        when: 'Use for continuous features and continuous/binary targets',
+                        range: 'Values range from -1 (perfect negative) to +1 (perfect positive)',
+                        example: 'Gene expression levels vs disease severity score',
+                        code: `from scipy.stats import pearsonr
+from sklearn.feature_selection import SelectKBest, f_regression
+
+# Correlation-based selection
+def correlation_selector(X, y, k=10):
+    correlations = [abs(pearsonr(X[:, i], y)[0]) for i in range(X.shape[1])]
+    top_indices = np.argsort(correlations)[-k:][::-1]
+    return top_indices
+
+# Using sklearn
+selector = SelectKBest(score_func=f_regression, k=10)
+X_selected = selector.fit_transform(X, y)`,
+                        pros: 'Fast, interpretable, handles continuous data well',
+                        cons: 'Only captures linear relationships, sensitive to outliers'
+                    },
+                    'Chi-Square': {
+                        description: 'Chi-square test evaluates independence between categorical features and categorical targets.',
+                        when: 'Use for categorical features and categorical targets',
+                        range: 'Values ≥ 0, higher values indicate stronger dependency',
+                        example: 'Customer demographics (age group, region) vs purchase behavior (buy/not buy)',
+                        code: `from sklearn.feature_selection import SelectKBest, chi2
+from sklearn.preprocessing import LabelEncoder
+
+# Ensure features are non-negative (required for chi2)
+X_positive = X - X.min() + 0.01  # Small constant to avoid zeros
+
+# Chi-square selection
+selector = SelectKBest(score_func=chi2, k=10)
+X_selected = selector.fit_transform(X_positive, y)
+
+# Get selected feature indices
+selected_indices = selector.get_support(indices=True)
+print(f"Selected features: {selected_indices}")`,
+                        pros: 'Good for categorical data, statistically principled',
+                        cons: 'Requires non-negative features, assumes independence'
+                    },
+                    'Mutual Information': {
+                        description: 'Measures how much information one variable provides about another, capturing non-linear relationships.',
+                        when: 'Use when relationships might be non-linear',
+                        range: 'Values ≥ 0, higher values indicate stronger dependency',
+                        example: 'Image pixel intensities vs object class (non-linear patterns)',
+                        code: `from sklearn.feature_selection import SelectKBest, mutual_info_classif
+
+# For classification problems
+selector = SelectKBest(score_func=mutual_info_classif, k=10)
+X_selected = selector.fit_transform(X, y)
+
+# For regression problems  
+from sklearn.feature_selection import mutual_info_regression
+selector_reg = SelectKBest(score_func=mutual_info_regression, k=10)
+X_selected_reg = selector_reg.fit_transform(X, y_continuous)`,
+                        pros: 'Captures non-linear relationships, works with mixed data types',
+                        cons: 'Slower computation, requires more data for reliable estimates'
+                    },
+                    'F-Score': {
+                        description: 'ANOVA F-test measures the ratio of variance between groups to variance within groups.',
+                        when: 'Use for continuous features and classification targets',
+                        range: 'Values ≥ 0, higher F-scores indicate better discriminative power',
+                        example: 'Blood test measurements vs disease diagnosis',
+                        code: `from sklearn.feature_selection import SelectKBest, f_classif
+
+# F-score for classification
+selector = SelectKBest(score_func=f_classif, k=10)
+X_selected = selector.fit_transform(X, y)
+
+# Get F-scores and p-values
+f_scores = selector.scores_
+p_values = selector.pvalues_
+
+print("Top features by F-score:")
+for i, (score, p_val) in enumerate(zip(f_scores, p_values)):
+    print(f"Feature {i}: F={score:.2f}, p={p_val:.4f}")`,
+                        pros: 'Well-established statistical test, good for linear relationships',
+                        cons: 'Assumes normal distribution, linear relationships only'
+                    },
+                    'Variance Threshold': {
+                        description: 'Removes features with variance below a threshold, eliminating near-constant features.',
+                        when: 'Use as preprocessing step to remove uninformative features',
+                        range: 'Variance ≥ 0, features with low variance are removed',
+                        example: 'Remove sensor readings that never change or customer IDs',
+                        code: `from sklearn.feature_selection import VarianceThreshold
+
+# Remove features with variance < 0.1
+selector = VarianceThreshold(threshold=0.1)
+X_selected = selector.fit_transform(X)
+
+print(f"Original features: {X.shape[1]}")
+print(f"After variance threshold: {X_selected.shape[1]}")
+
+# See which features were kept
+feature_mask = selector.get_support()
+print(f"Kept features: {np.where(feature_mask)[0]}")`,
+                        pros: 'Very fast, removes obviously useless features',
+                        cons: 'Only considers individual feature variance, not relationship to target'
+                    },
+                    'Relief': {
+                        description: 'Estimates feature quality by how well features distinguish between similar instances of different classes.',
+                        when: 'Use for both classification and regression, handles feature interactions',
+                        range: 'Values typically between -1 and +1, positive values indicate good features',
+                        example: 'Medical diagnosis where combinations of symptoms matter',
+                        code: `from sklearn.feature_selection import SelectKBest
+from skrebate import ReliefF
+
+# Relief algorithm
+relief = ReliefF(n_features_to_select=10, n_neighbors=10)
+X_selected = relief.fit_transform(X, y)
+
+# Get feature scores
+feature_scores = relief.feature_importances_
+selected_features = np.argsort(feature_scores)[-10:][::-1]
+
+print("Top 10 features by Relief score:")
+for i, idx in enumerate(selected_features):
+    print(f"{i+1}. Feature {idx}: {feature_scores[idx]:.3f}")`,
+                        pros: 'Handles feature interactions, works with noisy data, no assumptions about data distribution',
+                        cons: 'Slower than other methods, requires parameter tuning (k neighbors)'
+                    }
+                };
+                
+                const details = methodDetails[title];
+                modal.show(`Filter Method: ${title}`, `
+                    <div class="modal-highlight">
+                        <strong>${details.description}</strong>
+                    </div>
+                    
+                    <p><strong>🎯 When to Use:</strong> ${details.when}</p>
+                    <p><strong>📏 Value Range:</strong> ${details.range}</p>
+                    <p><strong>📝 Example:</strong> ${details.example}</p>
+                    
+                    <div class="modal-code">${details.code}</div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px;">
+                        <div style="padding: 15px; background: rgba(34, 197, 94, 0.1); border-radius: 10px;">
+                            <strong>✅ Pros:</strong><br>
+                            ${details.pros}
+                        </div>
+                        <div style="padding: 15px; background: rgba(239, 68, 68, 0.1); border-radius: 10px;">
+                            <strong>❌ Cons:</strong><br>
+                            ${details.cons}
+                        </div>
+                    </div>
+                `);
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week7_Slide135.html';
+            } else if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week7_Slide137.html';
+            }
+        });
+    </script>
+</body>
+</html>

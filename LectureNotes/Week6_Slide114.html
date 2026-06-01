@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Mean Shift Clustering</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .overview-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .algorithm-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .definition-text {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 25px;
+            padding: 20px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .key-features {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .feature-item {
+            padding: 15px;
+            margin: 12px 0;
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border-left: 3px solid #14b8a6;
+        }
+
+        .feature-item:hover {
+            transform: translateX(8px);
+            box-shadow: 0 8px 20px rgba(13, 148, 136, 0.15);
+        }
+
+        .feature-icon {
+            display: inline-block;
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+
+        .feature-text {
+            font-size: 0.95em;
+            color: #475569;
+        }
+
+        .algorithm-steps {
+            list-style: none;
+            counter-reset: step-counter;
+        }
+
+        .step-item {
+            padding: 20px;
+            margin: 15px 0;
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 15px;
+            border-left: 4px solid #14b8a6;
+            counter-increment: step-counter;
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .step-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(13, 148, 136, 0.15);
+        }
+
+        .step-item::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: -15px;
+            top: 15px;
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .step-text {
+            font-size: 1em;
+            color: #1e293b;
+            line-height: 1.6;
+            margin-left: 20px;
+        }
+
+        .visualization-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            margin-bottom: 40px;
+        }
+
+        .demo-canvas {
+            width: 100%;
+            height: 500px;
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 15px;
+            border: 2px solid #14b8a6;
+            position: relative;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .demo-controls {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(13, 148, 136, 0.3);
+        }
+
+        .bandwidth-control {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 20px;
+            border-radius: 25px;
+            border: 1px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .bandwidth-slider {
+            width: 150px;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(13, 148, 136, 0.2);
+            outline: none;
+            appearance: none;
+        }
+
+        .bandwidth-slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            cursor: pointer;
+        }
+
+        .demo-point {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #64748b;
+            transform: translate(-50%, -50%);
+            transition: all 0.5s ease;
+        }
+
+        .cluster-0 { background: #ef4444 !important; }
+        .cluster-1 { background: #3b82f6 !important; }
+        .cluster-2 { background: #10b981 !important; }
+        .cluster-3 { background: #f59e0b !important; }
+        .cluster-4 { background: #8b5cf6 !important; }
+
+        .mode-point {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.9);
+            border: 3px solid #134e4a;
+            transform: translate(-50%, -50%);
+            transition: all 0.5s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .kernel-circle {
+            position: absolute;
+            border: 2px dashed #0d9488;
+            border-radius: 50%;
+            background: rgba(13, 148, 136, 0.05);
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .comparison-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.9s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 25px;
+            margin-top: 25px;
+        }
+
+        .comparison-card {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 15px;
+            padding: 25px;
+            border-left: 4px solid #14b8a6;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+
+        .comparison-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-title {
+            font-size: 1.2em;
+            color: #0d9488;
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .card-content {
+            font-size: 0.9em;
+            color: #475569;
+            line-height: 1.6;
+        }
+
+        .pros-cons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .pros, .cons {
+            list-style: none;
+        }
+
+        .pros li {
+            color: #065f46;
+            margin-bottom: 5px;
+        }
+
+        .cons li {
+            color: #991b1b;
+            margin-bottom: 5px;
+        }
+
+        .pros li::before { content: '✅ '; }
+        .cons li::before { content: '❌ '; }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: float 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .comparison-grid { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    
+    <div class="course-info">CS5710 - Week 6</div>
+    <div class="slide-number">Slide 114 of 120</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Mean Shift Clustering</h1>
+        
+        <div class="content-layout">
+            <div class="overview-section">
+                <h2 class="section-title">🎯 What is Mean Shift?</h2>
+                
+                <div class="definition-text">
+                    <strong>Mean Shift</strong> is a non-parametric clustering algorithm that finds cluster centers by iteratively shifting data points towards the mode (highest density) of the data distribution using a kernel density estimator.
+                </div>
+                
+                <ul class="key-features">
+                    <li class="feature-item">
+                        <span class="feature-icon">🔢</span>
+                        <span class="feature-text">No need to specify number of clusters</span>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-icon">📍</span>
+                        <span class="feature-text">Finds modes of data distribution</span>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-icon">🎲</span>
+                        <span class="feature-text">Works with arbitrary shaped clusters</span>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-icon">📊</span>
+                        <span class="feature-text">Based on kernel density estimation</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="algorithm-section">
+                <h2 class="section-title">⚙️ Algorithm Steps</h2>
+                
+                <ol class="algorithm-steps">
+                    <li class="step-item">
+                        <div class="step-text">
+                            <strong>Initialize:</strong> Start with each data point as initial guess
+                        </div>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-text">
+                            <strong>Kernel placement:</strong> Place kernel (usually Gaussian) at current point
+                        </div>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-text">
+                            <strong>Calculate mean:</strong> Compute weighted mean of points within kernel
+                        </div>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-text">
+                            <strong>Shift:</strong> Move point towards calculated mean (mode seeking)
+                        </div>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-text">
+                            <strong>Repeat:</strong> Continue until convergence (minimal movement)
+                        </div>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-text">
+                            <strong>Cluster:</strong> Group points that converged to similar modes
+                        </div>
+                    </li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="visualization-section">
+            <h2 class="section-title">📊 Interactive Mean Shift Demo</h2>
+            
+            <div class="demo-controls">
+                <button class="control-btn" id="generateData">Generate New Data</button>
+                <button class="control-btn" id="stepAlgorithm">Step Algorithm</button>
+                <button class="control-btn" id="runComplete">Run to Completion</button>
+                <button class="control-btn" id="resetDemo">Reset</button>
+                
+                <div class="bandwidth-control">
+                    <label style="color: #0d9488; font-weight: 600;">Bandwidth:</label>
+                    <input type="range" class="bandwidth-slider" id="bandwidthSlider" min="20" max="100" value="50">
+                    <span id="bandwidthValue" style="color: #134e4a; font-weight: 600;">50</span>
+                </div>
+            </div>
+            
+            <div class="demo-canvas" id="demoCanvas"></div>
+            
+            <p style="text-align: center; margin-top: 15px; color: #64748b; font-style: italic;">
+                Watch how points iteratively shift towards local density maxima (modes)
+            </p>
+        </div>
+
+        <div class="comparison-section">
+            <h2 class="section-title">⚖️ Comparison with Other Methods</h2>
+            
+            <div class="comparison-grid">
+                <div class="comparison-card">
+                    <div class="card-title">Mean Shift</div>
+                    <div class="card-content">
+                        Mode-seeking algorithm that automatically determines cluster count
+                        <div class="pros-cons">
+                            <ul class="pros">
+                                <li>No k parameter</li>
+                                <li>Finds arbitrary shapes</li>
+                                <li>Robust to outliers</li>
+                            </ul>
+                            <ul class="cons">
+                                <li>Computationally expensive</li>
+                                <li>Sensitive to bandwidth</li>
+                                <li>Struggles with varying densities</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="comparison-card">
+                    <div class="card-title">K-Means</div>
+                    <div class="card-content">
+                        Centroid-based clustering with predetermined cluster count
+                        <div class="pros-cons">
+                            <ul class="pros">
+                                <li>Fast and scalable</li>
+                                <li>Simple implementation</li>
+                                <li>Works well with spherical clusters</li>
+                            </ul>
+                            <ul class="cons">
+                                <li>Need to specify k</li>
+                                <li>Assumes spherical clusters</li>
+                                <li>Sensitive to initialization</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="comparison-card">
+                    <div class="card-title">DBSCAN</div>
+                    <div class="card-content">
+                        Density-based clustering that identifies noise points
+                        <div class="pros-cons">
+                            <ul class="pros">
+                                <li>Handles noise well</li>
+                                <li>Finds arbitrary shapes</li>
+                                <li>No k parameter</li>
+                            </ul>
+                            <ul class="cons">
+                                <li>Sensitive to parameters</li>
+                                <li>Struggles with varying densities</li>
+                                <li>Memory intensive</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week6_Slide113.html" class="nav-btn">← Previous</a>
+        <a href="Week6_Slide115.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Mean Shift Demo
+        class MeanShiftDemo {
+            constructor() {
+                this.canvas = document.getElementById('demoCanvas');
+                this.bandwidthSlider = document.getElementById('bandwidthSlider');
+                this.bandwidthValue = document.getElementById('bandwidthValue');
+                
+                this.points = [];
+                this.modes = [];
+                this.kernelCircles = [];
+                this.iteration = 0;
+                this.isAnimating = false;
+                
+                this.setupEventListeners();
+                this.generateRandomData();
+            }
+            
+            setupEventListeners() {
+                document.getElementById('generateData').addEventListener('click', () => this.generateRandomData());
+                document.getElementById('stepAlgorithm').addEventListener('click', () => this.stepAlgorithm());
+                document.getElementById('runComplete').addEventListener('click', () => this.runToCompletion());
+                document.getElementById('resetDemo').addEventListener('click', () => this.reset());
+                
+                this.bandwidthSlider.addEventListener('input', () => {
+                    this.bandwidthValue.textContent = this.bandwidthSlider.value;
+                    this.reset();
+                });
+            }
+            
+            generateRandomData() {
+                this.points = [];
+                this.canvas.innerHTML = '';
+                
+                // Generate clustered data
+                const clusters = [
+                    { center: [25, 30], points: 15, spread: 60 },
+                    { center: [70, 25], points: 12, spread: 40 },
+                    { center: [55, 70], points: 10, spread: 50 },
+                ];
+                
+                clusters.forEach((cluster, clusterIndex) => {
+                    for (let i = 0; i < cluster.points; i++) {
+                        const angle = Math.random() * 2 * Math.PI;
+                        const radius = Math.random() * cluster.spread + 10;
+                        const x = Math.max(5, Math.min(95, cluster.center[0] + Math.cos(angle) * radius / 4));
+                        const y = Math.max(5, Math.min(95, cluster.center[1] + Math.sin(angle) * radius / 4));
+                        
+                        const point = {
+                            originalX: x,
+                            originalY: y,
+                            x: x,
+                            y: y,
+                            trueCluster: clusterIndex,
+                            cluster: -1,
+                            converged: false
+                        };
+                        
+                        const element = document.createElement('div');
+                        element.className = 'demo-point';
+                        element.style.left = point.x + '%';
+                        element.style.top = point.y + '%';
+                        this.canvas.appendChild(element);
+                        
+                        point.element = element;
+                        this.points.push(point);
+                    }
+                });
+                
+                this.iteration = 0;
+                this.modes = [];
+                this.clearKernelCircles();
+            }
+            
+            stepAlgorithm() {
+                if (this.isAnimating) return;
+                
+                const bandwidth = parseFloat(this.bandwidthSlider.value);
+                let hasMovement = false;
+                
+                // Clear previous kernel circles
+                this.clearKernelCircles();
+                
+                // For each point, calculate mean shift
+                this.points.forEach((point, index) => {
+                    if (point.converged) return;
+                    
+                    // Show kernel circle for this point
+                    this.showKernelCircle(point, bandwidth);
+                    
+                    const neighbors = this.getNeighbors(point, bandwidth);
+                    const newPosition = this.calculateWeightedMean(point, neighbors, bandwidth);
+                    
+                    const movement = Math.sqrt(
+                        Math.pow(newPosition.x - point.x, 2) + 
+                        Math.pow(newPosition.y - point.y, 2)
+                    );
+                    
+                    if (movement > 1) { // Convergence threshold
+                        point.x = newPosition.x;
+                        point.y = newPosition.y;
+                        hasMovement = true;
+                        
+                        // Update DOM element position
+                        point.element.style.left = point.x + '%';
+                        point.element.style.top = point.y + '%';
+                    } else {
+                        point.converged = true;
+                    }
+                });
+                
+                this.iteration++;
+                
+                if (!hasMovement) {
+                    this.findFinalClusters();
+                }
+            }
+            
+            runToCompletion() {
+                if (this.isAnimating) return;
+                this.isAnimating = true;
+                
+                const animate = () => {
+                    this.stepAlgorithm();
+                    
+                    if (this.points.every(p => p.converged)) {
+                        this.isAnimating = false;
+                        return;
+                    }
+                    
+                    setTimeout(animate, 500);
+                };
+                
+                animate();
+            }
+            
+            getNeighbors(centerPoint, bandwidth) {
+                const neighbors = [];
+                const canvasRect = this.canvas.getBoundingClientRect();
+                const bandwidthPixels = (bandwidth / 100) * Math.min(canvasRect.width, canvasRect.height);
+                
+                this.points.forEach(point => {
+                    const dx = (centerPoint.x - point.x) * canvasRect.width / 100;
+                    const dy = (centerPoint.y - point.y) * canvasRect.height / 100;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance <= bandwidthPixels) {
+                        const weight = this.gaussianKernel(distance, bandwidthPixels);
+                        neighbors.push({ point, weight, distance });
+                    }
+                });
+                
+                return neighbors;
+            }
+            
+            gaussianKernel(distance, bandwidth) {
+                return Math.exp(-(distance * distance) / (2 * bandwidth * bandwidth));
+            }
+            
+            calculateWeightedMean(centerPoint, neighbors, bandwidth) {
+                let totalWeight = 0;
+                let weightedX = 0;
+                let weightedY = 0;
+                
+                neighbors.forEach(({ point, weight }) => {
+                    weightedX += point.x * weight;
+                    weightedY += point.y * weight;
+                    totalWeight += weight;
+                });
+                
+                return {
+                    x: weightedX / totalWeight,
+                    y: weightedY / totalWeight
+                };
+            }
+            
+            showKernelCircle(centerPoint, bandwidth) {
+                const canvasRect = this.canvas.getBoundingClientRect();
+                const radius = (bandwidth / 100) * Math.min(canvasRect.width, canvasRect.height);
+                
+                const circle = document.createElement('div');
+                circle.className = 'kernel-circle';
+                circle.style.width = (radius * 2) + 'px';
+                circle.style.height = (radius * 2) + 'px';
+                circle.style.left = (centerPoint.x * canvasRect.width / 100 - radius) + 'px';
+                circle.style.top = (centerPoint.y * canvasRect.height / 100 - radius) + 'px';
+                
+                this.canvas.appendChild(circle);
+                this.kernelCircles.push(circle);
+                
+                // Remove circle after short delay
+                setTimeout(() => {
+                    if (circle.parentNode) {
+                        circle.remove();
+                    }
+                }, 200);
+            }
+            
+            clearKernelCircles() {
+                this.kernelCircles.forEach(circle => {
+                    if (circle.parentNode) {
+                        circle.remove();
+                    }
+                });
+                this.kernelCircles = [];
+            }
+            
+            findFinalClusters() {
+                // Group points that converged to similar locations
+                const tolerance = 5; // pixels
+                const clusters = [];
+                
+                this.points.forEach(point => {
+                    let assigned = false;
+                    
+                    for (let cluster of clusters) {
+                        const dx = point.x - cluster.center.x;
+                        const dy = point.y - cluster.center.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance <= tolerance) {
+                            cluster.points.push(point);
+                            point.cluster = cluster.id;
+                            assigned = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!assigned) {
+                        const newCluster = {
+                            id: clusters.length,
+                            center: { x: point.x, y: point.y },
+                            points: [point]
+                        };
+                        clusters.push(newCluster);
+                        point.cluster = newCluster.id;
+                    }
+                });
+                
+                // Update visualization
+                this.points.forEach(point => {
+                    point.element.className = `demo-point cluster-${point.cluster % 5}`;
+                });
+                
+                // Show cluster centers
+                this.modes = [];
+                clusters.forEach(cluster => {
+                    const mode = document.createElement('div');
+                    mode.className = 'mode-point';
+                    mode.style.left = cluster.center.x + '%';
+                    mode.style.top = cluster.center.y + '%';
+                    this.canvas.appendChild(mode);
+                    this.modes.push(mode);
+                });
+            }
+            
+            reset() {
+                this.points.forEach(point => {
+                    point.x = point.originalX;
+                    point.y = point.originalY;
+                    point.cluster = -1;
+                    point.converged = false;
+                    point.element.className = 'demo-point';
+                    point.element.style.left = point.x + '%';
+                    point.element.style.top = point.y + '%';
+                });
+                
+                this.modes.forEach(mode => mode.remove());
+                this.modes = [];
+                this.clearKernelCircles();
+                this.iteration = 0;
+                this.isAnimating = false;
+            }
+        }
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive feature items
+        document.querySelectorAll('.feature-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const text = this.querySelector('.feature-text').textContent;
+                
+                const details = {
+                    'No need to specify number of clusters': {
+                        title: 'Automatic Cluster Discovery',
+                        content: 'Mean shift automatically determines the number of clusters by finding modes in the data density. Each mode becomes a cluster center, eliminating the need to guess k beforehand.'
+                    },
+                    'Finds modes of data distribution': {
+                        title: 'Mode-Seeking Behavior',
+                        content: 'The algorithm iteratively shifts each point towards the local maximum of the kernel density estimate. This mode-seeking property naturally identifies cluster centers at density peaks.'
+                    },
+                    'Works with arbitrary shaped clusters': {
+                        title: 'Shape Flexibility',
+                        content: 'Unlike k-means which assumes spherical clusters, mean shift can discover clusters of any shape by following the density gradient. It works well with elongated, curved, or irregular cluster shapes.'
+                    },
+                    'Based on kernel density estimation': {
+                        title: 'Kernel Density Foundation',
+                        content: 'Uses a kernel function (typically Gaussian) to estimate the probability density at each point. The mean shift vector points towards the direction of steepest increase in density.'
+                    }
+                };
+                
+                const detail = details[text];
+                if (detail) {
+                    modal.show(detail.title, `
+                        <div class="modal-highlight">
+                            ${detail.content}
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Interactive algorithm steps
+        document.querySelectorAll('.step-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const stepText = this.querySelector('.step-text').innerHTML;
+                const stepNumber = Array.from(this.parentNode.children).indexOf(this) + 1;
+                
+                const explanations = {
+                    1: 'Each data point starts as its own potential cluster center. This initialization ensures all regions of the data space are considered.',
+                    2: 'A kernel (usually Gaussian) is centered at the current point. The kernel defines the neighborhood and weights for nearby points.',
+                    3: 'Calculate the weighted average position of all points within the kernel window. Points closer to the center have higher weights.',
+                    4: 'Move the point towards this weighted mean. This step seeks the direction of highest density (mode seeking).',
+                    5: 'Repeat the process until the point stops moving significantly (convergence). This indicates it has reached a local density maximum.',
+                    6: 'Points that converge to the same mode belong to the same cluster. The final modes become the cluster centers.'
+                };
+                
+                modal.show(`Step ${stepNumber} Details`, `
+                    <div class="modal-highlight">
+                        <p style="margin-bottom: 15px;"><strong>Step:</strong> ${stepText}</p>
+                        <p><strong>Explanation:</strong> ${explanations[stepNumber]}</p>
+                    </div>
+                `);
+            });
+        });
+
+        // Interactive comparison cards
+        document.querySelectorAll('.comparison-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const algorithm = this.querySelector('.card-title').textContent;
+                
+                const details = {
+                    'Mean Shift': 'Mean shift excels at finding natural clusters without specifying k, but requires careful bandwidth tuning and can be computationally expensive for large datasets.',
+                    'K-Means': 'K-means is fast and works well for spherical, well-separated clusters of similar sizes, but requires knowing k and struggles with complex shapes.',
+                    'DBSCAN': 'DBSCAN is excellent for irregular shapes and noise detection, but sensitive to parameter choice and may struggle with clusters of varying densities.'
+                };
+                
+                modal.show(algorithm + ' - Usage Guide', `
+                    <div class="modal-highlight">
+                        ${details[algorithm]}
+                    </div>
+                `);
+            });
+        });
+
+        // Initialize
+        const demo = new MeanShiftDemo();
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week6_Slide113.html';
+            } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                if (!modal.overlay.classList.contains('active')) {
+                    window.location.href = 'Week6_Slide115.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Feature Engineering for Ensembles</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .principles-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .strategies-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .principle-description {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .strategy-list {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .strategy-item {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #14b8a6;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .strategy-item:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 30px rgba(13, 148, 136, 0.2);
+        }
+
+        .strategy-title {
+            font-size: 1.2em;
+            color: #0d9488;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .strategy-desc {
+            color: #475569;
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+
+        .techniques-showcase {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .showcase-title {
+            font-size: 2em;
+            color: #0d9488;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .techniques-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .technique-card {
+            background: linear-gradient(135deg, #1e293b, #334155);
+            color: white;
+            border-radius: 15px;
+            padding: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .technique-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.2);
+        }
+
+        .technique-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(13, 148, 136, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .technique-card:hover::before {
+            left: 100%;
+        }
+
+        .technique-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .technique-name {
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #5eead4;
+        }
+
+        .technique-description {
+            font-size: 0.95em;
+            line-height: 1.5;
+            opacity: 0.9;
+            margin-bottom: 15px;
+        }
+
+        .technique-example {
+            font-size: 0.85em;
+            color: #94a3b8;
+            font-style: italic;
+        }
+
+        .diversity-matrix {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.9s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            margin-top: 30px;
+        }
+
+        .matrix-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+
+        .diversity-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .diversity-table th {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            padding: 15px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .diversity-table td {
+            padding: 12px 15px;
+            text-align: center;
+            border-bottom: 1px solid #e2e8f0;
+            font-weight: 500;
+        }
+
+        .diversity-table tr:hover {
+            background: rgba(13, 148, 136, 0.05);
+        }
+
+        .model-column {
+            font-weight: 600;
+            color: #0d9488;
+        }
+
+        .correlation-high {
+            background: #fecaca !important;
+            color: #991b1b;
+            font-weight: 600;
+        }
+
+        .correlation-medium {
+            background: #fde68a !important;
+            color: #92400e;
+            font-weight: 600;
+        }
+
+        .correlation-low {
+            background: #bbf7d0 !important;
+            color: #166534;
+            font-weight: 600;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .techniques-grid { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 5</div>
+    <div class="slide-number">Slide 94 of 100</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">🛠️ Feature Engineering for Ensembles</h1>
+        
+        <div class="content-layout">
+            <div class="principles-section">
+                <h2 class="section-title">Core Principles</h2>
+                
+                <div class="principle-description">
+                    <strong>Diversity is King!</strong><br>
+                    Create different feature representations for different models to maximize ensemble diversity and performance.
+                </div>
+                
+                <div style="font-size: 1.1em; line-height: 1.7; color: #1e293b;">
+                    <strong>🎯 Goal:</strong><br>
+                    Each model should see the data differently while maintaining predictive power.
+                    <br><br>
+                    <strong>🔑 Strategy:</strong><br>
+                    Feature engineering → Model diversity → Better ensemble performance.
+                    <br><br>
+                    <strong>💡 Insight:</strong><br>
+                    Uncorrelated predictions from diverse features = powerful ensemble!
+                </div>
+            </div>
+
+            <div class="strategies-section">
+                <h2 class="section-title">Diversification Strategies</h2>
+                
+                <div class="strategy-list">
+                    <div class="strategy-item" data-strategy="views">
+                        <div class="strategy-title">🔄 Feature Views</div>
+                        <div class="strategy-desc">Create different representations of the same data</div>
+                    </div>
+                    
+                    <div class="strategy-item" data-strategy="scales">
+                        <div class="strategy-title">⚖️ Different Scales</div>
+                        <div class="strategy-desc">Use various normalization and scaling techniques</div>
+                    </div>
+                    
+                    <div class="strategy-item" data-strategy="transforms">
+                        <div class="strategy-title">📊 Transformations</div>
+                        <div class="strategy-desc">Apply mathematical transformations to features</div>
+                    </div>
+                    
+                    <div class="strategy-item" data-strategy="interactions">
+                        <div class="strategy-title">🔗 Feature Interactions</div>
+                        <div class="strategy-desc">Create polynomial and interaction features</div>
+                    </div>
+                    
+                    <div class="strategy-item" data-strategy="domain">
+                        <div class="strategy-title">🏗️ Domain Knowledge</div>
+                        <div class="strategy-desc">Engineer domain-specific features for different models</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="techniques-showcase">
+            <h2 class="showcase-title">🎨 Feature Engineering Techniques</h2>
+            <p style="text-align: center; color: #475569; margin-bottom: 20px;">
+                Click each technique to explore detailed implementation strategies
+            </p>
+            
+            <div class="techniques-grid">
+                <div class="technique-card" data-technique="statistical">
+                    <span class="technique-icon">📈</span>
+                    <div class="technique-name">Statistical Features</div>
+                    <div class="technique-description">Create statistical summaries and aggregations</div>
+                    <div class="technique-example">Mean, std, percentiles, rolling windows</div>
+                </div>
+                
+                <div class="technique-card" data-technique="temporal">
+                    <span class="technique-icon">⏰</span>
+                    <div class="technique-name">Temporal Features</div>
+                    <div class="technique-description">Extract time-based patterns and trends</div>
+                    <div class="technique-example">Day of week, seasonality, lags, trends</div>
+                </div>
+                
+                <div class="technique-card" data-technique="categorical">
+                    <span class="technique-icon">📋</span>
+                    <div class="technique-name">Categorical Encoding</div>
+                    <div class="technique-description">Multiple encoding strategies for categories</div>
+                    <div class="technique-example">One-hot, target, frequency, embeddings</div>
+                </div>
+                
+                <div class="technique-card" data-technique="text">
+                    <span class="technique-icon">📝</span>
+                    <div class="technique-name">Text Features</div>
+                    <div class="technique-description">Extract insights from textual data</div>
+                    <div class="technique-example">TF-IDF, n-grams, sentiment, length</div>
+                </div>
+                
+                <div class="technique-card" data-technique="geographical">
+                    <span class="technique-icon">🗺️</span>
+                    <div class="technique-name">Geographical Features</div>
+                    <div class="technique-description">Leverage location-based information</div>
+                    <div class="technique-example">Distance, clustering, density, boundaries</div>
+                </div>
+                
+                <div class="technique-card" data-technique="engineered">
+                    <span class="technique-icon">⚙️</span>
+                    <div class="technique-name">Engineered Features</div>
+                    <div class="technique-description">Create problem-specific features</div>
+                    <div class="technique-example">Ratios, differences, business metrics</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="diversity-matrix">
+            <h2 class="matrix-title">🎲 Ensemble Diversity Matrix</h2>
+            <p style="text-align: center; color: #475569; margin-bottom: 20px;">
+                Feature correlation between models - Lower is better for diversity!
+            </p>
+            
+            <table class="diversity-table">
+                <thead>
+                    <tr>
+                        <th>Model</th>
+                        <th>Features Used</th>
+                        <th>RF</th>
+                        <th>XGB</th>
+                        <th>NN</th>
+                        <th>SVM</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="model-column">Random Forest</td>
+                        <td>Raw + Statistical</td>
+                        <td>1.00</td>
+                        <td class="correlation-medium">0.72</td>
+                        <td class="correlation-low">0.45</td>
+                        <td class="correlation-low">0.38</td>
+                    </tr>
+                    <tr>
+                        <td class="model-column">XGBoost</td>
+                        <td>Engineered + Interactions</td>
+                        <td class="correlation-medium">0.72</td>
+                        <td>1.00</td>
+                        <td class="correlation-low">0.42</td>
+                        <td class="correlation-medium">0.65</td>
+                    </tr>
+                    <tr>
+                        <td class="model-column">Neural Network</td>
+                        <td>Normalized + Embeddings</td>
+                        <td class="correlation-low">0.45</td>
+                        <td class="correlation-low">0.42</td>
+                        <td>1.00</td>
+                        <td class="correlation-low">0.35</td>
+                    </tr>
+                    <tr>
+                        <td class="model-column">SVM</td>
+                        <td>Scaled + Polynomial</td>
+                        <td class="correlation-low">0.38</td>
+                        <td class="correlation-medium">0.65</td>
+                        <td class="correlation-low">0.35</td>
+                        <td>1.00</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div style="margin-top: 20px; display: flex; justify-content: center; gap: 30px;">
+                <span><span class="correlation-low" style="padding: 5px 10px; border-radius: 5px;">Low (< 0.5)</span> = Excellent diversity</span>
+                <span><span class="correlation-medium" style="padding: 5px 10px; border-radius: 5px;">Medium (0.5-0.7)</span> = Good diversity</span>
+                <span><span class="correlation-high" style="padding: 5px 10px; border-radius: 5px;">High (> 0.7)</span> = Poor diversity</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week5_Slide93.html" class="nav-btn">← Previous</a>
+        <a href="Week5_Slide95.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Strategy details
+        const strategyDetails = {
+            'views': {
+                title: 'Feature Views for Diversity',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Multiple Perspectives:</strong> Same data, different representations
+                    </div>
+                    <p><strong>Techniques:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Raw Features:</strong> Original data for tree-based models</li>
+                        <li><strong>Aggregated Features:</strong> Statistical summaries for linear models</li>
+                        <li><strong>Temporal Views:</strong> Time-based aggregations</li>
+                        <li><strong>Hierarchical Features:</strong> Multi-level aggregations</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Example: Multiple views of transaction data
+# View 1: Raw features for Random Forest
+rf_features = ['amount', 'merchant_id', 'category']
+
+# View 2: Aggregated features for Linear Model
+linear_features = ['amount_mean_30d', 'amount_std_30d', 'transaction_count_7d']
+
+# View 3: Interaction features for XGBoost
+xgb_features = ['amount_per_category', 'merchant_frequency', 'weekend_flag']
+                    </div>
+                    
+                    <p><strong>Impact:</strong> Each model sees different aspects of the problem, reducing correlation between predictions.</p>
+                `
+            },
+            'scales': {
+                title: 'Scaling and Normalization Strategies',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Scale Sensitivity:</strong> Different algorithms prefer different scales
+                    </div>
+                    <p><strong>Model-Specific Scaling:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Tree Models:</strong> No scaling needed (scale-invariant)</li>
+                        <li><strong>Neural Networks:</strong> StandardScaler or MinMaxScaler</li>
+                        <li><strong>SVM:</strong> RobustScaler for outliers</li>
+                        <li><strong>Linear Models:</strong> StandardScaler with regularization</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler
+
+# Different scalers for different models
+scalers = {
+    'neural_network': StandardScaler(),
+    'svm': RobustScaler(),
+    'linear': StandardScaler(),
+    'tree': None  # No scaling needed
+}
+
+# Apply appropriate scaling
+for model_name, scaler in scalers.items():
+    if scaler:
+        X_scaled = scaler.fit_transform(X_train)
+    else:
+        X_scaled = X_train
+                    </div>
+                    
+                    <p><strong>Benefits:</strong> Optimizes each model's performance while maintaining diversity.</p>
+                `
+            },
+            'transforms': {
+                title: 'Mathematical Transformations',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Transform to Discover:</strong> Mathematical transformations reveal hidden patterns
+                    </div>
+                    <p><strong>Common Transformations:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Log Transform:</strong> For skewed distributions</li>
+                        <li><strong>Power Transform:</strong> Box-Cox, Yeo-Johnson</li>
+                        <li><strong>Binning:</strong> Convert continuous to categorical</li>
+                        <li><strong>Polynomial:</strong> Higher-order relationships</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+import numpy as np
+from sklearn.preprocessing import PowerTransformer
+
+# Log transformation for skewed features
+X_log = np.log1p(X[skewed_features])
+
+# Power transformation for normality
+pt = PowerTransformer(method='yeo-johnson')
+X_power = pt.fit_transform(X_numeric)
+
+# Polynomial features
+from sklearn.preprocessing import PolynomialFeatures
+poly = PolynomialFeatures(degree=2, include_bias=False)
+X_poly = poly.fit_transform(X_selected)
+                    </div>
+                    
+                    <p><strong>Strategy:</strong> Apply different transformations to create distinct feature spaces for each model.</p>
+                `
+            },
+            'interactions': {
+                title: 'Feature Interactions and Combinations',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Synergy Effects:</strong> The whole can be greater than the sum of parts
+                    </div>
+                    <p><strong>Interaction Types:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Multiplicative:</strong> feature1 × feature2</li>
+                        <li><strong>Ratio:</strong> feature1 / feature2</li>
+                        <li><strong>Difference:</strong> feature1 - feature2</li>
+                        <li><strong>Conditional:</strong> if-then feature combinations</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Create interaction features
+df['price_per_sqft'] = df['price'] / df['sqft']
+df['income_age_interaction'] = df['income'] * df['age']
+df['weekend_amount'] = df['weekend'] * df['transaction_amount']
+
+# Automatic interaction detection
+from sklearn.preprocessing import PolynomialFeatures
+poly = PolynomialFeatures(degree=2, interaction_only=True)
+X_interactions = poly.fit_transform(X_selected)
+
+# Domain-specific interactions
+df['debt_to_income'] = df['debt'] / (df['income'] + 1e-6)
+df['experience_education'] = df['years_exp'] * df['education_level']
+                    </div>
+                    
+                    <p><strong>Pro Tip:</strong> Use domain knowledge to identify meaningful interactions rather than generating all possible combinations.</p>
+                `
+            },
+            'domain': {
+                title: 'Domain-Specific Feature Engineering',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Domain Expertise:</strong> Business knowledge creates the most valuable features
+                    </div>
+                    <p><strong>Domain-Driven Approach:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Business Metrics:</strong> KPIs relevant to the problem</li>
+                        <li><strong>Expert Rules:</strong> Encode domain knowledge as features</li>
+                        <li><strong>External Data:</strong> Weather, holidays, market data</li>
+                        <li><strong>Temporal Patterns:</strong> Seasonality, trends, cycles</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# E-commerce example: Customer behavior features
+df['days_since_last_purchase'] = (today - df['last_purchase_date']).dt.days
+df['avg_order_value'] = df['total_spent'] / df['num_orders']
+df['preferred_category'] = df.groupby('customer_id')['category'].transform(lambda x: x.mode()[0])
+
+# Financial example: Risk indicators
+df['debt_service_ratio'] = df['monthly_debt_payment'] / df['monthly_income']
+df['credit_utilization'] = df['credit_used'] / df['credit_limit']
+df['payment_history_score'] = df['on_time_payments'] / df['total_payments']
+                    </div>
+                    
+                    <p><strong>Success Factor:</strong> Domain features often provide the biggest performance boost to ensembles.</p>
+                `
+            }
+        };
+
+        // Technique details
+        const techniqueDetails = {
+            'statistical': {
+                title: 'Statistical Features',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Statistical Insights:</strong> Summarize distributions and patterns
+                    </div>
+                    <p><strong>Basic Statistics:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>Central tendency: mean, median, mode</li>
+                        <li>Dispersion: std, variance, IQR, range</li>
+                        <li>Shape: skewness, kurtosis</li>
+                        <li>Percentiles: 25th, 75th, 90th, 99th</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Rolling window statistics
+df['amount_mean_7d'] = df.groupby('customer_id')['amount'].rolling(7).mean()
+df['amount_std_30d'] = df.groupby('customer_id')['amount'].rolling(30).std()
+df['amount_max_7d'] = df.groupby('customer_id')['amount'].rolling(7).max()
+
+# Percentile features
+df['amount_p95'] = df.groupby('customer_id')['amount'].transform(lambda x: x.quantile(0.95))
+df['relative_to_p95'] = df['amount'] / df['amount_p95']
+                    </div>
+                    
+                    <p><strong>Use Case:</strong> Excellent for tree-based models and detecting anomalies.</p>
+                `
+            },
+            'temporal': {
+                title: 'Temporal Features',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Time Patterns:</strong> Extract cyclical and trend information
+                    </div>
+                    <p><strong>Time Components:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>Cyclical: hour, day of week, month, season</li>
+                        <li>Trends: linear, polynomial, exponential</li>
+                        <li>Lags: previous values at different time intervals</li>
+                        <li>Special dates: holidays, events, weekends</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Extract time components
+df['hour'] = df['timestamp'].dt.hour
+df['day_of_week'] = df['timestamp'].dt.dayofweek
+df['is_weekend'] = df['day_of_week'].isin([5, 6]).astype(int)
+df['month'] = df['timestamp'].dt.month
+
+# Cyclical encoding (preserves cyclical nature)
+df['hour_sin'] = np.sin(2 * np.pi * df['hour'] / 24)
+df['hour_cos'] = np.cos(2 * np.pi * df['hour'] / 24)
+
+# Lag features
+df['value_lag_1'] = df.groupby('entity_id')['value'].shift(1)
+df['value_lag_7'] = df.groupby('entity_id')['value'].shift(7)
+                    </div>
+                    
+                    <p><strong>Power Feature:</strong> Time-based features often drive significant performance gains in real-world problems.</p>
+                `
+            },
+            'categorical': {
+                title: 'Advanced Categorical Encoding',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Encoding Strategies:</strong> Different encodings for different models
+                    </div>
+                    <p><strong>Encoding Methods:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>One-Hot:</strong> For low-cardinality categories</li>
+                        <li><strong>Target Encoding:</strong> Mean target by category</li>
+                        <li><strong>Frequency:</strong> Count of category occurrences</li>
+                        <li><strong>Embeddings:</strong> Learned dense representations</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Multiple encoding strategies
+from category_encoders import TargetEncoder, LeaveOneOutEncoder
+
+# For tree models: Label encoding or raw categories
+df['category_label'] = LabelEncoder().fit_transform(df['category'])
+
+# For linear models: One-hot encoding
+df_onehot = pd.get_dummies(df, columns=['category'], prefix='cat')
+
+# For neural networks: Target encoding
+target_enc = TargetEncoder()
+df['category_target'] = target_enc.fit_transform(df['category'], df['target'])
+
+# Frequency encoding
+freq_map = df['category'].value_counts().to_dict()
+df['category_freq'] = df['category'].map(freq_map)
+                    </div>
+                    
+                    <p><strong>Strategy:</strong> Use different encodings for different models to maximize ensemble diversity.</p>
+                `
+            },
+            'text': {
+                title: 'Text Feature Engineering',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Text to Numbers:</strong> Extract meaning from unstructured text
+                    </div>
+                    <p><strong>Text Features:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>Length features: character count, word count</li>
+                        <li>TF-IDF vectors: term frequency importance</li>
+                        <li>N-grams: word sequences</li>
+                        <li>Sentiment scores: positive/negative/neutral</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+from sklearn.feature_extraction.text import TfidfVectorizer
+from textblob import TextBlob
+
+# Basic text features
+df['text_length'] = df['text'].str.len()
+df['word_count'] = df['text'].str.split().str.len()
+df['capital_ratio'] = df['text'].str.count('[A-Z]') / df['text_length']
+
+# TF-IDF features
+tfidf = TfidfVectorizer(max_features=1000, stop_words='english')
+tfidf_features = tfidf.fit_transform(df['text'])
+
+# Sentiment analysis
+df['sentiment'] = df['text'].apply(lambda x: TextBlob(x).sentiment.polarity)
+df['subjectivity'] = df['text'].apply(lambda x: TextBlob(x).sentiment.subjectivity)
+                    </div>
+                    
+                    <p><strong>Advanced:</strong> Use pre-trained embeddings (Word2Vec, BERT) for rich text representations.</p>
+                `
+            },
+            'geographical': {
+                title: 'Geographical Features',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Location Intelligence:</strong> Spatial relationships and patterns
+                    </div>
+                    <p><strong>Geo Features:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>Distance calculations: haversine, Manhattan</li>
+                        <li>Spatial clustering: k-means on coordinates</li>
+                        <li>Density features: points per area</li>
+                        <li>Boundary features: inside/outside regions</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+from sklearn.cluster import KMeans
+import numpy as np
+
+# Distance features
+def haversine_distance(lat1, lon1, lat2, lon2):
+    # Haversine formula implementation
+    pass
+
+df['dist_to_center'] = haversine_distance(df['lat'], df['lon'], center_lat, center_lon)
+df['dist_to_airport'] = haversine_distance(df['lat'], df['lon'], airport_lat, airport_lon)
+
+# Geographical clustering
+kmeans = KMeans(n_clusters=10)
+df['geo_cluster'] = kmeans.fit_predict(df[['lat', 'lon']])
+
+# Density features
+df['nearby_count'] = df.groupby('geo_cluster').transform('size')
+                    </div>
+                    
+                    <p><strong>Applications:</strong> Real estate, delivery optimization, retail location analysis.</p>
+                `
+            },
+            'engineered': {
+                title: 'Custom Engineered Features',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Creative Engineering:</strong> Problem-specific feature creation
+                    </div>
+                    <p><strong>Engineering Techniques:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>Ratios and proportions: meaningful relationships</li>
+                        <li>Differences and changes: temporal variations</li>
+                        <li>Binning and grouping: discrete representations</li>
+                        <li>Business metrics: domain-specific calculations</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Ratio features
+df['price_to_income_ratio'] = df['price'] / df['income']
+df['debt_to_asset_ratio'] = df['total_debt'] / df['total_assets']
+
+# Change features
+df['price_change_1y'] = (df['current_price'] - df['price_1y_ago']) / df['price_1y_ago']
+df['income_growth'] = df['current_income'] / df['previous_income'] - 1
+
+# Custom business metrics
+df['customer_lifetime_value'] = df['avg_order_value'] * df['purchase_frequency'] * df['lifespan']
+df['churn_risk_score'] = (df['days_since_last_purchase'] / df['avg_purchase_interval'])
+                    </div>
+                    
+                    <p><strong>Success Key:</strong> Combine domain expertise with creative feature engineering for maximum impact.</p>
+                `
+            }
+        };
+
+        // Make strategy items clickable
+        document.querySelectorAll('.strategy-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const strategy = this.dataset.strategy;
+                const details = strategyDetails[strategy];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        // Make technique cards clickable
+        document.querySelectorAll('.technique-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const technique = this.dataset.technique;
+                const details = techniqueDetails[technique];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week5_Slide93.html';
+            } else if ((e.key === 'ArrowRight' || e.key === ' ') && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week5_Slide95.html';
+            }
+        });
+
+    </script>
+</body>
+</html>

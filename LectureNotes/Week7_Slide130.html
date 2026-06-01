@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Interactive PCA Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1600px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 40px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            font-weight: 700;
+            background: linear-gradient(90deg, #0d9488, #14b8a6, #0d9488);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientShift 3s ease infinite, slideInFromTop 1.2s ease-out;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .visualization-panel {
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,253,250,0.95) 100%);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            backdrop-filter: blur(10px);
+            position: relative;
+        }
+
+        .control-panel {
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,253,250,0.95) 100%);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromTop 1s ease-out 0.4s both;
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .info-panel {
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,253,250,0.95) 100%);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.5s both;
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .panel-title {
+            font-size: 1.5em;
+            color: #0d9488;
+            margin-bottom: 20px;
+            font-weight: 600;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .panel-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        #pcaCanvas {
+            width: 100%;
+            height: 400px;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 15px;
+            cursor: crosshair;
+            border: 2px solid rgba(13, 148, 136, 0.1);
+            position: relative;
+        }
+
+        #transformedCanvas {
+            width: 100%;
+            height: 400px;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 15px;
+            border: 2px solid rgba(13, 148, 136, 0.1);
+            margin-top: 20px;
+        }
+
+        .control-group {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 15px;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .control-label {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 10px;
+            display: block;
+            font-size: 1.1em;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 10px 0;
+        }
+
+        .slider {
+            flex: 1;
+            height: 8px;
+            border-radius: 5px;
+            background: linear-gradient(90deg, #ccfbf1 0%, #0d9488 100%);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(13, 148, 136, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 6px 15px rgba(13, 148, 136, 0.4);
+        }
+
+        .slider-value {
+            min-width: 50px;
+            text-align: center;
+            font-weight: 600;
+            color: #0d9488;
+            padding: 8px 12px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 10px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(13, 148, 136, 0.3);
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(13, 148, 136, 0.4);
+        }
+
+        .action-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .action-btn.secondary {
+            background: linear-gradient(135deg, #64748b, #94a3b8);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            padding: 15px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #64748b;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: #0d9488;
+        }
+
+        .variance-bars {
+            margin-top: 20px;
+        }
+
+        .variance-bar {
+            margin: 10px 0;
+        }
+
+        .variance-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+            color: #475569;
+        }
+
+        .variance-progress {
+            height: 20px;
+            background: rgba(204, 251, 241, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .variance-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 8px;
+            color: white;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .dataset-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .dataset-btn {
+            padding: 12px;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-weight: 600;
+            color: #0d9488;
+        }
+
+        .dataset-btn:hover {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(13, 148, 136, 0.2);
+        }
+
+        .dataset-btn.active {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% center; }
+            50% { background-position: 100% center; }
+            100% { background-position: 0% center; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 1200px) {
+            .content-layout { grid-template-columns: 1fr 1fr; }
+            .info-panel { grid-column: span 2; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            pointer-events: none;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .tooltip.visible {
+            opacity: 1;
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="tooltip" id="tooltip"></div>
+    
+    <div class="course-info">CS5710 - Week 7</div>
+    <div class="slide-number">Slide 130 of 140</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Interactive PCA Sandbox</h1>
+        
+        <div class="content-layout">
+            <div class="visualization-panel">
+                <h2 class="panel-title">Original Data Space</h2>
+                <canvas id="pcaCanvas"></canvas>
+                <h2 class="panel-title" style="margin-top: 30px;">Transformed Space</h2>
+                <canvas id="transformedCanvas"></canvas>
+            </div>
+
+            <div class="control-panel">
+                <h2 class="panel-title">Controls</h2>
+                
+                <div class="control-group">
+                    <label class="control-label">Number of Components</label>
+                    <div class="slider-container">
+                        <input type="range" id="componentsSlider" class="slider" min="1" max="2" value="2">
+                        <span class="slider-value" id="componentsValue">2</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">Dataset Templates</label>
+                    <div class="dataset-selector">
+                        <button class="dataset-btn active" data-dataset="random">Random</button>
+                        <button class="dataset-btn" data-dataset="linear">Linear</button>
+                        <button class="dataset-btn" data-dataset="clusters">Clusters</button>
+                        <button class="dataset-btn" data-dataset="spiral">Spiral</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">Actions</label>
+                    <div class="button-group">
+                        <button class="action-btn" id="addPointBtn">Add Points</button>
+                        <button class="action-btn" id="animateBtn">Animate</button>
+                        <button class="action-btn secondary" id="clearBtn">Clear All</button>
+                        <button class="action-btn secondary" id="exportBtn">Export Data</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">Visualization Options</label>
+                    <div class="button-group">
+                        <button class="action-btn" id="showEigenvectorsBtn">Show Eigenvectors</button>
+                        <button class="action-btn" id="showCovarianceBtn">Show Covariance</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-panel">
+                <h2 class="panel-title">Statistics</h2>
+                
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-label">Total Points</div>
+                        <div class="stat-value" id="totalPoints">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Total Variance</div>
+                        <div class="stat-value" id="totalVariance">0.00</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">PC1 Eigenvalue</div>
+                        <div class="stat-value" id="eigenvalue1">0.00</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">PC2 Eigenvalue</div>
+                        <div class="stat-value" id="eigenvalue2">0.00</div>
+                    </div>
+                </div>
+
+                <div class="variance-bars">
+                    <h3 style="color: #0d9488; margin-bottom: 15px; font-size: 1.2em;">Explained Variance</h3>
+                    <div class="variance-bar">
+                        <div class="variance-label">
+                            <span>PC1</span>
+                            <span id="pc1Percent">0%</span>
+                        </div>
+                        <div class="variance-progress">
+                            <div class="variance-fill" id="pc1Bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="variance-bar">
+                        <div class="variance-label">
+                            <span>PC2</span>
+                            <span id="pc2Percent">0%</span>
+                        </div>
+                        <div class="variance-progress">
+                            <div class="variance-fill" id="pc2Bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="variance-bar">
+                        <div class="variance-label">
+                            <span>Cumulative</span>
+                            <span id="cumulativePercent">0%</span>
+                        </div>
+                        <div class="variance-progress">
+                            <div class="variance-fill" id="cumulativeBar" style="width: 0%; background: linear-gradient(90deg, #14b8a6, #0d9488)"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-group" style="margin-top: 20px;">
+                    <label class="control-label">Reconstruction Error</label>
+                    <div class="stat-value" id="reconstructionError" style="color: #ef4444;">0.00</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week7_Slide129.html" class="nav-btn">← Previous</a>
+        <a href="Week7_Slide131.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        // PCA Sandbox Implementation
+        class PCASandbox {
+            constructor() {
+                this.canvas = document.getElementById('pcaCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.transformedCanvas = document.getElementById('transformedCanvas');
+                this.transformedCtx = this.transformedCanvas.getContext('2d');
+                
+                this.points = [];
+                this.eigenvectors = [];
+                this.eigenvalues = [];
+                this.transformedPoints = [];
+                this.showEigenvectors = false;
+                this.showCovariance = false;
+                this.numComponents = 2;
+                this.isAnimating = false;
+                this.animationProgress = 0;
+                this.selectedPoint = null;
+                this.isDragging = false;
+                
+                this.setupCanvas();
+                this.initializeEventListeners();
+                this.generateRandomData();
+                this.animate();
+            }
+            
+            setupCanvas() {
+                const rect = this.canvas.getBoundingClientRect();
+                this.canvas.width = rect.width;
+                this.canvas.height = rect.height;
+                this.transformedCanvas.width = rect.width;
+                this.transformedCanvas.height = rect.height;
+                
+                this.centerX = this.canvas.width / 2;
+                this.centerY = this.canvas.height / 2;
+                this.scale = Math.min(this.canvas.width, this.canvas.height) / 6;
+            }
+            
+            initializeEventListeners() {
+                // Canvas interactions
+                this.canvas.addEventListener('mousedown', (e) => this.handleMouseDown(e));
+                this.canvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
+                this.canvas.addEventListener('mouseup', () => this.handleMouseUp());
+                this.canvas.addEventListener('mouseleave', () => this.handleMouseUp());
+                this.canvas.addEventListener('click', (e) => this.handleCanvasClick(e));
+                
+                // Controls
+                document.getElementById('componentsSlider').addEventListener('input', (e) => {
+                    this.numComponents = parseInt(e.target.value);
+                    document.getElementById('componentsValue').textContent = this.numComponents;
+                    this.calculatePCA();
+                });
+                
+                document.getElementById('addPointBtn').addEventListener('click', () => {
+                    this.addRandomPoints(5);
+                });
+                
+                document.getElementById('animateBtn').addEventListener('click', () => {
+                    this.toggleAnimation();
+                });
+                
+                document.getElementById('clearBtn').addEventListener('click', () => {
+                    this.clearAll();
+                });
+                
+                document.getElementById('exportBtn').addEventListener('click', () => {
+                    this.exportData();
+                });
+                
+                document.getElementById('showEigenvectorsBtn').addEventListener('click', () => {
+                    this.showEigenvectors = !this.showEigenvectors;
+                    this.render();
+                });
+                
+                document.getElementById('showCovarianceBtn').addEventListener('click', () => {
+                    this.showCovariance = !this.showCovariance;
+                    this.render();
+                });
+                
+                // Dataset buttons
+                document.querySelectorAll('.dataset-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        document.querySelectorAll('.dataset-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        this.generateDataset(btn.dataset.dataset);
+                    });
+                });
+                
+                // Window resize
+                window.addEventListener('resize', () => {
+                    this.setupCanvas();
+                    this.render();
+                });
+            }
+            
+            handleMouseDown(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                const x = (e.clientX - rect.left - this.centerX) / this.scale;
+                const y = -(e.clientY - rect.top - this.centerY) / this.scale;
+                
+                // Check if clicking on existing point
+                for (let point of this.points) {
+                    const dist = Math.sqrt((x - point.x) ** 2 + (y - point.y) ** 2);
+                    if (dist < 0.15) {
+                        this.selectedPoint = point;
+                        this.isDragging = true;
+                        return;
+                    }
+                }
+            }
+            
+            handleMouseMove(e) {
+                if (this.isDragging && this.selectedPoint) {
+                    const rect = this.canvas.getBoundingClientRect();
+                    this.selectedPoint.x = (e.clientX - rect.left - this.centerX) / this.scale;
+                    this.selectedPoint.y = -(e.clientY - rect.top - this.centerY) / this.scale;
+                    this.calculatePCA();
+                }
+                
+                // Show tooltip for hover
+                const rect = this.canvas.getBoundingClientRect();
+                const x = (e.clientX - rect.left - this.centerX) / this.scale;
+                const y = -(e.clientY - rect.top - this.centerY) / this.scale;
+                
+                const tooltip = document.getElementById('tooltip');
+                let showTooltip = false;
+                
+                for (let point of this.points) {
+                    const dist = Math.sqrt((x - point.x) ** 2 + (y - point.y) ** 2);
+                    if (dist < 0.15) {
+                        tooltip.style.left = e.clientX + 10 + 'px';
+                        tooltip.style.top = e.clientY - 30 + 'px';
+                        tooltip.textContent = `(${point.x.toFixed(2)}, ${point.y.toFixed(2)})`;
+                        tooltip.classList.add('visible');
+                        showTooltip = true;
+                        break;
+                    }
+                }
+                
+                if (!showTooltip) {
+                    tooltip.classList.remove('visible');
+                }
+            }
+            
+            handleMouseUp() {
+                this.isDragging = false;
+                this.selectedPoint = null;
+            }
+            
+            handleCanvasClick(e) {
+                if (!this.isDragging) {
+                    const rect = this.canvas.getBoundingClientRect();
+                    const x = (e.clientX - rect.left - this.centerX) / this.scale;
+                    const y = -(e.clientY - rect.top - this.centerY) / this.scale;
+                    
+                    // Check if clicking on existing point
+                    for (let point of this.points) {
+                        const dist = Math.sqrt((x - point.x) ** 2 + (y - point.y) ** 2);
+                        if (dist < 0.15) {
+                            return; // Don't add point if clicking on existing
+                        }
+                    }
+                    
+                    this.addPoint(x, y);
+                }
+            }
+            
+            addPoint(x, y) {
+                const hue = (this.points.length * 137.5) % 360;
+                this.points.push({
+                    x: x,
+                    y: y,
+                    color: `hsl(${hue}, 70%, 50%)`
+                });
+                this.calculatePCA();
+            }
+            
+            addRandomPoints(count) {
+                for (let i = 0; i < count; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const radius = Math.random() * 2 + 0.5;
+                    this.addPoint(
+                        Math.cos(angle) * radius,
+                        Math.sin(angle) * radius
+                    );
+                }
+            }
+            
+            generateRandomData() {
+                this.clearAll();
+                this.addRandomPoints(20);
+            }
+            
+            generateDataset(type) {
+                this.clearAll();
+                
+                switch(type) {
+                    case 'linear':
+                        for (let i = 0; i < 30; i++) {
+                            const t = (i / 29) * 4 - 2;
+                            const noise = (Math.random() - 0.5) * 0.3;
+                            this.addPoint(t, t * 0.7 + noise);
+                        }
+                        break;
+                        
+                    case 'clusters':
+                        const clusters = [
+                            {x: -1.5, y: 1.5},
+                            {x: 1.5, y: 1.5},
+                            {x: 0, y: -1.5}
+                        ];
+                        clusters.forEach(center => {
+                            for (let i = 0; i < 10; i++) {
+                                const angle = Math.random() * Math.PI * 2;
+                                const radius = Math.random() * 0.5;
+                                this.addPoint(
+                                    center.x + Math.cos(angle) * radius,
+                                    center.y + Math.sin(angle) * radius
+                                );
+                            }
+                        });
+                        break;
+                        
+                    case 'spiral':
+                        for (let i = 0; i < 40; i++) {
+                            const t = (i / 39) * Math.PI * 3;
+                            const radius = t / (Math.PI * 3) * 2;
+                            const noise = (Math.random() - 0.5) * 0.1;
+                            this.addPoint(
+                                Math.cos(t) * radius + noise,
+                                Math.sin(t) * radius + noise
+                            );
+                        }
+                        break;
+                        
+                    default:
+                        this.generateRandomData();
+                }
+            }
+            
+            clearAll() {
+                this.points = [];
+                this.eigenvectors = [];
+                this.eigenvalues = [];
+                this.transformedPoints = [];
+                this.updateStats();
+                this.render();
+            }
+            
+            calculatePCA() {
+                if (this.points.length < 2) {
+                    this.updateStats();
+                    this.render();
+                    return;
+                }
+                
+                // Calculate mean
+                const meanX = this.points.reduce((sum, p) => sum + p.x, 0) / this.points.length;
+                const meanY = this.points.reduce((sum, p) => sum + p.y, 0) / this.points.length;
+                
+                // Center the data
+                const centeredPoints = this.points.map(p => ({
+                    x: p.x - meanX,
+                    y: p.y - meanY,
+                    color: p.color
+                }));
+                
+                // Calculate covariance matrix
+                let cov_xx = 0, cov_yy = 0, cov_xy = 0;
+                for (let p of centeredPoints) {
+                    cov_xx += p.x * p.x;
+                    cov_yy += p.y * p.y;
+                    cov_xy += p.x * p.y;
+                }
+                
+                const n = this.points.length - 1;
+                cov_xx /= n;
+                cov_yy /= n;
+                cov_xy /= n;
+                
+                // Calculate eigenvalues and eigenvectors
+                const trace = cov_xx + cov_yy;
+                const det = cov_xx * cov_yy - cov_xy * cov_xy;
+                const discriminant = Math.sqrt(Math.max(0, trace * trace - 4 * det));
+                
+                this.eigenvalues = [
+                    (trace + discriminant) / 2,
+                    (trace - discriminant) / 2
+                ];
+                
+                // Calculate eigenvectors
+                this.eigenvectors = [];
+                for (let lambda of this.eigenvalues) {
+                    if (Math.abs(cov_xy) > 0.0001) {
+                        const vx = cov_xy;
+                        const vy = lambda - cov_xx;
+                        const norm = Math.sqrt(vx * vx + vy * vy);
+                        this.eigenvectors.push({x: vx / norm, y: vy / norm});
+                    } else {
+                        this.eigenvectors.push(lambda === this.eigenvalues[0] ? 
+                            {x: 1, y: 0} : {x: 0, y: 1});
+                    }
+                }
+                
+                // Transform points
+                this.transformedPoints = centeredPoints.map(p => {
+                    const transformed = {
+                        x: p.x * this.eigenvectors[0].x + p.y * this.eigenvectors[0].y,
+                        y: this.numComponents > 1 ? 
+                            p.x * this.eigenvectors[1].x + p.y * this.eigenvectors[1].y : 0,
+                        color: p.color
+                    };
+                    return transformed;
+                });
+                
+                this.updateStats();
+                this.render();
+            }
+            
+            updateStats() {
+                document.getElementById('totalPoints').textContent = this.points.length;
+                
+                if (this.eigenvalues.length > 0) {
+                    const totalVar = this.eigenvalues[0] + this.eigenvalues[1];
+                    const pc1Var = totalVar > 0 ? (this.eigenvalues[0] / totalVar * 100) : 0;
+                    const pc2Var = totalVar > 0 ? (this.eigenvalues[1] / totalVar * 100) : 0;
+                    
+                    document.getElementById('totalVariance').textContent = totalVar.toFixed(2);
+                    document.getElementById('eigenvalue1').textContent = this.eigenvalues[0].toFixed(3);
+                    document.getElementById('eigenvalue2').textContent = this.eigenvalues[1].toFixed(3);
+                    
+                    document.getElementById('pc1Percent').textContent = pc1Var.toFixed(1) + '%';
+                    document.getElementById('pc2Percent').textContent = pc2Var.toFixed(1) + '%';
+                    document.getElementById('cumulativePercent').textContent = (pc1Var + pc2Var).toFixed(1) + '%';
+                    
+                    document.getElementById('pc1Bar').style.width = pc1Var + '%';
+                    document.getElementById('pc2Bar').style.width = pc2Var + '%';
+                    document.getElementById('cumulativeBar').style.width = (pc1Var + pc2Var) + '%';
+                    
+                    // Calculate reconstruction error if using fewer components
+                    let error = 0;
+                    if (this.numComponents < 2) {
+                        error = this.eigenvalues[1];
+                    }
+                    document.getElementById('reconstructionError').textContent = error.toFixed(3);
+                } else {
+                    document.getElementById('totalVariance').textContent = '0.00';
+                    document.getElementById('eigenvalue1').textContent = '0.00';
+                    document.getElementById('eigenvalue2').textContent = '0.00';
+                    document.getElementById('pc1Percent').textContent = '0%';
+                    document.getElementById('pc2Percent').textContent = '0%';
+                    document.getElementById('cumulativePercent').textContent = '0%';
+                    document.getElementById('pc1Bar').style.width = '0%';
+                    document.getElementById('pc2Bar').style.width = '0%';
+                    document.getElementById('cumulativeBar').style.width = '0%';
+                    document.getElementById('reconstructionError').textContent = '0.00';
+                }
+            }
+            
+            render() {
+                // Clear canvases
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.transformedCtx.clearRect(0, 0, this.transformedCanvas.width, this.transformedCanvas.height);
+                
+                // Draw original space
+                this.drawAxes(this.ctx);
+                
+                if (this.showEigenvectors && this.eigenvectors.length > 0) {
+                    this.drawEigenvectors(this.ctx);
+                }
+                
+                if (this.showCovariance && this.points.length > 2) {
+                    this.drawCovarianceEllipse(this.ctx);
+                }
+                
+                this.drawPoints(this.ctx, this.points);
+                
+                // Draw transformed space
+                this.drawAxes(this.transformedCtx);
+                this.drawPoints(this.transformedCtx, this.transformedPoints);
+            }
+            
+            drawAxes(ctx) {
+                ctx.save();
+                ctx.translate(this.centerX, this.centerY);
+                
+                // Grid
+                ctx.strokeStyle = 'rgba(13, 148, 136, 0.1)';
+                ctx.lineWidth = 1;
+                
+                for (let i = -3; i <= 3; i++) {
+                    if (i !== 0) {
+                        ctx.beginPath();
+                        ctx.moveTo(i * this.scale, -this.canvas.height);
+                        ctx.lineTo(i * this.scale, this.canvas.height);
+                        ctx.stroke();
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(-this.canvas.width, i * this.scale);
+                        ctx.lineTo(this.canvas.width, i * this.scale);
+                        ctx.stroke();
+                    }
+                }
+                
+                // Axes
+                ctx.strokeStyle = 'rgba(13, 148, 136, 0.5)';
+                ctx.lineWidth = 2;
+                
+                ctx.beginPath();
+                ctx.moveTo(-this.canvas.width, 0);
+                ctx.lineTo(this.canvas.width, 0);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(0, -this.canvas.height);
+                ctx.lineTo(0, this.canvas.height);
+                ctx.stroke();
+                
+                ctx.restore();
+            }
+            
+            drawPoints(ctx, points) {
+                ctx.save();
+                ctx.translate(this.centerX, this.centerY);
+                
+                points.forEach(point => {
+                    const x = point.x * this.scale;
+                    const y = -point.y * this.scale;
+                    
+                    ctx.fillStyle = point.color;
+                    ctx.beginPath();
+                    ctx.arc(x, y, 6, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    ctx.strokeStyle = 'white';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                });
+                
+                ctx.restore();
+            }
+            
+            drawEigenvectors(ctx) {
+                if (this.eigenvectors.length < 2) return;
+                
+                ctx.save();
+                ctx.translate(this.centerX, this.centerY);
+                
+                // Draw eigenvectors
+                const colors = ['#0d9488', '#14b8a6'];
+                this.eigenvectors.forEach((vec, i) => {
+                    const scale = Math.sqrt(this.eigenvalues[i]) * this.scale;
+                    
+                    ctx.strokeStyle = colors[i];
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(vec.x * scale, -vec.y * scale);
+                    ctx.stroke();
+                    
+                    // Arrowhead
+                    const angle = Math.atan2(-vec.y, vec.x);
+                    ctx.save();
+                    ctx.translate(vec.x * scale, -vec.y * scale);
+                    ctx.rotate(angle);
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(-10, -5);
+                    ctx.lineTo(-10, 5);
+                    ctx.closePath();
+                    ctx.fillStyle = colors[i];
+                    ctx.fill();
+                    ctx.restore();
+                    
+                    // Label
+                    ctx.fillStyle = colors[i];
+                    ctx.font = 'bold 14px Arial';
+                    ctx.fillText(`PC${i + 1}`, vec.x * scale + 10, -vec.y * scale - 10);
+                });
+                
+                ctx.restore();
+            }
+            
+            drawCovarianceEllipse(ctx) {
+                if (this.eigenvalues.length < 2) return;
+                
+                ctx.save();
+                ctx.translate(this.centerX, this.centerY);
+                
+                // Calculate mean
+                const meanX = this.points.reduce((sum, p) => sum + p.x, 0) / this.points.length;
+                const meanY = this.points.reduce((sum, p) => sum + p.y, 0) / this.points.length;
+                
+                // Draw ellipse
+                ctx.strokeStyle = 'rgba(13, 148, 136, 0.3)';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                
+                const angle = Math.atan2(this.eigenvectors[0].y, this.eigenvectors[0].x);
+                ctx.translate(meanX * this.scale, -meanY * this.scale);
+                ctx.rotate(angle);
+                
+                ctx.beginPath();
+                ctx.ellipse(0, 0, 
+                    Math.sqrt(this.eigenvalues[0]) * this.scale * 2,
+                    Math.sqrt(this.eigenvalues[1]) * this.scale * 2,
+                    0, 0, Math.PI * 2);
+                ctx.stroke();
+                
+                ctx.restore();
+            }
+            
+            toggleAnimation() {
+                this.isAnimating = !this.isAnimating;
+                const btn = document.getElementById('animateBtn');
+                btn.textContent = this.isAnimating ? 'Stop' : 'Animate';
+                
+                if (this.isAnimating) {
+                    this.animationProgress = 0;
+                }
+            }
+            
+            animate() {
+                if (this.isAnimating) {
+                    this.animationProgress += 0.02;
+                    if (this.animationProgress > 1) {
+                        this.animationProgress = 0;
+                    }
+                    
+                    // Rotate points slightly
+                    const angle = this.animationProgress * Math.PI * 2;
+                    const cos = Math.cos(0.01);
+                    const sin = Math.sin(0.01);
+                    
+                    this.points.forEach(p => {
+                        const x = p.x * cos - p.y * sin;
+                        const y = p.x * sin + p.y * cos;
+                        p.x = x;
+                        p.y = y;
+                    });
+                    
+                    this.calculatePCA();
+                }
+                
+                requestAnimationFrame(() => this.animate());
+            }
+            
+            exportData() {
+                const data = {
+                    points: this.points,
+                    eigenvectors: this.eigenvectors,
+                    eigenvalues: this.eigenvalues,
+                    transformedPoints: this.transformedPoints
+                };
+                
+                const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'pca_data.json';
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Initialize components
+        const modal = new ModalSystem();
+        const pcaSandbox = new PCASandbox();
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (!modal.overlay.classList.contains('active')) {
+                if (e.key === 'ArrowLeft') {
+                    window.location.href = 'Week7_Slide129.html';
+                } else if (e.key === 'ArrowRight') {
+                    window.location.href = 'Week7_Slide131.html';
+                } else if (e.key === ' ') {
+                    e.preventDefault();
+                    pcaSandbox.toggleAnimation();
+                }
+            }
+        });
+
+        // Show welcome modal
+        setTimeout(() => {
+            modal.show('Welcome to PCA Sandbox!', `
+                <div class="modal-highlight">
+                    <strong>Interactive PCA Exploration Tool</strong>
+                </div>
+                <p><strong>Features:</strong></p>
+                <ul style="line-height: 1.8; margin-left: 20px;">
+                    <li>🖱️ Click to add points or drag existing ones</li>
+                    <li>📊 See real-time PCA calculations</li>
+                    <li>🎨 Try different dataset templates</li>
+                    <li>📈 Watch variance explained by components</li>
+                    <li>🔄 Animate to see rotation effects</li>
+                </ul>
+                <p style="margin-top: 20px; color: #0d9488;">
+                    <strong>Tip:</strong> Try dragging points to see how principal components change!
+                </p>
+            `);
+        }, 1000);
+
+    </script>
+</body>
+</html>

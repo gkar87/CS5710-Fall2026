@@ -1,0 +1,1817 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Ensemble Performance Analysis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .metrics-overview {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            animation: slideInFromBottom 1s ease-out;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(13, 148, 136, 0.2);
+        }
+
+        .metric-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+            color: #0d9488;
+        }
+
+        .metric-value {
+            font-size: 2.2em;
+            font-weight: bold;
+            color: #0d9488;
+            margin-bottom: 8px;
+        }
+
+        .metric-label {
+            font-size: 1em;
+            color: #475569;
+            font-weight: 600;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .performance-comparison {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .ensemble-benefits {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .model-results {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 15px;
+            margin: 20px 0;
+            align-items: center;
+        }
+
+        .model-name {
+            font-weight: 600;
+            color: #1e293b;
+            padding: 12px 0;
+        }
+
+        .accuracy-bar {
+            position: relative;
+            background: #e2e8f0;
+            height: 25px;
+            border-radius: 12px;
+            width: 200px;
+            overflow: hidden;
+        }
+
+        .accuracy-fill {
+            height: 100%;
+            border-radius: 12px;
+            transition: width 2s ease-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.8em;
+        }
+
+        .single-model { background: linear-gradient(135deg, #64748b, #475569); }
+        .ensemble-model { background: linear-gradient(135deg, #0d9488, #14b8a6); }
+        .best-ensemble { background: linear-gradient(135deg, #059669, #047857); }
+
+        .accuracy-value {
+            font-weight: bold;
+            color: #0d9488;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .benefits-list {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .benefit-item {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #14b8a6;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .benefit-item:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 30px rgba(13, 148, 136, 0.2);
+        }
+
+        .benefit-title {
+            font-size: 1.2em;
+            color: #0d9488;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .benefit-desc {
+            color: #475569;
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+
+        .bias-variance-analysis {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .analysis-title {
+            font-size: 2em;
+            color: #0d9488;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .bias-variance-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin: 30px 0;
+        }
+
+        .decomposition-card {
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .decomposition-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(13, 148, 136, 0.2);
+        }
+
+        .decomposition-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 15px;
+        }
+
+        .decomposition-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .bias-high { color: #dc2626; }
+        .bias-medium { color: #f59e0b; }
+        .bias-low { color: #059669; }
+
+        .variance-high { color: #dc2626; }
+        .variance-medium { color: #f59e0b; }
+        .variance-low { color: #059669; }
+
+        .decomposition-desc {
+            font-size: 0.9em;
+            color: #475569;
+            line-height: 1.4;
+        }
+
+        .ensemble-strategies {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.9s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            margin-top: 30px;
+        }
+
+        .strategies-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+
+        .strategies-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+            margin: 25px 0;
+        }
+
+        .strategy-card {
+            background: linear-gradient(135deg, #ccfbf1, #99f6e4);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .strategy-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(13, 148, 136, 0.2);
+        }
+
+        .strategy-name {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 15px;
+        }
+
+        .strategy-technique {
+            font-size: 1em;
+            color: #1e293b;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .strategy-result {
+            font-size: 0.9em;
+            color: #475569;
+            font-style: italic;
+        }
+
+        .key-insights {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 20px;
+            padding: 30px;
+            margin-top: 30px;
+            border-left: 4px solid #0d9488;
+            animation: slideInFromBottom 1s ease-out 1.2s both;
+        }
+
+        .insights-title {
+            font-size: 1.5em;
+            color: #0d9488;
+            margin-bottom: 20px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .insight-item {
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 10px;
+            padding: 15px;
+            font-size: 0.95em;
+            line-height: 1.6;
+            color: #1e293b;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @keyframes fillBar {
+            from { width: 0%; }
+            to { width: var(--target-width); }
+        }
+
+        @media (max-width: 768px) {
+            .metrics-overview { grid-template-columns: repeat(2, 1fr); }
+            .content-layout { grid-template-columns: 1fr; }
+            .bias-variance-grid { grid-template-columns: 1fr; }
+            .strategies-grid { grid-template-columns: 1fr; }
+            .insights-grid { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 5</div>
+    <div class="slide-number">Slide 99 of 100</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">📊 Ensemble Performance Analysis</h1>
+        
+        <div class="metrics-overview">
+            <div class="metric-card" data-metric="accuracy">
+                <div class="metric-icon">🎯</div>
+                <div class="metric-value">94.7%</div>
+                <div class="metric-label">Best Accuracy</div>
+            </div>
+            
+            <div class="metric-card" data-metric="improvement">
+                <div class="metric-icon">📈</div>
+                <div class="metric-value">+12.3%</div>
+                <div class="metric-label">vs Single Model</div>
+            </div>
+            
+            <div class="metric-card" data-metric="variance">
+                <div class="metric-icon">📉</div>
+                <div class="metric-value">-45%</div>
+                <div class="metric-label">Variance Reduction</div>
+            </div>
+            
+            <div class="metric-card" data-metric="robustness">
+                <div class="metric-icon">🛡️</div>
+                <div class="metric-value">0.023</div>
+                <div class="metric-label">Std Deviation</div>
+            </div>
+        </div>
+        
+        <div class="content-layout">
+            <div class="performance-comparison">
+                <h2 class="section-title">🏆 Model Comparison</h2>
+                
+                <div class="model-results">
+                    <div class="model-name">Decision Tree</div>
+                    <div class="accuracy-bar">
+                        <div class="accuracy-fill single-model" style="--target-width: 78%; width: 0%;">78%</div>
+                    </div>
+                    <div class="accuracy-value">78.2%</div>
+                    
+                    <div class="model-name">Random Forest</div>
+                    <div class="accuracy-bar">
+                        <div class="accuracy-fill single-model" style="--target-width: 85%; width: 0%;">85%</div>
+                    </div>
+                    <div class="accuracy-value">84.8%</div>
+                    
+                    <div class="model-name">SVM</div>
+                    <div class="accuracy-bar">
+                        <div class="accuracy-fill single-model" style="--target-width: 82%; width: 0%;">82%</div>
+                    </div>
+                    <div class="accuracy-value">82.4%</div>
+                    
+                    <div class="model-name">XGBoost</div>
+                    <div class="accuracy-bar">
+                        <div class="accuracy-fill single-model" style="--target-width: 87%; width: 0%;">87%</div>
+                    </div>
+                    <div class="accuracy-value">87.1%</div>
+                    
+                    <div class="model-name">Voting Ensemble</div>
+                    <div class="accuracy-bar">
+                        <div class="accuracy-fill ensemble-model" style="--target-width: 91%; width: 0%;">91%</div>
+                    </div>
+                    <div class="accuracy-value">91.2%</div>
+                    
+                    <div class="model-name">Stacking Ensemble</div>
+                    <div class="accuracy-bar">
+                        <div class="accuracy-fill best-ensemble" style="--target-width: 95%; width: 0%;">95%</div>
+                    </div>
+                    <div class="accuracy-value">94.7%</div>
+                </div>
+            </div>
+
+            <div class="ensemble-benefits">
+                <h2 class="section-title">✨ Ensemble Benefits</h2>
+                
+                <div class="benefits-list">
+                    <div class="benefit-item" data-benefit="diversity">
+                        <div class="benefit-title">🌈 Model Diversity</div>
+                        <div class="benefit-desc">Different algorithms capture different patterns</div>
+                    </div>
+                    
+                    <div class="benefit-item" data-benefit="error-reduction">
+                        <div class="benefit-title">📉 Error Reduction</div>
+                        <div class="benefit-desc">Averaging reduces individual model errors</div>
+                    </div>
+                    
+                    <div class="benefit-item" data-benefit="overfitting">
+                        <div class="benefit-title">🛡️ Overfitting Protection</div>
+                        <div class="benefit-desc">Robust against individual model weaknesses</div>
+                    </div>
+                    
+                    <div class="benefit-item" data-benefit="stability">
+                        <div class="benefit-title">⚖️ Prediction Stability</div>
+                        <div class="benefit-desc">Consistent performance across different datasets</div>
+                    </div>
+                    
+                    <div class="benefit-item" data-benefit="uncertainty">
+                        <div class="benefit-title">🎯 Uncertainty Estimation</div>
+                        <div class="benefit-desc">Disagreement indicates prediction confidence</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bias-variance-analysis">
+            <h2 class="analysis-title">⚖️ Bias-Variance Decomposition</h2>
+            <p style="text-align: center; color: #475569; margin-bottom: 20px;">
+                Understanding how ensembles improve generalization performance
+            </p>
+            
+            <div class="bias-variance-grid">
+                <div class="decomposition-card" data-decomposition="bias">
+                    <div class="decomposition-title">Bias</div>
+                    <div class="decomposition-value bias-medium">Medium</div>
+                    <div class="decomposition-desc">Systematic errors from model assumptions</div>
+                </div>
+                
+                <div class="decomposition-card" data-decomposition="variance">
+                    <div class="decomposition-title">Variance</div>
+                    <div class="decomposition-value variance-low">Low</div>
+                    <div class="decomposition-desc">Sensitivity to training data changes</div>
+                </div>
+                
+                <div class="decomposition-card" data-decomposition="noise">
+                    <div class="decomposition-title">Noise</div>
+                    <div class="decomposition-value">Constant</div>
+                    <div class="decomposition-desc">Irreducible error in the data</div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 25px; padding: 20px; background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%); border-radius: 15px; border-left: 4px solid #0d9488; text-align: center;">
+                <strong style="color: #0d9488;">📐 Mathematical Insight:</strong><br>
+                Error = Bias² + Variance + Noise<br>
+                Ensembles primarily reduce <strong>variance</strong> while maintaining similar bias
+            </div>
+        </div>
+
+        <div class="ensemble-strategies">
+            <h2 class="strategies-title">🎯 Optimization Strategies Comparison</h2>
+            
+            <div class="strategies-grid">
+                <div class="strategy-card" data-strategy="bagging">
+                    <div class="strategy-name">Bagging Strategy</div>
+                    <div class="strategy-technique">✓ Bootstrap sampling</div>
+                    <div class="strategy-technique">✓ Parallel training</div>
+                    <div class="strategy-technique">✓ Voting/Averaging</div>
+                    <div class="strategy-result">Result: High variance reduction</div>
+                </div>
+                
+                <div class="strategy-card" data-strategy="boosting">
+                    <div class="strategy-name">Boosting Strategy</div>
+                    <div class="strategy-technique">✓ Sequential learning</div>
+                    <div class="strategy-technique">✓ Error-focused training</div>
+                    <div class="strategy-technique">✓ Weighted voting</div>
+                    <div class="strategy-result">Result: Bias and variance reduction</div>
+                </div>
+                
+                <div class="strategy-card" data-strategy="stacking">
+                    <div class="strategy-name">Stacking Strategy</div>
+                    <div class="strategy-technique">✓ Meta-learner training</div>
+                    <div class="strategy-technique">✓ Cross-validation</div>
+                    <div class="strategy-technique">✓ Optimal combination</div>
+                    <div class="strategy-result">Result: Optimal individual strengths</div>
+                </div>
+                
+                <div class="strategy-card" data-strategy="blending">
+                    <div class="strategy-name">Blending Strategy</div>
+                    <div class="strategy-technique">✓ Holdout validation</div>
+                    <div class="strategy-technique">✓ Linear combination</div>
+                    <div class="strategy-technique">✓ Fast training</div>
+                    <div class="strategy-result">Result: Simple yet effective</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="key-insights">
+            <h3 class="insights-title">🔑 Key Performance Insights</h3>
+            <div class="insights-grid">
+                <div class="insight-item">
+                    <strong>🎯 Sweet Spot:</strong> 5-10 diverse models typically provide optimal performance without diminishing returns
+                </div>
+                <div class="insight-item">
+                    <strong>⚡ Efficiency Trade-off:</strong> Stacking > Boosting > Bagging for accuracy, but opposite for training speed
+                </div>
+                <div class="insight-item">
+                    <strong>🔄 Diversity Importance:</strong> Model diversity contributes more to performance than individual model accuracy
+                </div>
+                <div class="insight-item">
+                    <strong>📊 Hyperparameter Impact:</strong> Bayesian optimization on ensemble hyperparameters yields 2-5% additional improvement
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week5_Slide98.html" class="nav-btn">← Previous</a>
+        <a href="Week5_Slide100.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Animate accuracy bars
+        function animateAccuracyBars() {
+            setTimeout(() => {
+                document.querySelectorAll('.accuracy-fill').forEach(bar => {
+                    const targetWidth = bar.style.getPropertyValue('--target-width');
+                    bar.style.width = targetWidth;
+                });
+            }, 1000);
+        }
+
+        // Metric details
+        const metricDetails = {
+            'accuracy': {
+                title: 'Best Accuracy: 94.7%',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Stacking Ensemble Achievement:</strong> State-of-the-art performance
+                    </div>
+                    <p><strong>Performance Breakdown:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Individual Best:</strong> XGBoost at 87.1%</li>
+                        <li><strong>Simple Voting:</strong> 91.2% (+4.1%)</li>
+                        <li><strong>Stacking Meta-learner:</strong> 94.7% (+7.6%)</li>
+                        <li><strong>Cross-validation Std:</strong> ±0.023 (very stable)</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Ensemble performance analysis
+ensemble_results = {
+    'Decision Tree': 0.782,
+    'Random Forest': 0.848, 
+    'SVM': 0.824,
+    'XGBoost': 0.871,
+    'Voting Ensemble': 0.912,
+    'Stacking Ensemble': 0.947
+}
+
+# Calculate improvements
+individual_best = max([v for k,v in ensemble_results.items() 
+                      if 'Ensemble' not in k])
+stacking_improvement = ensemble_results['Stacking Ensemble'] - individual_best
+print(f"Stacking improvement: +{stacking_improvement:.1%}")
+                    </div>
+                    
+                    <p><strong>Why This Performance?</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>Meta-learner optimally combines predictions</li>
+                        <li>Reduces both bias and variance components</li>
+                        <li>Leverages complementary model strengths</li>
+                        <li>Robust against individual model failures</li>
+                    </ul>
+                `
+            },
+            'improvement': {
+                title: 'Improvement: +12.3%',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Significant Gain:</strong> Over 12% improvement from ensemble methods
+                    </div>
+                    <p><strong>Improvement Sources:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Error Diversification:</strong> Different models make different mistakes</li>
+                        <li><strong>Variance Reduction:</strong> Averaging smooths individual predictions</li>
+                        <li><strong>Bias Compensation:</strong> Models correct each other's systematic errors</li>
+                        <li><strong>Optimal Weighting:</strong> Meta-learner finds best combination</li>
+                    </ul>
+                    
+                    <p><strong>Statistical Significance:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>P-value:</strong> < 0.001 (highly significant)</li>
+                        <li><strong>Effect Size:</strong> Cohen's d = 1.8 (large effect)</li>
+                        <li><strong>Confidence Interval:</strong> [+10.1%, +14.5%] improvement</li>
+                        <li><strong>Cross-dataset Validation:</strong> Consistent across 5 test sets</li>
+                    </ul>
+                    
+                    <p><strong>Business Impact:</strong> In a classification task with 10,000 samples, this represents 1,230 additional correct predictions!</p>
+                `
+            },
+            'variance': {
+                title: 'Variance Reduction: -45%',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Stability Gain:</strong> Ensemble dramatically reduces prediction variance
+                    </div>
+                    <p><strong>Variance Analysis:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Individual Models:</strong> σ² = 0.042 (high variability)</li>
+                        <li><strong>Ensemble Average:</strong> σ² = 0.023 (45% reduction)</li>
+                        <li><strong>Theoretical Limit:</strong> σ²/n for n independent models</li>
+                        <li><strong>Practical Gain:</strong> Models are somewhat correlated</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Variance reduction calculation
+import numpy as np
+
+# Individual model predictions (example)
+model_predictions = np.array([
+    [0.85, 0.82, 0.88, 0.79],  # Model 1 across folds
+    [0.83, 0.86, 0.81, 0.84],  # Model 2 across folds
+    [0.87, 0.84, 0.89, 0.85],  # Model 3 across folds
+    [0.82, 0.88, 0.86, 0.83]   # Model 4 across folds
+])
+
+# Individual variances
+individual_var = np.var(model_predictions, axis=1).mean()
+print(f"Average individual variance: {individual_var:.6f}")
+
+# Ensemble variance (average predictions)
+ensemble_predictions = np.mean(model_predictions, axis=0)
+ensemble_var = np.var(ensemble_predictions)
+print(f"Ensemble variance: {ensemble_var:.6f}")
+
+# Variance reduction
+reduction = (individual_var - ensemble_var) / individual_var
+print(f"Variance reduction: {reduction:.1%}")
+                    </div>
+                    
+                    <p><strong>Practical Benefits:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>More consistent predictions across different data</li>
+                        <li>Reduced sensitivity to training set variations</li>
+                        <li>Better generalization to unseen scenarios</li>
+                        <li>Increased stakeholder confidence in model outputs</li>
+                    </ul>
+                `
+            },
+            'robustness': {
+                title: 'Standard Deviation: 0.023',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Exceptional Stability:</strong> Very low prediction variability
+                    </div>
+                    <p><strong>Robustness Metrics:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Cross-validation Std:</strong> 0.023 (excellent)</li>
+                        <li><strong>Bootstrap Std:</strong> 0.019 (very stable)</li>
+                        <li><strong>Out-of-distribution Std:</strong> 0.031 (robust)</li>
+                        <li><strong>Temporal Stability:</strong> 0.025 over 6 months</li>
+                    </ul>
+                    
+                    <p><strong>Comparison with Baselines:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Single Best Model:</strong> σ = 0.067 (3x worse)</li>
+                        <li><strong>Simple Average:</strong> σ = 0.041 (2x worse)</li>
+                        <li><strong>Weighted Average:</strong> σ = 0.034 (1.5x worse)</li>
+                        <li><strong>Stacking Ensemble:</strong> σ = 0.023 (best)</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Robustness testing
+def evaluate_robustness(model, X_test, y_test, n_trials=100):
+    scores = []
+    for _ in range(n_trials):
+        # Add small perturbations to test data
+        X_perturbed = X_test + np.random.normal(0, 0.01, X_test.shape)
+        score = model.score(X_perturbed, y_test)
+        scores.append(score)
+    
+    return {
+        'mean': np.mean(scores),
+        'std': np.std(scores),
+        'min': np.min(scores),
+        'max': np.max(scores)
+    }
+
+# Results show ensemble maintains performance under perturbations
+                    </div>
+                    
+                    <p><strong>Business Value:</strong> Low standard deviation means reliable, predictable model performance in production environments.</p>
+                `
+            }
+        };
+
+        // Benefit details
+        const benefitDetails = {
+            'diversity': {
+                title: 'Model Diversity',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Diversity is Key:</strong> Different models capture different aspects of the data
+                    </div>
+                    <p><strong>Types of Diversity:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Algorithmic:</strong> Tree-based, linear, kernel-based, neural</li>
+                        <li><strong>Feature:</strong> Different feature subsets and transformations</li>
+                        <li><strong>Training:</strong> Bootstrap samples, cross-validation folds</li>
+                        <li><strong>Hyperparameter:</strong> Different parameter configurations</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Measure diversity between models
+from sklearn.metrics import accuracy_score
+import numpy as np
+
+def pairwise_diversity(predictions):
+    """Calculate average pairwise disagreement rate"""
+    n_models = len(predictions)
+    diversity_scores = []
+    
+    for i in range(n_models):
+        for j in range(i+1, n_models):
+            # Disagreement rate between models i and j
+            disagreement = np.mean(predictions[i] != predictions[j])
+            diversity_scores.append(disagreement)
+    
+    return np.mean(diversity_scores)
+
+# Example: Our ensemble diversity
+ensemble_predictions = [dt_pred, rf_pred, svm_pred, xgb_pred]
+diversity = pairwise_diversity(ensemble_predictions)
+print(f"Average pairwise diversity: {diversity:.3f}")
+# Higher diversity (around 0.3-0.5) typically leads to better ensembles
+                    </div>
+                    
+                    <p><strong>Maximizing Diversity:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>Use algorithms with different inductive biases</li>
+                        <li>Train on different feature representations</li>
+                        <li>Vary training procedures and hyperparameters</li>
+                        <li>Use different data sampling strategies</li>
+                    </ul>
+                `
+            },
+            'error-reduction': {
+                title: 'Error Reduction',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Mathematical Guarantee:</strong> Ensemble error ≤ average individual error
+                    </div>
+                    <p><strong>Error Reduction Mechanisms:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Averaging Effect:</strong> Random errors cancel out</li>
+                        <li><strong>Majority Voting:</strong> Correct predictions outnumber incorrect ones</li>
+                        <li><strong>Weighted Combination:</strong> Better models get higher influence</li>
+                        <li><strong>Meta-learning:</strong> Learn optimal combination strategy</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Error reduction analysis
+def analyze_error_reduction(individual_errors, ensemble_error):
+    """
+    Analyze how ensemble reduces individual model errors
+    """
+    # Calculate statistics
+    mean_individual = np.mean(individual_errors)
+    min_individual = np.min(individual_errors)
+    max_individual = np.max(individual_errors)
+    
+    # Error reduction metrics
+    absolute_reduction = mean_individual - ensemble_error
+    relative_reduction = absolute_reduction / mean_individual
+    
+    print(f"Individual model errors: {individual_errors}")
+    print(f"Mean individual error: {mean_individual:.4f}")
+    print(f"Ensemble error: {ensemble_error:.4f}")
+    print(f"Absolute reduction: {absolute_reduction:.4f}")
+    print(f"Relative reduction: {relative_reduction:.1%}")
+    
+    return {
+        'absolute_reduction': absolute_reduction,
+        'relative_reduction': relative_reduction,
+        'beats_best_individual': ensemble_error < min_individual
+    }
+
+# Our results
+individual_errors = [0.218, 0.152, 0.176, 0.129]  # 1 - accuracy
+ensemble_error = 0.053  # 1 - 0.947
+results = analyze_error_reduction(individual_errors, ensemble_error)
+                    </div>
+                    
+                    <p><strong>Theoretical Foundation:</strong> For independent models with error rate p, ensemble error with majority voting is approximately p^k where k > n/2 models agree.</p>
+                `
+            },
+            'overfitting': {
+                title: 'Overfitting Protection',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Regularization Effect:</strong> Ensembles naturally resist overfitting
+                    </div>
+                    <p><strong>Protection Mechanisms:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Model Averaging:</strong> Smooths individual model overfitting</li>
+                        <li><strong>Diversity Constraint:</strong> Different models overfit differently</li>
+                        <li><strong>Cross-validation:</strong> Meta-learner trained on held-out data</li>
+                        <li><strong>Early Stopping:</strong> Ensemble performance monitored</li>
+                    </ul>
+                    
+                    <p><strong>Generalization Bound:</strong></p>
+                    <p>For an ensemble of M models, the generalization error is bounded by:</p>
+                    <div class="modal-code">
+Ensemble_Error ≤ (1/M) * Σ Individual_Errors + Complexity_Penalty
+
+where Complexity_Penalty decreases with model diversity
+                    </div>
+                    
+                    <p><strong>Empirical Evidence:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Training Accuracy:</strong> Individual models: 98.5%, Ensemble: 96.8%</li>
+                        <li><strong>Validation Accuracy:</strong> Individual models: 87.1%, Ensemble: 94.7%</li>
+                        <li><strong>Gap Reduction:</strong> From 11.4% to 2.1% (5.4× improvement)</li>
+                        <li><strong>Consistency:</strong> Similar performance across multiple datasets</li>
+                    </ul>
+                    
+                    <p><strong>Best Practices:</strong> Use out-of-fold predictions for stacking, regularize meta-learner, monitor ensemble complexity vs performance trade-off.</p>
+                `
+            },
+            'stability': {
+                title: 'Prediction Stability',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Robust Performance:</strong> Consistent predictions across different conditions
+                    </div>
+                    <p><strong>Stability Dimensions:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Cross-validation:</strong> Performance across different data splits</li>
+                        <li><strong>Bootstrap:</strong> Robustness to sampling variations</li>
+                        <li><strong>Temporal:</strong> Consistency over time periods</li>
+                        <li><strong>Perturbation:</strong> Resilience to small input changes</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Stability analysis
+def measure_stability(model, X, y, n_trials=50):
+    """Measure model stability across multiple training runs"""
+    scores = []
+    
+    for trial in range(n_trials):
+        # Random train/test split
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.3, random_state=trial
+        )
+        
+        # Train and evaluate
+        model.fit(X_train, y_train)
+        score = model.score(X_test, y_test)
+        scores.append(score)
+    
+    return {
+        'mean': np.mean(scores),
+        'std': np.std(scores),
+        'coefficient_of_variation': np.std(scores) / np.mean(scores),
+        'min': np.min(scores),
+        'max': np.max(scores)
+    }
+
+# Stability comparison
+individual_stability = measure_stability(best_individual_model, X, y)
+ensemble_stability = measure_stability(ensemble_model, X, y)
+
+print(f"Individual CV: {individual_stability['coefficient_of_variation']:.4f}")
+print(f"Ensemble CV: {ensemble_stability['coefficient_of_variation']:.4f}")
+# Lower CV indicates better stability
+                    </div>
+                    
+                    <p><strong>Production Benefits:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>Predictable model behavior in deployment</li>
+                        <li>Reduced need for frequent model retraining</li>
+                        <li>Better user experience with consistent outputs</li>
+                        <li>Easier model monitoring and maintenance</li>
+                    </ul>
+                `
+            },
+            'uncertainty': {
+                title: 'Uncertainty Estimation',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Know What You Don't Know:</strong> Ensemble disagreement indicates uncertainty
+                    </div>
+                    <p><strong>Uncertainty Sources:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Aleatoric:</strong> Inherent data noise and variability</li>
+                        <li><strong>Epistemic:</strong> Model uncertainty due to limited data</li>
+                        <li><strong>Model:</strong> Uncertainty in model selection and parameters</li>
+                        <li><strong>Distributional:</strong> Out-of-distribution prediction uncertainty</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Uncertainty estimation from ensemble
+def ensemble_uncertainty(models, X):
+    """Estimate prediction uncertainty from ensemble disagreement"""
+    predictions = []
+    
+    # Get predictions from all models
+    for model in models:
+        if hasattr(model, 'predict_proba'):
+            pred = model.predict_proba(X)
+        else:
+            pred = model.predict(X)
+        predictions.append(pred)
+    
+    predictions = np.array(predictions)
+    
+    # Calculate uncertainty metrics
+    mean_pred = np.mean(predictions, axis=0)
+    
+    # Variance as uncertainty measure
+    uncertainty = np.var(predictions, axis=0)
+    
+    # Entropy for classification
+    if len(mean_pred.shape) > 1:  # Multi-class probabilities
+        entropy = -np.sum(mean_pred * np.log(mean_pred + 1e-8), axis=1)
+        return mean_pred, uncertainty, entropy
+    
+    return mean_pred, uncertainty
+
+# Use uncertainty for decision making
+mean_pred, uncertainty = ensemble_uncertainty(ensemble_models, X_test)
+
+# Flag high-uncertainty predictions for human review
+high_uncertainty_mask = uncertainty > np.percentile(uncertainty, 95)
+review_indices = np.where(high_uncertainty_mask)[0]
+print(f"Samples requiring review: {len(review_indices)}")
+                    </div>
+                    
+                    <p><strong>Applications:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Active Learning:</strong> Query uncertain samples for labeling</li>
+                        <li><strong>Risk Assessment:</strong> Flag high-uncertainty decisions</li>
+                        <li><strong>Human-in-the-loop:</strong> Escalate uncertain cases</li>
+                        <li><strong>Calibration:</strong> Adjust confidence based on uncertainty</li>
+                    </ul>
+                `
+            }
+        };
+
+        // Decomposition details
+        const decompositionDetails = {
+            'bias': {
+                title: 'Bias Component Analysis',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Systematic Error:</strong> How ensemble affects model bias
+                    </div>
+                    <p><strong>Bias in Machine Learning:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Definition:</strong> Expected difference between predictions and true values</li>
+                        <li><strong>Sources:</strong> Model assumptions, feature limitations, algorithm constraints</li>
+                        <li><strong>Individual Models:</strong> Each has specific bias patterns</li>
+                        <li><strong>Ensemble Effect:</strong> Can reduce bias through compensation</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Bias decomposition analysis
+def bias_variance_decomposition(models, X_test, y_true, n_bootstrap=100):
+    """
+    Decompose prediction error into bias and variance components
+    """
+    all_predictions = []
+    
+    # Bootstrap sampling to estimate bias and variance
+    for _ in range(n_bootstrap):
+        bootstrap_predictions = []
+        
+        for model in models:
+            # Retrain on bootstrap sample (simplified)
+            pred = model.predict(X_test)
+            bootstrap_predictions.append(pred)
+        
+        # Ensemble prediction for this bootstrap
+        ensemble_pred = np.mean(bootstrap_predictions, axis=0)
+        all_predictions.append(ensemble_pred)
+    
+    all_predictions = np.array(all_predictions)
+    
+    # Calculate bias and variance
+    mean_prediction = np.mean(all_predictions, axis=0)
+    bias_squared = np.mean((mean_prediction - y_true) ** 2)
+    variance = np.mean(np.var(all_predictions, axis=0))
+    
+    # Total error
+    total_error = bias_squared + variance
+    
+    return {
+        'bias_squared': bias_squared,
+        'variance': variance,
+        'total_error': total_error,
+        'bias_ratio': bias_squared / total_error,
+        'variance_ratio': variance / total_error
+    }
+
+# Analysis results
+decomp = bias_variance_decomposition(ensemble_models, X_test, y_test)
+print(f"Bias²: {decomp['bias_squared']:.4f}")
+print(f"Variance: {decomp['variance']:.4f}")
+print(f"Bias contributes {decomp['bias_ratio']:.1%} of total error")
+                    </div>
+                    
+                    <p><strong>Ensemble Impact on Bias:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Diverse Models:</strong> Different biases can cancel out</li>
+                        <li><strong>Meta-learner:</strong> Learns to correct systematic errors</li>
+                        <li><strong>Boosting:</strong> Specifically targets bias reduction</li>
+                        <li><strong>Trade-offs:</strong> Some methods may increase bias while reducing variance</li>
+                    </ul>
+                `
+            },
+            'variance': {
+                title: 'Variance Component Analysis',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Primary Benefit:</strong> Ensembles excel at variance reduction
+                    </div>
+                    <p><strong>Variance in Ensembles:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Mathematical Guarantee:</strong> Var(average) ≤ average(Var)</li>
+                        <li><strong>Independence Assumption:</strong> Best reduction when models are uncorrelated</li>
+                        <li><strong>Practical Reality:</strong> Models are somewhat correlated</li>
+                        <li><strong>Diversity Benefit:</strong> Lower correlation = better variance reduction</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Variance reduction calculation
+def calculate_variance_reduction(individual_vars, correlations):
+    """
+    Calculate theoretical variance reduction for ensemble
+    
+    For n models with variances σ₁², σ₂², ..., σₙ² and correlations ρᵢⱼ:
+    Ensemble_Variance = (1/n²) * [Σσᵢ² + 2ΣΣρᵢⱼσᵢσⱼ]
+    """
+    n_models = len(individual_vars)
+    
+    # Average individual variance
+    avg_individual_var = np.mean(individual_vars)
+    
+    # Ensemble variance with correlations
+    ensemble_var = (1/n_models**2) * (
+        np.sum(individual_vars) + 
+        2 * np.sum(correlations * np.sqrt(np.outer(individual_vars, individual_vars)))
+    )
+    
+    # Variance reduction
+    reduction = (avg_individual_var - ensemble_var) / avg_individual_var
+    
+    return {
+        'individual_variance': avg_individual_var,
+        'ensemble_variance': ensemble_var,
+        'reduction_ratio': reduction,
+        'theoretical_max': 1 - 1/n_models  # If perfectly uncorrelated
+    }
+
+# Our ensemble analysis
+individual_variances = [0.067, 0.052, 0.061, 0.048]  # Individual model variances
+correlation_matrix = np.array([
+    [1.0, 0.3, 0.4, 0.2],
+    [0.3, 1.0, 0.2, 0.5],
+    [0.4, 0.2, 1.0, 0.3],
+    [0.2, 0.5, 0.3, 1.0]
+])
+
+results = calculate_variance_reduction(individual_variances, correlation_matrix)
+print(f"Variance reduction: {results['reduction_ratio']:.1%}")
+print(f"Theoretical maximum: {results['theoretical_max']:.1%}")
+                    </div>
+                    
+                    <p><strong>Maximizing Variance Reduction:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>Use diverse algorithms with different inductive biases</li>
+                        <li>Train on different feature subsets</li>
+                        <li>Use different hyperparameter configurations</li>
+                        <li>Apply different data preprocessing techniques</li>
+                    </ul>
+                `
+            },
+            'noise': {
+                title: 'Noise Component (Irreducible Error)',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Fundamental Limit:</strong> Noise cannot be reduced by better models
+                    </div>
+                    <p><strong>Understanding Noise:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Irreducible:</strong> Inherent randomness in the data generation process</li>
+                        <li><strong>Measurement Error:</strong> Sensor noise, human labeling errors</li>
+                        <li><strong>Unobserved Variables:</strong> Missing important features</li>
+                        <li><strong>Stochastic Process:</strong> True randomness in the underlying system</li>
+                    </ul>
+                    
+                    <p><strong>Bayes Error Rate:</strong></p>
+                    <p>The theoretical minimum error rate achievable by any classifier, determined by:</p>
+                    <div class="modal-code">
+# Estimating Bayes error rate
+def estimate_bayes_error(X, y, k_neighbors=5):
+    """
+    Estimate Bayes error using k-NN approach
+    
+    Assumption: With enough data, k-NN approaches Bayes optimal
+    """
+    from sklearn.neighbors import KNeighborsClassifier
+    from sklearn.model_selection import cross_val_score
+    
+    # Use k-NN with increasing k values
+    bayes_estimates = []
+    
+    for k in range(1, k_neighbors + 1):
+        knn = KNeighborsClassifier(n_neighbors=k)
+        scores = cross_val_score(knn, X, y, cv=10)
+        error_rate = 1 - scores.mean()
+        bayes_estimates.append(error_rate)
+    
+    # Bayes error is approximately the minimum achieved
+    estimated_bayes_error = min(bayes_estimates)
+    
+    return estimated_bayes_error, bayes_estimates
+
+# Estimate for our dataset
+bayes_error, estimates = estimate_bayes_error(X, y)
+print(f"Estimated Bayes error: {bayes_error:.4f}")
+print(f"Our ensemble error: {1 - 0.947:.4f}")  # 0.053
+print(f"Distance from optimal: {(0.053 - bayes_error):.4f}")
+                    </div>
+                    
+                    <p><strong>Practical Implications:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Performance Ceiling:</strong> No model can exceed Bayes optimal</li>
+                        <li><strong>Resource Allocation:</strong> Focus on reducing bias/variance when far from ceiling</li>
+                        <li><strong>Data Quality:</strong> Reducing noise requires better data collection</li>
+                        <li><strong>Feature Engineering:</strong> Adding informative features can reduce apparent noise</li>
+                    </ul>
+                `
+            }
+        };
+
+        // Strategy details
+        const strategyDetails = {
+            'bagging': {
+                title: 'Bagging Strategy Analysis',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Bootstrap Aggregation:</strong> Reduce variance through averaging
+                    </div>
+                    <p><strong>Bagging Mechanism:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Bootstrap Sampling:</strong> Create diverse training sets</li>
+                        <li><strong>Parallel Training:</strong> Independent model training</li>
+                        <li><strong>Simple Averaging:</strong> Equal weight combination</li>
+                        <li><strong>Variance Focus:</strong> Primarily reduces variance component</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Bagging implementation
+from sklearn.ensemble import BaggingClassifier
+from sklearn.tree import DecisionTreeClassifier
+
+# Create bagging ensemble
+bagging_ensemble = BaggingClassifier(
+    base_estimator=DecisionTreeClassifier(),
+    n_estimators=100,        # Number of bootstrap samples
+    max_samples=0.8,         # Fraction of samples per bootstrap
+    max_features=0.8,        # Fraction of features per model
+    bootstrap=True,          # Bootstrap sampling
+    random_state=42
+)
+
+# Train ensemble
+bagging_ensemble.fit(X_train, y_train)
+
+# Predictions with uncertainty
+predictions = []
+for estimator in bagging_ensemble.estimators_:
+    pred = estimator.predict_proba(X_test)
+    predictions.append(pred)
+
+# Calculate mean and variance
+mean_pred = np.mean(predictions, axis=0)
+pred_variance = np.var(predictions, axis=0)
+
+# Variance indicates prediction uncertainty
+uncertainty = np.mean(pred_variance, axis=1)
+                    </div>
+                    
+                    <p><strong>Performance Characteristics:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Stability:</strong> Very stable across different datasets</li>
+                        <li><strong>Overfitting Resistance:</strong> Excellent protection</li>
+                        <li><strong>Parallelization:</strong> Easily parallelizable training</li>
+                        <li><strong>Bias Preservation:</strong> Maintains base learner bias</li>
+                    </ul>
+                `
+            },
+            'boosting': {
+                title: 'Boosting Strategy Analysis',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Sequential Learning:</strong> Focus on difficult examples to reduce bias
+                    </div>
+                    <p><strong>Boosting Approach:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Sequential Training:</strong> Each model learns from previous mistakes</li>
+                        <li><strong>Error-focused:</strong> Emphasize misclassified examples</li>
+                        <li><strong>Weighted Voting:</strong> Better models get higher influence</li>
+                        <li><strong>Bias Reduction:</strong> Converts weak learners to strong ensemble</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# AdaBoost implementation concept
+def adaboost_training(X, y, n_estimators=50):
+    """
+    Simplified AdaBoost algorithm implementation
+    """
+    n_samples = len(X)
+    sample_weights = np.ones(n_samples) / n_samples
+    
+    models = []
+    model_weights = []
+    
+    for t in range(n_estimators):
+        # Train weak learner on weighted samples
+        model = DecisionTreeClassifier(max_depth=1)  # Weak learner
+        model.fit(X, y, sample_weight=sample_weights)
+        
+        # Make predictions
+        predictions = model.predict(X)
+        
+        # Calculate weighted error
+        errors = (predictions != y).astype(int)
+        weighted_error = np.sum(sample_weights * errors)
+        
+        # Calculate model weight
+        if weighted_error > 0:
+            alpha = 0.5 * np.log((1 - weighted_error) / weighted_error)
+        else:
+            alpha = 1.0
+        
+        # Update sample weights
+        sample_weights *= np.exp(alpha * errors)
+        sample_weights /= np.sum(sample_weights)  # Normalize
+        
+        models.append(model)
+        model_weights.append(alpha)
+    
+    return models, model_weights
+
+# The beauty: each iteration focuses on previously difficult examples
+                    </div>
+                    
+                    <p><strong>Advantages:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Bias Reduction:</strong> Excellent at reducing systematic errors</li>
+                        <li><strong>Adaptive:</strong> Automatically focuses on difficult cases</li>
+                        <li><strong>Theoretical Guarantees:</strong> Provable performance bounds</li>
+                        <li><strong>Versatile:</strong> Works with any weak learner</li>
+                    </ul>
+                `
+            },
+            'stacking': {
+                title: 'Stacking Strategy Analysis',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Meta-learning Approach:</strong> Learn optimal combination of diverse models
+                    </div>
+                    <p><strong>Stacking Process:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Level-0 Models:</strong> Diverse base learners</li>
+                        <li><strong>Cross-validation:</strong> Generate out-of-fold predictions</li>
+                        <li><strong>Meta-learner:</strong> Learn optimal combination strategy</li>
+                        <li><strong>Non-linear Combination:</strong> Can capture complex interactions</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Stacking implementation
+from sklearn.model_selection import cross_val_predict
+from sklearn.linear_model import LogisticRegression
+
+def create_stacking_ensemble(base_models, meta_model, X, y, cv=5):
+    """
+    Create stacking ensemble with cross-validation
+    """
+    # Generate out-of-fold predictions for meta-features
+    meta_features = np.zeros((len(X), len(base_models)))
+    
+    for i, model in enumerate(base_models):
+        # Use cross-validation to generate predictions
+        oof_predictions = cross_val_predict(
+            model, X, y, cv=cv, method='predict_proba'
+        )
+        # Use class probabilities as meta-features
+        meta_features[:, i] = oof_predictions[:, 1]  # Positive class probability
+    
+    # Train meta-learner on meta-features
+    meta_model.fit(meta_features, y)
+    
+    # Train base models on full dataset for final predictions
+    trained_base_models = []
+    for model in base_models:
+        model.fit(X, y)
+        trained_base_models.append(model)
+    
+    return trained_base_models, meta_model
+
+# Example usage
+base_models = [
+    RandomForestClassifier(n_estimators=100),
+    SVC(probability=True),
+    GradientBoostingClassifier(),
+    LogisticRegression()
+]
+
+meta_model = LogisticRegression()
+
+# Create stacked ensemble
+stacked_models, trained_meta = create_stacking_ensemble(
+    base_models, meta_model, X_train, y_train
+)
+                    </div>
+                    
+                    <p><strong>Key Advantages:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Optimal Combination:</strong> Learns best way to combine predictions</li>
+                        <li><strong>Non-linear:</strong> Can model complex interaction between base models</li>
+                        <li><strong>Overfitting Protection:</strong> Cross-validation prevents overfitting</li>
+                        <li><strong>Flexible:</strong> Any algorithm can be used as meta-learner</li>
+                    </ul>
+                `
+            },
+            'blending': {
+                title: 'Blending Strategy Analysis',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Holdout Approach:</strong> Simple yet effective alternative to stacking
+                    </div>
+                    <p><strong>Blending Methodology:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Holdout Split:</strong> Reserve data for meta-learner training</li>
+                        <li><strong>Base Model Training:</strong> Train on remaining data</li>
+                        <li><strong>Meta-feature Generation:</strong> Predictions on holdout set</li>
+                        <li><strong>Linear Combination:</strong> Usually simple weighted average</li>
+                    </ul>
+                    
+                    <div class="modal-code">
+# Blending implementation
+from sklearn.model_selection import train_test_split
+
+def create_blending_ensemble(base_models, X, y, holdout_size=0.2):
+    """
+    Create blending ensemble using holdout validation
+    """
+    # Split data for blending
+    X_blend, X_holdout, y_blend, y_holdout = train_test_split(
+        X, y, test_size=holdout_size, random_state=42, stratify=y
+    )
+    
+    # Train base models on blend set
+    trained_models = []
+    holdout_predictions = []
+    
+    for model in base_models:
+        # Train on blend set
+        model.fit(X_blend, y_blend)
+        trained_models.append(model)
+        
+        # Predict on holdout set
+        pred = model.predict_proba(X_holdout)[:, 1]  # Positive class prob
+        holdout_predictions.append(pred)
+    
+    # Convert to array for easier manipulation
+    holdout_predictions = np.column_stack(holdout_predictions)
+    
+    # Find optimal weights using simple optimization
+    from scipy.optimize import minimize
+    
+    def objective(weights):
+        # Weighted prediction
+        blended_pred = np.dot(holdout_predictions, weights)
+        # Convert to binary predictions
+        binary_pred = (blended_pred > 0.5).astype(int)
+        # Return negative accuracy (for minimization)
+        return -accuracy_score(y_holdout, binary_pred)
+    
+    # Constraints: weights sum to 1, all positive
+    constraints = {'type': 'eq', 'fun': lambda w: np.sum(w) - 1}
+    bounds = [(0, 1) for _ in range(len(base_models))]
+    
+    # Optimize weights
+    result = minimize(
+        objective, 
+        x0=np.ones(len(base_models)) / len(base_models),
+        method='SLSQP',
+        bounds=bounds,
+        constraints=constraints
+    )
+    
+    optimal_weights = result.x
+    
+    return trained_models, optimal_weights
+
+# Usage
+base_models = [DecisionTreeClassifier(), RandomForestClassifier(), SVC(probability=True)]
+models, weights = create_blending_ensemble(base_models, X_train, y_train)
+print(f"Optimal weights: {weights}")
+                    </div>
+                    
+                    <p><strong>Blending Characteristics:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>Simplicity:</strong> Easier to implement than stacking</li>
+                        <li><strong>Speed:</strong> Faster training (no cross-validation)</li>
+                        <li><strong>Data Efficiency:</strong> Uses less data for meta-learning</li>
+                        <li><strong>Interpretability:</strong> Linear weights are easy to understand</li>
+                    </ul>
+                `
+            }
+        };
+
+        // Make all interactive elements clickable
+        document.querySelectorAll('.metric-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const metric = this.dataset.metric;
+                const details = metricDetails[metric];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        document.querySelectorAll('.benefit-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const benefit = this.dataset.benefit;
+                const details = benefitDetails[benefit];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        document.querySelectorAll('.decomposition-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const decomposition = this.dataset.decomposition;
+                const details = decompositionDetails[decomposition];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        document.querySelectorAll('.strategy-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const strategy = this.dataset.strategy;
+                const details = strategyDetails[strategy];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+        animateAccuracyBars();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week5_Slide98.html';
+            } else if ((e.key === 'ArrowRight' || e.key === ' ') && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week5_Slide100.html';
+            }
+        });
+
+    </script>
+</body>
+</html>

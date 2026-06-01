@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Sentiment Analysis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .approaches-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .applications-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .approach-card {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 4px solid #0d9488;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .approach-card:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .approach-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .approach-desc {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .sentiment-scale {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .sentiment-scale:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .scale-bar {
+            height: 30px;
+            border-radius: 15px;
+            background: linear-gradient(90deg, #ef4444 0%, #fbbf24 25%, #a3a3a3 50%, #84cc16 75%, #22c55e 100%);
+            margin: 15px 0;
+            position: relative;
+        }
+
+        .scale-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #475569;
+        }
+
+        .demo-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .demo-title {
+            font-size: 1.6em;
+            color: #0d9488;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .demo-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1em;
+            border: 2px solid rgba(13, 148, 136, 0.3);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s ease;
+        }
+
+        .demo-input:focus {
+            outline: none;
+            border-color: #0d9488;
+            box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+        }
+
+        .analyze-btn {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.3);
+        }
+
+        .result-container {
+            margin-top: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            display: none;
+        }
+
+        .result-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .application-card {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .application-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.2);
+        }
+
+        .app-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .app-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+        }
+
+        .app-desc {
+            font-size: 0.9em;
+            color: #475569;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: float 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    
+    <div class="course-info">CS5710 - Week 10</div>
+    <div class="slide-number">Slide 194 of 200</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Sentiment Analysis</h1>
+        
+        <div class="content-layout">
+            <div class="approaches-section">
+                <h2 class="section-title">Approaches & Methods</h2>
+                
+                <div class="approach-card">
+                    <div class="approach-title">📚 Lexicon-Based</div>
+                    <div class="approach-desc">Uses predefined sentiment dictionaries and rules</div>
+                </div>
+                
+                <div class="approach-card">
+                    <div class="approach-title">🤖 Machine Learning</div>
+                    <div class="approach-desc">Supervised learning with labeled training data</div>
+                </div>
+                
+                <div class="approach-card">
+                    <div class="approach-title">🧠 Deep Learning</div>
+                    <div class="approach-desc">RNNs, LSTMs, and Transformers for context</div>
+                </div>
+                
+                <div class="approach-card">
+                    <div class="approach-title">🔄 Hybrid Methods</div>
+                    <div class="approach-desc">Combines lexicon and ML approaches</div>
+                </div>
+                
+                <div class="sentiment-scale">
+                    <div style="text-align: center; font-weight: 600; color: #0d9488; margin-bottom: 10px;">
+                        Sentiment Polarity Scale
+                    </div>
+                    <div class="scale-bar"></div>
+                    <div class="scale-labels">
+                        <span>Very Negative</span>
+                        <span>Negative</span>
+                        <span>Neutral</span>
+                        <span>Positive</span>
+                        <span>Very Positive</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="applications-section">
+                <h2 class="section-title">Real-World Applications</h2>
+                
+                <div class="application-card">
+                    <div class="app-icon">📱</div>
+                    <div class="app-title">Social Media Monitoring</div>
+                    <div class="app-desc">Track brand sentiment on Twitter/Facebook</div>
+                </div>
+                
+                <div class="application-card">
+                    <div class="app-icon">⭐</div>
+                    <div class="app-title">Product Reviews</div>
+                    <div class="app-desc">Analyze customer feedback on Amazon/Yelp</div>
+                </div>
+                
+                <div class="application-card">
+                    <div class="app-icon">📈</div>
+                    <div class="app-title">Stock Market Analysis</div>
+                    <div class="app-desc">Predict market trends from news sentiment</div>
+                </div>
+                
+                <div class="application-card">
+                    <div class="app-icon">🏢</div>
+                    <div class="app-title">Customer Service</div>
+                    <div class="app-desc">Prioritize negative feedback for quick response</div>
+                </div>
+                
+                <div class="application-card">
+                    <div class="app-icon">🗳️</div>
+                    <div class="app-title">Political Analysis</div>
+                    <div class="app-desc">Gauge public opinion on policies/candidates</div>
+                </div>
+                
+                <div class="application-card">
+                    <div class="app-icon">💊</div>
+                    <div class="app-title">Healthcare Feedback</div>
+                    <div class="app-desc">Patient satisfaction and drug reviews</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <div class="demo-title">Interactive Sentiment Analysis Demo</div>
+            
+            <input type="text" class="demo-input" id="sentimentInput" 
+                   placeholder="Enter text to analyze sentiment (e.g., 'This movie was absolutely fantastic!')">
+            
+            <div style="text-align: center;">
+                <button class="analyze-btn" onclick="analyzeSentiment()">Analyze Sentiment</button>
+            </div>
+            
+            <div class="result-container" id="resultContainer">
+                <div id="sentimentResult"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week10_Slide193.html" class="nav-btn">← Previous</a>
+        <a href="Week10_Slide195.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Approach details
+        const approachDetails = {
+            '📚 Lexicon-Based': {
+                explanation: 'Lexicon-based approaches use predefined dictionaries of words with associated sentiment scores. They combine these scores using rules to determine overall sentiment.',
+                methods: `
+                    <strong>Popular Lexicons:</strong><br>
+                    • VADER (Valence Aware Dictionary)<br>
+                    • TextBlob Sentiment<br>
+                    • AFINN<br>
+                    • SentiWordNet<br>
+                    • Opinion Lexicon
+                `,
+                code: `
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+from textblob import TextBlob
+
+# VADER Example
+analyzer = SentimentIntensityAnalyzer()
+scores = analyzer.polarity_scores("The movie was fantastic!")
+# {'neg': 0.0, 'neu': 0.434, 'pos': 0.566, 'compound': 0.6249}
+
+# TextBlob Example
+blob = TextBlob("I hate this product.")
+sentiment = blob.sentiment
+# Sentiment(polarity=-0.8, subjectivity=0.9)
+
+# Custom Lexicon
+positive_words = ['good', 'excellent', 'amazing', 'wonderful']
+negative_words = ['bad', 'terrible', 'awful', 'horrible']
+
+def simple_sentiment(text):
+    words = text.lower().split()
+    pos_score = sum(1 for w in words if w in positive_words)
+    neg_score = sum(1 for w in words if w in negative_words)
+    return 'positive' if pos_score > neg_score else 'negative'
+                `,
+                pros: 'Fast, interpretable, no training data needed, works well for domain-specific lexicons',
+                cons: 'Cannot handle context, sarcasm, or complex expressions; requires manual updates'
+            },
+            '🤖 Machine Learning': {
+                explanation: 'ML approaches treat sentiment analysis as a classification problem, using features extracted from text to train models on labeled data.',
+                methods: `
+                    <strong>Common Algorithms:</strong><br>
+                    • Naive Bayes<br>
+                    • Support Vector Machines (SVM)<br>
+                    • Logistic Regression<br>
+                    • Random Forest<br>
+                    • Gradient Boosting
+                `,
+                code: `
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.pipeline import Pipeline
+
+# Create pipeline
+pipeline = Pipeline([
+    ('tfidf', TfidfVectorizer(max_features=5000)),
+    ('classifier', MultinomialNB())
+])
+
+# Train model
+pipeline.fit(X_train, y_train)
+
+# Predict sentiment
+predictions = pipeline.predict(X_test)
+
+# Feature engineering for better performance
+def extract_features(text):
+    features = {}
+    features['word_count'] = len(text.split())
+    features['exclamation_count'] = text.count('!')
+    features['question_count'] = text.count('?')
+    features['uppercase_ratio'] = sum(1 for c in text if c.isupper()) / len(text)
+    features['positive_emoticons'] = len(re.findall(r'[:;]-?[)D]', text))
+    features['negative_emoticons'] = len(re.findall(r'[:;]-?[(]', text))
+    return features
+                `,
+                pros: 'Good accuracy with proper features, can learn domain-specific patterns, interpretable features',
+                cons: 'Requires labeled training data, feature engineering effort, may not capture complex semantics'
+            },
+            '🧠 Deep Learning': {
+                explanation: 'Deep learning models can automatically learn features from raw text and capture complex patterns including context and long-range dependencies.',
+                methods: `
+                    <strong>Popular Architectures:</strong><br>
+                    • LSTM/GRU for sequential processing<br>
+                    • CNN for local pattern detection<br>
+                    • BERT for bidirectional context<br>
+                    • RoBERTa for robust performance<br>
+                    • DistilBERT for efficiency
+                `,
+                code: `
+import torch
+from transformers import BertTokenizer, BertForSequenceClassification
+
+# Load pre-trained BERT
+model = BertForSequenceClassification.from_pretrained(
+    'bert-base-uncased', 
+    num_labels=3  # negative, neutral, positive
+)
+tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+
+# Prepare input
+text = "This product exceeded my expectations!"
+inputs = tokenizer(text, return_tensors='pt', padding=True, truncation=True)
+
+# Get prediction
+with torch.no_grad():
+    outputs = model(**inputs)
+    predictions = torch.nn.functional.softmax(outputs.logits, dim=-1)
+    sentiment = torch.argmax(predictions, dim=-1)
+
+# Custom LSTM implementation
+import tensorflow as tf
+
+model = tf.keras.Sequential([
+    tf.keras.layers.Embedding(vocab_size, 128),
+    tf.keras.layers.LSTM(64, dropout=0.5, recurrent_dropout=0.5),
+    tf.keras.layers.Dense(3, activation='softmax')
+])
+
+model.compile(optimizer='adam',
+              loss='categorical_crossentropy',
+              metrics=['accuracy'])
+                `,
+                pros: 'State-of-the-art accuracy, captures context and nuance, handles complex language patterns',
+                cons: 'Requires large datasets, computationally expensive, less interpretable, prone to overfitting'
+            },
+            '🔄 Hybrid Methods': {
+                explanation: 'Hybrid approaches combine the strengths of multiple methods, often using lexicons to enhance ML/DL models or ensemble techniques.',
+                methods: `
+                    <strong>Common Strategies:</strong><br>
+                    • Lexicon features + ML classifier<br>
+                    • Rule-based post-processing<br>
+                    • Ensemble voting<br>
+                    • Multi-level analysis<br>
+                    • Domain adaptation
+                `,
+                code: `
+class HybridSentimentAnalyzer:
+    def __init__(self):
+        self.vader = SentimentIntensityAnalyzer()
+        self.ml_model = load_trained_model()
+        self.bert_model = load_bert_model()
+        
+    def analyze(self, text):
+        # Lexicon-based score
+        vader_scores = self.vader.polarity_scores(text)
+        
+        # ML prediction
+        ml_features = extract_features(text)
+        ml_pred = self.ml_model.predict([ml_features])[0]
+        
+        # Deep learning prediction
+        dl_pred = self.bert_model.predict(text)
+        
+        # Weighted ensemble
+        weights = {'vader': 0.2, 'ml': 0.3, 'dl': 0.5}
+        
+        final_score = (
+            weights['vader'] * vader_scores['compound'] +
+            weights['ml'] * ml_pred +
+            weights['dl'] * dl_pred
+        )
+        
+        # Apply domain-specific rules
+        if self.has_negation(text):
+            final_score *= -0.5
+            
+        if self.has_intensifier(text):
+            final_score *= 1.5
+            
+        return self.score_to_label(final_score)
+    
+    def has_negation(self, text):
+        negation_words = ['not', 'no', 'never', 'neither', 'none']
+        return any(word in text.lower() for word in negation_words)
+    
+    def has_intensifier(self, text):
+        intensifiers = ['very', 'extremely', 'absolutely', 'totally']
+        return any(word in text.lower() for word in intensifiers)
+                `,
+                pros: 'Combines strengths of multiple approaches, robust to different text types, customizable',
+                cons: 'Complex implementation, requires tuning multiple components, potential for error propagation'
+            }
+        };
+
+        // Add click handlers for approach cards
+        document.querySelectorAll('.approach-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('.approach-title').textContent;
+                const info = approachDetails[title];
+                
+                if (info) {
+                    modal.show(`Sentiment Analysis: ${title}`, `
+                        <div class="modal-highlight">
+                            <strong>Overview</strong>
+                        </div>
+                        <p>${info.explanation}</p>
+                        
+                        <div class="modal-highlight">
+                            <strong>Methods & Techniques</strong>
+                        </div>
+                        <p>${info.methods}</p>
+                        
+                        <div class="modal-code">
+${info.code}
+                        </div>
+                        
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                            <strong>✅ Advantages:</strong><br>
+                            ${info.pros}
+                            <br><br>
+                            <strong>⚠️ Limitations:</strong><br>
+                            ${info.cons}
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Application details
+        const applicationDetails = {
+            'Social Media Monitoring': {
+                description: 'Analyze millions of social media posts to understand public opinion about brands, products, or events in real-time.',
+                implementation: `
+                    • Twitter API integration for streaming data<br>
+                    • Real-time sentiment scoring<br>
+                    • Trend detection and alert systems<br>
+                    • Influencer sentiment tracking<br>
+                    • Crisis detection and management
+                `,
+                example: 'A company monitors Twitter for mentions of their brand. When negative sentiment spikes above 30%, customer service is alerted to investigate potential issues.',
+                metrics: 'Response time reduction: 65%, Customer satisfaction improvement: 40%, Crisis prevention rate: 80%'
+            },
+            'Product Reviews': {
+                description: 'Automatically analyze customer reviews to identify strengths, weaknesses, and improvement opportunities for products.',
+                implementation: `
+                    • Aspect-based sentiment analysis<br>
+                    • Feature extraction from reviews<br>
+                    • Rating prediction<br>
+                    • Review summarization<br>
+                    • Fake review detection
+                `,
+                example: 'Amazon analyzes product reviews to show "Most mentioned: battery life (positive), screen quality (negative)" helping buyers make informed decisions.',
+                metrics: 'Purchase decision confidence: +45%, Return rate reduction: 25%, Product improvement insights: 3x faster'
+            },
+            'Stock Market Analysis': {
+                description: 'Predict stock price movements by analyzing sentiment in financial news, earnings calls, and social media.',
+                implementation: `
+                    • News sentiment aggregation<br>
+                    • CEO speech analysis<br>
+                    • Reddit/Twitter sentiment tracking<br>
+                    • Correlation with price movements<br>
+                    • Trading signal generation
+                `,
+                example: 'Hedge funds analyze sentiment from r/wallstreetbets to predict meme stock movements, achieving 15% better returns than traditional models.',
+                metrics: 'Prediction accuracy: 72%, Alpha generation: +8% annually, Risk reduction: 30%'
+            },
+            'Customer Service': {
+                description: 'Automatically route and prioritize customer inquiries based on sentiment to improve response times and satisfaction.',
+                implementation: `
+                    • Email/chat sentiment scoring<br>
+                    • Priority queue management<br>
+                    • Agent matching by expertise<br>
+                    • Escalation prediction<br>
+                    • Response tone optimization
+                `,
+                example: 'A support system detects frustrated customers and routes them to senior agents, reducing escalations by 40% and improving resolution rates.',
+                metrics: 'First contact resolution: +35%, Customer satisfaction: +28%, Agent efficiency: +50%'
+            },
+            'Political Analysis': {
+                description: 'Gauge public opinion on political candidates, policies, and events through sentiment analysis of news and social media.',
+                implementation: `
+                    • Poll prediction models<br>
+                    • Policy reception analysis<br>
+                    • Debate performance scoring<br>
+                    • Demographic sentiment segmentation<br>
+                    • Misinformation detection
+                `,
+                example: 'Political campaigns analyze sentiment by demographic to tailor messages, achieving 20% better engagement in targeted regions.',
+                metrics: 'Poll prediction accuracy: 85%, Message effectiveness: +30%, Voter engagement: +25%'
+            },
+            'Healthcare Feedback': {
+                description: 'Analyze patient feedback to improve healthcare services, monitor drug effectiveness, and detect adverse reactions.',
+                implementation: `
+                    • Patient satisfaction scoring<br>
+                    • Drug review analysis<br>
+                    • Side effect detection<br>
+                    • Treatment outcome prediction<br>
+                    • Provider performance evaluation
+                `,
+                example: 'FDA monitors social media for mentions of drug side effects, detecting adverse reactions 3 months earlier than traditional reporting.',
+                metrics: 'Adverse event detection: 3x faster, Patient satisfaction improvement: 45%, Treatment adherence: +20%'
+            }
+        };
+
+        // Add click handlers for application cards
+        document.querySelectorAll('.application-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('.app-title').textContent;
+                const info = applicationDetails[title];
+                
+                if (info) {
+                    modal.show(`Application: ${title}`, `
+                        <div class="modal-highlight">
+                            <strong>Description</strong>
+                        </div>
+                        <p>${info.description}</p>
+                        
+                        <div class="modal-highlight">
+                            <strong>Implementation Details</strong>
+                        </div>
+                        <p>${info.implementation}</p>
+                        
+                        <div style="margin: 20px 0; padding: 15px; background: rgba(13, 148, 136, 0.05); border-radius: 10px;">
+                            <strong>📊 Real-World Example:</strong><br>
+                            ${info.example}
+                        </div>
+                        
+                        <div style="padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                            <strong>📈 Impact Metrics:</strong><br>
+                            ${info.metrics}
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Sentiment scale click handler
+        document.querySelector('.sentiment-scale').addEventListener('click', function() {
+            modal.show('Understanding Sentiment Polarity', `
+                <div class="modal-highlight">
+                    <strong>Sentiment Classification Levels</strong>
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <strong style="color: #ef4444;">Very Negative (-1.0 to -0.6)</strong><br>
+                    Examples: "This is absolutely terrible!", "I hate this product completely"<br>
+                    Characteristics: Strong negative words, intensifiers, multiple negatives<br><br>
+                    
+                    <strong style="color: #f59e0b;">Negative (-0.6 to -0.2)</strong><br>
+                    Examples: "Not very good", "Disappointed with the service"<br>
+                    Characteristics: Negative words, mild criticism, dissatisfaction<br><br>
+                    
+                    <strong style="color: #6b7280;">Neutral (-0.2 to +0.2)</strong><br>
+                    Examples: "It's okay", "The product works as described"<br>
+                    Characteristics: Factual statements, balanced opinions, no strong emotion<br><br>
+                    
+                    <strong style="color: #84cc16;">Positive (+0.2 to +0.6)</strong><br>
+                    Examples: "Good product", "I'm satisfied with my purchase"<br>
+                    Characteristics: Positive words, satisfaction, mild praise<br><br>
+                    
+                    <strong style="color: #22c55e;">Very Positive (+0.6 to +1.0)</strong><br>
+                    Examples: "Absolutely amazing!", "Best purchase ever!"<br>
+                    Characteristics: Strong positive words, enthusiasm, superlatives
+                </div>
+                
+                <div class="modal-highlight">
+                    <strong>Challenges in Polarity Detection</strong>
+                </div>
+                
+                <p>
+                    <strong>🔄 Sarcasm:</strong> "Oh great, another delay!" (Negative despite "great")<br>
+                    <strong>❓ Context:</strong> "This movie is sick!" (Positive in slang context)<br>
+                    <strong>🔀 Negation:</strong> "Not bad at all" (Positive despite "bad")<br>
+                    <strong>🎭 Mixed Sentiment:</strong> "Great product but terrible service"<br>
+                    <strong>🌍 Cultural Differences:</strong> Same phrase, different meanings
+                </p>
+                
+                <div class="modal-code">
+# Handling edge cases
+def refined_sentiment(text):
+    base_score = get_base_sentiment(text)
+    
+    # Check for sarcasm indicators
+    if has_sarcasm_markers(text):
+        base_score *= -0.8
+    
+    # Handle negation
+    if has_negation_before_sentiment(text):
+        base_score *= -0.5
+    
+    # Detect mixed sentiment
+    if has_mixed_sentiment(text):
+        base_score *= 0.5  # Move toward neutral
+    
+    return clip(base_score, -1, 1)
+                </div>
+            `);
+        });
+
+        // Simple sentiment analysis function for demo
+        function analyzeSentiment() {
+            const input = document.getElementById('sentimentInput').value;
+            if (!input.trim()) {
+                alert('Please enter some text to analyze');
+                return;
+            }
+            
+            // Simple lexicon-based sentiment scoring
+            const positiveWords = ['good', 'great', 'excellent', 'amazing', 'wonderful', 'fantastic', 'love', 'best', 'happy', 'awesome', 'perfect', 'beautiful'];
+            const negativeWords = ['bad', 'terrible', 'awful', 'hate', 'worst', 'horrible', 'disgusting', 'disappointed', 'poor', 'useless', 'waste'];
+            const intensifiers = ['very', 'extremely', 'absolutely', 'completely', 'totally'];
+            
+            const words = input.toLowerCase().split(/\s+/);
+            let score = 0;
+            let posCount = 0;
+            let negCount = 0;
+            
+            for (let i = 0; i < words.length; i++) {
+                let multiplier = 1;
+                if (i > 0 && intensifiers.includes(words[i-1])) {
+                    multiplier = 1.5;
+                }
+                
+                if (positiveWords.includes(words[i])) {
+                    score += multiplier;
+                    posCount++;
+                } else if (negativeWords.includes(words[i])) {
+                    score -= multiplier;
+                    negCount++;
+                }
+            }
+            
+            // Normalize score
+            const normalizedScore = Math.max(-1, Math.min(1, score / Math.max(words.length * 0.3, 1)));
+            
+            // Determine sentiment label
+            let sentiment, color, emoji;
+            if (normalizedScore > 0.3) {
+                sentiment = 'Positive';
+                color = '#22c55e';
+                emoji = '😊';
+            } else if (normalizedScore < -0.3) {
+                sentiment = 'Negative';
+                color = '#ef4444';
+                emoji = '😞';
+            } else {
+                sentiment = 'Neutral';
+                color = '#6b7280';
+                emoji = '😐';
+            }
+            
+            const resultContainer = document.getElementById('resultContainer');
+            const resultDiv = document.getElementById('sentimentResult');
+            
+            resultDiv.innerHTML = `
+                <div style="text-align: center;">
+                    <div style="font-size: 3em; margin-bottom: 10px;">${emoji}</div>
+                    <div style="font-size: 1.5em; font-weight: 600; color: ${color}; margin-bottom: 15px;">
+                        ${sentiment} Sentiment
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <strong>Confidence Score:</strong> ${Math.abs(normalizedScore * 100).toFixed(1)}%
+                    </div>
+                    <div style="background: white; padding: 15px; border-radius: 10px; margin-top: 20px;">
+                        <div style="color: #0d9488; font-weight: 600; margin-bottom: 10px;">Analysis Details:</div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: left; font-size: 0.9em;">
+                            <div>📝 Word Count: ${words.length}</div>
+                            <div>✅ Positive Words: ${posCount}</div>
+                            <div>📏 Score: ${normalizedScore.toFixed(3)}</div>
+                            <div>❌ Negative Words: ${negCount}</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.05); border-radius: 10px; font-size: 0.9em; color: #475569;">
+                        <strong>Note:</strong> This is a simple lexicon-based demo. Real-world sentiment analysis uses more sophisticated methods including context understanding and machine learning models.
+                    </div>
+                </div>
+            `;
+            
+            resultContainer.classList.add('active');
+        }
+
+        // Initialize components
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week10_Slide193.html';
+            } else if (e.key === 'ArrowRight' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week10_Slide195.html';
+            }
+        });
+
+        // Enter key for sentiment analysis
+        document.getElementById('sentimentInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                analyzeSentiment();
+            }
+        });
+    </script>
+</body>
+</html>

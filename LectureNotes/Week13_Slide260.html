@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Week 13 Summary & Week 14 Preview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .summary-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .preview-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .topic-card {
+            padding: 20px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+
+        .topic-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .topic-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 5px;
+            font-size: 1em;
+        }
+
+        .topic-desc {
+            font-size: 0.9em;
+            color: #475569;
+            line-height: 1.4;
+        }
+
+        .celebration-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            text-align: center;
+        }
+
+        .achievement-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .achievement-card {
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border: 2px solid #14b8a6;
+        }
+
+        .achievement-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .achievement-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+
+        .achievement-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #0d9488;
+        }
+
+        .achievement-count {
+            font-size: 0.85em;
+            color: #475569;
+            line-height: 1.4;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .achievement-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 13</div>
+    <div class="slide-number">Slide 260 of 260</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">🎉 Week 13 Summary & Week 14 Preview</h1>
+        
+        <div class="content-layout">
+            <div class="summary-section">
+                <h2 class="section-title">📚 Week 13 Recap</h2>
+                
+                <div class="topic-card" data-topic="gans">
+                    <div class="topic-title">🎨 Generative Adversarial Networks</div>
+                    <div class="topic-desc">Generator vs Discriminator training, applications in art and data synthesis</div>
+                </div>
+                
+                <div class="topic-card" data-topic="anomaly">
+                    <div class="topic-title">🔍 Anomaly Detection</div>
+                    <div class="topic-desc">Statistical, ML-based, and deep learning approaches to outlier detection</div>
+                </div>
+                
+                <div class="topic-card" data-topic="timeseries">
+                    <div class="topic-title">📈 Time Series Forecasting</div>
+                    <div class="topic-desc">ARIMA, LSTM, Prophet models for predicting future trends</div>
+                </div>
+                
+                <div class="topic-card" data-topic="recommenders">
+                    <div class="topic-title">🎯 Recommender Systems</div>
+                    <div class="topic-desc">Collaborative filtering, content-based, and hybrid recommendation approaches</div>
+                </div>
+                
+                <div class="topic-card" data-topic="applications">
+                    <div class="topic-title">🚀 ML Applications</div>
+                    <div class="topic-desc">Healthcare, finance, autonomous vehicles - real-world ML implementations</div>
+                </div>
+            </div>
+
+            <div class="preview-section">
+                <h2 class="section-title">🔮 Week 14 Preview</h2>
+                
+                <div class="topic-card" data-topic="ethics">
+                    <div class="topic-title">⚖️ AI/ML Ethics</div>
+                    <div class="topic-desc">Bias, fairness, and responsible AI development practices</div>
+                </div>
+                
+                <div class="topic-card" data-topic="explainable">
+                    <div class="topic-title">🔍 Explainable AI</div>
+                    <div class="topic-desc">SHAP, LIME, and interpretability techniques for black-box models</div>
+                </div>
+                
+                <div class="topic-card" data-topic="privacy">
+                    <div class="topic-title">🔒 Privacy & Security</div>
+                    <div class="topic-desc">Differential privacy, federated learning, adversarial attacks</div>
+                </div>
+                
+                <div class="topic-card" data-topic="future">
+                    <div class="topic-title">🌟 Future of ML</div>
+                    <div class="topic-desc">Quantum ML, AutoML, neural architecture search, research frontiers</div>
+                </div>
+                
+                <div class="topic-card" data-topic="career">
+                    <div class="topic-title">💼 ML Career Paths</div>
+                    <div class="topic-desc">Industry roles, portfolio building, interview preparation, continuous learning</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="celebration-section">
+            <div style="font-size: 1.4em; color: #0d9488; line-height: 1.6; margin-bottom: 30px;">
+                <strong>🎓 Congratulations on Completing Week 13!</strong><br>
+                You've mastered advanced ML topics and real-world applications
+            </div>
+            
+            <div class="achievement-grid">
+                <div class="achievement-card" data-achievement="techniques">
+                    <div class="achievement-icon">🧠</div>
+                    <div class="achievement-title">Advanced Techniques</div>
+                    <div class="achievement-count">GANs, Anomaly Detection, Time Series</div>
+                </div>
+                
+                <div class="achievement-card" data-achievement="applications">
+                    <div class="achievement-icon">🚀</div>
+                    <div class="achievement-title">Real Applications</div>
+                    <div class="achievement-count">Healthcare, Finance, Autonomous Systems</div>
+                </div>
+                
+                <div class="achievement-card" data-achievement="systems">
+                    <div class="achievement-icon">🎯</div>
+                    <div class="achievement-title">Recommendation Systems</div>
+                    <div class="achievement-count">Collaborative & Content-Based Filtering</div>
+                </div>
+                
+                <div class="achievement-card" data-achievement="forecasting">
+                    <div class="achievement-icon">📊</div>
+                    <div class="achievement-title">Forecasting Mastery</div>
+                    <div class="achievement-count">Multiple Model Approaches</div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 30px; padding: 20px; background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%); border-radius: 15px;">
+                <strong style="color: #0d9488; font-size: 1.2em;">
+                    🏁 Final Week Ahead: Ethics, Future Trends, and Your ML Career Journey!
+                </strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week13_Slide259.html" class="nav-btn">← Previous</a>
+        <a href="Week14_Slide261.html" class="nav-btn">Start Week 14 →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Topic Details
+        document.querySelectorAll('.topic-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const topic = this.dataset.topic;
+                
+                const topicDetails = {
+                    'gans': {
+                        title: '🎨 Generative Adversarial Networks Mastery',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>You've learned the fundamentals of GANs!</strong>
+                            </div>
+                            <p><strong>🎯 Key Concepts Mastered:</strong></p>
+                            <ul style="margin: 15px 0; padding-left: 20px;">
+                                <li>Generator vs Discriminator architecture</li>
+                                <li>Adversarial training process</li>
+                                <li>Loss functions and optimization</li>
+                                <li>Applications in art, faces, and data generation</li>
+                            </ul>
+                            <div class="modal-code">
+# GAN Implementation Summary
+class GAN:
+    def __init__(self):
+        self.generator = Generator()
+        self.discriminator = Discriminator()
+    
+    def train_step(self, real_data):
+        # Train discriminator
+        fake_data = self.generator(noise)
+        d_loss = discriminator_loss(real_data, fake_data)
+        
+        # Train generator
+        g_loss = generator_loss(fake_data)
+        
+        return d_loss, g_loss
+                            </div>
+                            <p><strong>💡 Applications Explored:</strong> Art generation, deepfakes, data augmentation, medical imaging</p>
+                        `
+                    },
+                    'anomaly': {
+                        title: '🔍 Anomaly Detection Expertise',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>You can now detect outliers like a pro!</strong>
+                            </div>
+                            <p><strong>🛠️ Techniques Learned:</strong></p>
+                            <ul style="margin: 15px 0; padding-left: 20px;">
+                                <li>Statistical methods (Z-score, IQR)</li>
+                                <li>Isolation Forest for tree-based detection</li>
+                                <li>One-Class SVM for boundary learning</li>
+                                <li>Local Outlier Factor for density-based detection</li>
+                                <li>Autoencoders for reconstruction-based detection</li>
+                            </ul>
+                            <p><strong>🏢 Industry Applications:</strong> Fraud detection, cybersecurity, predictive maintenance, quality control</p>
+                        `
+                    },
+                    'timeseries': {
+                        title: '📈 Time Series Forecasting Skills',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>You can predict the future with data!</strong>
+                            </div>
+                            <p><strong>📊 Models Mastered:</strong></p>
+                            <ul style="margin: 15px 0; padding-left: 20px;">
+                                <li>ARIMA for linear trend and seasonality</li>
+                                <li>LSTM networks for complex sequences</li>
+                                <li>Prophet for business forecasting</li>
+                                <li>Exponential smoothing techniques</li>
+                                <li>Ensemble forecasting approaches</li>
+                            </ul>
+                            <p><strong>🌍 Real Applications:</strong> Stock prices, energy demand, weather prediction, sales forecasting</p>
+                        `
+                    },
+                    'recommenders': {
+                        title: '🎯 Recommendation System Mastery',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Build the next Netflix or Amazon recommendation engine!</strong>
+                            </div>
+                            <p><strong>🔧 System Types:</strong></p>
+                            <ul style="margin: 15px 0; padding-left: 20px;">
+                                <li>Collaborative filtering (user-item interactions)</li>
+                                <li>Content-based filtering (item features)</li>
+                                <li>Hybrid systems (best of both worlds)</li>
+                                <li>Matrix factorization techniques</li>
+                                <li>Deep learning recommendation models</li>
+                            </ul>
+                            <p><strong>📈 Impact:</strong> 80% of Netflix content comes from recommendations, 35% of Amazon revenue from recommendations</p>
+                        `
+                    },
+                    'applications': {
+                        title: '🚀 Real-World ML Applications',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>You've seen ML in action across industries!</strong>
+                            </div>
+                            <p><strong>🏥 Healthcare:</strong> Medical imaging, drug discovery, patient monitoring</p>
+                            <p><strong>💰 Finance:</strong> Fraud detection, algorithmic trading, risk assessment</p>
+                            <p><strong>🚗 Autonomous Vehicles:</strong> Computer vision, sensor fusion, path planning</p>
+                            <p><strong>🏭 Manufacturing:</strong> Quality control, predictive maintenance</p>
+                            <p><strong>💡 Key Insight:</strong> ML is transforming every industry by automating complex decision-making</p>
+                        `
+                    },
+                    'ethics': {
+                        title: '⚖️ AI Ethics & Responsibility',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Coming Next: The responsible side of AI</strong>
+                            </div>
+                            <p><strong>🔍 Topics to Explore:</strong></p>
+                            <ul style="margin: 15px 0; padding-left: 20px;">
+                                <li>Bias detection and mitigation strategies</li>
+                                <li>Fairness metrics and algorithmic accountability</li>
+                                <li>Ethical frameworks for AI development</li>
+                                <li>Impact on society and employment</li>
+                            </ul>
+                            <p><strong>❓ Key Questions:</strong> How do we ensure AI benefits everyone? What are our responsibilities as ML practitioners?</p>
+                        `
+                    },
+                    'explainable': {
+                        title: '🔍 Explainable AI Preview',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Make your black-box models transparent</strong>
+                            </div>
+                            <p><strong>🛠️ Tools You'll Learn:</strong></p>
+                            <ul style="margin: 15px 0; padding-left: 20px;">
+                                <li>SHAP values for feature importance</li>
+                                <li>LIME for local explanations</li>
+                                <li>Permutation importance</li>
+                                <li>Attention visualization in neural networks</li>
+                            </ul>
+                            <p><strong>💼 Why It Matters:</strong> Regulatory compliance, building trust, debugging models</p>
+                        `
+                    },
+                    'privacy': {
+                        title: '🔒 Privacy & Security in ML',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Protect data while preserving utility</strong>
+                            </div>
+                            <p><strong>🛡️ Topics Ahead:</strong></p>
+                            <ul style="margin: 15px 0; padding-left: 20px;">
+                                <li>Differential privacy for data protection</li>
+                                <li>Federated learning for distributed training</li>
+                                <li>Adversarial attacks and defenses</li>
+                                <li>Homomorphic encryption</li>
+                            </ul>
+                            <p><strong>🏥 Use Cases:</strong> Healthcare data, financial records, personal information</p>
+                        `
+                    },
+                    'future': {
+                        title: '🌟 The Future of Machine Learning',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Peek into tomorrow's ML landscape</strong>
+                            </div>
+                            <p><strong>🚀 Emerging Trends:</strong></p>
+                            <ul style="margin: 15px 0; padding-left: 20px;">
+                                <li>Quantum machine learning</li>
+                                <li>AutoML and neural architecture search</li>
+                                <li>Foundation models and large language models</li>
+                                <li>Edge AI and tiny ML</li>
+                                <li>Neuromorphic computing</li>
+                            </ul>
+                            <p><strong>🔬 Research Frontiers:</strong> AGI, multimodal learning, continual learning, causal AI</p>
+                        `
+                    },
+                    'career': {
+                        title: '💼 Your ML Career Journey',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Launch your ML career with confidence</strong>
+                            </div>
+                            <p><strong>🎯 Career Paths:</strong></p>
+                            <ul style="margin: 15px 0; padding-left: 20px;">
+                                <li>ML Engineer: Production systems and infrastructure</li>
+                                <li>Data Scientist: Analysis and model development</li>
+                                <li>Research Scientist: Algorithm development</li>
+                                <li>AI Product Manager: Strategic AI implementation</li>
+                            </ul>
+                            <p><strong>📚 Preparation Topics:</strong> Portfolio building, interview prep, networking, continuous learning</p>
+                        `
+                    }
+                };
+                
+                const details = topicDetails[topic];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        // Achievement Details
+        document.querySelectorAll('.achievement-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const achievement = this.dataset.achievement;
+                
+                const achievementDetails = {
+                    'techniques': {
+                        title: '🧠 Advanced ML Techniques Mastered',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>You've conquered advanced machine learning!</strong>
+                            </div>
+                            <p><strong>🎨 GANs:</strong> Can generate realistic images, art, and synthetic data</p>
+                            <p><strong>🔍 Anomaly Detection:</strong> Expert in finding outliers across domains</p>
+                            <p><strong>📈 Time Series:</strong> Predict future trends with multiple models</p>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                                <strong>🏆 Achievement Unlocked:</strong><br>
+                                Advanced ML Practitioner - You can tackle complex, cutting-edge ML problems!
+                            </div>
+                        `
+                    },
+                    'applications': {
+                        title: '🚀 Real-World Application Expert',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>You understand ML in the real world!</strong>
+                            </div>
+                            <p><strong>🏥 Healthcare:</strong> Medical imaging, diagnostics, drug discovery</p>
+                            <p><strong>💰 Finance:</strong> Trading algorithms, fraud detection, risk analysis</p>
+                            <p><strong>🚗 Autonomous Systems:</strong> Self-driving cars, robotics, IoT</p>
+                            
+                            <p><strong>💼 Industry Impact:</strong> You can now speak the language of business stakeholders and understand how ML creates value across industries.</p>
+                        `
+                    },
+                    'systems': {
+                        title: '🎯 Recommendation Systems Specialist',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Build systems that understand user preferences!</strong>
+                            </div>
+                            <p><strong>🔧 Collaborative Filtering:</strong> User-item interaction patterns</p>
+                            <p><strong>📄 Content-Based:</strong> Item feature analysis</p>
+                            <p><strong>🔄 Hybrid Systems:</strong> Best of both approaches</p>
+                            
+                            <p><strong>📊 Business Value:</strong> Recommendation systems drive 35% of Amazon's revenue and 80% of Netflix viewing!</p>
+                        `
+                    },
+                    'forecasting': {
+                        title: '📊 Forecasting Mastery Achieved',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>You can predict the future with data!</strong>
+                            </div>
+                            <p><strong>📈 ARIMA:</strong> Classical time series analysis</p>
+                            <p><strong>🧠 LSTM:</strong> Deep learning for sequences</p>
+                            <p><strong>🔮 Prophet:</strong> Business-friendly forecasting</p>
+                            <p><strong>📊 Ensembles:</strong> Combining multiple models</p>
+                            
+                            <p><strong>🌍 Applications:</strong> From stock prices to energy demand, you can forecast anything!</p>
+                        `
+                    }
+                };
+                
+                const details = achievementDetails[achievement];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week13_Slide259.html';
+            } else if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week14_Slide261.html';
+            }
+        });
+
+    </script>
+</body>
+</html>

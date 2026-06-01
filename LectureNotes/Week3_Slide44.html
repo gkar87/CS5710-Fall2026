@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Sigmoid Function and Decision Boundary</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%); min-height: 100vh; display: flex; flex-direction: column; color: #134e4a; overflow-x: hidden; }
+        .slide-container { flex: 1; padding: 40px; max-width: 1400px; margin: 0 auto; position: relative; }
+        .slide-title { font-size: 3.2em; text-align: center; margin-bottom: 40px; color: #0d9488; text-shadow: 2px 2px 4px rgba(0,0,0,0.1); animation: slideInFromTop 1.2s ease-out; font-weight: 700; }
+        .content-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 30px; }
+        .concept-section, .comparison-section { background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%); border-radius: 20px; padding: 35px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); animation: slideInFromLeft 1s ease-out 0.3s both; border: 1px solid rgba(13, 148, 136, 0.1); }
+        .comparison-section { animation: slideInFromRight 1s ease-out 0.3s both; }
+        .section-title { font-size: 1.6em; color: #0d9488; margin-bottom: 20px; font-weight: 600; position: relative; }
+        .section-title::after { content: ''; position: absolute; bottom: -8px; left: 0; width: 60px; height: 3px; background: linear-gradient(90deg, #0d9488, #14b8a6); border-radius: 2px; }
+        .definition-text { font-size: 1.1em; line-height: 1.7; color: #1e293b; margin-bottom: 25px; padding: 20px; background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%); border-radius: 15px; border-left: 4px solid #0d9488; }
+        .formula-box { background: #1e293b; color: #5eead4; padding: 25px; border-radius: 15px; margin: 20px 0; font-family: 'Courier New', monospace; text-align: center; font-size: 1.3em; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
+        .formula-main { font-size: 1.4em; padding-bottom: 15px; border-bottom: 1px solid rgba(94, 234, 212, 0.2); margin-bottom: 15px; }
+        .formula-detail { font-size: 0.85em; color: #94a3b8; line-height: 1.5; }
+        .where-section { margin-top: 20px; font-size: 0.95em; line-height: 1.6; color: #1e293b; }
+        .where-section strong { color: #0d9488; }
+        .visualization-box { background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border-radius: 15px; padding: 25px; text-align: center; border: 2px solid #e2e8f0; }
+        .sigmoid-curve { font-size: 3em; margin: 15px 0; }
+        .method-card { padding: 20px; border-radius: 15px; text-align: center; transition: all 0.3s ease; cursor: pointer; border: 2px solid; margin: 15px 0; }
+        .method-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.1); }
+        .linear-card { background: linear-gradient(135deg, #f0fdfa, #ccfbf1); border-color: #14b8a6; color: #0d9488; }
+        .nonlinear-card { background: linear-gradient(135deg, #fef3c7, #fde68a); border-color: #f59e0b; color: #92400e; }
+        .method-icon { font-size: 2.5em; margin-bottom: 10px; }
+        .method-title { font-size: 1.2em; font-weight: 600; margin-bottom: 10px; }
+        .method-features { list-style: none; text-align: left; font-size: 0.85em; }
+        .method-features li { margin: 6px 0; padding: 6px 0; border-bottom: 1px solid rgba(0,0,0,0.1); }
+        .derivation-section { grid-column: 1 / -1; background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%); border-radius: 20px; padding: 35px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); animation: slideInFromBottom 1s ease-out 0.6s both; border: 1px solid rgba(13, 148, 136, 0.1); }
+        .derivation-steps { list-style: none; margin-top: 15px; }
+        .derivation-item { padding: 15px; margin: 12px 0; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border-radius: 12px; border-left: 4px solid #0d9488; transition: all 0.3s ease; cursor: pointer; }
+        .derivation-item:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15); }
+        .step-number { display: inline-block; background: #0d9488; color: white; width: 28px; height: 28px; border-radius: 50%; text-align: center; line-height: 28px; font-weight: 600; margin-right: 12px; font-size: 0.85em; }
+        .step-content { display: inline-block; vertical-align: top; width: calc(100% - 45px); }
+        .step-text { font-size: 1em; color: #1e293b; line-height: 1.5; }
+        .step-formula { background: #1e293b; color: #5eead4; padding: 12px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.9em; margin-top: 8px; }
+        .navigation { position: fixed; bottom: 30px; right: 30px; display: flex; gap: 15px; }
+        .nav-btn { padding: 15px 25px; background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9)); border: 2px solid rgba(13, 148, 136, 0.2); border-radius: 30px; color: #134e4a; text-decoration: none; transition: all 0.3s ease; backdrop-filter: blur(20px); font-weight: 600; }
+        .nav-btn:hover { background: linear-gradient(135deg, #0d9488, #14b8a6); color: white; transform: translateY(-3px); box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4); }
+        .slide-number { position: fixed; top: 30px; right: 30px; background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9)); padding: 12px 20px; border-radius: 25px; backdrop-filter: blur(20px); border: 1px solid rgba(13, 148, 136, 0.2); color: #134e4a; font-weight: 600; }
+        .course-info { position: fixed; top: 30px; left: 30px; background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9)); padding: 12px 20px; border-radius: 25px; backdrop-filter: blur(20px); border: 1px solid rgba(13, 148, 136, 0.2); color: #134e4a; font-weight: 600; }
+        @keyframes slideInFromTop { from { transform: translateY(-80px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes slideInFromLeft { from { transform: translateX(-60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideInFromRight { from { transform: translateX(60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideInFromBottom { from { transform: translateY(60px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @media (max-width: 768px) { .content-layout { grid-template-columns: 1fr; } .slide-title { font-size: 2.5em; } }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.3s ease; backdrop-filter: blur(5px); }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-container { background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%); border-radius: 25px; padding: 40px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; transform: scale(0.9) translateY(20px); transition: transform 0.3s ease; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3); border: 2px solid rgba(13, 148, 136, 0.2); }
+        .modal-overlay.active .modal-container { transform: scale(1) translateY(0); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid rgba(13, 148, 136, 0.1); }
+        .modal-title { font-size: 1.6em; color: #0d9488; font-weight: 600; }
+        .modal-close { background: none; border: none; font-size: 1.4em; color: #64748b; cursor: pointer; transition: all 0.3s ease; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .modal-close:hover { background: rgba(13, 148, 136, 0.1); color: #0d9488; transform: rotate(90deg); }
+        .modal-content { font-size: 1.05em; line-height: 1.7; color: #1e293b; }
+        .modal-highlight { background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%); padding: 18px; border-radius: 12px; margin: 15px 0; border-left: 4px solid #0d9488; }
+        .modal-formula { background: #1e293b; color: #5eead4; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; margin: 12px 0; }
+    </style>
+    <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="modal-overlay" id="modalOverlay"><div class="modal-container"><div class="modal-header"><h3 class="modal-title" id="modalTitle">Title</h3><button class="modal-close" id="modalClose">×</button></div><div class="modal-content" id="modalContent">Content</div></div></div></div>
+    <div class="course-info">CS5710 - Week 3</div>
+    <div class="slide-number">Slide 44 of 60</div>
+    <div class="slide-container">
+        <h1 class="slide-title">Sigmoid Function and Decision Boundary</h1>
+        <div class="content-layout">
+            <div class="concept-section">
+                <h2 class="section-title">The Sigmoid Function</h2>
+                <div class="definition-text">The <strong>sigmoid function</strong> (also called logistic function) maps any real-valued number to the range (0, 1). It's the key component that makes logistic regression a classifier.</div>
+                <div class="formula-box"><div class="formula-main">σ(z) = 1 / (1 + e^(-z))</div><div class="formula-detail">Sigmoid (logistic) function</div></div>
+                <div class="visualization-box" onclick="showModal('Visualization', vizContent)"><div class="sigmoid-curve">↗ 1.0</div><div class="sigmoid-curve" style="color: #f59e0b;">───●──────────→</div><div class="sigmoid-curve">↘ 0.0</div><p style="margin-top: 10px; font-size: 0.9em; color: #64748b;">Click to explore key properties</p></div>
+            </div>
+            <div class="comparison-section">
+                <h2 class="section-title">Decision Boundary</h2>
+                <div class="definition-text">The <strong>decision boundary</strong> is the surface that separates different classes. For logistic regression with threshold 0.5, it's where σ(z) = 0.5, i.e., z = 0.</div>
+                <div class="formula-box"><div class="formula-main">θ^T x = 0</div><div class="formula-detail">Decision boundary equation</div></div>
+                <div class="where-section"><strong>Prediction Rule:</strong><br>• If θ^T x ≥ 0: predict y = 1<br>• If θ^T x < 0: predict y = 0<br>This creates a linear boundary!</div>
+            </div>
+        </div>
+        <div class="derivation-section">
+            <h2 class="section-title">Understanding the Boundary</h2>
+            <ul class="derivation-steps">
+                <li class="derivation-item" onclick="showModal('Threshold', thresholdContent)"><div class="step-number">1</div><div class="step-content"><div class="step-text">The probability threshold</div><div class="step-formula">σ(z) = 0.5 when z = 0</div></div></li>
+                <li class="derivation-item" onclick="showModal('Linear Boundary', linearBContent)"><div class="step-number">2</div><div class="step-content"><div class="step-text">Linear decision boundary</div><div class="step-formula">θ_0 + θ_1 x_1 + θ_2 x_2 = 0</div></div></li>
+                <li class="derivation-item" onclick="showModal('Classification', classContent)"><div class="step-number">3</div><div class="step-content"><div class="step-text">Classification regions</div><div class="step-formula">θ^T x > 0 → Class 1<br>θ^T x < 0 → Class 0</div></div></li>
+                <li class="derivation-item" onclick="showModal('Nonlinear', nonlinearContent)"><div class="step-number">4</div><div class="step-content"><div class="step-text">Nonlinear boundaries with polynomial features</div><div class="step-formula">θ_0 + θ_1 x + θ_2 x² + ... = 0</div></div></li>
+            </ul>
+        </div>
+    </div>
+    <div class="navigation"><a href="Week3_Slide43.html" class="nav-btn">← Previous</a><a href="Week3_Slide45.html" class="nav-btn">Next →</a></div>
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;"><strong>Prepared by Dr. Gorkem Kar</strong></div>
+    <script>
+        const vizContent = `<p><strong>Sigmoid Properties:</strong></p><div class="modal-highlight"><ul><li><strong>Differentiability:</strong> σ'(z) = σ(z)(1 - σ(z))</li><li><strong>Range:</strong> (0, 1) - never reaches exactly 0 or 1</li><li><strong>Symmetry:</strong> σ(-z) = 1 - σ(z)</li><li><strong>S-curve:</strong> S-shaped, centered at z=0</li></ul></div><p><strong>Interpretation:</strong> As z increases, output approaches 1</p>`;
+        const thresholdContent = `<p>The <strong>threshold of 0.5</strong> is standard because σ(0) = 0.5.</p><div class="modal-formula">if h_θ(x) ≥ 0.5 → y = 1<br>if h_θ(x) < 0.5 → y = 0</div><p>This is equivalent to checking if θ^T x ≥ 0</p>`;
+        const linearBContent = `<p>The <strong>decision boundary is linear</strong> because σ(z) = 0.5 when z = 0.</p><div class="modal-formula">θ_0 + θ_1 x_1 + θ_2 x_2 = 0</div><p>This is a line (in 2D) or plane (in 3D)</p>`;
+        const classContent = `<p><strong>Classification regions:</strong></p><div class="modal-highlight"><ul><li>Points where θ^T x > 0 → Class 1</li><li>Points where θ^T x < 0 → Class 0</li></ul></div><p>The boundary itself is where θ^T x = 0</p>`;
+        const nonlinearContent = `<p>With <strong>polynomial features</strong>, we can create nonlinear boundaries.</p><div class="modal-formula">θ_0 + θ_1 x_1 + θ_2 x_2 + θ_3 x_1² + θ_4 x_2² = 0</div><p>This can form circles, ellipses, or other shapes</p>`;
+        class ModalSystem { constructor() { this.overlay = document.getElementById('modalOverlay'); this.title = document.getElementById('modalTitle'); this.content = document.getElementById('modalContent'); this.closeBtn = document.getElementById('modalClose'); this.closeBtn.addEventListener('click', () => this.close()); this.overlay.addEventListener('click', (e) => { if (e.target === this.overlay) this.close(); }); document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && this.overlay.classList.contains('active')) this.close(); }); } show(title, content) { this.title.textContent = title; this.content.innerHTML = content; this.overlay.classList.add('active'); document.body.style.overflow = 'hidden'; } close() { this.overlay.classList.remove('active'); document.body.style.overflow = ''; } }
+        const modal = new ModalSystem(); function showModal(title, content) { modal.show(title, content); }
+        document.addEventListener('keydown', function(e) { if (!document.getElementById('modalOverlay').classList.contains('active')) { if (e.key === 'ArrowLeft') window.location.href = 'Week3_Slide43.html'; else if (e.key === 'ArrowRight' || e.key === ' ') window.location.href = 'Week3_Slide45.html'; } });
+    </script>
+</body>
+</html>

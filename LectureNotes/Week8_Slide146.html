@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Forward Propagation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .network-visualization {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .process-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .network-canvas {
+            width: 100%;
+            height: 350px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .step-list {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .step-item {
+            padding: 20px;
+            margin: 15px 0;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .step-item:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .step-number {
+            position: absolute;
+            left: -15px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .step-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .step-desc {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .formula-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            text-align: center;
+        }
+
+        .formula-box {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 25px;
+            border-radius: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.2em;
+            margin: 20px 0;
+            line-height: 1.8;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 8</div>
+    <div class="slide-number">Slide 146 of 160</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Forward Propagation</h1>
+        
+        <div class="content-layout">
+            <div class="network-visualization">
+                <h2 class="section-title">Neural Network Flow</h2>
+                <div class="network-canvas" id="networkCanvas">
+                    <canvas id="forwardPropCanvas" style="width: 100%; height: 100%;"></canvas>
+                </div>
+                <p style="margin-top: 15px; color: #64748b; text-align: center;">
+                    Click to see the signal flow through the network
+                </p>
+            </div>
+
+            <div class="process-section">
+                <h2 class="section-title">Forward Pass Steps</h2>
+                <ul class="step-list">
+                    <li class="step-item" data-step="1">
+                        <span class="step-number">1</span>
+                        <div class="step-title">Input Layer</div>
+                        <div class="step-desc">Receive input features x₁, x₂, ..., xₙ</div>
+                    </li>
+                    <li class="step-item" data-step="2">
+                        <span class="step-number">2</span>
+                        <div class="step-title">Weighted Sum</div>
+                        <div class="step-desc">Calculate z = Σ(wᵢxᵢ) + b for each neuron</div>
+                    </li>
+                    <li class="step-item" data-step="3">
+                        <span class="step-number">3</span>
+                        <div class="step-title">Activation</div>
+                        <div class="step-desc">Apply activation function a = f(z)</div>
+                    </li>
+                    <li class="step-item" data-step="4">
+                        <span class="step-number">4</span>
+                        <div class="step-title">Propagate</div>
+                        <div class="step-desc">Pass output to next layer as input</div>
+                    </li>
+                    <li class="step-item" data-step="5">
+                        <span class="step-number">5</span>
+                        <div class="step-title">Output</div>
+                        <div class="step-desc">Generate final prediction ŷ</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="formula-section">
+            <h2 class="section-title">Mathematical Formulation</h2>
+            <div class="formula-box">
+                Layer l computation:<br>
+                z[l] = W[l] · a[l-1] + b[l]<br>
+                a[l] = g[l](z[l])<br><br>
+                Where:<br>
+                W[l] = weight matrix for layer l<br>
+                b[l] = bias vector for layer l<br>
+                g[l] = activation function for layer l<br>
+                a[0] = x (input features)
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week8_Slide145.html" class="nav-btn">← Previous</a>
+        <a href="Week8_Slide147.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Draw neural network
+        function drawNeuralNetwork() {
+            const canvas = document.getElementById('forwardPropCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            // Network structure
+            const layers = [3, 4, 4, 2]; // Input, Hidden1, Hidden2, Output
+            const layerPositions = [];
+            
+            // Calculate positions
+            layers.forEach((nodeCount, layerIndex) => {
+                const x = (layerIndex + 1) * width / (layers.length + 1);
+                const layerNodes = [];
+                
+                for (let i = 0; i < nodeCount; i++) {
+                    const y = (i + 1) * height / (nodeCount + 1);
+                    layerNodes.push({x, y});
+                }
+                layerPositions.push(layerNodes);
+            });
+            
+            // Draw connections
+            ctx.strokeStyle = 'rgba(13, 148, 136, 0.3)';
+            ctx.lineWidth = 1;
+            
+            for (let l = 0; l < layerPositions.length - 1; l++) {
+                const currentLayer = layerPositions[l];
+                const nextLayer = layerPositions[l + 1];
+                
+                currentLayer.forEach(node1 => {
+                    nextLayer.forEach(node2 => {
+                        ctx.beginPath();
+                        ctx.moveTo(node1.x, node1.y);
+                        ctx.lineTo(node2.x, node2.y);
+                        ctx.stroke();
+                    });
+                });
+            }
+            
+            // Draw nodes
+            layerPositions.forEach((layer, layerIndex) => {
+                layer.forEach(node => {
+                    ctx.fillStyle = layerIndex === 0 ? '#0d9488' : 
+                                   layerIndex === layers.length - 1 ? '#14b8a6' : '#5eead4';
+                    ctx.beginPath();
+                    ctx.arc(node.x, node.y, 15, 0, 2 * Math.PI);
+                    ctx.fill();
+                    
+                    ctx.strokeStyle = '#0d9488';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                });
+            });
+            
+            // Add layer labels
+            ctx.fillStyle = '#0d9488';
+            ctx.font = 'bold 14px Segoe UI';
+            ctx.textAlign = 'center';
+            
+            const labels = ['Input', 'Hidden 1', 'Hidden 2', 'Output'];
+            layers.forEach((_, index) => {
+                const x = (index + 1) * width / (layers.length + 1);
+                ctx.fillText(labels[index], x, height - 10);
+            });
+        }
+
+        // Initialize network drawing
+        drawNeuralNetwork();
+
+        // Add click handler for network canvas
+        document.getElementById('networkCanvas').addEventListener('click', function() {
+            modal.show('Neural Network Signal Flow', `
+                <div class="modal-highlight">
+                    <strong>How Forward Propagation Works</strong>
+                </div>
+                
+                <h4>Layer-by-Layer Computation:</h4>
+                <div class="modal-code">
+# Example: 3-layer network forward pass
+def forward_propagation(X, parameters):
+    # Layer 1
+    Z1 = np.dot(parameters['W1'], X) + parameters['b1']
+    A1 = relu(Z1)
+    
+    # Layer 2
+    Z2 = np.dot(parameters['W2'], A1) + parameters['b2']
+    A2 = relu(Z2)
+    
+    # Output layer
+    Z3 = np.dot(parameters['W3'], A2) + parameters['b3']
+    A3 = sigmoid(Z3)  # For binary classification
+    
+    cache = {'Z1': Z1, 'A1': A1, 'Z2': Z2, 'A2': A2, 'Z3': Z3, 'A3': A3}
+    return A3, cache
+                </div>
+                
+                <h4>Key Concepts:</h4>
+                <ul style="line-height: 1.8;">
+                    <li><strong>Linear Transformation:</strong> z = Wx + b combines inputs</li>
+                    <li><strong>Non-linearity:</strong> Activation functions add complexity</li>
+                    <li><strong>Composition:</strong> Deep networks learn hierarchical features</li>
+                    <li><strong>Cache Storage:</strong> Save intermediate values for backprop</li>
+                </ul>
+                
+                <h4>Matrix Dimensions:</h4>
+                <div style="background: rgba(13, 148, 136, 0.1); padding: 15px; border-radius: 10px; margin-top: 15px;">
+                    • Input X: (n₀, m) where n₀ = features, m = samples<br>
+                    • Weight W[l]: (n[l], n[l-1])<br>
+                    • Bias b[l]: (n[l], 1)<br>
+                    • Output A[l]: (n[l], m)
+                </div>
+            `);
+        });
+
+        // Add click handlers for step items
+        document.querySelectorAll('.step-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const step = this.dataset.step;
+                
+                const stepDetails = {
+                    '1': {
+                        title: 'Input Layer Processing',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Receiving and Normalizing Input Data</strong>
+                            </div>
+                            
+                            <h4>Input Preparation:</h4>
+                            <ul>
+                                <li>Features are organized into vector x = [x₁, x₂, ..., xₙ]</li>
+                                <li>Often normalized to [0,1] or standardized to mean=0, std=1</li>
+                                <li>Batch processing: X matrix contains multiple samples</li>
+                            </ul>
+                            
+                            <div class="modal-code">
+# Input normalization example
+def normalize_inputs(X):
+    # Standardization
+    mean = np.mean(X, axis=0)
+    std = np.std(X, axis=0)
+    X_normalized = (X - mean) / (std + 1e-8)
+    
+    # Alternative: Min-Max scaling
+    # X_normalized = (X - X.min()) / (X.max() - X.min())
+    
+    return X_normalized
+                            </div>
+                            
+                            <strong>Why normalize?</strong>
+                            <ul>
+                                <li>Faster convergence during training</li>
+                                <li>Prevents numerical instabilities</li>
+                                <li>Ensures all features contribute equally</li>
+                            </ul>
+                        `
+                    },
+                    '2': {
+                        title: 'Weighted Sum Calculation',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Linear Combination of Inputs</strong>
+                            </div>
+                            
+                            <h4>Mathematical Operation:</h4>
+                            <p>For each neuron j in layer l:</p>
+                            <div style="background: #1e293b; color: #5eead4; padding: 15px; border-radius: 10px; margin: 15px 0;">
+                                z[l]ⱼ = Σᵢ(w[l]ⱼᵢ × a[l-1]ᵢ) + b[l]ⱼ
+                            </div>
+                            
+                            <h4>Matrix Form (Vectorized):</h4>
+                            <div class="modal-code">
+# Efficient computation using matrix multiplication
+def weighted_sum(W, A_prev, b):
+    """
+    W: weight matrix (n_current, n_previous)
+    A_prev: activations from previous layer (n_previous, m)
+    b: bias vector (n_current, 1)
+    """
+    Z = np.dot(W, A_prev) + b
+    return Z
+
+# Example with dimensions
+# W: (4, 3) - 4 neurons, 3 inputs each
+# A_prev: (3, 100) - 3 features, 100 samples
+# b: (4, 1) - 4 biases
+# Z: (4, 100) - 4 neurons, 100 samples
+                            </div>
+                            
+                            <strong>Computational Efficiency:</strong>
+                            <p>Matrix multiplication is highly optimized in libraries like NumPy, making it much faster than loops.</p>
+                        `
+                    },
+                    '3': {
+                        title: 'Activation Function Application',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Adding Non-linearity to the Network</strong>
+                            </div>
+                            
+                            <h4>Why Activation Functions?</h4>
+                            <p>Without activation functions, even deep networks would only learn linear transformations!</p>
+                            
+                            <div class="modal-code">
+# Common activation functions in forward prop
+def apply_activation(Z, activation_type):
+    if activation_type == 'relu':
+        A = np.maximum(0, Z)
+    elif activation_type == 'sigmoid':
+        A = 1 / (1 + np.exp(-Z))
+    elif activation_type == 'tanh':
+        A = np.tanh(Z)
+    elif activation_type == 'softmax':
+        exp_Z = np.exp(Z - np.max(Z, axis=0))  # Stability
+        A = exp_Z / np.sum(exp_Z, axis=0)
+    return A
+                            </div>
+                            
+                            <h4>Choosing Activation Functions:</h4>
+                            <ul>
+                                <li><strong>Hidden layers:</strong> ReLU (fast, no vanishing gradient)</li>
+                                <li><strong>Output (binary):</strong> Sigmoid (probability interpretation)</li>
+                                <li><strong>Output (multi-class):</strong> Softmax (probability distribution)</li>
+                                <li><strong>Output (regression):</strong> Linear (no activation)</li>
+                            </ul>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.1); padding: 15px; border-radius: 10px; margin-top: 15px;">
+                                <strong>Pro tip:</strong> Different layers can use different activation functions based on their role in the network.
+                            </div>
+                        `
+                    },
+                    '4': {
+                        title: 'Layer-to-Layer Propagation',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Passing Information Through the Network</strong>
+                            </div>
+                            
+                            <h4>Information Flow:</h4>
+                            <p>Each layer's output becomes the next layer's input:</p>
+                            
+                            <div class="modal-code">
+# Complete forward propagation through multiple layers
+def forward_propagation_deep(X, parameters, architecture):
+    """
+    X: input data
+    parameters: dictionary with W1, b1, W2, b2, ...
+    architecture: list of (size, activation) tuples
+    """
+    caches = []
+    A = X
+    L = len(architecture) - 1  # number of layers
+    
+    # Forward prop through L-1 layers
+    for l in range(1, L):
+        A_prev = A
+        W = parameters[f'W{l}']
+        b = parameters[f'b{l}']
+        
+        # Linear forward
+        Z = np.dot(W, A_prev) + b
+        
+        # Activation forward
+        activation = architecture[l][1]
+        A = apply_activation(Z, activation)
+        
+        # Store for backprop
+        cache = (A_prev, W, b, Z)
+        caches.append(cache)
+    
+    # Output layer (might use different activation)
+    W = parameters[f'W{L}']
+    b = parameters[f'b{L}']
+    Z = np.dot(W, A) + b
+    Y_hat = apply_activation(Z, architecture[L][1])
+    
+    cache = (A, W, b, Z)
+    caches.append(cache)
+    
+    return Y_hat, caches
+                            </div>
+                            
+                            <h4>Feature Hierarchy:</h4>
+                            <ul>
+                                <li><strong>Early layers:</strong> Learn simple features (edges, colors)</li>
+                                <li><strong>Middle layers:</strong> Combine simple features (shapes, textures)</li>
+                                <li><strong>Deep layers:</strong> Learn complex abstractions (objects, concepts)</li>
+                            </ul>
+                        `
+                    },
+                    '5': {
+                        title: 'Output Generation',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Producing Final Predictions</strong>
+                            </div>
+                            
+                            <h4>Output Layer Processing:</h4>
+                            <p>The output layer configuration depends on your task:</p>
+                            
+                            <div class="modal-code">
+# Different output configurations
+def output_layer(Z_final, task_type):
+    if task_type == 'binary_classification':
+        # Single neuron with sigmoid
+        Y_hat = 1 / (1 + np.exp(-Z_final))
+        prediction = (Y_hat > 0.5).astype(int)
+        
+    elif task_type == 'multiclass_classification':
+        # Softmax for probability distribution
+        exp_Z = np.exp(Z_final - np.max(Z_final, axis=0))
+        Y_hat = exp_Z / np.sum(exp_Z, axis=0)
+        prediction = np.argmax(Y_hat, axis=0)
+        
+    elif task_type == 'regression':
+        # Linear output (no activation)
+        Y_hat = Z_final
+        prediction = Y_hat
+        
+    elif task_type == 'multilabel_classification':
+        # Sigmoid for each class independently
+        Y_hat = 1 / (1 + np.exp(-Z_final))
+        prediction = (Y_hat > 0.5).astype(int)
+    
+    return Y_hat, prediction
+
+# Example: Binary classification
+# Z_final shape: (1, m) for m samples
+# Y_hat shape: (1, m) - probabilities
+# prediction shape: (1, m) - 0 or 1
+                            </div>
+                            
+                            <h4>Interpreting Outputs:</h4>
+                            <ul>
+                                <li><strong>Classification:</strong> Probabilities for each class</li>
+                                <li><strong>Regression:</strong> Continuous values</li>
+                                <li><strong>Confidence:</strong> Probability indicates model certainty</li>
+                            </ul>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.1); padding: 15px; border-radius: 10px; margin-top: 15px;">
+                                <strong>Remember:</strong> The output is only as good as the features learned in hidden layers!
+                            </div>
+                        `
+                    }
+                };
+                
+                const detail = stepDetails[step];
+                if (detail) {
+                    modal.show(detail.title, detail.content);
+                }
+            });
+        });
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (!modal.overlay.classList.contains('active')) {
+                if (e.key === 'ArrowRight') {
+                    window.location.href = 'Week8_Slide147.html';
+                } else if (e.key === 'ArrowLeft') {
+                    window.location.href = 'Week8_Slide145.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

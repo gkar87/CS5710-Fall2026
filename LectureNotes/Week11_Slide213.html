@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - SARSA Algorithm</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .sarsa-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .comparison-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .key-concept {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .formula-box {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 25px;
+            border-radius: 15px;
+            font-family: 'Courier New', monospace;
+            margin: 20px 0;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+            font-size: 1.3em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .formula-box:hover {
+            transform: scale(1.02);
+            box-shadow: 0 15px 35px rgba(13, 148, 136, 0.3);
+        }
+
+        .acronym-breakdown {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .acronym-letter {
+            display: inline-block;
+            font-size: 2em;
+            font-weight: 700;
+            color: #0d9488;
+            margin-right: 15px;
+            padding: 10px;
+            background: linear-gradient(135deg, #ccfbf1, #99f6e4);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .acronym-letter:hover {
+            transform: scale(1.1);
+            box-shadow: 0 5px 15px rgba(13, 148, 136, 0.3);
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .comparison-table th {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .comparison-table td {
+            padding: 15px;
+            border-bottom: 1px solid rgba(13, 148, 136, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .comparison-table tr:hover td {
+            background: rgba(13, 148, 136, 0.05);
+        }
+
+        .algorithm-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .pseudocode-box {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 30px;
+            border-radius: 15px;
+            font-family: 'Courier New', monospace;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            font-size: 0.95em;
+            line-height: 1.8;
+        }
+
+        .code-comment {
+            color: #94a3b8;
+            font-style: italic;
+        }
+
+        .code-highlight {
+            background: rgba(251, 191, 36, 0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #fbbf24;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: float 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 11</div>
+    <div class="slide-number">Slide 213 of 220</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">SARSA Algorithm</h1>
+        
+        <div class="content-layout">
+            <div class="sarsa-section">
+                <h2 class="section-title">What is SARSA?</h2>
+                
+                <div class="key-concept">
+                    <strong>SARSA</strong> (State-Action-Reward-State-Action) is an on-policy TD control algorithm that learns Q-values for the policy being followed.
+                </div>
+                
+                <div class="acronym-breakdown">
+                    <span class="acronym-letter" onclick="showAcronym('S1')">S</span>
+                    <span class="acronym-letter" onclick="showAcronym('A1')">A</span>
+                    <span class="acronym-letter" onclick="showAcronym('R')">R</span>
+                    <span class="acronym-letter" onclick="showAcronym('S2')">S</span>
+                    <span class="acronym-letter" onclick="showAcronym('A2')">A</span>
+                </div>
+
+                <div class="formula-box" onclick="showSARSAFormula()">
+                    Q(s,a) ← Q(s,a) + α[r + γQ(s',a') - Q(s,a)]
+                </div>
+
+                <div style="margin-top: 20px; padding: 20px; background: rgba(13, 148, 136, 0.05); border-radius: 10px;">
+                    <strong>On-Policy Learning:</strong><br>
+                    • Learns about policy being followed<br>
+                    • More conservative than Q-Learning<br>
+                    • Takes exploration into account
+                </div>
+            </div>
+
+            <div class="comparison-section">
+                <h2 class="section-title">SARSA vs Q-Learning</h2>
+                
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Aspect</th>
+                            <th>SARSA</th>
+                            <th>Q-Learning</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr onclick="showComparisonDetail('policy')">
+                            <td>Policy Type</td>
+                            <td>On-Policy</td>
+                            <td>Off-Policy</td>
+                        </tr>
+                        <tr onclick="showComparisonDetail('update')">
+                            <td>Update Rule</td>
+                            <td>Q(s',a')</td>
+                            <td>max Q(s',a)</td>
+                        </tr>
+                        <tr onclick="showComparisonDetail('behavior')">
+                            <td>Behavior</td>
+                            <td>Conservative</td>
+                            <td>Optimistic</td>
+                        </tr>
+                        <tr onclick="showComparisonDetail('exploration')">
+                            <td>Exploration</td>
+                            <td>Considers it</td>
+                            <td>Ignores it</td>
+                        </tr>
+                        <tr onclick="showComparisonDetail('cliff')">
+                            <td>Cliff Walking</td>
+                            <td>Safe path</td>
+                            <td>Optimal path</td>
+                        </tr>
+                        <tr onclick="showComparisonDetail('convergence')">
+                            <td>Convergence</td>
+                            <td>To π policy</td>
+                            <td>To π* optimal</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="algorithm-section">
+            <h2 class="section-title">SARSA Algorithm</h2>
+            <div class="pseudocode-box">
+                <strong style="color: #5eead4;">SARSA (on-policy TD control):</strong><br><br>
+                <span class="code-comment"># Initialize Q-values arbitrarily</span><br>
+                Initialize Q(s,a) for all s ∈ S, a ∈ A(s), arbitrarily<br>
+                Q(terminal, ·) = 0<br><br>
+                
+                Repeat for each episode:<br>
+                &nbsp;&nbsp;Initialize S<br>
+                &nbsp;&nbsp;<span class="code-highlight">Choose A from S using policy derived from Q (e.g., ε-greedy)</span><br>
+                &nbsp;&nbsp;Repeat for each step of episode:<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;Take action A, observe R, S'<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-highlight">Choose A' from S' using policy derived from Q (e.g., ε-greedy)</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-comment"># SARSA update (on-policy)</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-highlight">Q(S,A) ← Q(S,A) + α[R + γQ(S',A') - Q(S,A)]</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;S ← S'; A ← A'<br>
+                &nbsp;&nbsp;until S is terminal
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week11_Slide212.html" class="nav-btn">← Previous</a>
+        <a href="Week11_Slide214.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 30; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Show SARSA acronym details
+        function showAcronym(part) {
+            const parts = {
+                'S1': {
+                    title: 'S - State (Current)',
+                    content: `
+                        <div class="modal-highlight">
+                            The current state where the agent is located
+                        </div>
+                        <p>This is the starting point for the update. The agent observes its current state in the environment.</p>
+                        <div class="modal-code">
+                            Example: Robot at position (3,4) in a grid
+                            State features might include:
+                            - Position coordinates
+                            - Sensor readings
+                            - Battery level
+                        </div>
+                    `
+                },
+                'A1': {
+                    title: 'A - Action (Current)',
+                    content: `
+                        <div class="modal-highlight">
+                            The action taken from the current state
+                        </div>
+                        <p>Selected using the current policy (e.g., ε-greedy based on Q-values).</p>
+                        <div class="modal-code">
+                            Example actions:
+                            - Move North/South/East/West
+                            - Accelerate/Brake/Turn
+                            - Buy/Sell/Hold
+                            
+                            Selection: ε-greedy from Q(s,·)
+                        </div>
+                    `
+                },
+                'R': {
+                    title: 'R - Reward',
+                    content: `
+                        <div class="modal-highlight">
+                            The immediate reward received after taking the action
+                        </div>
+                        <p>This is the feedback signal that guides learning.</p>
+                        <div class="modal-code">
+                            Examples:
+                            - Game: +100 for winning, -100 for losing
+                            - Robot: -1 per step, +10 for reaching goal
+                            - Trading: Profit or loss from action
+                        </div>
+                    `
+                },
+                'S2': {
+                    title: 'S - State (Next)',
+                    content: `
+                        <div class="modal-highlight">
+                            The new state after taking the action
+                        </div>
+                        <p>Where the agent ends up after executing the action.</p>
+                        <div class="modal-code">
+                            Transition: S → A → S'
+                            
+                            The next state depends on:
+                            - Current state
+                            - Action taken
+                            - Environment dynamics (may be stochastic)
+                        </div>
+                    `
+                },
+                'A2': {
+                    title: 'A - Action (Next)',
+                    content: `
+                        <div class="modal-highlight">
+                            The next action to be taken from the new state
+                        </div>
+                        <p><strong>Key difference from Q-Learning:</strong> SARSA uses the actual next action A' that will be taken, not the maximum.</p>
+                        <div class="modal-code">
+                            SARSA: Uses Q(S',A') where A' is chosen by policy
+                            Q-Learning: Uses max Q(S',a) regardless of policy
+                            
+                            This makes SARSA "on-policy"
+                        </div>
+                    `
+                }
+            };
+            
+            const info = parts[part];
+            if (info) {
+                modal.show(info.title, info.content);
+            }
+        }
+
+        // Show SARSA formula details
+        function showSARSAFormula() {
+            modal.show('SARSA Update Rule', `
+                <div class="modal-highlight">
+                    <strong>Q(s,a) ← Q(s,a) + α[r + γQ(s',a') - Q(s,a)]</strong>
+                </div>
+                <h4>Key Difference from Q-Learning:</h4>
+                <div class="modal-code">
+                    SARSA:     Q(s,a) ← Q(s,a) + α[r + γQ(s',a') - Q(s,a)]
+                               Uses actual next action a'
+                    
+                    Q-Learning: Q(s,a) ← Q(s,a) + α[r + γ max Q(s',a) - Q(s,a)]
+                                Uses best possible action
+                </div>
+                <h4>Why This Matters:</h4>
+                <ul>
+                    <li><strong>SARSA learns about the policy being followed</strong> - including its exploration</li>
+                    <li><strong>Q-Learning learns about the optimal policy</strong> - assuming perfect greedy behavior</li>
+                </ul>
+                <h4>Example Scenario:</h4>
+                <p>Near a cliff edge with ε=0.1 exploration:</p>
+                <ul>
+                    <li>SARSA: Learns to stay away (accounts for 10% random dangerous moves)</li>
+                    <li>Q-Learning: Learns edge is fine (assumes 100% optimal moves)</li>
+                </ul>
+            `);
+        }
+
+        // Show comparison details
+        function showComparisonDetail(aspect) {
+            const comparisons = {
+                'policy': {
+                    title: 'On-Policy vs Off-Policy',
+                    content: `
+                        <h4>SARSA (On-Policy):</h4>
+                        <p>Learns about and improves the policy being followed.</p>
+                        <div class="modal-code">
+                            Behavior policy = Target policy
+                            Both use ε-greedy
+                            Learns Q^π (value of current policy)
+                        </div>
+                        
+                        <h4>Q-Learning (Off-Policy):</h4>
+                        <p>Learns optimal policy while following exploratory policy.</p>
+                        <div class="modal-code">
+                            Behavior policy: ε-greedy (explores)
+                            Target policy: greedy (optimal)
+                            Learns Q* (optimal values)
+                        </div>
+                    `
+                },
+                'update': {
+                    title: 'Update Rule Difference',
+                    content: `
+                        <div class="modal-highlight">
+                            The key difference is in the TD target
+                        </div>
+                        <h4>SARSA TD Target:</h4>
+                        <div class="modal-code">
+                            r + γQ(s',a')
+                            where a' is the actual next action
+                        </div>
+                        
+                        <h4>Q-Learning TD Target:</h4>
+                        <div class="modal-code">
+                            r + γ max Q(s',a)
+                                  a
+                            always uses the maximum Q-value
+                        </div>
+                        <p>This makes SARSA more conservative as it considers the actual (possibly suboptimal) actions that will be taken.</p>
+                    `
+                },
+                'behavior': {
+                    title: 'Conservative vs Optimistic',
+                    content: `
+                        <h4>SARSA - Conservative:</h4>
+                        <p>Takes into account the risk of exploration.</p>
+                        <div class="modal-highlight">
+                            "What's the value if I continue with my current exploration strategy?"
+                        </div>
+                        <ul>
+                            <li>Avoids risky areas when exploring</li>
+                            <li>Safer but potentially slower to find optimal path</li>
+                        </ul>
+                        
+                        <h4>Q-Learning - Optimistic:</h4>
+                        <p>Assumes optimal behavior in the future.</p>
+                        <div class="modal-highlight">
+                            "What's the value if I always act optimally from now on?"
+                        </div>
+                        <ul>
+                            <li>May take risks during exploration</li>
+                            <li>Faster to find optimal path but may incur penalties</li>
+                        </ul>
+                    `
+                },
+                'exploration': {
+                    title: 'How Exploration Affects Learning',
+                    content: `
+                        <h4>SARSA:</h4>
+                        <p>Exploration is part of what it learns about.</p>
+                        <div class="modal-code">
+                            If ε = 0.1:
+                            - 10% random actions are factored into values
+                            - Q-values reflect exploration risk
+                            - Learns safer policies near dangers
+                        </div>
+                        
+                        <h4>Q-Learning:</h4>
+                        <p>Exploration is just for gathering data.</p>
+                        <div class="modal-code">
+                            If ε = 0.1:
+                            - 10% random actions for exploration
+                            - But Q-values assume 100% optimal actions
+                            - Learns true optimal values
+                        </div>
+                    `
+                },
+                'cliff': {
+                    title: 'Classic Cliff Walking Example',
+                    content: `
+                        <div class="modal-highlight">
+                            Grid world with cliff edge and two possible paths
+                        </div>
+                        <div class="modal-code">
+                            S...........G
+                            ############  ← Cliff (reward = -100)
+                            ............  ← Safe path
+                        </div>
+                        
+                        <h4>SARSA Result:</h4>
+                        <p>Takes the longer, safer path away from cliff</p>
+                        <ul>
+                            <li>Accounts for ε-greedy exploration</li>
+                            <li>Avoids risk of falling off cliff</li>
+                            <li>Total reward: Lower but consistent</li>
+                        </ul>
+                        
+                        <h4>Q-Learning Result:</h4>
+                        <p>Learns optimal path along cliff edge</p>
+                        <ul>
+                            <li>Ignores exploration in value estimates</li>
+                            <li>During training: may fall off cliff</li>
+                            <li>Final policy: Optimal but learned with risk</li>
+                        </ul>
+                    `
+                },
+                'convergence': {
+                    title: 'Convergence Properties',
+                    content: `
+                        <h4>SARSA Convergence:</h4>
+                        <div class="modal-highlight">
+                            Converges to Q^π - values of the policy being followed
+                        </div>
+                        <ul>
+                            <li>If policy is ε-greedy, converges to Q^ε-greedy</li>
+                            <li>Need decaying ε for optimal convergence</li>
+                            <li>GLIE: Greedy in the Limit with Infinite Exploration</li>
+                        </ul>
+                        
+                        <h4>Q-Learning Convergence:</h4>
+                        <div class="modal-highlight">
+                            Converges to Q* - optimal action values
+                        </div>
+                        <ul>
+                            <li>Converges regardless of behavior policy</li>
+                            <li>Only needs all (s,a) pairs visited infinitely</li>
+                            <li>Stronger convergence guarantees</li>
+                        </ul>
+                    `
+                }
+            };
+            
+            const data = comparisons[aspect];
+            if (data) {
+                modal.show(data.title, data.content);
+            }
+        }
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (!modal.overlay.classList.contains('active')) {
+                if (e.key === 'ArrowRight' || e.key === ' ') {
+                    window.location.href = 'Week11_Slide214.html';
+                } else if (e.key === 'ArrowLeft') {
+                    window.location.href = 'Week11_Slide212.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

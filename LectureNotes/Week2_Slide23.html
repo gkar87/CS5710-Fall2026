@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Cost Function (MSE)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .formula-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .intuition-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .cost-formula-box {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+            text-align: center;
+        }
+
+        .main-formula {
+            font-size: 1.6em;
+            color: #0d9488;
+            font-weight: 600;
+            margin: 20px 0;
+            letter-spacing: 1px;
+        }
+
+        .formula-explanation {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 10px;
+        }
+
+        .component-list {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .component-item {
+            padding: 15px;
+            margin: 10px 0;
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 12px;
+            border-left: 3px solid #14b8a6;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .component-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(13, 148, 136, 0.2);
+        }
+
+        .visualization-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .error-visualization {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .graph-container {
+            position: relative;
+            height: 300px;
+            background: #1e293b;
+            border-radius: 15px;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .error-line {
+            stroke: #ef4444;
+            stroke-width: 2;
+            stroke-dasharray: 5,5;
+            opacity: 0.7;
+        }
+
+        .data-point {
+            fill: #14b8a6;
+            stroke: #0d9488;
+            stroke-width: 2;
+            cursor: pointer;
+        }
+
+        .regression-line {
+            stroke: #f59e0b;
+            stroke-width: 3;
+            fill: none;
+        }
+
+        .axis {
+            stroke: #5eead4;
+            stroke-width: 2;
+        }
+
+        .axis-label {
+            fill: #5eead4;
+            font-size: 12px;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .error-visualization { grid-template-columns: 1fr; }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    
+    <div class="course-info">CS5710 - Week 2</div>
+    <div class="slide-number">Slide 23 of 40</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Cost Function (MSE)</h1>
+        
+        <div class="content-layout">
+            <div class="formula-section">
+                <h2 class="section-title">Mean Squared Error</h2>
+                
+                <div class="cost-formula-box">
+                    <div style="font-size: 1.1em; margin-bottom: 10px;">Cost Function J(θ₀, θ₁):</div>
+                    <div class="main-formula">
+                        J(θ₀, θ₁) = <sup>1</sup>⁄<sub>2m</sub> Σ(h(x⁽ⁱ⁾) - y⁽ⁱ⁾)²
+                    </div>
+                    <div style="font-size: 0.9em; color: #475569; margin-top: 10px;">
+                        Measures average squared difference between predictions and actual values
+                    </div>
+                </div>
+                
+                <div class="formula-explanation">
+                    <strong>Where:</strong><br>
+                    • m = number of training examples<br>
+                    • h(x⁽ⁱ⁾) = predicted value for example i<br>
+                    • y⁽ⁱ⁾ = actual value for example i<br>
+                    • <sup>1</sup>⁄<sub>2</sub> factor makes math cleaner later
+                </div>
+            </div>
+
+            <div class="intuition-section">
+                <h2 class="section-title">Why Square the Error?</h2>
+                
+                <ul class="component-list">
+                    <li class="component-item">
+                        <strong>🎯 Penalizes Large Errors</strong><br>
+                        Squaring amplifies larger errors more than small ones
+                    </li>
+                    <li class="component-item">
+                        <strong>➕ Always Positive</strong><br>
+                        Prevents positive and negative errors from canceling out
+                    </li>
+                    <li class="component-item">
+                        <strong>📈 Differentiable</strong><br>
+                        Smooth function makes optimization easier
+                    </li>
+                    <li class="component-item">
+                        <strong>🔧 Convex Function</strong><br>
+                        Has a single global minimum (no local minima)
+                    </li>
+                </ul>
+                
+                <div style="background: #1e293b; color: #5eead4; padding: 20px; border-radius: 10px; margin-top: 20px;">
+                    <strong>Goal:</strong> Find θ₀ and θ₁ that minimize J(θ₀, θ₁)<br><br>
+                    min J(θ₀, θ₁)<br>
+                    θ₀,θ₁
+                </div>
+            </div>
+        </div>
+
+        <div class="visualization-section">
+            <h2 class="section-title">Visualizing the Error</h2>
+            
+            <div class="error-visualization">
+                <div class="graph-container">
+                    <svg viewBox="0 0 400 280" style="width: 100%; height: 100%;">
+                        <!-- Title -->
+                        <text x="200" y="20" class="axis-label" text-anchor="middle" font-size="14">Individual Errors</text>
+                        
+                        <!-- Axes -->
+                        <line x1="40" y1="240" x2="360" y2="240" class="axis"/>
+                        <line x1="40" y1="240" x2="40" y2="40" class="axis"/>
+                        
+                        <!-- Regression line -->
+                        <line x1="60" y1="200" x2="340" y2="80" class="regression-line"/>
+                        
+                        <!-- Data points with error lines -->
+                        <line x1="100" y1="180" x2="100" y2="138" class="error-line"/>
+                        <circle cx="100" cy="180" r="5" class="data-point"/>
+                        
+                        <line x1="150" y1="150" x2="150" y2="118" class="error-line"/>
+                        <circle cx="150" cy="150" r="5" class="data-point"/>
+                        
+                        <line x1="200" y1="130" x2="200" y2="138" class="error-line"/>
+                        <circle cx="200" cy="130" r="5" class="data-point"/>
+                        
+                        <line x1="250" y1="110" x2="250" y2="118" class="error-line"/>
+                        <circle cx="250" cy="110" r="5" class="data-point"/>
+                        
+                        <line x1="300" y1="85" x2="300" y2="98" class="error-line"/>
+                        <circle cx="300" cy="85" r="5" class="data-point"/>
+                        
+                        <!-- Labels -->
+                        <text x="105" y="165" class="axis-label" font-size="10">e₁</text>
+                        <text x="155" y="135" class="axis-label" font-size="10">e₂</text>
+                        <text x="205" y="125" class="axis-label" font-size="10">e₃</text>
+                        <text x="255" y="105" class="axis-label" font-size="10">e₄</text>
+                        <text x="305" y="80" class="axis-label" font-size="10">e₅</text>
+                    </svg>
+                </div>
+                
+                <div style="background: linear-gradient(135deg, #f0fdfa, #ccfbf1); border-radius: 15px; padding: 25px;">
+                    <h3 style="color: #0d9488; margin-bottom: 15px;">Understanding MSE</h3>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <strong>Step 1:</strong> Calculate error for each point<br>
+                        error⁽ⁱ⁾ = h(x⁽ⁱ⁾) - y⁽ⁱ⁾
+                    </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <strong>Step 2:</strong> Square each error<br>
+                        (error⁽ⁱ⁾)²
+                    </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <strong>Step 3:</strong> Average all squared errors<br>
+                        <sup>1</sup>⁄<sub>m</sub> Σ(error⁽ⁱ⁾)²
+                    </div>
+                    
+                    <div style="background: rgba(13, 148, 136, 0.1); padding: 15px; border-radius: 10px; margin-top: 20px;">
+                        <strong>Example with 5 points:</strong><br>
+                        Errors: [2, -3, 1, -2, 4]<br>
+                        Squared: [4, 9, 1, 4, 16]<br>
+                        MSE = (4+9+1+4+16)/5 = 6.8
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week2_Slide22.html" class="nav-btn">← Previous</a>
+        <a href="Week2_Slide24.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive component items
+        document.querySelectorAll('.component-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const title = this.querySelector('strong').textContent;
+                
+                const details = {
+                    '🎯 Penalizes Large Errors': {
+                        title: 'Why Penalize Large Errors?',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Quadratic penalty makes the model focus on reducing big mistakes</strong>
+                            </div>
+                            <p>Consider two scenarios:</p>
+                            <div style="background: #1e293b; color: #5eead4; padding: 15px; border-radius: 10px; margin: 15px 0;">
+                                <strong>Scenario A:</strong> 5 errors of 1 unit each<br>
+                                Total squared error = 1² + 1² + 1² + 1² + 1² = 5<br><br>
+                                <strong>Scenario B:</strong> 1 error of 5 units, 4 perfect predictions<br>
+                                Total squared error = 5² + 0² + 0² + 0² + 0² = 25
+                            </div>
+                            <p>The model strongly prefers many small errors over a few large ones!</p>
+                        `
+                    },
+                    '➕ Always Positive': {
+                        title: 'Importance of Positive Values',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Squaring ensures all errors contribute to increasing the cost</strong>
+                            </div>
+                            <p>Without squaring:</p>
+                            <div style="background: #1e293b; color: #5eead4; padding: 15px; border-radius: 10px; margin: 15px 0;">
+                                Prediction 1: Overestimate by 10 → Error = +10<br>
+                                Prediction 2: Underestimate by 10 → Error = -10<br>
+                                Simple sum: 10 + (-10) = 0 ❌<br><br>
+                                With squaring: 10² + (-10)² = 200 ✓
+                            </div>
+                            <p>This prevents the model from thinking it's perfect when it's actually making large errors in both directions!</p>
+                        `
+                    },
+                    '📈 Differentiable': {
+                        title: 'Smooth Optimization',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>The squared function has a well-defined derivative everywhere</strong>
+                            </div>
+                            <p>The derivative of MSE with respect to parameters:</p>
+                            <div style="background: #1e293b; color: #5eead4; padding: 15px; border-radius: 10px; margin: 15px 0;">
+                                ∂J/∂θ₁ = (1/m) Σ(h(x⁽ⁱ⁾) - y⁽ⁱ⁾) · x⁽ⁱ⁾<br>
+                                ∂J/∂θ₀ = (1/m) Σ(h(x⁽ⁱ⁾) - y⁽ⁱ⁾)
+                            </div>
+                            <p>These smooth gradients allow gradient descent to find the optimal parameters efficiently!</p>
+                        `
+                    },
+                    '🔧 Convex Function': {
+                        title: 'Global Minimum Guarantee',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>MSE creates a bowl-shaped error surface with one global minimum</strong>
+                            </div>
+                            <p>Properties of convex functions:</p>
+                            <ul style="margin: 15px 0;">
+                                <li>• Any local minimum is also the global minimum</li>
+                                <li>• Gradient descent will always converge to the best solution</li>
+                                <li>• No risk of getting stuck in suboptimal local minima</li>
+                            </ul>
+                            <div style="background: rgba(13, 148, 136, 0.1); padding: 15px; border-radius: 10px;">
+                                This is why MSE is preferred for linear regression - we're guaranteed to find the best possible line!
+                            </div>
+                        `
+                    }
+                };
+                
+                const key = Object.keys(details).find(k => title.includes(k.substring(0, 10)));
+                if (key && details[key]) {
+                    modal.show(details[key].title, details[key].content);
+                }
+            });
+        });
+
+        // Interactive data points
+        document.querySelectorAll('.data-point').forEach(point => {
+            point.addEventListener('click', function() {
+                modal.show('Error Calculation', `
+                    <div class="modal-highlight">
+                        <strong>How we calculate the error for this point</strong>
+                    </div>
+                    <p>For each training example:</p>
+                    <ol style="margin: 15px 0; line-height: 1.8;">
+                        <li>1. Use current θ₀ and θ₁ to predict: h(x) = θ₀ + θ₁x</li>
+                        <li>2. Calculate error: e = h(x) - y (predicted - actual)</li>
+                        <li>3. Square the error: e²</li>
+                        <li>4. This squared error contributes to the total cost</li>
+                    </ol>
+                    <div style="background: rgba(13, 148, 136, 0.1); padding: 15px; border-radius: 10px;">
+                        The red dashed line shows this error visually. Our goal is to find parameters that minimize the sum of all these squared errors.
+                    </div>
+                `);
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (!modal.overlay.classList.contains('active')) {
+                if (e.key === 'ArrowLeft') {
+                    window.location.href = 'Week2_Slide22.html';
+                } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                    window.location.href = 'Week2_Slide24.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

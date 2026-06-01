@@ -1,0 +1,2469 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Adversarial Attacks</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .attacks-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .defenses-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .attack-card {
+            padding: 20px;
+            margin: 15px 0;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .attack-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .attack-name {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .attack-desc {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .defense-card {
+            padding: 20px;
+            margin: 15px 0;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .defense-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .defense-name {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .defense-desc {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .visualization-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 25px;
+        }
+
+        .demo-card {
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border: 2px solid #14b8a6;
+        }
+
+        .demo-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .demo-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+
+        .demo-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #0d9488;
+        }
+
+        .demo-desc {
+            font-size: 0.85em;
+            color: #475569;
+            line-height: 1.4;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .demo-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    
+    <div class="course-info">CS5710 - Week 14</div>
+    <div class="slide-number">Slide 267 of 280</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Adversarial Attacks</h1>
+        
+        <div class="content-layout">
+            <div class="attacks-section">
+                <h2 class="section-title">Attack Methods</h2>
+                
+                <div class="attack-card" onclick="showAttack('fgsm')">
+                    <div class="attack-name">⚡ FGSM (Fast Gradient Sign)</div>
+                    <div class="attack-desc">Single-step attack using gradient sign</div>
+                </div>
+                
+                <div class="attack-card" onclick="showAttack('pgd')">
+                    <div class="attack-name">🔄 PGD (Projected Gradient Descent)</div>
+                    <div class="attack-desc">Iterative attack with projection</div>
+                </div>
+                
+                <div class="attack-card" onclick="showAttack('cw')">
+                    <div class="attack-name">🎯 C&W (Carlini & Wagner)</div>
+                    <div class="attack-desc">Optimization-based targeted attack</div>
+                </div>
+                
+                <div class="attack-card" onclick="showAttack('deepfool')">
+                    <div class="attack-name">🌀 DeepFool</div>
+                    <div class="attack-desc">Minimal perturbation for misclassification</div>
+                </div>
+                
+                <div class="attack-card" onclick="showAttack('patch')">
+                    <div class="attack-name">🎨 Adversarial Patches</div>
+                    <div class="attack-desc">Physical world attacks with patches</div>
+                </div>
+            </div>
+
+            <div class="defenses-section">
+                <h2 class="section-title">Defense Strategies</h2>
+                
+                <div class="defense-card" onclick="showDefense('training')">
+                    <div class="defense-name">🛡️ Adversarial Training</div>
+                    <div class="defense-desc">Train on adversarial examples</div>
+                </div>
+                
+                <div class="defense-card" onclick="showDefense('distillation')">
+                    <div class="defense-name">🔥 Defensive Distillation</div>
+                    <div class="defense-desc">Smooth decision boundaries</div>
+                </div>
+                
+                <div class="defense-card" onclick="showDefense('detection')">
+                    <div class="defense-name">🔍 Detection Methods</div>
+                    <div class="defense-desc">Identify adversarial inputs</div>
+                </div>
+                
+                <div class="defense-card" onclick="showDefense('certified')">
+                    <div class="defense-name">✅ Certified Defenses</div>
+                    <div class="defense-desc">Provable robustness guarantees</div>
+                </div>
+                
+                <div class="defense-card" onclick="showDefense('preprocessing')">
+                    <div class="defense-name">🔧 Input Preprocessing</div>
+                    <div class="defense-desc">Transform inputs before classification</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="visualization-section">
+            <h2 class="section-title" style="text-align: center;">Real-World Implications</h2>
+            
+            <div class="demo-grid">
+                <div class="demo-card" onclick="showDemo('autonomous')">
+                    <div class="demo-icon">🚗</div>
+                    <div class="demo-title">Autonomous Vehicles</div>
+                    <div class="demo-desc">Stop sign attacks and lane markings</div>
+                </div>
+                
+                <div class="demo-card" onclick="showDemo('face')">
+                    <div class="demo-icon">👤</div>
+                    <div class="demo-title">Face Recognition</div>
+                    <div class="demo-desc">Evading or impersonating identities</div>
+                </div>
+                
+                <div class="demo-card" onclick="showDemo('malware')">
+                    <div class="demo-icon">🦠</div>
+                    <div class="demo-title">Malware Detection</div>
+                    <div class="demo-desc">Bypassing ML-based antivirus</div>
+                </div>
+                
+                <div class="demo-card" onclick="showDemo('speech')">
+                    <div class="demo-icon">🎤</div>
+                    <div class="demo-title">Voice Assistants</div>
+                    <div class="demo-desc">Hidden commands in audio</div>
+                </div>
+                
+                <div class="demo-card" onclick="showDemo('medical')">
+                    <div class="demo-icon">🏥</div>
+                    <div class="demo-title">Medical Imaging</div>
+                    <div class="demo-desc">Manipulating diagnoses</div>
+                </div>
+                
+                <div class="demo-card" onclick="showDemo('finance')">
+                    <div class="demo-icon">💰</div>
+                    <div class="demo-title">Financial Systems</div>
+                    <div class="demo-desc">Fraud detection evasion</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week14_Slide266.html" class="nav-btn">← Previous</a>
+        <a href="Week14_Slide268.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Show attack details
+        function showAttack(attack) {
+            const attacks = {
+                'fgsm': {
+                    title: 'FGSM - Fast Gradient Sign Method',
+                    content: `
+                        <div class="modal-highlight">
+                            <strong>Concept:</strong> Generate adversarial examples in one step using the sign of the gradient.
+                        </div>
+                        <h4>How FGSM Works:</h4>
+                        <p>Perturb input in the direction that maximizes the loss with respect to the true label.</p>
+                        
+                        <h4>Mathematical Formulation:</h4>
+                        <div class="modal-code">
+x_adv = x + ε · sign(∇_x L(θ, x, y))
+
+Where:
+- x: Original input
+- ε: Perturbation magnitude (e.g., 0.01)
+- L: Loss function
+- θ: Model parameters
+- y: True label
+                        </div>
+                        
+                        <h4>Implementation:</h4>
+                        <div class="modal-code">
+import torch
+import torch.nn.functional as F
+
+def fgsm_attack(model, images, labels, epsilon=0.01):
+    """Generate FGSM adversarial examples"""
+    
+    # Set requires_grad for input
+    images.requires_grad = True
+    
+    # Forward pass
+    outputs = model(images)
+    loss = F.cross_entropy(outputs, labels)
+    
+    # Backward pass
+    model.zero_grad()
+    loss.backward()
+    
+    # Collect gradients
+    data_grad = images.grad.data
+    
+    # Create perturbation
+    sign_data_grad = data_grad.sign()
+    perturbed_images = images + epsilon * sign_data_grad
+    
+    # Clamp to valid range [0, 1]
+    perturbed_images = torch.clamp(perturbed_images, 0, 1)
+    
+    return perturbed_images
+
+# Example usage
+model.eval()
+adv_images = fgsm_attack(model, images, labels, epsilon=0.03)
+
+# Test attack success
+with torch.no_grad():
+    original_pred = model(images).argmax(dim=1)
+    adv_pred = model(adv_images).argmax(dim=1)
+    success_rate = (original_pred != adv_pred).float().mean()
+    print(f"Attack success rate: {success_rate:.2%}")
+                        </div>
+                        <p><strong>Strengths:</strong> Fast, single step, easy to implement</p>
+                        <p><strong>Weaknesses:</strong> Often not optimal, can be defended against relatively easily</p>
+                    `
+                },
+                'pgd': {
+                    title: 'PGD - Projected Gradient Descent',
+                    content: `
+                        <div class="modal-highlight">
+                            <strong>Concept:</strong> Iterative version of FGSM with projection to maintain perturbation bounds.
+                        </div>
+                        <h4>Algorithm:</h4>
+                        <ol style="margin: 15px 0;">
+                            <li>Initialize with random noise</li>
+                            <li>Take gradient step to maximize loss</li>
+                            <li>Project back to ε-ball around original input</li>
+                            <li>Repeat for k iterations</li>
+                        </ol>
+                        
+                        <h4>Implementation:</h4>
+                        <div class="modal-code">
+def pgd_attack(model, images, labels, epsilon=0.03, 
+               alpha=0.01, num_iter=40):
+    """PGD attack - strongest first-order adversary"""
+    
+    # Random initialization
+    delta = torch.zeros_like(images).uniform_(-epsilon, epsilon)
+    delta.requires_grad = True
+    
+    for i in range(num_iter):
+        # Forward pass
+        outputs = model(images + delta)
+        loss = F.cross_entropy(outputs, labels)
+        
+        # Backward pass
+        loss.backward()
+        
+        # Update perturbation
+        delta.data = delta + alpha * delta.grad.sign()
+        
+        # Project to epsilon ball
+        delta.data = torch.clamp(delta.data, -epsilon, epsilon)
+        
+        # Clamp to valid image range
+        delta.data = torch.clamp(images + delta.data, 0, 1) - images
+        
+        # Zero gradients
+        delta.grad.zero_()
+    
+    return images + delta
+
+# Targeted PGD
+def targeted_pgd(model, images, target_labels, 
+                 epsilon=0.03, alpha=0.01, num_iter=100):
+    """PGD for targeted attack"""
+    
+    delta = torch.zeros_like(images).uniform_(-epsilon, epsilon)
+    delta.requires_grad = True
+    
+    for i in range(num_iter):
+        outputs = model(images + delta)
+        # Minimize loss for target class
+        loss = -F.cross_entropy(outputs, target_labels)
+        
+        loss.backward()
+        
+        # Gradient descent (not ascent)
+        delta.data = delta - alpha * delta.grad.sign()
+        delta.data = torch.clamp(delta.data, -epsilon, epsilon)
+        delta.data = torch.clamp(images + delta.data, 0, 1) - images
+        delta.grad.zero_()
+    
+    return images + delta
+
+# Multi-targeted PGD (stronger attack)
+def mt_pgd(model, images, labels, epsilon=0.03, num_targets=9):
+    """Attack multiple random targets"""
+    batch_size = images.shape[0]
+    num_classes = 10  # e.g., CIFAR-10
+    
+    max_loss = torch.zeros(batch_size)
+    max_delta = torch.zeros_like(images)
+    
+    for _ in range(num_targets):
+        # Random target (different from true label)
+        targets = torch.randint(0, num_classes, (batch_size,))
+        targets[targets == labels] = (targets[targets == labels] + 1) % num_classes
+        
+        # Run targeted PGD
+        adv_images = targeted_pgd(model, images, targets, epsilon)
+        
+        # Keep best attack
+        with torch.no_grad():
+            outputs = model(adv_images)
+            loss = F.cross_entropy(outputs, labels, reduction='none')
+            
+            mask = loss > max_loss
+            max_loss[mask] = loss[mask]
+            max_delta[mask] = (adv_images - images)[mask]
+    
+    return images + max_delta
+                        </div>
+                        <p><strong>Properties:</strong> Considered the strongest first-order attack</p>
+                        <p><strong>Use in Training:</strong> PGD adversarial training provides good robustness</p>
+                    `
+                },
+                'cw': {
+                    title: 'C&W - Carlini & Wagner Attack',
+                    content: `
+                        <div class="modal-highlight">
+                            <strong>Innovation:</strong> Formulate adversarial example generation as an optimization problem.
+                        </div>
+                        <h4>Objective Function:</h4>
+                        <div class="modal-code">
+minimize ||δ||_p + c · f(x + δ)
+
+Where:
+- δ: Perturbation
+- p: Norm (typically 2 or ∞)
+- c: Trade-off constant
+- f: Attack objective function
+
+f(x) = max(Z(x)_true - max_{i≠true} Z(x)_i, -κ)
+- Z(x): Logits before softmax
+- κ: Confidence parameter
+                        </div>
+                        
+                        <h4>Implementation:</h4>
+                        <div class="modal-code">
+import torch.optim as optim
+
+class CWAttack:
+    def __init__(self, model, c=1e-4, kappa=0, max_iter=1000):
+        self.model = model
+        self.c = c
+        self.kappa = kappa
+        self.max_iter = max_iter
+    
+    def attack(self, images, labels):
+        """C&W L2 attack"""
+        batch_size = images.shape[0]
+        
+        # Use tanh space for box constraints
+        # x = 0.5 * (tanh(w) + 1)
+        w = torch.atanh(2 * images - 1)
+        w.requires_grad = True
+        
+        optimizer = optim.Adam([w], lr=0.01)
+        
+        for step in range(self.max_iter):
+            # Transform to image space
+            adv_images = 0.5 * (torch.tanh(w) + 1)
+            
+            # Get logits
+            outputs = self.model(adv_images)
+            
+            # Compute f(x)
+            one_hot_labels = F.one_hot(labels, outputs.shape[1])
+            real = (one_hot_labels * outputs).sum(dim=1)
+            
+            other = ((1 - one_hot_labels) * outputs - 
+                    one_hot_labels * 10000).max(dim=1)[0]
+            
+            loss1 = torch.clamp(real - other + self.kappa, min=0)
+            
+            # L2 distance
+            loss2 = ((adv_images - images) ** 2).sum(dim=(1,2,3))
+            
+            # Total loss
+            loss = loss2.sum() + self.c * loss1.sum()
+            
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+            
+            # Check success
+            if step % 100 == 0:
+                pred = outputs.argmax(dim=1)
+                success = (pred != labels).float().mean()
+                print(f"Step {step}: Success rate = {success:.2%}")
+        
+        return 0.5 * (torch.tanh(w) + 1)
+
+# Alternative: C&W L∞ attack
+def cw_linf_attack(model, images, labels, epsilon=0.03, 
+                   c=1, max_iter=1000):
+    """C&W attack with L∞ constraint"""
+    
+    delta = torch.zeros_like(images, requires_grad=True)
+    optimizer = optim.Adam([delta], lr=0.001)
+    
+    for i in range(max_iter):
+        adv_images = images + delta
+        outputs = model(adv_images)
+        
+        # CW loss
+        one_hot = F.one_hot(labels, outputs.shape[1]).float()
+        real = (one_hot * outputs).sum(dim=1)
+        other = ((1 - one_hot) * outputs).max(dim=1)[0]
+        loss = -torch.clamp(real - other, min=-50)
+        
+        # Add penalty for exceeding epsilon
+        penalty = torch.relu(delta.abs() - epsilon).sum()
+        total_loss = loss.mean() + c * penalty
+        
+        optimizer.zero_grad()
+        total_loss.backward()
+        optimizer.step()
+        
+        # Project to epsilon ball
+        delta.data = torch.clamp(delta.data, -epsilon, epsilon)
+        delta.data = torch.clamp(images + delta.data, 0, 1) - images
+    
+    return images + delta
+                        </div>
+                        <p><strong>Advantages:</strong> Often finds smaller perturbations, high success rate</p>
+                        <p><strong>Disadvantages:</strong> Computationally expensive, requires many iterations</p>
+                    `
+                },
+                'deepfool': {
+                    title: 'DeepFool Attack',
+                    content: `
+                        <div class="modal-highlight">
+                            <strong>Goal:</strong> Find minimal perturbation to cross decision boundary.
+                        </div>
+                        <h4>Algorithm Intuition:</h4>
+                        <p>Iteratively linearize the classifier and find the closest decision boundary.</p>
+                        
+                        <h4>Implementation:</h4>
+                        <div class="modal-code">
+def deepfool(model, image, num_classes=10, max_iter=50):
+    """
+    DeepFool attack for finding minimal adversarial perturbations
+    """
+    image = image.unsqueeze(0)  # Add batch dimension
+    image.requires_grad = True
+    
+    # Get initial prediction
+    output = model(image)
+    _, orig_pred = output.max(1)
+    
+    # Initialize perturbation
+    total_pert = torch.zeros_like(image)
+    
+    for iteration in range(max_iter):
+        output = model(image + total_pert)
+        _, current_pred = output.max(1)
+        
+        # Check if we've changed the prediction
+        if current_pred != orig_pred:
+            break
+        
+        # Compute gradients for all classes
+        gradients = []
+        outputs_list = []
+        
+        for k in range(num_classes):
+            model.zero_grad()
+            
+            output_k = output[0, k]
+            output_k.backward(retain_graph=True)
+            
+            grad_k = image.grad.data.clone()
+            gradients.append(grad_k)
+            outputs_list.append(output[0, k].item())
+            
+            image.grad.zero_()
+        
+        # Find minimum distance to decision boundary
+        label = orig_pred.item()
+        min_dist = float('inf')
+        min_pert = None
+        
+        for k in range(num_classes):
+            if k == label:
+                continue
+            
+            # Difference in gradients
+            w_k = gradients[k] - gradients[label]
+            
+            # Difference in outputs
+            f_k = outputs_list[k] - outputs_list[label]
+            
+            # Distance to hyperplane
+            dist_k = abs(f_k) / (torch.norm(w_k) + 1e-8)
+            
+            if dist_k < min_dist:
+                min_dist = dist_k
+                # Perturbation to reach hyperplane
+                min_pert = (abs(f_k) / (torch.norm(w_k)**2 + 1e-8)) * w_k
+        
+        # Update total perturbation
+        total_pert += min_pert
+        
+        # Project to stay in valid range
+        total_pert = torch.clamp(image + total_pert, 0, 1) - image
+    
+    return total_pert.squeeze(0)
+
+# Universal DeepFool - find universal perturbation
+def universal_deepfool(model, dataset, delta_max=0.2):
+    """
+    Find a single perturbation that fools model on many inputs
+    """
+    # Initialize universal perturbation
+    v = torch.zeros_like(dataset[0][0])
+    
+    fooling_rate = 0
+    max_iter = 10
+    
+    for iteration in range(max_iter):
+        print(f"Iteration {iteration}")
+        
+        for image, label in dataset:
+            # Check if already misclassified
+            perturbed = image + v
+            output = model(perturbed.unsqueeze(0))
+            
+            if output.argmax() == label:
+                # Not yet fooled, update perturbation
+                dr = deepfool(model, perturbed)
+                
+                # Update universal perturbation
+                v = v + dr
+                
+                # Project to norm ball
+                v = project_to_norm_ball(v, delta_max)
+        
+        # Compute fooling rate
+        fooled = 0
+        for image, label in dataset:
+            output = model((image + v).unsqueeze(0))
+            if output.argmax() != label:
+                fooled += 1
+        
+        fooling_rate = fooled / len(dataset)
+        print(f"Fooling rate: {fooling_rate:.2%}")
+        
+        if fooling_rate > 0.8:  # Stop if good enough
+            break
+    
+    return v
+
+def project_to_norm_ball(v, max_norm, p=2):
+    """Project perturbation to Lp norm ball"""
+    if p == 2:
+        norm = torch.norm(v)
+        if norm > max_norm:
+            v = v * (max_norm / norm)
+    elif p == float('inf'):
+        v = torch.clamp(v, -max_norm, max_norm)
+    return v
+                        </div>
+                        <p><strong>Key Property:</strong> Produces minimal perturbations compared to other methods</p>
+                        <p><strong>Extension:</strong> Universal DeepFool finds perturbations that work across many images</p>
+                    `
+                },
+                'patch': {
+                    title: 'Adversarial Patches',
+                    content: `
+                        <div class="modal-highlight">
+                            <strong>Physical World Attack:</strong> Create visible patches that cause misclassification when placed in scenes.
+                        </div>
+                        <h4>How Patches Work:</h4>
+                        <p>Optimize a small patch that, when placed anywhere in the image, causes targeted misclassification.</p>
+                        
+                        <h4>Implementation:</h4>
+                        <div class="modal-code">
+class AdversarialPatch:
+    def __init__(self, patch_size=50, target_class=859):  # 859='toaster' in ImageNet
+        self.patch_size = patch_size
+        self.target_class = target_class
+        # Initialize with random patch
+        self.patch = torch.rand(3, patch_size, patch_size)
+        self.patch.requires_grad = True
+    
+    def apply_patch(self, images, locations=None):
+        """Apply patch to images at specified locations"""
+        batch_size = images.shape[0]
+        patched_images = images.clone()
+        
+        if locations is None:
+            # Random locations
+            locations = []
+            for i in range(batch_size):
+                x = torch.randint(0, images.shape[2] - self.patch_size, (1,))
+                y = torch.randint(0, images.shape[3] - self.patch_size, (1,))
+                locations.append((x.item(), y.item()))
+        
+        for i, (x, y) in enumerate(locations):
+            patched_images[i, :, x:x+self.patch_size, 
+                          y:y+self.patch_size] = self.patch
+        
+        return patched_images
+    
+    def train_patch(self, model, dataloader, epochs=500):
+        """Train adversarial patch"""
+        optimizer = optim.Adam([self.patch], lr=0.01)
+        
+        for epoch in range(epochs):
+            total_loss = 0
+            success_rate = 0
+            
+            for images, labels in dataloader:
+                # Apply patch with random transformations
+                patched = self.apply_patch_with_transforms(images)
+                
+                # Forward pass
+                outputs = model(patched)
+                
+                # Loss: maximize probability of target class
+                target_labels = torch.full_like(labels, self.target_class)
+                loss = -F.cross_entropy(outputs, target_labels)
+                
+                # Update patch
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+                
+                # Clamp patch to valid range
+                self.patch.data = torch.clamp(self.patch.data, 0, 1)
+                
+                # Track metrics
+                total_loss += loss.item()
+                predictions = outputs.argmax(dim=1)
+                success_rate += (predictions == self.target_class).float().mean()
+            
+            if epoch % 10 == 0:
+                print(f"Epoch {epoch}: Loss={total_loss:.3f}, "
+                      f"Success={success_rate/len(dataloader):.2%}")
+    
+    def apply_patch_with_transforms(self, images):
+        """Apply patch with random transformations for robustness"""
+        import torchvision.transforms.functional as TF
+        
+        batch_size = images.shape[0]
+        patched_images = images.clone()
+        
+        for i in range(batch_size):
+            # Random transformations
+            patch_transformed = self.patch.clone()
+            
+            # Random rotation
+            angle = torch.randint(-30, 30, (1,)).item()
+            patch_transformed = TF.rotate(patch_transformed, angle)
+            
+            # Random scaling
+            scale = torch.rand(1).item() * 0.5 + 0.5  # 0.5x to 1x
+            new_size = int(self.patch_size * scale)
+            patch_transformed = F.interpolate(
+                patch_transformed.unsqueeze(0),
+                size=(new_size, new_size),
+                mode='bilinear'
+            ).squeeze(0)
+            
+            # Random position
+            if new_size < images.shape[2]:
+                x = torch.randint(0, images.shape[2] - new_size, (1,)).item()
+                y = torch.randint(0, images.shape[3] - new_size, (1,)).item()
+                
+                # Apply patch
+                patched_images[i, :, x:x+new_size, y:y+new_size] = patch_transformed
+        
+        return patched_images
+
+# Physical world adversarial objects
+class Adversarial3DObject:
+    """Create 3D printable adversarial objects"""
+    
+    def optimize_texture(self, model, renderer, target_class):
+        """Optimize texture for 3D object to cause misclassification"""
+        
+        # Initialize random texture
+        texture = torch.rand(1024, 1024, 3, requires_grad=True)
+        optimizer = optim.Adam([texture], lr=0.01)
+        
+        for iteration in range(1000):
+            # Render object from multiple viewpoints
+            rendered_views = []
+            for angle in range(0, 360, 30):
+                view = renderer.render(texture, angle)
+                rendered_views.append(view)
+            
+            # Stack views
+            views_batch = torch.stack(rendered_views)
+            
+            # Get predictions
+            outputs = model(views_batch)
+            
+            # Loss: fool classifier from all angles
+            target_labels = torch.full((len(rendered_views),), target_class)
+            loss = -F.cross_entropy(outputs, target_labels)
+            
+            # Add smoothness regularization for printability
+            smooth_loss = total_variation_loss(texture)
+            total_loss = loss + 0.01 * smooth_loss
+            
+            optimizer.zero_grad()
+            total_loss.backward()
+            optimizer.step()
+            
+            # Clamp to valid colors
+            texture.data = torch.clamp(texture.data, 0, 1)
+        
+        return texture
+                        </div>
+                        <p><strong>Real-World Impact:</strong> Physical stickers can fool cameras and vision systems</p>
+                        <p><strong>Defense Challenge:</strong> Hard to defend against as patches are visible and can be large</p>
+                    `
+                }
+            };
+            
+            const detail = attacks[attack];
+            if (detail) {
+                modal.show(detail.title, detail.content);
+            }
+        }
+
+        // Show defense details
+        function showDefense(defense) {
+            const defenses = {
+                'training': {
+                    title: 'Adversarial Training',
+                    content: `
+                        <div class="modal-highlight">
+                            <strong>Principle:</strong> Train model on adversarial examples to improve robustness.
+                        </div>
+                        <h4>Standard Adversarial Training:</h4>
+                        <div class="modal-code">
+def adversarial_training(model, train_loader, epochs=100, 
+                        epsilon=0.03, attack='pgd'):
+    """Train model with adversarial examples"""
+    
+    optimizer = optim.SGD(model.parameters(), lr=0.1, 
+                         momentum=0.9, weight_decay=5e-4)
+    scheduler = optim.lr_scheduler.MultiStepLR(
+        optimizer, milestones=[75, 90], gamma=0.1
+    )
+    
+    for epoch in range(epochs):
+        model.train()
+        for batch_idx, (data, target) in enumerate(train_loader):
+            # Generate adversarial examples
+            if attack == 'pgd':
+                adv_data = pgd_attack(model, data, target, 
+                                    epsilon=epsilon, num_iter=10)
+            elif attack == 'fgsm':
+                adv_data = fgsm_attack(model, data, target, 
+                                     epsilon=epsilon)
+            
+            # Train on mixture of clean and adversarial
+            combined_data = torch.cat([data, adv_data])
+            combined_target = torch.cat([target, target])
+            
+            # Shuffle
+            perm = torch.randperm(combined_data.size(0))
+            combined_data = combined_data[perm]
+            combined_target = combined_target[perm]
+            
+            # Standard training step
+            optimizer.zero_grad()
+            output = model(combined_data)
+            loss = F.cross_entropy(output, combined_target)
+            loss.backward()
+            optimizer.step()
+        
+        scheduler.step()
+        
+        # Evaluate robustness
+        if epoch % 10 == 0:
+            robust_acc = evaluate_robustness(model, test_loader, epsilon)
+            print(f"Epoch {epoch}: Robust accuracy = {robust_acc:.2%}")
+
+# TRADES: Trade-off between accuracy and robustness
+def trades_training(model, data, target, epsilon=0.03, beta=6.0):
+    """TRADES loss for better accuracy-robustness trade-off"""
+    
+    # Natural loss
+    nat_output = model(data)
+    nat_loss = F.cross_entropy(nat_output, target)
+    
+    # Generate adversarial examples
+    adv_data = pgd_attack(model, data, target, epsilon)
+    
+    # KL divergence loss
+    adv_output = model(adv_data)
+    robust_loss = F.kl_div(
+        F.log_softmax(adv_output, dim=1),
+        F.softmax(nat_output.detach(), dim=1),
+        reduction='batchmean'
+    )
+    
+    # Combined loss
+    loss = nat_loss + beta * robust_loss
+    return loss
+
+# MART: Misclassification Aware Adversarial Training
+def mart_loss(model, data, target, epsilon=0.03):
+    """MART loss emphasizes misclassified examples"""
+    
+    # Generate adversarial examples
+    adv_data = pgd_attack(model, data, target, epsilon)
+    
+    # Get predictions
+    adv_logits = model(adv_data)
+    nat_logits = model(data)
+    
+    # BCE loss for adversarial examples
+    adv_probs = F.softmax(adv_logits, dim=1)
+    nat_probs = F.softmax(nat_logits, dim=1)
+    
+    # Boosted CE loss
+    true_probs = torch.gather(adv_probs, 1, target.unsqueeze(1))
+    boosted_loss = F.binary_cross_entropy(
+        true_probs,
+        torch.ones_like(true_probs),
+        reduction='none'
+    )
+    
+    # Weight by misclassification
+    nat_pred = nat_logits.argmax(dim=1)
+    weight = (nat_pred != target).float() * 5 + 1
+    
+    loss = (boosted_loss.squeeze() * weight).mean()
+    
+    # Add KL regularization
+    kl_loss = F.kl_div(
+        F.log_softmax(adv_logits, dim=1),
+        nat_probs.detach(),
+        reduction='batchmean'
+    )
+    
+    return loss + 6 * kl_loss
+                        </div>
+                        <p><strong>Trade-off:</strong> Robust models typically have lower clean accuracy</p>
+                        <p><strong>Best Practice:</strong> Use PGD with random starts for training</p>
+                    `
+                },
+                'distillation': {
+                    title: 'Defensive Distillation',
+                    content: `
+                        <div class="modal-highlight">
+                            <strong>Idea:</strong> Train a student model on soft labels from a teacher to smooth decision boundaries.
+                        </div>
+                        <h4>Implementation:</h4>
+                        <div class="modal-code">
+def defensive_distillation(teacher_model, student_model, 
+                          train_loader, temperature=20):
+    """Defensive distillation for robustness"""
+    
+    optimizer = optim.Adam(student_model.parameters(), lr=0.001)
+    
+    for epoch in range(100):
+        for data, _ in train_loader:
+            # Get soft labels from teacher
+            with torch.no_grad():
+                teacher_logits = teacher_model(data)
+                soft_labels = F.softmax(teacher_logits / temperature, dim=1)
+            
+            # Train student
+            student_logits = student_model(data)
+            student_log_probs = F.log_softmax(
+                student_logits / temperature, dim=1
+            )
+            
+            # KL divergence loss
+            loss = F.kl_div(
+                student_log_probs,
+                soft_labels,
+                reduction='batchmean'
+            ) * (temperature ** 2)
+            
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+    
+    return student_model
+
+# Label smoothing (similar effect)
+def label_smoothing_loss(outputs, targets, smoothing=0.1):
+    """Smooth hard labels to improve robustness"""
+    n_classes = outputs.size(-1)
+    
+    # Create smooth labels
+    smooth_labels = torch.full_like(outputs, smoothing / n_classes)
+    smooth_labels.scatter_(1, targets.unsqueeze(1), 1 - smoothing)
+    
+    # Compute loss
+    log_probs = F.log_softmax(outputs, dim=1)
+    loss = -(smooth_labels * log_probs).sum(dim=1).mean()
+    
+    return loss
+                        </div>
+                        <p><strong>Effect:</strong> Makes gradients less informative for attackers</p>
+                        <p><strong>Limitation:</strong> Can be broken by stronger attacks like C&W</p>
+                    `
+                },
+                'detection': {
+                    title: 'Adversarial Detection Methods',
+                    content: `
+                        <div class="modal-highlight">
+                            <strong>Strategy:</strong> Detect and reject adversarial inputs rather than classify them correctly.
+                        </div>
+                        <h4>Detection Approaches:</h4>
+                        <div class="modal-code">
+# 1. Statistical Detection
+class StatisticalDetector:
+    def __init__(self, model, clean_data):
+        self.model = model
+        # Compute statistics on clean data
+        self.clean_stats = self.compute_statistics(clean_data)
+    
+    def compute_statistics(self, data):
+        """Extract statistical features"""
+        features = []
+        for x in data:
+            # Activation statistics
+            acts = self.get_activations(x)
+            features.append({
+                'mean': acts.mean(dim=(2,3)),
+                'std': acts.std(dim=(2,3)),
+                'max': acts.max(dim=(2,3))[0]
+            })
+        return features
+    
+    def detect(self, input_image):
+        """Detect if input is adversarial"""
+        stats = self.compute_statistics([input_image])[0]
+        
+        # Mahalanobis distance
+        distance = mahalanobis_distance(stats, self.clean_stats)
+        
+        threshold = 3.0  # Tune on validation set
+        return distance > threshold
+
+# 2. Feature Squeezing
+def feature_squeezing_detection(model, image, bit_depth=4):
+    """Detect by comparing predictions before/after squeezing"""
+    
+    # Original prediction
+    orig_pred = model(image).softmax(dim=1)
+    
+    # Squeeze features (reduce color depth)
+    squeezed = squeeze_image(image, bit_depth)
+    squeezed_pred = model(squeezed).softmax(dim=1)
+    
+    # Compare predictions
+    l1_distance = (orig_pred - squeezed_pred).abs().sum()
+    
+    # Threshold detection
+    return l1_distance > 0.1
+
+def squeeze_image(image, bit_depth):
+    """Reduce color bit depth"""
+    max_val = 2 ** bit_depth - 1
+    squeezed = torch.round(image * max_val) / max_val
+    return squeezed
+
+# 3. Uncertainty-based Detection
+class UncertaintyDetector:
+    def __init__(self, models):
+        """Use ensemble uncertainty for detection"""
+        self.models = models  # List of models
+    
+    def detect(self, input_image):
+        predictions = []
+        for model in self.models:
+            pred = model(input_image).softmax(dim=1)
+            predictions.append(pred)
+        
+        predictions = torch.stack(predictions)
+        
+        # Compute uncertainty (variance)
+        uncertainty = predictions.var(dim=0).max()
+        
+        # High uncertainty suggests adversarial
+        return uncertainty > 0.3
+
+# 4. Gradient-based Detection
+def gradient_masking_detection(model, image):
+    """Detect using gradient properties"""
+    image.requires_grad = True
+    
+    output = model(image)
+    loss = output.max()
+    
+    # Compute gradients
+    loss.backward()
+    gradients = image.grad
+    
+    # Adversarial examples often have unusual gradients
+    grad_norm = gradients.norm()
+    grad_sparsity = (gradients.abs() < 1e-5).float().mean()
+    
+    # Detection criteria
+    if grad_norm > 10 or grad_sparsity > 0.9:
+        return True  # Likely adversarial
+    return False
+
+# 5. Autoencoder Detection
+class AutoencoderDetector(nn.Module):
+    def __init__(self, input_dim):
+        super().__init__()
+        self.encoder = nn.Sequential(
+            nn.Linear(input_dim, 512),
+            nn.ReLU(),
+            nn.Linear(512, 128),
+            nn.ReLU(),
+            nn.Linear(128, 32)
+        )
+        self.decoder = nn.Sequential(
+            nn.Linear(32, 128),
+            nn.ReLU(),
+            nn.Linear(128, 512),
+            nn.ReLU(),
+            nn.Linear(512, input_dim)
+        )
+    
+    def forward(self, x):
+        encoded = self.encoder(x.flatten(1))
+        decoded = self.decoder(encoded)
+        return decoded.reshape_as(x)
+    
+    def detect(self, image):
+        """Detect based on reconstruction error"""
+        reconstructed = self(image)
+        error = (image - reconstructed).norm()
+        
+        # High error suggests adversarial
+        return error > 0.5
+                        </div>
+                        <p><strong>Challenge:</strong> Adaptive attacks can evade detection</p>
+                        <p><strong>Best Practice:</strong> Combine multiple detection methods</p>
+                    `
+                },
+                'certified': {
+                    title: 'Certified Defenses',
+                    content: `
+                        <div class="modal-highlight">
+                            <strong>Goal:</strong> Provide provable guarantees that no adversarial example exists within a certain radius.
+                        </div>
+                        <h4>Randomized Smoothing:</h4>
+                        <div class="modal-code">
+import scipy.stats as stats
+
+class RandomizedSmoothing:
+    """Certifiably robust classifier via randomized smoothing"""
+    
+    def __init__(self, base_model, sigma=0.25, n_samples=100):
+        self.base_model = base_model
+        self.sigma = sigma  # Noise level
+        self.n_samples = n_samples
+    
+    def predict(self, x):
+        """Smoothed prediction"""
+        predictions = []
+        
+        for _ in range(self.n_samples):
+            # Add Gaussian noise
+            noise = torch.randn_like(x) * self.sigma
+            noisy_x = x + noise
+            
+            # Get prediction
+            pred = self.base_model(noisy_x).argmax(dim=1)
+            predictions.append(pred)
+        
+        # Majority vote
+        predictions = torch.stack(predictions)
+        return predictions.mode(dim=0)[0]
+    
+    def certify(self, x, n0=100, n=100000, alpha=0.001):
+        """
+        Certify robustness radius for input x
+        Returns: (predicted_class, certified_radius)
+        """
+        
+        # Phase 1: Estimate prediction
+        counts = torch.zeros(10)  # Assuming 10 classes
+        for _ in range(n0):
+            noise = torch.randn_like(x) * self.sigma
+            pred = self.base_model(x + noise).argmax()
+            counts[pred] += 1
+        
+        top_class = counts.argmax()
+        
+        # Phase 2: Certify
+        count_A = 0
+        for _ in range(n):
+            noise = torch.randn_like(x) * self.sigma
+            pred = self.base_model(x + noise).argmax()
+            if pred == top_class:
+                count_A += 1
+        
+        # Binomial confidence interval
+        p_A = self._lower_confidence_bound(count_A, n, alpha)
+        
+        if p_A > 0.5:
+            # Compute certified radius
+            radius = self.sigma * stats.norm.ppf(p_A)
+            return top_class, radius
+        else:
+            return top_class, 0.0  # Cannot certify
+    
+    def _lower_confidence_bound(self, NA, N, alpha):
+        """Clopper-Pearson confidence interval"""
+        if NA == 0:
+            return 0.0
+        return stats.beta.ppf(alpha, NA, N - NA + 1)
+
+# Interval Bound Propagation (IBP)
+class IBPLayer(nn.Module):
+    """Layer with interval bound propagation"""
+    
+    def __init__(self, in_features, out_features):
+        super().__init__()
+        self.linear = nn.Linear(in_features, out_features)
+    
+    def forward(self, x_l, x_u):
+        """
+        Forward with interval bounds
+        x_l: lower bound, x_u: upper bound
+        """
+        W = self.linear.weight
+        b = self.linear.bias
+        
+        # Compute bounds after linear transformation
+        W_pos = torch.clamp(W, min=0)
+        W_neg = torch.clamp(W, max=0)
+        
+        z_l = W_pos @ x_l + W_neg @ x_u + b
+        z_u = W_pos @ x_u + W_neg @ x_l + b
+        
+        return z_l, z_u
+
+# Certified training
+def certified_robust_training(model, train_loader, epsilon=0.1):
+    """Train with certified robustness"""
+    
+    optimizer = optim.Adam(model.parameters())
+    
+    for data, target in train_loader:
+        # Compute interval bounds
+        x_l = data - epsilon
+        x_u = data + epsilon
+        
+        # Forward with bounds
+        logits_l, logits_u = model.interval_forward(x_l, x_u)
+        
+        # Worst-case loss
+        worst_case_logits = torch.min(
+            logits_l.gather(1, target.unsqueeze(1)),
+            logits_u.gather(1, target.unsqueeze(1))
+        )
+        
+        # Train to maximize worst-case margin
+        loss = F.cross_entropy(worst_case_logits, target)
+        
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+                        </div>
+                        <p><strong>Guarantee:</strong> Mathematical proof of robustness within certified radius</p>
+                        <p><strong>Trade-off:</strong> Often limited to small perturbations or reduced accuracy</p>
+                    `
+                },
+                'preprocessing': {
+                    title: 'Input Preprocessing Defenses',
+                    content: `
+                        <div class="modal-highlight">
+                            <strong>Strategy:</strong> Transform inputs to remove adversarial perturbations before classification.
+                        </div>
+                        <h4>Preprocessing Methods:</h4>
+                        <div class="modal-code">
+# 1. JPEG Compression
+def jpeg_compression_defense(image, quality=75):
+    """Remove perturbations via JPEG compression"""
+    from PIL import Image
+    import io
+    
+    # Convert to PIL Image
+    img = transforms.ToPILImage()(image)
+    
+    # Compress with JPEG
+    buffer = io.BytesIO()
+    img.save(buffer, 'JPEG', quality=quality)
+    buffer.seek(0)
+    
+    # Load compressed image
+    compressed = Image.open(buffer)
+    
+    # Convert back to tensor
+    return transforms.ToTensor()(compressed)
+
+# 2. Bit Depth Reduction
+def bit_depth_reduction(image, bits=4):
+    """Reduce color bit depth"""
+    levels = 2 ** bits
+    quantized = torch.round(image * (levels - 1)) / (levels - 1)
+    return quantized
+
+# 3. Spatial Smoothing
+def spatial_smoothing_defense(image, kernel_size=3):
+    """Apply Gaussian blur"""
+    from torchvision.transforms import GaussianBlur
+    
+    blur = GaussianBlur(kernel_size=kernel_size, sigma=1.0)
+    return blur(image)
+
+# 4. Total Variance Minimization
+def tv_minimization_defense(image, lambda_tv=0.03, n_iter=10):
+    """Minimize total variation while staying close to input"""
+    
+    denoised = image.clone().requires_grad_(True)
+    optimizer = optim.Adam([denoised], lr=0.1)
+    
+    for _ in range(n_iter):
+        # Data fidelity term
+        fidelity = ((denoised - image) ** 2).mean()
+        
+        # Total variation term
+        tv = total_variation(denoised)
+        
+        # Combined loss
+        loss = fidelity + lambda_tv * tv
+        
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+        
+        # Clamp to valid range
+        denoised.data = torch.clamp(denoised.data, 0, 1)
+    
+    return denoised.detach()
+
+def total_variation(x):
+    """Compute total variation of image"""
+    tv_h = ((x[:, :, 1:, :] - x[:, :, :-1, :]) ** 2).sum()
+    tv_w = ((x[:, :, :, 1:] - x[:, :, :, :-1]) ** 2).sum()
+    return tv_h + tv_w
+
+# 5. Denoising Autoencoder
+class DenoisingAutoencoder(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.encoder = nn.Sequential(
+            nn.Conv2d(3, 64, 3, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(64, 128, 3, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(2)
+        )
+        self.decoder = nn.Sequential(
+            nn.ConvTranspose2d(128, 64, 2, stride=2),
+            nn.ReLU(),
+            nn.Conv2d(64, 3, 3, padding=1),
+            nn.Sigmoid()
+        )
+    
+    def forward(self, x):
+        encoded = self.encoder(x)
+        decoded = self.decoder(encoded)
+        return decoded
+
+# 6. PixelDefend: Generative Model Defense
+class PixelDefend:
+    def __init__(self, generative_model):
+        self.model = generative_model  # e.g., PixelCNN
+    
+    def purify(self, image, steps=10):
+        """Purify image using generative model"""
+        purified = image.clone()
+        
+        for step in range(steps):
+            # Sample from generative model conditioned on current image
+            noise = torch.randn_like(purified) * 0.1
+            purified = purified + noise
+            
+            # Project back using generative model
+            purified = self.model.project(purified)
+        
+        return purified
+
+# Combined preprocessing pipeline
+def preprocessing_pipeline(image):
+    """Apply multiple preprocessing defenses"""
+    
+    # 1. Bit depth reduction
+    image = bit_depth_reduction(image, bits=5)
+    
+    # 2. Spatial smoothing
+    image = spatial_smoothing_defense(image, kernel_size=3)
+    
+    # 3. JPEG compression
+    image = jpeg_compression_defense(image, quality=80)
+    
+    # 4. TV minimization
+    image = tv_minimization_defense(image)
+    
+    return image
+                        </div>
+                        <p><strong>Advantage:</strong> No retraining required</p>
+                        <p><strong>Limitation:</strong> Can reduce clean accuracy, adaptive attacks can compensate</p>
+                    `
+                }
+            };
+            
+            const detail = defenses[defense];
+            if (detail) {
+                modal.show(detail.title, detail.content);
+            }
+        }
+
+        // Show demo applications
+        function showDemo(application) {
+            const demos = {
+                'autonomous': {
+                    title: 'Adversarial Attacks on Autonomous Vehicles',
+                    content: `
+                        <div class="modal-highlight">
+                            <strong>Critical Risk:</strong> Adversarial perturbations can cause misinterpretation of road signs and obstacles.
+                        </div>
+                        <h4>Stop Sign Attack:</h4>
+                        <div class="modal-code">
+# Physical adversarial attack on stop signs
+def create_stop_sign_sticker(model, target_class='speed_limit_45'):
+    """Design stickers that make stop signs appear as speed limit signs"""
+    
+    # Initialize sticker mask (where stickers can be placed)
+    sticker_mask = create_sticker_mask()  # Define printable regions
+    
+    # Optimize sticker pattern
+    sticker_pattern = torch.rand(3, 224, 224) * sticker_mask
+    sticker_pattern.requires_grad = True
+    
+    optimizer = optim.Adam([sticker_pattern], lr=0.01)
+    
+    for iteration in range(1000):
+        # Simulate different viewing conditions
+        perturbed_signs = []
+        for angle in [-30, -15, 0, 15, 30]:
+            for distance in [5, 10, 20]:  # meters
+                for lighting in ['sunny', 'cloudy', 'night']:
+                    # Apply sticker and transformations
+                    sign = apply_sticker_with_transform(
+                        stop_sign_image, 
+                        sticker_pattern,
+                        angle, distance, lighting
+                    )
+                    perturbed_signs.append(sign)
+        
+        # Batch process
+        batch = torch.stack(perturbed_signs)
+        outputs = model(batch)
+        
+        # Loss: classify as target across all conditions
+        target_labels = torch.full((len(batch),), target_class_id)
+        loss = F.cross_entropy(outputs, target_labels)
+        
+        # Add printability constraint
+        printability_loss = non_printable_color_loss(sticker_pattern)
+        total_loss = loss + 0.1 * printability_loss
+        
+        optimizer.zero_grad()
+        total_loss.backward()
+        optimizer.step()
+        
+        # Ensure sticker stays in valid region
+        sticker_pattern.data = sticker_pattern.data * sticker_mask
+        sticker_pattern.data = torch.clamp(sticker_pattern.data, 0, 1)
+    
+    return sticker_pattern
+                        </div>
+                        <p><strong>Real Incident:</strong> Researchers fooled Tesla Autopilot with stickers on road (2019)</p>
+                        <p><strong>Defense:</strong> Multiple sensor fusion, semantic consistency checks</p>
+                    `
+                },
+                'face': {
+                    title: 'Attacking Face Recognition Systems',
+                    content: `
+                        <div class="modal-highlight">
+                            <strong>Privacy & Security:</strong> Adversarial examples can evade or impersonate in face recognition.
+                        </div>
+                        <h4>Face Recognition Attacks:</h4>
+                        <div class="modal-code">
+# Adversarial glasses for face recognition
+class AdversarialGlasses:
+    def __init__(self, face_model):
+        self.model = face_model
+        # Initialize glasses pattern
+        self.glasses_pattern = self.init_glasses_template()
+    
+    def optimize_glasses(self, source_face, target_identity):
+        """Create glasses that cause misidentification"""
+        
+        glasses = self.glasses_pattern.clone()
+        glasses.requires_grad = True
+        
+        optimizer = optim.Adam([glasses], lr=0.01)
+        
+        for epoch in range(500):
+            # Apply glasses to face
+            face_with_glasses = self.apply_glasses(source_face, glasses)
+            
+            # Get face embedding
+            source_embedding = self.model.encode(face_with_glasses)
+            target_embedding = self.model.encode(target_identity)
+            
+            # Loss: minimize distance to target identity
+            identity_loss = F.cosine_embedding_loss(
+                source_embedding,
+                target_embedding,
+                torch.ones(1)  # Similar
+            )
+            
+            # Ensure glasses look realistic
+            smooth_loss = total_variation(glasses)
+            natural_loss = color_consistency_loss(glasses)
+            
+            total_loss = identity_loss + 0.01 * smooth_loss + 0.01 * natural_loss
+            
+            optimizer.zero_grad()
+            total_loss.backward()
+            optimizer.step()
+            
+            # Constrain to printable colors
+            glasses.data = self.constrain_printable(glasses.data)
+        
+        return glasses
+
+# Privacy-preserving adversarial makeup
+def adversarial_makeup(face_image, recognition_model):
+    """Generate makeup patterns that prevent recognition"""
+    
+    # Define makeup regions (eyes, lips, cheeks)
+    makeup_mask = get_makeup_regions(face_image)
+    
+    # Initialize makeup pattern
+    makeup = torch.zeros_like(face_image)
+    makeup.requires_grad = True
+    
+    # Original identity
+    original_id = recognition_model(face_image)
+    
+    # Optimize to be unrecognizable
+    for step in range(100):
+        # Apply makeup
+        modified_face = face_image + makeup * makeup_mask
+        modified_face = torch.clamp(modified_face, 0, 1)
+        
+        # Get new identity
+        new_id = recognition_model(modified_face)
+        
+        # Loss: maximize distance from original identity
+        # while keeping changes minimal
+        distance_loss = -cosine_distance(original_id, new_id)
+        minimal_loss = torch.norm(makeup, p=1)
+        
+        loss = distance_loss + 0.1 * minimal_loss
+        
+        loss.backward()
+        makeup.data -= 0.01 * makeup.grad.sign()
+        makeup.grad.zero_()
+    
+    return face_image + makeup * makeup_mask
+                        </div>
+                        <p><strong>Applications:</strong> Privacy protection, security testing</p>
+                        <p><strong>Ethical Concerns:</strong> Potential for misuse in surveillance evasion</p>
+                    `
+                },
+                'malware': {
+                    title: 'Evading ML-based Malware Detection',
+                    content: `
+                        <div class="modal-highlight">
+                            <strong>Security Challenge:</strong> Adversarial malware can bypass ML-based antivirus systems.
+                        </div>
+                        <h4>Malware Evasion Techniques:</h4>
+                        <div class="modal-code">
+# Adversarial malware generation
+class AdversarialMalware:
+    def __init__(self, detector_model):
+        self.detector = detector_model
+        self.max_size_increase = 0.1  # 10% size increase limit
+    
+    def generate_evasive_variant(self, malware_bytes):
+        """Modify malware to evade detection"""
+        
+        # Convert to feature representation
+        features = self.extract_features(malware_bytes)
+        features.requires_grad = True
+        
+        # Original detection score
+        orig_score = self.detector(features)
+        
+        # Optimize to appear benign
+        for iteration in range(100):
+            score = self.detector(features)
+            
+            # Loss: appear as benign
+            loss = score  # Minimize malware score
+            
+            loss.backward()
+            
+            # Gradient-based modification
+            features.data -= 0.01 * features.grad.sign()
+            features.grad.zero_()
+            
+            # Ensure functionality preserved
+            features.data = self.preserve_functionality(
+                features.data, 
+                malware_bytes
+            )
+        
+        # Convert back to bytes
+        modified_bytes = self.features_to_bytes(features.data)
+        
+        return modified_bytes
+    
+    def preserve_functionality(self, features, original):
+        """Ensure malware still functions"""
+        
+        # Preserve critical sections
+        critical_sections = self.identify_critical_code(original)
+        
+        # Only modify non-critical parts
+        mask = self.get_modifiable_mask(critical_sections)
+        
+        # Apply modifications only to safe regions
+        return features * mask + original * (1 - mask)
+    
+    def append_benign_content(self, malware_bytes):
+        """Append benign content to change statistics"""
+        
+        # Load benign file snippets
+        benign_snippets = load_benign_code_database()
+        
+        # Find snippets that reduce detection score
+        best_snippet = None
+        best_score = float('inf')
+        
+        for snippet in benign_snippets:
+            combined = malware_bytes + snippet
+            features = self.extract_features(combined)
+            score = self.detector(features).item()
+            
+            if score < best_score:
+                best_score = score
+                best_snippet = snippet
+        
+        return malware_bytes + best_snippet
+
+# Polymorphic adversarial malware
+class PolymorphicAdversarial:
+    """Generate multiple variants to evade detection"""
+    
+    def generate_variants(self, malware, num_variants=10):
+        variants = []
+        
+        for i in range(num_variants):
+            # Different obfuscation per variant
+            variant = self.obfuscate(malware, seed=i)
+            
+            # Add adversarial perturbations
+            variant = self.add_adversarial_noise(variant)
+            
+            # Ensure evasion
+            if self.test_evasion(variant):
+                variants.append(variant)
+        
+        return variants
+    
+    def obfuscate(self, code, seed):
+        """Apply code obfuscation techniques"""
+        import random
+        random.seed(seed)
+        
+        techniques = [
+            self.dead_code_insertion,
+            self.variable_renaming,
+            self.control_flow_obfuscation,
+            self.string_encryption,
+            self.packing
+        ]
+        
+        # Apply random subset of techniques
+        for technique in random.sample(techniques, 3):
+            code = technique(code)
+        
+        return code
+                        </div>
+                        <p><strong>Defense:</strong> Behavioral analysis, sandboxing, ensemble detection</p>
+                        <p><strong>Arms Race:</strong> Continuous evolution of attacks and defenses</p>
+                    `
+                },
+                'speech': {
+                    title: 'Audio Adversarial Examples',
+                    content: `
+                        <div class="modal-highlight">
+                            <strong>Hidden Commands:</strong> Inaudible perturbations that trigger voice assistants.
+                        </div>
+                        <h4>Audio Attack Implementation:</h4>
+                        <div class="modal-code">
+import librosa
+import soundfile as sf
+
+class AudioAdversarial:
+    def __init__(self, speech_model, sample_rate=16000):
+        self.model = speech_model
+        self.sr = sample_rate
+    
+    def create_hidden_command(self, audio, target_command):
+        """Embed hidden command in audio"""
+        
+        # Convert to spectrogram
+        audio_tensor = torch.from_numpy(audio).float()
+        audio_tensor.requires_grad = True
+        
+        optimizer = optim.Adam([audio_tensor], lr=0.001)
+        
+        for iteration in range(1000):
+            # Convert to features
+            features = self.extract_features(audio_tensor)
+            
+            # Get transcription
+            transcription = self.model(features)
+            
+            # Loss: transcribe as target command
+            target_tokens = self.tokenize(target_command)
+            loss = F.cross_entropy(transcription, target_tokens)
+            
+            # Perceptual loss (keep similar to original)
+            perceptual_loss = self.psychoacoustic_loss(
+                audio_tensor, audio
+            )
+            
+            total_loss = loss + 10 * perceptual_loss
+            
+            optimizer.zero_grad()
+            total_loss.backward()
+            optimizer.step()
+            
+            # Constrain perturbation magnitude
+            perturbation = audio_tensor.data - audio
+            perturbation = torch.clamp(perturbation, -0.002, 0.002)
+            audio_tensor.data = audio + perturbation
+        
+        return audio_tensor.detach().numpy()
+    
+    def psychoacoustic_loss(self, modified, original):
+        """Ensure perturbation is imperceptible"""
+        
+        # Frequency masking based on human hearing
+        stft_mod = torch.stft(modified, n_fft=2048, return_complex=True)
+        stft_orig = torch.stft(original, n_fft=2048, return_complex=True)
+        
+        # Apply psychoacoustic masking model
+        masking_threshold = self.compute_masking_threshold(stft_orig)
+        
+        # Perturbation should be below masking threshold
+        perturbation = torch.abs(stft_mod - stft_orig)
+        excess = torch.relu(perturbation - masking_threshold)
+        
+        return excess.mean()
+    
+    def ultrasonic_command(self, command, carrier_freq=20000):
+        """Embed command in ultrasonic frequencies"""
+        
+        # Text to speech for command
+        command_audio = text_to_speech(command)
+        
+        # Modulate to ultrasonic
+        t = np.linspace(0, len(command_audio)/self.sr, len(command_audio))
+        carrier = np.sin(2 * np.pi * carrier_freq * t)
+        
+        # AM modulation
+        modulated = command_audio * carrier
+        
+        # Add to benign audio
+        benign_audio = load_music_sample()
+        combined = benign_audio + 0.01 * modulated
+        
+        return combined
+
+# Dolphin Attack - ultrasonic voice commands
+def dolphin_attack(target_command):
+    """Generate inaudible voice commands"""
+    
+    # Generate command audio
+    command_audio = generate_speech(target_command)
+    
+    # Shift to ultrasonic (>20kHz)
+    upsampled = librosa.resample(command_audio, 16000, 48000)
+    
+    # Frequency shift
+    shifted = frequency_shift(upsampled, shift=25000)
+    
+    # Ensure inaudible to humans but audible after demodulation
+    # by voice assistant hardware
+    
+    return shifted
+                        </div>
+                        <p><strong>Real Attack:</strong> DolphinAttack demonstrated ultrasonic commands (2017)</p>
+                        <p><strong>Defense:</strong> Frequency filtering, command verification, user awareness</p>
+                    `
+                },
+                'medical': {
+                    title: 'Adversarial Attacks on Medical AI',
+                    content: `
+                        <div class="modal-highlight">
+                            <strong>Life-Critical Risk:</strong> Adversarial examples could cause misdiagnosis with serious consequences.
+                        </div>
+                        <h4>Medical Imaging Attacks:</h4>
+                        <div class="modal-code">
+class MedicalAdversarial:
+    def __init__(self, diagnostic_model):
+        self.model = diagnostic_model
+        self.max_perturbation = 0.02  # Very small for medical images
+    
+    def targeted_misdiagnosis(self, scan, target_diagnosis):
+        """Create adversarial medical image"""
+        
+        # Clone and enable gradients
+        adv_scan = scan.clone()
+        adv_scan.requires_grad = True
+        
+        # Use C&W attack for high confidence
+        for iteration in range(100):
+            # Get diagnosis
+            diagnosis = self.model(adv_scan)
+            
+            # Targeted loss
+            target_label = self.encode_diagnosis(target_diagnosis)
+            loss = F.cross_entropy(diagnosis, target_label)
+            
+            # Add L2 penalty to keep changes minimal
+            l2_loss = torch.norm(adv_scan - scan, p=2)
+            total_loss = loss + 0.1 * l2_loss
+            
+            # Update
+            total_loss.backward()
+            
+            # Small step with projection
+            perturbation = 0.001 * adv_scan.grad.sign()
+            adv_scan.data = adv_scan.data - perturbation
+            
+            # Project to epsilon ball
+            delta = adv_scan.data - scan
+            delta = torch.clamp(delta, -self.max_perturbation, 
+                              self.max_perturbation)
+            adv_scan.data = scan + delta
+            
+            # Ensure valid pixel range
+            adv_scan.data = torch.clamp(adv_scan.data, 0, 1)
+            adv_scan.grad.zero_()
+        
+        return adv_scan.detach()
+    
+    def hide_tumor(self, mri_scan, tumor_location):
+        """Adversarially hide tumor in MRI"""
+        
+        # Create mask around tumor
+        tumor_mask = create_mask(tumor_location, radius=20)
+        
+        # Optimize to make tumor region look healthy
+        perturbation = torch.zeros_like(mri_scan)
+        perturbation.requires_grad = True
+        
+        optimizer = optim.Adam([perturbation], lr=0.001)
+        
+        for step in range(200):
+            # Apply perturbation
+            modified_scan = mri_scan + perturbation * tumor_mask
+            
+            # Get tumor detection
+            detection = self.model(modified_scan)
+            tumor_prob = detection['tumor_probability']
+            
+            # Loss: minimize tumor probability
+            loss = tumor_prob
+            
+            # Regularization
+            smooth_loss = total_variation(perturbation)
+            small_loss = torch.norm(perturbation, p=2)
+            
+            total_loss = loss + 0.01 * smooth_loss + 0.001 * small_loss
+            
+            optimizer.zero_grad()
+            total_loss.backward()
+            optimizer.step()
+            
+            # Constrain perturbation
+            perturbation.data = torch.clamp(
+                perturbation.data, 
+                -self.max_perturbation, 
+                self.max_perturbation
+            )
+        
+        return mri_scan + perturbation * tumor_mask
+
+# Defense: Ensemble voting for critical decisions
+class RobustMedicalDiagnosis:
+    def __init__(self, models):
+        self.models = models  # Multiple models
+        self.threshold = 0.8  # High agreement needed
+    
+    def diagnose(self, scan):
+        """Robust diagnosis using ensemble"""
+        
+        predictions = []
+        confidences = []
+        
+        for model in self.models:
+            # Test with small perturbations
+            perturbed_preds = []
+            for _ in range(10):
+                noise = torch.randn_like(scan) * 0.001
+                pred = model(scan + noise)
+                perturbed_preds.append(pred)
+            
+            # Check consistency
+            pred_std = torch.stack(perturbed_preds).std(dim=0)
+            
+            if pred_std.max() < 0.1:  # Consistent predictions
+                predictions.append(pred)
+                confidences.append(1.0)
+            else:  # Inconsistent, possibly adversarial
+                confidences.append(0.5)
+        
+        # Weighted voting
+        if np.mean(confidences) > self.threshold:
+            return self.ensemble_prediction(predictions, confidences)
+        else:
+            return "Manual review required - possible adversarial input"
+                        </div>
+                        <p><strong>Ethical Consideration:</strong> Research must ensure patient safety</p>
+                        <p><strong>Defense Strategy:</strong> Multiple expert validation, uncertainty quantification</p>
+                    `
+                },
+                'finance': {
+                    title: 'Adversarial Attacks on Financial ML',
+                    content: `
+                        <div class="modal-highlight">
+                            <strong>Financial Risk:</strong> Adversarial examples could manipulate trading algorithms or credit decisions.
+                        </div>
+                        <h4>Financial System Attacks:</h4>
+                        <div class="modal-code">
+class FinancialAdversarial:
+    def __init__(self, trading_model, fraud_detector):
+        self.trading_model = trading_model
+        self.fraud_detector = fraud_detector
+    
+    def manipulate_trading_signal(self, market_data):
+        """Create false trading signals"""
+        
+        # Target: trigger buy signal when should sell
+        adv_data = market_data.clone()
+        adv_data.requires_grad = True
+        
+        for iteration in range(50):
+            # Get trading decision
+            signal = self.trading_model(adv_data)
+            
+            # Loss: maximize buy signal
+            loss = -signal['buy_probability']
+            
+            # Constraint: changes must be realistic
+            # (within normal market volatility)
+            volatility = self.estimate_volatility(market_data)
+            
+            loss.backward()
+            
+            # Update with realistic constraints
+            perturbation = adv_data.grad * volatility
+            adv_data.data = adv_data.data + 0.01 * perturbation
+            
+            # Ensure changes look like normal market movement
+            adv_data.data = self.enforce_market_constraints(adv_data.data)
+            adv_data.grad.zero_()
+        
+        return adv_data
+    
+    def evade_fraud_detection(self, transaction):
+        """Modify fraudulent transaction to appear legitimate"""
+        
+        features = self.extract_transaction_features(transaction)
+        features.requires_grad = True
+        
+        # Optimize to appear legitimate
+        for step in range(100):
+            fraud_score = self.fraud_detector(features)
+            
+            # Loss: minimize fraud score
+            loss = fraud_score
+            
+            # Constraints: preserve transaction semantics
+            # Can't change fundamental properties
+            immutable_mask = self.get_immutable_features()
+            
+            loss.backward()
+            
+            # Update only mutable features
+            grad_masked = features.grad * (1 - immutable_mask)
+            features.data = features.data - 0.01 * grad_masked
+            
+            # Ensure realistic values
+            features.data = self.enforce_transaction_constraints(features.data)
+            features.grad.zero_()
+        
+        return self.features_to_transaction(features)
+    
+    def loan_application_attack(self, application):
+        """Adversarially modify loan application"""
+        
+        # Find minimal changes to get approval
+        approved = False
+        changes = []
+        
+        for feature in ['income', 'employment_length', 'debt_ratio']:
+            if feature in self.get_verifiable_features():
+                continue  # Skip verifiable features
+            
+            # Binary search for minimal change
+            low, high = 0, 0.5  # Max 50% change
+            
+            while high - low > 0.01:
+                mid = (low + high) / 2
+                
+                # Test with modification
+                modified = application.copy()
+                modified[feature] *= (1 + mid)
+                
+                decision = self.loan_model(modified)
+                
+                if decision == 'approved':
+                    high = mid
+                    approved = True
+                else:
+                    low = mid
+            
+            if approved:
+                changes.append((feature, high))
+                break
+        
+        return changes
+
+# Defense: Robust financial models
+class RobustFinancialML:
+    def __init__(self):
+        self.models = self.train_robust_ensemble()
+        self.anomaly_detector = AnomalyDetector()
+    
+    def make_decision(self, data):
+        """Make robust financial decision"""
+        
+        # Check for anomalies
+        if self.anomaly_detector.is_anomalous(data):
+            return self.handle_anomaly(data)
+        
+        # Get predictions from ensemble
+        predictions = []
+        for model in self.models:
+            # Test with perturbations
+            robust_pred = self.certify_prediction(model, data)
+            predictions.append(robust_pred)
+        
+        # Require high agreement for high-stakes decisions
+        agreement = self.calculate_agreement(predictions)
+        
+        if agreement < 0.8:
+            return "Manual review required"
+        
+        return self.aggregate_predictions(predictions)
+    
+    def certify_prediction(self, model, data):
+        """Certify prediction is robust to small perturbations"""
+        
+        base_pred = model(data)
+        
+        # Test with random perturbations
+        stable = True
+        for _ in range(100):
+            noise = torch.randn_like(data) * 0.01
+            noisy_pred = model(data + noise)
+            
+            if torch.abs(noisy_pred - base_pred).max() > 0.1:
+                stable = False
+                break
+        
+        if stable:
+            return base_pred
+        else:
+            return None  # Uncertain prediction
+                        </div>
+                        <p><strong>Regulatory Concern:</strong> Financial AI must be robust and auditable</p>
+                        <p><strong>Best Practice:</strong> Combine ML with rule-based validation and human oversight</p>
+                    `
+                }
+            };
+            
+            const demo = demos[application];
+            if (demo) {
+                modal.show(demo.title, demo.content);
+            }
+        }
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Initialize components
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (!modal.overlay.classList.contains('active')) {
+                if (e.key === 'ArrowLeft') {
+                    window.location.href = 'Week14_Slide266.html';
+                } else if (e.key === 'ArrowRight') {
+                    window.location.href = 'Week14_Slide268.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

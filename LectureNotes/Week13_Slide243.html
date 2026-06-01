@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - GAN Training Process</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .training-process {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            margin-bottom: 40px;
+            animation: fadeInScale 1s ease-out 0.3s both;
+        }
+
+        .process-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 30px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .training-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .step-card {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            padding: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid #0d9488;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .step-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.2);
+        }
+
+        .step-number {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 35px;
+            height: 35px;
+            background: #0d9488;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .step-title {
+            font-size: 1.3em;
+            color: #0d9488;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .step-description {
+            color: #475569;
+            line-height: 1.6;
+        }
+
+        .loss-functions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .loss-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .loss-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 15px 35px rgba(13, 148, 136, 0.15);
+        }
+
+        .loss-title {
+            font-size: 1.4em;
+            color: #0d9488;
+            margin-bottom: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .loss-formula {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 15px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            margin: 15px 0;
+            overflow-x: auto;
+        }
+
+        .training-tips {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+        }
+
+        .tips-title {
+            font-size: 1.6em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .tips-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .tip-item {
+            padding: 20px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .tip-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(13, 148, 136, 0.2);
+        }
+
+        .tip-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .tip-text {
+            color: #1e293b;
+            font-weight: 500;
+        }
+
+        .algorithm-visualization {
+            background: #1e293b;
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 30px;
+            color: #5eead4;
+            text-align: center;
+        }
+
+        .pseudo-code {
+            text-align: left;
+            font-family: 'Courier New', monospace;
+            line-height: 1.8;
+            margin: 20px auto;
+            max-width: 800px;
+        }
+
+        .code-comment {
+            color: #94a3b8;
+            font-style: italic;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: float 20s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes fadeInScale {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .slide-title { font-size: 2.5em; }
+            .training-steps { grid-template-columns: 1fr; }
+            .loss-functions { grid-template-columns: 1fr; }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    
+    <div class="course-info">CS5710 - Week 13</div>
+    <div class="slide-number">Slide 243 of 260</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">GAN Training Process</h1>
+        
+        <div class="training-process">
+            <h2 class="process-title">🔄 Adversarial Training Loop</h2>
+            
+            <div class="training-steps">
+                <div class="step-card" data-step="1">
+                    <div class="step-number">1</div>
+                    <div class="step-title">Train Discriminator</div>
+                    <div class="step-description">
+                        Update D to better distinguish real from fake data while keeping G fixed
+                    </div>
+                </div>
+                
+                <div class="step-card" data-step="2">
+                    <div class="step-number">2</div>
+                    <div class="step-title">Generate Fake Samples</div>
+                    <div class="step-description">
+                        G creates synthetic data from random noise vectors
+                    </div>
+                </div>
+                
+                <div class="step-card" data-step="3">
+                    <div class="step-number">3</div>
+                    <div class="step-title">Train Generator</div>
+                    <div class="step-description">
+                        Update G to fool D better while keeping D fixed
+                    </div>
+                </div>
+                
+                <div class="step-card" data-step="4">
+                    <div class="step-number">4</div>
+                    <div class="step-title">Evaluate Progress</div>
+                    <div class="step-description">
+                        Check convergence and quality of generated samples
+                    </div>
+                </div>
+            </div>
+            
+            <div class="algorithm-visualization">
+                <div class="pseudo-code">
+                    <span class="code-comment"># GAN Training Algorithm</span><br>
+                    for epoch in range(num_epochs):<br>
+                    &nbsp;&nbsp;for batch in dataloader:<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-comment"># Train Discriminator</span><br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;real_data = batch<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;noise = torch.randn(batch_size, latent_dim)<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;fake_data = generator(noise)<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;d_loss = -log(D(real_data)) - log(1-D(fake_data))<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;optimize_discriminator(d_loss)<br><br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-comment"># Train Generator</span><br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;noise = torch.randn(batch_size, latent_dim)<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;fake_data = generator(noise)<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;g_loss = -log(D(fake_data))<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;optimize_generator(g_loss)
+                </div>
+            </div>
+        </div>
+        
+        <div class="loss-functions">
+            <div class="loss-card" data-loss="discriminator">
+                <div class="loss-title">
+                    <span>📉</span> Discriminator Loss
+                </div>
+                <div class="loss-formula">
+                    L_D = -E[log(D(x))] - E[log(1-D(G(z)))]
+                </div>
+                <div style="color: #475569; font-size: 0.95em;">
+                    Maximize probability of correct classification
+                </div>
+            </div>
+            
+            <div class="loss-card" data-loss="generator">
+                <div class="loss-title">
+                    <span>📈</span> Generator Loss
+                </div>
+                <div class="loss-formula">
+                    L_G = -E[log(D(G(z)))]
+                </div>
+                <div style="color: #475569; font-size: 0.95em;">
+                    Maximize probability of fooling discriminator
+                </div>
+            </div>
+        </div>
+        
+        <div class="training-tips">
+            <h3 class="tips-title">⚡ Training Best Practices</h3>
+            <div class="tips-grid">
+                <div class="tip-item" data-tip="balance">
+                    <div class="tip-icon">⚖️</div>
+                    <div class="tip-text">Balance Training</div>
+                </div>
+                <div class="tip-item" data-tip="normalize">
+                    <div class="tip-icon">📊</div>
+                    <div class="tip-text">Normalize Inputs</div>
+                </div>
+                <div class="tip-item" data-tip="learning">
+                    <div class="tip-icon">🎯</div>
+                    <div class="tip-text">Careful Learning Rates</div>
+                </div>
+                <div class="tip-item" data-tip="regularize">
+                    <div class="tip-icon">🛡️</div>
+                    <div class="tip-text">Add Regularization</div>
+                </div>
+                <div class="tip-item" data-tip="monitor">
+                    <div class="tip-icon">📈</div>
+                    <div class="tip-text">Monitor Metrics</div>
+                </div>
+                <div class="tip-item" data-tip="architecture">
+                    <div class="tip-icon">🏗️</div>
+                    <div class="tip-text">Stable Architecture</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week13_Slide242.html" class="nav-btn">← Previous</a>
+        <a href="Week13_Slide244.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Training step details
+        const stepDetails = {
+            '1': {
+                title: 'Training the Discriminator',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Objective:</strong> Maximize D's ability to distinguish real from fake
+                    </div>
+                    <h4>Process:</h4>
+                    <ol style="line-height: 1.8;">
+                        <li><strong>Sample real data:</strong> Get batch from training dataset</li>
+                        <li><strong>Generate fake data:</strong> G(z) where z ~ N(0,1)</li>
+                        <li><strong>Forward pass:</strong> D(real) and D(fake)</li>
+                        <li><strong>Calculate loss:</strong> Binary cross-entropy</li>
+                        <li><strong>Backpropagate:</strong> Update D's weights only</li>
+                    </ol>
+                    <div class="modal-code">
+# Discriminator update
+real_labels = torch.ones(batch_size, 1)
+fake_labels = torch.zeros(batch_size, 1)
+
+real_loss = criterion(D(real_data), real_labels)
+fake_loss = criterion(D(fake_data.detach()), fake_labels)
+d_loss = real_loss + fake_loss
+
+d_optimizer.zero_grad()
+d_loss.backward()
+d_optimizer.step()
+                    </div>
+                    <p><strong>Key Point:</strong> We detach fake_data to prevent gradients flowing to G</p>
+                `
+            },
+            '2': {
+                title: 'Generating Fake Samples',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Process:</strong> Transform random noise into realistic data
+                    </div>
+                    <h4>Steps:</h4>
+                    <ul style="line-height: 1.8;">
+                        <li><strong>Sample noise:</strong> z ~ N(0,1) with dimension [batch_size, latent_dim]</li>
+                        <li><strong>Transform:</strong> Pass through generator network</li>
+                        <li><strong>Output:</strong> Synthetic data matching real data dimensions</li>
+                    </ul>
+                    <div class="modal-code">
+# Noise generation
+latent_dim = 100
+noise = torch.randn(batch_size, latent_dim)
+
+# Generate fake images
+fake_images = generator(noise)
+# Shape: [batch_size, channels, height, width]
+                    </div>
+                    <h4>Latent Space Properties:</h4>
+                    <ul>
+                        <li>• <strong>Continuous:</strong> Small changes in z → small changes in output</li>
+                        <li>• <strong>Meaningful:</strong> Different dimensions control different features</li>
+                        <li>• <strong>Interpolatable:</strong> Can blend between samples</li>
+                    </ul>
+                `
+            },
+            '3': {
+                title: 'Training the Generator',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Objective:</strong> Minimize D's ability to detect fake samples
+                    </div>
+                    <h4>Process:</h4>
+                    <ol style="line-height: 1.8;">
+                        <li><strong>Generate new batch:</strong> Fresh noise → fake data</li>
+                        <li><strong>Discriminate:</strong> D(fake) with D's weights frozen</li>
+                        <li><strong>Calculate loss:</strong> Want D(fake) → 1</li>
+                        <li><strong>Backpropagate:</strong> Through D to G (D weights unchanged)</li>
+                    </ol>
+                    <div class="modal-code">
+# Generator update
+noise = torch.randn(batch_size, latent_dim)
+fake_data = generator(noise)
+
+# We want D to think fake is real
+g_loss = criterion(D(fake_data), real_labels)
+
+g_optimizer.zero_grad()
+g_loss.backward()
+g_optimizer.step()
+                    </div>
+                    <p><strong>Important:</strong> D acts as a learned loss function for G</p>
+                    <p><strong>Alternative Loss:</strong> Use -log(D(G(z))) instead of log(1-D(G(z))) for better gradients early in training</p>
+                `
+            },
+            '4': {
+                title: 'Evaluating GAN Progress',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Challenge:</strong> No single metric perfectly captures GAN performance
+                    </div>
+                    <h4>Common Metrics:</h4>
+                    <ul style="line-height: 1.8;">
+                        <li><strong>Inception Score (IS):</strong> Measures quality and diversity</li>
+                        <li><strong>Fréchet Inception Distance (FID):</strong> Compares real and fake distributions</li>
+                        <li><strong>Visual inspection:</strong> Still important for quality assessment</li>
+                    </ul>
+                    <h4>Monitoring Training:</h4>
+                    <div class="modal-code">
+# Check for mode collapse
+if d_loss < 0.1:  # D too strong
+    train_g_more = True
+    
+if g_loss < 0.1:  # G too strong
+    train_d_more = True
+    
+# Save generated samples
+if epoch % 10 == 0:
+    save_samples(generator, epoch)
+                    </div>
+                    <h4>Common Issues:</h4>
+                    <ul>
+                        <li>• <strong>Mode collapse:</strong> G produces limited variety</li>
+                        <li>• <strong>Vanishing gradients:</strong> D becomes too good</li>
+                        <li>• <strong>Non-convergence:</strong> Oscillating losses</li>
+                    </ul>
+                `
+            }
+        };
+
+        // Loss function details
+        const lossDetails = {
+            'discriminator': {
+                title: 'Discriminator Loss Function',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Goal:</strong> Maximize probability of correct classification
+                    </div>
+                    <h4>Mathematical Formulation:</h4>
+                    <div class="modal-code">
+max_D V(D,G) = E[log D(x)] + E[log(1 - D(G(z)))]
+
+Where:
+• x ~ p_data(x): Real data distribution
+• z ~ p_z(z): Noise distribution
+• D(x): Probability that x is real
+• G(z): Generated fake data
+                    </div>
+                    <h4>Implementation:</h4>
+                    <ul style="line-height: 1.8;">
+                        <li><strong>Real samples:</strong> Want D(x) → 1 (maximize log D(x))</li>
+                        <li><strong>Fake samples:</strong> Want D(G(z)) → 0 (maximize log(1-D(G(z))))</li>
+                    </ul>
+                    <h4>Binary Cross-Entropy:</h4>
+                    <div class="modal-code">
+BCE = -[y·log(ŷ) + (1-y)·log(1-ŷ)]
+
+For real: y=1, ŷ=D(x)
+For fake: y=0, ŷ=D(G(z))
+                    </div>
+                    <p><strong>Tip:</strong> Label smoothing (0.9 for real, 0.1 for fake) can stabilize training</p>
+                `
+            },
+            'generator': {
+                title: 'Generator Loss Function',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Goal:</strong> Fool discriminator into thinking fake is real
+                    </div>
+                    <h4>Original Formulation:</h4>
+                    <div class="modal-code">
+min_G V(D,G) = E[log(1 - D(G(z)))]
+
+Problem: Saturating gradients when D is confident
+                    </div>
+                    <h4>Non-Saturating Loss (Recommended):</h4>
+                    <div class="modal-code">
+max_G E[log D(G(z))]
+
+Equivalent to minimizing:
+L_G = -E[log D(G(z))]
+                    </div>
+                    <h4>Why Non-Saturating?</h4>
+                    <ul style="line-height: 1.8;">
+                        <li>• <strong>Better gradients:</strong> Stronger signal when G is poor</li>
+                        <li>• <strong>Faster convergence:</strong> G learns more quickly</li>
+                        <li>• <strong>More stable:</strong> Less prone to vanishing gradients</li>
+                    </ul>
+                    <h4>Advanced Losses:</h4>
+                    <ul>
+                        <li><strong>Wasserstein Loss:</strong> Earth mover's distance</li>
+                        <li><strong>Least Squares Loss:</strong> L2 instead of log</li>
+                        <li><strong>Hinge Loss:</strong> Max-margin formulation</li>
+                    </ul>
+                `
+            }
+        };
+
+        // Training tips details
+        const tipsDetails = {
+            'balance': {
+                title: 'Balancing Generator and Discriminator',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Key Challenge:</strong> Maintaining equilibrium between G and D
+                    </div>
+                    <h4>Strategies:</h4>
+                    <ul style="line-height: 1.8;">
+                        <li><strong>Update ratio:</strong> Train D more frequently (e.g., 5:1 ratio)</li>
+                        <li><strong>Different learning rates:</strong> Often D_lr < G_lr</li>
+                        <li><strong>Capacity control:</strong> Limit D's architecture complexity</li>
+                    </ul>
+                    <div class="modal-code">
+# Adaptive training
+for epoch in range(epochs):
+    for batch in dataloader:
+        # Train D multiple times
+        for _ in range(d_steps):
+            train_discriminator(batch)
+        
+        # Train G once
+        train_generator()
+        
+        # Adjust ratio based on performance
+        if d_loss < threshold:
+            d_steps = max(1, d_steps - 1)
+        elif g_loss < threshold:
+            d_steps = min(5, d_steps + 1)
+                    </div>
+                    <h4>Signs of Imbalance:</h4>
+                    <ul>
+                        <li>• D loss → 0: Discriminator too strong</li>
+                        <li>• G loss exploding: Generator can't fool D</li>
+                        <li>• Both losses → 0: Mode collapse</li>
+                    </ul>
+                `
+            },
+            'normalize': {
+                title: 'Input Normalization',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Importance:</strong> Proper normalization crucial for stable training
+                    </div>
+                    <h4>Techniques:</h4>
+                    <ul style="line-height: 1.8;">
+                        <li><strong>Image data:</strong> Scale to [-1, 1] using tanh activation</li>
+                        <li><strong>Batch normalization:</strong> In G, not recommended in D</li>
+                        <li><strong>Spectral normalization:</strong> Constrains Lipschitz constant</li>
+                    </ul>
+                    <div class="modal-code">
+# Image normalization
+transform = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize((0.5,), (0.5,))
+    # Converts [0,1] to [-1,1]
+])
+
+# Generator output
+class Generator(nn.Module):
+    def forward(self, z):
+        # ... layers ...
+        return torch.tanh(output)  # [-1, 1]
+
+# Discriminator input
+# Expects inputs in [-1, 1]
+                    </div>
+                    <h4>Benefits:</h4>
+                    <ul>
+                        <li>• Prevents gradient explosion</li>
+                        <li>• Faster convergence</li>
+                        <li>• Better quality outputs</li>
+                    </ul>
+                `
+            },
+            'learning': {
+                title: 'Learning Rate Selection',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Critical:</strong> Learning rates significantly impact training stability
+                    </div>
+                    <h4>Recommended Settings:</h4>
+                    <div class="modal-code">
+# Common configurations
+# DCGAN
+g_lr = 0.0002
+d_lr = 0.0002
+betas = (0.5, 0.999)  # Adam
+
+# WGAN
+g_lr = 0.00005
+d_lr = 0.00005
+# Use RMSprop or Adam
+
+# Progressive GAN
+g_lr = 0.001
+d_lr = 0.001
+# With learning rate decay
+                    </div>
+                    <h4>Scheduling Strategies:</h4>
+                    <ul style="line-height: 1.8;">
+                        <li><strong>Linear decay:</strong> Gradual reduction over epochs</li>
+                        <li><strong>Step decay:</strong> Reduce at milestones</li>
+                        <li><strong>Adaptive:</strong> Based on loss plateaus</li>
+                    </ul>
+                    <h4>Tips:</h4>
+                    <ul>
+                        <li>• Start with equal rates for both networks</li>
+                        <li>• Use momentum carefully (β1 = 0.5 often better than 0.9)</li>
+                        <li>• Consider TTUR: Two Time-scale Update Rule</li>
+                    </ul>
+                `
+            },
+            'regularize': {
+                title: 'Regularization Techniques',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Purpose:</strong> Prevent overfitting and stabilize training
+                    </div>
+                    <h4>Common Techniques:</h4>
+                    <ul style="line-height: 1.8;">
+                        <li><strong>Gradient Penalty (WGAN-GP):</strong></li>
+                    </ul>
+                    <div class="modal-code">
+# Gradient penalty
+def gradient_penalty(D, real, fake):
+    alpha = torch.rand(batch_size, 1, 1, 1)
+    interpolated = alpha * real + (1-alpha) * fake
+    
+    d_interp = D(interpolated)
+    gradients = autograd.grad(
+        d_interp, interpolated,
+        grad_outputs=torch.ones_like(d_interp),
+        create_graph=True
+    )[0]
+    
+    penalty = ((gradients.norm(2, dim=1) - 1) ** 2).mean()
+    return penalty
+                    </div>
+                    <h4>Other Methods:</h4>
+                    <ul>
+                        <li><strong>Spectral Normalization:</strong> Constrains weight matrices</li>
+                        <li><strong>Dropout:</strong> In G only, not D</li>
+                        <li><strong>Label Smoothing:</strong> Soft labels (0.9/0.1)</li>
+                        <li><strong>Instance Noise:</strong> Add noise to inputs</li>
+                    </ul>
+                `
+            },
+            'monitor': {
+                title: 'Monitoring Training Progress',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Essential:</strong> Track multiple metrics for comprehensive view
+                    </div>
+                    <h4>Metrics to Track:</h4>
+                    <ul style="line-height: 1.8;">
+                        <li><strong>Loss curves:</strong> D_loss, G_loss over time</li>
+                        <li><strong>Inception Score:</strong> Quality and diversity</li>
+                        <li><strong>FID Score:</strong> Distribution similarity</li>
+                        <li><strong>Generated samples:</strong> Visual inspection</li>
+                    </ul>
+                    <div class="modal-code">
+# Logging setup
+from tensorboard import SummaryWriter
+writer = SummaryWriter()
+
+# Training loop
+for epoch in range(epochs):
+    # ... training ...
+    
+    writer.add_scalar('Loss/D', d_loss, epoch)
+    writer.add_scalar('Loss/G', g_loss, epoch)
+    
+    if epoch % 10 == 0:
+        # Generate samples
+        samples = generator(fixed_noise)
+        writer.add_images('Generated', samples, epoch)
+        
+        # Calculate metrics
+        is_score = calculate_inception_score(samples)
+        writer.add_scalar('Metrics/IS', is_score, epoch)
+                    </div>
+                    <h4>Warning Signs:</h4>
+                    <ul>
+                        <li>• Sudden loss spikes</li>
+                        <li>• Mode collapse (low diversity)</li>
+                        <li>• Training divergence</li>
+                    </ul>
+                `
+            },
+            'architecture': {
+                title: 'Stable Architecture Design',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Key:</strong> Architecture choices greatly impact stability
+                    </div>
+                    <h4>Best Practices:</h4>
+                    <ul style="line-height: 1.8;">
+                        <li><strong>DCGAN Guidelines:</strong></li>
+                        <ul>
+                            <li>• Replace pooling with strided convolutions</li>
+                            <li>• Use BatchNorm in G (except output)</li>
+                            <li>• ReLU in G, LeakyReLU in D</li>
+                            <li>• No fully connected hidden layers</li>
+                        </ul>
+                    </ul>
+                    <div class="modal-code">
+# Stable Generator architecture
+class Generator(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.main = nn.Sequential(
+            # Input: z
+            nn.ConvTranspose2d(100, 512, 4, 1, 0),
+            nn.BatchNorm2d(512),
+            nn.ReLU(True),
+            
+            nn.ConvTranspose2d(512, 256, 4, 2, 1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(True),
+            
+            nn.ConvTranspose2d(256, 128, 4, 2, 1),
+            nn.BatchNorm2d(128),
+            nn.ReLU(True),
+            
+            nn.ConvTranspose2d(128, 3, 4, 2, 1),
+            nn.Tanh()  # Output: [-1, 1]
+        )
+                    </div>
+                    <h4>Advanced Architectures:</h4>
+                    <ul>
+                        <li><strong>Progressive GAN:</strong> Grow networks gradually</li>
+                        <li><strong>StyleGAN:</strong> Style-based generator</li>
+                        <li><strong>Self-Attention:</strong> Long-range dependencies</li>
+                    </ul>
+                `
+            }
+        };
+
+        // Add click handlers for training steps
+        document.querySelectorAll('.step-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const step = this.dataset.step;
+                const details = stepDetails[step];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        // Add click handlers for loss cards
+        document.querySelectorAll('.loss-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const loss = this.dataset.loss;
+                const details = lossDetails[loss];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        // Add click handlers for training tips
+        document.querySelectorAll('.tip-item').forEach(tip => {
+            tip.addEventListener('click', function() {
+                const tipType = this.dataset.tip;
+                const details = tipsDetails[tipType];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 30; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 20 + 's';
+                element.style.animationDuration = (Math.random() * 10 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (!modal.overlay.classList.contains('active')) {
+                if (e.key === 'ArrowLeft') {
+                    window.location.href = 'Week13_Slide242.html';
+                } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                    window.location.href = 'Week13_Slide244.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

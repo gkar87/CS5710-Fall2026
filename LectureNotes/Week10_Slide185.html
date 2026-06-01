@@ -1,0 +1,1735 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Long Short-Term Memory (LSTM)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .lstm-overview {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .architecture-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .concept-text {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .lstm-diagram {
+            background: #1e293b;
+            border-radius: 20px;
+            padding: 30px;
+            margin: 30px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cell-state {
+            height: 60px;
+            background: linear-gradient(90deg, #fbbf24, #f59e0b);
+            border-radius: 10px;
+            position: relative;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .cell-state:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(251, 191, 36, 0.4);
+        }
+
+        .hidden-state {
+            height: 40px;
+            background: linear-gradient(90deg, #8b5cf6, #7c3aed);
+            border-radius: 8px;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .hidden-state:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(139, 92, 246, 0.4);
+        }
+
+        .gate-controls {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+        }
+
+        .gate {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+        }
+
+        .forget-gate {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        .input-gate {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .output-gate {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+        }
+
+        .gate:hover {
+            transform: scale(1.15);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        .advantages-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            margin-top: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.5s both;
+        }
+
+        .advantage-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .advantage-card {
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
+            padding: 25px;
+            border-radius: 15px;
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .advantage-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.2);
+        }
+
+        .advantage-title {
+            font-size: 1.3em;
+            color: #0d9488;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .advantage-desc {
+            color: #64748b;
+            line-height: 1.6;
+        }
+
+        .equations-section {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 30px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .equation-group {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(94, 234, 212, 0.1);
+            border-radius: 10px;
+            border-left: 3px solid #5eead4;
+        }
+
+        .equation-title {
+            color: #99f6e4;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .course-info {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            color: #0d9488;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            color: #0d9488;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @keyframes slideInFromTop {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInFromLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInFromRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInFromBottom {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .clickable-term {
+            color: #0d9488;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: underline dotted;
+            transition: all 0.3s ease;
+        }
+
+        .clickable-term:hover {
+            color: #14b8a6;
+            text-decoration: underline solid;
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    
+    <div class="course-info">CS5710 - Week 10</div>
+    <div class="slide-number">Slide 185 of 200</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Long Short-Term Memory (LSTM)</h1>
+        
+        <div class="content-layout">
+            <div class="lstm-overview">
+                <h2 class="section-title">What is LSTM?</h2>
+                
+                <div class="concept-text">
+                    <span class="clickable-term" data-term="lstm-concept">Long Short-Term Memory</span> networks are a special type of RNN designed to solve the <span class="clickable-term" data-term="gradient-problem">vanishing gradient problem</span> and learn long-range dependencies in sequences.
+                </div>
+                
+                <p style="font-size: 1.1em; line-height: 1.7; color: #1e293b; margin-bottom: 20px;">
+                    <strong>Key Innovation:</strong> LSTM introduces a <span class="clickable-term" data-term="cell-state">cell state</span> that acts as a "memory highway" allowing information to flow unchanged across many time steps.
+                </p>
+                
+                <div class="lstm-diagram">
+                    <div style="color: #99f6e4; margin-bottom: 15px; font-weight: bold;">LSTM Cell Structure</div>
+                    
+                    <div class="cell-state" data-component="cell-state">
+                        Cell State (C_t) - Memory Highway
+                    </div>
+                    
+                    <div class="gate-controls">
+                        <div class="gate forget-gate" data-gate="forget">f_t</div>
+                        <div class="gate input-gate" data-gate="input">i_t</div>
+                        <div class="gate output-gate" data-gate="output">o_t</div>
+                    </div>
+                    
+                    <div class="hidden-state" data-component="hidden-state">
+                        Hidden State (h_t) - Output
+                    </div>
+                </div>
+            </div>
+
+            <div class="architecture-section">
+                <h2 class="section-title">LSTM vs Vanilla RNN</h2>
+                
+                <div style="background: rgba(13, 148, 136, 0.05); padding: 20px; border-radius: 15px; margin-bottom: 25px;">
+                    <h4 style="color: #0d9488; margin-bottom: 15px;">Vanilla RNN Problems:</h4>
+                    <ul style="color: #64748b; line-height: 1.6;">
+                        <li>Single hidden state carries all information</li>
+                        <li>Gradients vanish through many time steps</li>
+                        <li>Cannot learn long-range dependencies</li>
+                        <li>Information gets overwritten at each step</li>
+                    </ul>
+                </div>
+                
+                <div style="background: rgba(16, 185, 129, 0.05); padding: 20px; border-radius: 15px;">
+                    <h4 style="color: #10b981; margin-bottom: 15px;">LSTM Solutions:</h4>
+                    <ul style="color: #64748b; line-height: 1.6;">
+                        <li><span class="clickable-term" data-term="dual-state">Dual state system</span> (cell + hidden)</li>
+                        <li><span class="clickable-term" data-term="gating">Gating mechanisms</span> control information flow</li>
+                        <li>Linear cell state enables gradient flow</li>
+                        <li>Selective memory updating and forgetting</li>
+                    </ul>
+                </div>
+                
+                <div class="equations-section">
+                    <div class="equation-title">LSTM Equations</div>
+                    
+                    <div class="equation-group">
+                        <div class="equation-title">Forget Gate</div>
+                        f_t = σ(W_f · [h_{t-1}, x_t] + b_f)
+                    </div>
+                    
+                    <div class="equation-group">
+                        <div class="equation-title">Input Gate</div>
+                        i_t = σ(W_i · [h_{t-1}, x_t] + b_i)<br>
+                        C̃_t = tanh(W_C · [h_{t-1}, x_t] + b_C)
+                    </div>
+                    
+                    <div class="equation-group">
+                        <div class="equation-title">Cell State Update</div>
+                        C_t = f_t * C_{t-1} + i_t * C̃_t
+                    </div>
+                    
+                    <div class="equation-group">
+                        <div class="equation-title">Output Gate</div>
+                        o_t = σ(W_o · [h_{t-1}, x_t] + b_o)<br>
+                        h_t = o_t * tanh(C_t)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="advantages-section">
+            <h2 class="section-title" style="color: #0d9488;">LSTM Advantages</h2>
+            
+            <div class="advantage-grid">
+                <div class="advantage-card" data-advantage="memory">
+                    <div class="advantage-title">
+                        🧠 Long-Term Memory
+                    </div>
+                    <div class="advantage-desc">
+                        Can remember information for hundreds of time steps without degradation
+                    </div>
+                </div>
+                
+                <div class="advantage-card" data-advantage="gradients">
+                    <div class="advantage-title">
+                        📈 Stable Gradients
+                    </div>
+                    <div class="advantage-desc">
+                        Cell state provides linear gradient path, preventing vanishing gradients
+                    </div>
+                </div>
+                
+                <div class="advantage-card" data-advantage="selective">
+                    <div class="advantage-title">
+                        🎯 Selective Processing
+                    </div>
+                    <div class="advantage-desc">
+                        Gates allow selective reading, writing, and forgetting of information
+                    </div>
+                </div>
+                
+                <div class="advantage-card" data-advantage="flexible">
+                    <div class="advantage-title">
+                        🔧 Flexible Architecture
+                    </div>
+                    <div class="advantage-desc">
+                        Can be stacked, bidirectional, or used in seq2seq models
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week10_Slide184.html" class="nav-btn">← Previous</a>
+        <a href="Week10_Slide186.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Clickable terms
+        document.querySelectorAll('.clickable-term').forEach(term => {
+            term.addEventListener('click', function() {
+                const termType = this.dataset.term;
+                
+                const explanations = {
+                    'lstm-concept': {
+                        title: 'LSTM Architecture Innovation',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>Why LSTM was Revolutionary</h4>
+                                <p>Introduced in 1997 by Hochreiter & Schmidhuber, LSTM solved the fundamental problem of learning long-range dependencies in sequences.</p>
+                            </div>
+                            
+                            <h4 style="color: #0d9488; margin: 20px 0;">Historical Context:</h4>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>1990s Challenge:</strong><br>
+                                • RNNs theoretically could handle sequences<br>
+                                • In practice, they only learned short-term patterns<br>
+                                • Vanishing gradients prevented long-range learning<br>
+                                • Researchers thought RNNs were fundamentally limited
+                            </div>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>LSTM Breakthrough:</strong><br>
+                                • Introduced the concept of "gated memory"<br>
+                                • Cell state acts as a controllable memory<br>
+                                • Gates determine what to remember/forget<br>
+                                • Enabled practical sequence learning
+                            </div>
+                            
+                            <div class="modal-code">
+# LSTM impact in numbers:
+- Can learn dependencies 1000+ steps apart
+- Reduced gradient vanishing by 10000x
+- Enabled practical speech recognition (2005)
+- Foundation for modern NLP (2010s)
+- Led to attention mechanisms (2014)
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(251, 191, 36, 0.1); border-radius: 10px;">
+                                <strong>🏆 Modern Legacy:</strong><br>
+                                LSTM principles influenced transformer attention mechanisms, making models like GPT and BERT possible.
+                            </div>
+                        `
+                    },
+                    'gradient-problem': {
+                        title: 'Vanishing Gradient Solution',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>How LSTM Solves Vanishing Gradients</h4>
+                                <p>LSTM's cell state provides a linear pathway for gradients to flow unchanged across many time steps.</p>
+                            </div>
+                            
+                            <div class="modal-code">
+# Vanilla RNN gradient flow:
+∂C_t/∂C_{t-k} = ∏_{i=1}^k W^T · diag(f'(h_i))
+# Product of k terms → vanishes if |W·f'| < 1
+
+# LSTM cell state gradient:
+∂C_t/∂C_{t-1} = f_t  # Just the forget gate!
+# No product accumulation → stable gradients
+                            </div>
+                            
+                            <h4 style="color: #0d9488; margin: 20px 0;">Why Cell State Works:</h4>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>1. Linear Updates:</strong><br>
+                                C_t = f_t ⊙ C_{t-1} + i_t ⊙ C̃_t<br>
+                                • Addition, not multiplication through layers<br>
+                                • Gradients flow directly through addition<br>
+                                • No repeated matrix multiplications
+                            </div>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>2. Controlled Forgetting:</strong><br>
+                                • Forget gate f_t ∈ [0,1]<br>
+                                • When f_t ≈ 1, C_{t-1} passes through unchanged<br>
+                                • Gradient magnitude preserved<br>
+                                • Network learns when to maintain gradients
+                            </div>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>3. Selective Updates:</strong><br>
+                                • Input gate i_t controls new information<br>
+                                • Only relevant updates are added<br>
+                                • Prevents noise from corrupting memory<br>
+                                • Gradients focus on important patterns
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(16, 185, 129, 0.1); border-radius: 10px;">
+                                <strong>📊 Experimental Evidence:</strong><br>
+                                LSTMs can learn dependencies separated by 1000 time steps, while vanilla RNNs fail beyond 10-20 steps.
+                            </div>
+                        `
+                    },
+                    'cell-state': {
+                        title: 'Understanding Cell State',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>Cell State: The Memory Highway</h4>
+                                <p>The cell state is LSTM's key innovation - a linear pathway that carries information across time with minimal modification.</p>
+                            </div>
+                            
+                            <div class="modal-code">
+# Cell state evolution:
+C_0 → C_1 → C_2 → C_3 → ... → C_t
+
+# At each step:
+C_t = f_t ⊙ C_{t-1} + i_t ⊙ C̃_t
+#     ^^^^^^^^^^^^^^^^   ^^^^^^^^^^^
+#     Keep old memory    Add new info
+
+# Key properties:
+1. Linear updates (addition, not layers)
+2. Gated control (selective read/write)
+3. Long-term persistence (f_t ≈ 1)
+4. Gradient-friendly (∂C_t/∂C_{t-1} = f_t)
+                            </div>
+                            
+                            <h4 style="color: #0d9488; margin: 20px 0;">Cell State vs Hidden State:</h4>
+                            
+                            <div style="background: rgba(251, 191, 36, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Cell State (C_t) - Internal Memory:</strong><br>
+                                • Raw, unfiltered memory<br>
+                                • Flows linearly through time<br>
+                                • Can accumulate information indefinitely<br>
+                                • Not directly accessible outside LSTM
+                            </div>
+                            
+                            <div style="background: rgba(139, 92, 246, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Hidden State (h_t) - Filtered Output:</strong><br>
+                                • Processed version of cell state<br>
+                                • h_t = o_t ⊙ tanh(C_t)<br>
+                                • What other layers see<br>
+                                • Shorter-term, task-relevant information
+                            </div>
+                            
+                            <h4 style="color: #0d9488; margin: 20px 0;">Memory Operations:</h4>
+                            
+                            <div class="modal-code">
+# Memory analogy:
+Cell State = Computer RAM
+- Stores raw data
+- Large capacity
+- Direct read/write access
+
+Hidden State = CPU Cache  
+- Processed, relevant data
+- Smaller, focused subset
+- What computations use
+
+Gates = Memory Controller
+- Decide what to load/store
+- When to clear old data
+- What to output to CPU
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                                <strong>🧠 Biological Inspiration:</strong><br>
+                                Similar to how human memory has both working memory (hidden state) and long-term memory (cell state) with attention controlling access.
+                            </div>
+                        `
+                    },
+                    'dual-state': {
+                        title: 'Dual State System',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>Why Two States Are Better Than One</h4>
+                                <p>LSTM's dual state system separates long-term memory storage from short-term working memory, enabling more sophisticated information processing.</p>
+                            </div>
+                            
+                            <div class="modal-code">
+# Single state system (Vanilla RNN):
+h_t = tanh(W_x @ x_t + W_h @ h_{t-1} + b)
+# h_t serves both as:
+# 1. Memory of past information  
+# 2. Current computation state
+# → Conflict: can't optimize for both!
+
+# Dual state system (LSTM):
+C_t = f_t ⊙ C_{t-1} + i_t ⊙ C̃_t  # Long-term memory
+h_t = o_t ⊙ tanh(C_t)              # Working memory
+# Specialized for different functions
+                            </div>
+                            
+                            <h4 style="color: #0d9488; margin: 20px 0;">Advantages of Separation:</h4>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>1. Specialized Optimization:</strong><br>
+                                • Cell state optimized for information persistence<br>
+                                • Hidden state optimized for current computation<br>
+                                • No need to compromise between conflicting goals<br>
+                                • Each can use different update mechanisms
+                            </div>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>2. Controlled Information Flow:</strong><br>
+                                • Can remember something without outputting it<br>
+                                • Can forget internal state while maintaining output<br>
+                                • Decouples what to remember from what to process<br>
+                                • Enables more complex memory strategies
+                            </div>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>3. Gradient Flow Optimization:</strong><br>
+                                • Cell state designed for stable gradients<br>
+                                • Hidden state can use nonlinearities safely<br>
+                                • Backpropagation can flow through cell state<br>
+                                • No gradient vanishing in memory pathway
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(251, 191, 36, 0.1); border-radius: 10px;">
+                                <strong>🔬 Analogy:</strong><br>
+                                Like separating a computer's RAM (cell state) from its CPU registers (hidden state) - each optimized for different purposes.
+                            </div>
+                        `
+                    },
+                    'gating': {
+                        title: 'Gating Mechanisms',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>How Gates Control Information Flow</h4>
+                                <p>LSTM gates are neural networks that learn to control what information flows through the cell state and hidden state.</p>
+                            </div>
+                            
+                            <div class="modal-code">
+# Gate structure (all gates follow this pattern):
+gate_t = σ(W_gate @ [h_{t-1}, x_t] + b_gate)
+
+# Sigmoid function σ maps to [0, 1]:
+# 0 = "completely block this information"
+# 1 = "completely allow this information"  
+# 0.5 = "partially allow this information"
+
+# Gates as learned switches:
+if gate_value ≈ 0:
+    # Information blocked
+elif gate_value ≈ 1:
+    # Information flows through
+else:
+    # Partial information flow
+                            </div>
+                            
+                            <h4 style="color: #0d9488; margin: 20px 0;">Three Types of Gates:</h4>
+                            
+                            <div style="background: rgba(239, 68, 68, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>🚫 Forget Gate (f_t):</strong><br>
+                                • Decides what to remove from cell state<br>
+                                • f_t = σ(W_f @ [h_{t-1}, x_t] + b_f)<br>
+                                • Applied: C_t = f_t ⊙ C_{t-1} + ...<br>
+                                • Function: "What old information is no longer relevant?"
+                            </div>
+                            
+                            <div style="background: rgba(16, 185, 129, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>📥 Input Gate (i_t):</strong><br>
+                                • Decides what new information to store<br>
+                                • i_t = σ(W_i @ [h_{t-1}, x_t] + b_i)<br>
+                                • Applied: C_t = ... + i_t ⊙ C̃_t<br>
+                                • Function: "What new information is worth remembering?"
+                            </div>
+                            
+                            <div style="background: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>📤 Output Gate (o_t):</strong><br>
+                                • Decides what parts of cell state to output<br>
+                                • o_t = σ(W_o @ [h_{t-1}, x_t] + b_o)<br>
+                                • Applied: h_t = o_t ⊙ tanh(C_t)<br>
+                                • Function: "What internal information is relevant for output?"
+                            </div>
+                            
+                            <h4 style="color: #0d9488; margin: 20px 0;">Training the Gates:</h4>
+                            
+                            <div class="modal-code">
+# Gates learn context-dependent behavior:
+
+# Example 1: Name tracking in text
+"John went to the store. He bought milk."
+# When processing "He":
+# - Forget gate: Keep John's info (f_t ≈ 1)
+# - Input gate: Don't add much new (i_t ≈ 0)  
+# - Output gate: Output John for pronoun resolution (o_t ≈ 1)
+
+# Example 2: New subject appears
+"John went to the store. Mary called him."
+# When processing "Mary":
+# - Forget gate: Partially forget John (f_t ≈ 0.7)
+# - Input gate: Store Mary's info (i_t ≈ 1)
+# - Output gate: Output Mary for new context (o_t ≈ 1)
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(139, 92, 246, 0.1); border-radius: 10px;">
+                                <strong>🧠 Key Insight:</strong><br>
+                                Gates aren't hand-coded rules - they're learned functions that adapt to the specific patterns in your data and task.
+                            </div>
+                        `
+                    }
+                };
+                
+                const exp = explanations[termType];
+                if (exp) {
+                    modal.show(exp.title, exp.content);
+                }
+            });
+        });
+
+        // LSTM component interactions
+        document.querySelectorAll('[data-component]').forEach(component => {
+            component.addEventListener('click', function() {
+                const compType = this.dataset.component;
+                
+                const components = {
+                    'cell-state': {
+                        title: 'Cell State Deep Dive',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>Cell State: The Core of LSTM</h4>
+                                <p>The cell state runs straight down the entire cell, with only minor linear interactions. It's very easy for information to just flow along it unchanged.</p>
+                            </div>
+                            
+                            <div class="modal-code">
+# Cell state properties:
+Shape: [batch_size, hidden_size]
+Range: Unbounded (can be negative/positive)
+Update: C_t = f_t ⊙ C_{t-1} + i_t ⊙ C̃_t
+
+# Information capacity:
+- Each dimension can store different information
+- Typical sizes: 128, 256, 512, or 1024 dimensions
+- Total memory = hidden_size × sequence_length
+                            </div>
+                            
+                            <h4 style="color: #0d9488; margin: 20px 0;">What Cell State Remembers:</h4>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Language Tasks:</strong><br>
+                                • Subject-verb agreement information<br>
+                                • Entity states and properties<br>
+                                • Nested clause structures<br>
+                                • Discourse context and topics
+                            </div>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Time Series:</strong><br>
+                                • Long-term trends and seasonality<br>
+                                • Regime changes and breakpoints<br>
+                                • Accumulated statistics<br>
+                                • External event memories
+                            </div>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Sequential Decision Making:</strong><br>
+                                • Goal and strategy information<br>
+                                • Environment state estimates<br>
+                                • Action history summaries<br>
+                                • Reward signal integration
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(251, 191, 36, 0.1); border-radius: 10px;">
+                                <strong>🔍 Visualization Techniques:</strong><br>
+                                Use t-SNE, PCA, or attention visualization to see what patterns the cell state captures across different time steps.
+                            </div>
+                        `
+                    },
+                    'hidden-state': {
+                        title: 'Hidden State Details',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>Hidden State: Processed Information</h4>
+                                <p>The hidden state is the "public interface" of the LSTM - it's what gets passed to other layers and used for predictions.</p>
+                            </div>
+                            
+                            <div class="modal-code">
+# Hidden state computation:
+h_t = o_t ⊙ tanh(C_t)
+
+# Two-step processing:
+1. tanh(C_t): Squash cell state to [-1, 1]
+2. o_t ⊙ (...): Filter what to reveal
+
+# Why tanh?
+- Bounds the output to reasonable range
+- Provides non-linearity for complex patterns  
+- Derivative helps with training
+- Maps large cell values to meaningful outputs
+                            </div>
+                            
+                            <h4 style="color: #0d9488; margin: 20px 0;">Hidden State Properties:</h4>
+                            
+                            <div style="background: rgba(139, 92, 246, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Range and Interpretation:</strong><br>
+                                • Values in [-1, 1] due to tanh<br>
+                                • -1: Strong negative activation<br>
+                                • 0: Neutral/no activation<br>
+                                • +1: Strong positive activation
+                            </div>
+                            
+                            <div style="background: rgba(139, 92, 246, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Information Content:</strong><br>
+                                • Task-relevant subset of cell state<br>
+                                • Filtered by current context (output gate)<br>
+                                • Optimized for immediate next predictions<br>
+                                • Changes rapidly compared to cell state
+                            </div>
+                            
+                            <div style="background: rgba(139, 92, 246, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Usage Patterns:</strong><br>
+                                • Input to next LSTM layer<br>
+                                • Features for classification head<br>
+                                • Attention computation in seq2seq<br>
+                                • Skip connections in deep networks
+                            </div>
+                            
+                            <h4 style="color: #0d9488; margin: 20px 0;">Cell State vs Hidden State:</h4>
+                            
+                            <div class="modal-code">
+# Example: Sentiment analysis
+Input: "The movie started poorly but got much better"
+
+Cell State after "poorly":
+[sentiment: -0.8, temporal: 0.3, expectation: 0.1, ...]
+# Raw memory - remembers negative sentiment
+
+Hidden State after "poorly": 
+[sentiment: -0.6, context: 0.2, ...]
+# Filtered output - what's relevant now
+
+Cell State after "better":
+[sentiment: +0.4, temporal: 0.8, expectation: 0.7, ...]  
+# Updated with new info, but keeps context
+
+Hidden State after "better":
+[sentiment: +0.5, confidence: 0.9, ...]
+# Final judgment - positive overall
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(16, 185, 129, 0.1); border-radius: 10px;">
+                                <strong>🎯 Design Principle:</strong><br>
+                                Hidden state optimizes for "what do I need to know right now?" while cell state optimizes for "what might I need to remember later?"
+                            </div>
+                        `
+                    }
+                };
+                
+                const comp = components[compType];
+                if (comp) {
+                    modal.show(comp.title, comp.content);
+                }
+            });
+        });
+
+        // Gate interactions
+        document.querySelectorAll('[data-gate]').forEach(gate => {
+            gate.addEventListener('click', function() {
+                const gateType = this.dataset.gate;
+                
+                const gates = {
+                    'forget': {
+                        title: 'Forget Gate in Detail',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>Forget Gate: Selective Memory Erasure</h4>
+                                <p>The forget gate decides what information should be discarded from the cell state. It's the first gate to act in the LSTM sequence.</p>
+                            </div>
+                            
+                            <div class="modal-code">
+# Forget gate computation:
+f_t = σ(W_f @ [h_{t-1}, x_t] + b_f)
+
+# Output: values in [0, 1]
+# 0 = "completely forget this information"
+# 1 = "completely keep this information"
+# 0.5 = "partially remember this information"
+
+# Application to cell state:
+C_t = f_t ⊙ C_{t-1} + ...
+#     ^^^^^^^^^^^^^^
+#     Element-wise multiplication
+                            </div>
+                            
+                            <h4 style="color: #ef4444; margin: 20px 0;">When Forget Gate Activates:</h4>
+                            
+                            <div style="background: rgba(239, 68, 68, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Context Switches:</strong><br>
+                                • New paragraph in document<br>
+                                • Speaker change in dialogue<br>
+                                • Scene transition in video<br>
+                                • Regime change in time series
+                            </div>
+                            
+                            <div style="background: rgba(239, 68, 68, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Irrelevant Information:</strong><br>
+                                • Completed sub-tasks<br>
+                                • Outdated temporal information<br>
+                                • Contradicted facts<br>
+                                • Noise or distractors
+                            </div>
+                            
+                            <div style="background: rgba(239, 68, 68, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Memory Limits:</strong><br>
+                                • Capacity management<br>
+                                • Preventing information overflow<br>
+                                • Making room for new memories<br>
+                                • Maintaining focus on current task
+                            </div>
+                            
+                            <h4 style="color: #ef4444; margin: 20px 0;">Forget Gate Examples:</h4>
+                            
+                            <div class="modal-code">
+# Example 1: Language modeling
+"John is a doctor. He works at the hospital. 
+ Sarah is a teacher."
+# When processing "Sarah":
+# Forget gate ≈ 0.3 for John's profession
+# (Still remember John exists, but job less relevant)
+
+# Example 2: Time series forecasting  
+Daily temperature: [20°C, 22°C, 19°C, 35°C, 21°C]
+# When processing 35°C (anomaly):
+# Forget gate ≈ 0.1 for this outlier
+# (Don't let anomaly affect long-term pattern)
+
+# Example 3: Sentiment analysis
+"I hate this movie, but the soundtrack is amazing"
+# When processing "amazing":
+# Forget gate ≈ 0.4 for previous negative sentiment
+# (Partial forgetting to incorporate new positive info)
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                                <strong>🧠 Training Insight:</strong><br>
+                                The forget gate learns task-specific forgetting patterns. In some tasks, it stays close to 1 (remember everything). In others, it actively forgets.
+                            </div>
+                        `
+                    },
+                    'input': {
+                        title: 'Input Gate in Detail',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>Input Gate: Selective Information Storage</h4>
+                                <p>The input gate determines what new information should be stored in the cell state. It works together with candidate values to update memory.</p>
+                            </div>
+                            
+                            <div class="modal-code">
+# Input gate has two parts:
+1. Input gate: i_t = σ(W_i @ [h_{t-1}, x_t] + b_i)
+2. Candidate: C̃_t = tanh(W_C @ [h_{t-1}, x_t] + b_C)
+
+# Combined effect:
+C_t = f_t ⊙ C_{t-1} + i_t ⊙ C̃_t
+#                      ^^^^^^^^^^^
+#                      New information to add
+
+# Two-step process:
+i_t: "How much should we update?" [0, 1]
+C̃_t: "What are the candidate updates?" [-1, 1]
+                            </div>
+                            
+                            <h4 style="color: #10b981; margin: 20px 0;">Input Gate Decisions:</h4>
+                            
+                            <div style="background: rgba(16, 185, 129, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>High Importance (i_t ≈ 1):</strong><br>
+                                • Key facts and entities<br>
+                                • Task-relevant information<br>
+                                • Novel or surprising data<br>
+                                • State-changing events
+                            </div>
+                            
+                            <div style="background: rgba(16, 185, 129, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Medium Importance (i_t ≈ 0.5):</strong><br>
+                                • Supporting details<br>
+                                • Contextual information<br>
+                                • Moderate updates to existing knowledge<br>
+                                • Incremental changes
+                            </div>
+                            
+                            <div style="background: rgba(16, 185, 129, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Low Importance (i_t ≈ 0):</strong><br>
+                                • Redundant information<br>
+                                • Noise or irrelevant data<br>
+                                • Already known facts<br>
+                                • Low-confidence predictions
+                            </div>
+                            
+                            <h4 style="color: #10b981; margin: 20px 0;">Candidate Values (C̃_t):</h4>
+                            
+                            <div class="modal-code">
+# Candidate generation:
+C̃_t = tanh(W_C @ [h_{t-1}, x_t] + b_C)
+
+# tanh output range: [-1, 1]
+# Interpretation:
+# +1: Strong positive update
+#  0: No change/neutral
+# -1: Strong negative update
+
+# Example candidates:
+C̃_t = [0.8, -0.3, 0.1, 0.9, -0.7, ...]
+#       ^^^   ^^^^  ^^^  ^^^   ^^^^
+#       Strong pos   Weak  Strong  Strong neg
+                            </div>
+                            
+                            <h4 style="color: #10b981; margin: 20px 0;">Input Gate Examples:</h4>
+                            
+                            <div class="modal-code">
+# Example: Reading comprehension
+"The capital of France is Paris. The population is 67 million."
+
+# Processing "Paris":
+i_t ≈ [0.9, 0.1, 0.8, ...]  # High gate for location info
+C̃_t ≈ [0.7, -0.2, 0.9, ...]  # Candidate: Paris = capital
+
+# Processing "67 million":  
+i_t ≈ [0.1, 0.9, 0.2, ...]  # High gate for population info
+C̃_t ≈ [0.1, 0.8, -0.1, ...]  # Candidate: population number
+
+# Result: Selective storage based on information type
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(251, 191, 36, 0.1); border-radius: 10px;">
+                                <strong>🎯 Key Insight:</strong><br>
+                                Input gate isn't just about "important vs unimportant" - it learns what types of information are relevant for different memory slots.
+                            </div>
+                        `
+                    },
+                    'output': {
+                        title: 'Output Gate in Detail',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>Output Gate: Controlled Information Access</h4>
+                                <p>The output gate controls what parts of the cell state should be revealed as the hidden state output at each time step.</p>
+                            </div>
+                            
+                            <div class="modal-code">
+# Output gate computation:
+o_t = σ(W_o @ [h_{t-1}, x_t] + b_o)
+h_t = o_t ⊙ tanh(C_t)
+
+# Two-stage filtering:
+1. tanh(C_t): Normalize cell state to [-1, 1]
+2. o_t ⊙ (...): Select what to output
+
+# Key distinction:
+# Cell state C_t = Internal memory (private)
+# Hidden state h_t = External output (public)
+                            </div>
+                            
+                            <h4 style="color: #3b82f6; margin: 20px 0;">Why Separate Internal vs External?</h4>
+                            
+                            <div style="background: rgba(59, 130, 246, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Information Privacy:</strong><br>
+                                • Some memories are for internal use only<br>
+                                • Current task may not need all stored info<br>
+                                • Prevents information overload in next layers<br>
+                                • Maintains focus on relevant aspects
+                            </div>
+                            
+                            <div style="background: rgba(59, 130, 246, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Context-Dependent Access:</strong><br>
+                                • Same memory, different outputs based on context<br>
+                                • Task-specific information filtering<br>
+                                • Adaptive attention to stored memories<br>
+                                • Dynamic relevance assessment
+                            </div>
+                            
+                            <div style="background: rgba(59, 130, 246, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Gradient Control:</strong><br>
+                                • Shapes what gets optimized<br>
+                                • Prevents irrelevant memories from affecting output<br>
+                                • Allows selective learning of output patterns<br>
+                                • Maintains stable internal representations
+                            </div>
+                            
+                            <h4 style="color: #3b82f6; margin: 20px 0;">Output Gate Examples:</h4>
+                            
+                            <div class="modal-code">
+# Example: Question answering
+Context: "John is 25 years old. He works as a doctor in Paris."
+Question: "Where does John work?"
+
+# Cell state contains: [age=25, job=doctor, location=Paris, ...]
+# Output gate for location question:
+o_t ≈ [0.1, 0.2, 0.9, ...]  # High output for location info
+h_t ≈ [low, low, high, ...]  # Only location info in output
+
+# Different question: "How old is John?"  
+o_t ≈ [0.9, 0.1, 0.2, ...]  # High output for age info
+h_t ≈ [high, low, low, ...]  # Only age info in output
+                            </div>
+                            
+                            <div class="modal-code">
+# Example: Conversation system
+Internal state: [speaker_intent, conversation_history, 
+                 emotional_state, factual_knowledge, ...]
+
+# Responding to factual question:
+o_t focuses on: factual_knowledge
+# Output: objective, informative response
+
+# Responding to emotional statement:
+o_t focuses on: emotional_state, conversation_history  
+# Output: empathetic, contextual response
+
+# Internal memories persist, but access changes
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(139, 92, 246, 0.1); border-radius: 10px;">
+                                <strong>🔑 Analogy:</strong><br>
+                                Like a librarian who knows everything in the library (cell state) but only shows you the books relevant to your current question (hidden state).
+                            </div>
+                        `
+                    }
+                };
+                
+                const gate = gates[gateType];
+                if (gate) {
+                    modal.show(gate.title, gate.content);
+                }
+            });
+        });
+
+        // Advantage card interactions
+        document.querySelectorAll('[data-advantage]').forEach(card => {
+            card.addEventListener('click', function() {
+                const advType = this.dataset.advantage;
+                
+                const advantages = {
+                    'memory': {
+                        title: 'Long-Term Memory Capabilities',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>Extraordinary Memory Performance</h4>
+                                <p>LSTMs can maintain information across hundreds or thousands of time steps, far exceeding vanilla RNN capabilities.</p>
+                            </div>
+                            
+                            <div class="modal-code">
+# Memory benchmarks:
+Vanilla RNN: ~10-20 time steps max
+LSTM: 1000+ time steps routinely
+GRU: Similar to LSTM but simpler
+
+# What enables long memory?
+1. Linear cell state updates (no repeated nonlinearities)
+2. Additive memory updates (vs multiplicative in RNN)  
+3. Gated control of information flow
+4. Dedicated memory pathway separate from computation
+                            </div>
+                            
+                            <h4 style="color: #0d9488; margin: 20px 0;">Real-World Memory Examples:</h4>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Document Understanding:</strong><br>
+                                • Remember character introduced in Chapter 1 for Chapter 10<br>
+                                • Track plot threads across 100,000+ word novels<br>
+                                • Maintain context in legal document analysis<br>
+                                • Connect references across research papers
+                            </div>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Time Series Analysis:</strong><br>
+                                • Seasonal patterns (365 days for yearly cycles)<br>
+                                • Economic trend analysis (quarters to years)<br>
+                                • Climate modeling (decades of dependencies)<br>
+                                • Financial regime detection (market cycles)
+                            </div>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Conversation AI:</strong><br>
+                                • Remember conversation context from hours ago<br>
+                                • Track user preferences across sessions<br>
+                                • Maintain personality consistency<br>
+                                • Reference earlier conversation topics
+                            </div>
+                            
+                            <h4 style="color: #0d9488; margin: 20px 0;">Memory Quality Metrics:</h4>
+                            
+                            <div class="modal-code">
+# Measuring memory quality:
+
+1. Retention Length:
+   - How many steps back can model remember?
+   - Test with synthetic tasks (copying, recall)
+
+2. Information Fidelity:  
+   - How accurately is info preserved?
+   - Measure reconstruction error over time
+
+3. Selective Memory:
+   - Does model remember important vs irrelevant?
+   - Test with distractor tasks
+
+4. Interference Resistance:
+   - Can model maintain memory despite noise?
+   - Robust to irrelevant information
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(251, 191, 36, 0.1); border-radius: 10px;">
+                                <strong>📊 Research Finding:</strong><br>
+                                LSTMs can solve the "adding problem" (sum two numbers separated by 1000 random digits) with 99% accuracy, while vanilla RNNs achieve ~50% (random chance).
+                            </div>
+                        `
+                    },
+                    'gradients': {
+                        title: 'Stable Gradient Flow',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>How LSTM Maintains Stable Gradients</h4>
+                                <p>LSTM's architecture provides multiple pathways for gradients to flow, preventing the vanishing gradient problem that plagues vanilla RNNs.</p>
+                            </div>
+                            
+                            <div class="modal-code">
+# Gradient flow analysis:
+
+# Vanilla RNN (problematic):
+∂h_t/∂h_{t-k} = ∏_{i=1}^k W^T diag(f'(h_i))
+# k multiplicative terms → exponential decay
+
+# LSTM cell state (stable):
+∂C_t/∂C_{t-k} = ∏_{i=1}^k f_{t-i+1}
+# Only forget gates (no weight matrices!)
+# When f_t ≈ 1, gradient ≈ 1
+
+# LSTM hidden state:
+∂h_t/∂h_{t-k} has multiple paths:
+1. Through cell state (stable)
+2. Through hidden state (traditional)
+3. Through gate computations (controlled)
+                            </div>
+                            
+                            <h4 style="color: #0d9488; margin: 20px 0;">Gradient Pathways:</h4>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>1. Cell State Highway:</strong><br>
+                                • Linear path with minimal transformations<br>
+                                • Gradients flow through addition operations<br>
+                                • Controlled by forget gates (learned)<br>
+                                • Can maintain gradient magnitude across long sequences
+                            </div>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>2. Gate Gradients:</strong><br>
+                                • Each gate provides its own gradient path<br>
+                                • Sigmoid activations help bound gradients<br>
+                                • Multiple parallel paths reduce dependency<br>
+                                • Adaptive gradient scaling through gate values
+                            </div>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>3. Hidden State Path:</strong><br>
+                                • Traditional RNN-like gradient flow<br>
+                                • Still present but not relied upon<br>
+                                • Handles short-term dependencies<br>
+                                • Complemented by cell state pathway
+                            </div>
+                            
+                            <h4 style="color: #0d9488; margin: 20px 0;">Training Stability Benefits:</h4>
+                            
+                            <div class="modal-code">
+# Empirical observations:
+
+# Gradient norms in vanilla RNN:
+Time steps:    1     10    50    100   500
+Gradient:   1.00  0.15  0.01  0.001  ~0
+# Exponential decay → no learning
+
+# Gradient norms in LSTM:
+Time steps:    1     10    50    100   500  
+Gradient:   1.00  0.85  0.72  0.68  0.45
+# Controlled decay → sustained learning
+
+# Training convergence:
+Vanilla RNN: Plateaus quickly, poor final performance
+LSTM: Steady improvement, much better final performance
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(16, 185, 129, 0.1); border-radius: 10px;">
+                                <strong>✅ Practical Impact:</strong><br>
+                                Stable gradients mean LSTM training is more predictable, requires less hyperparameter tuning, and achieves better final performance on sequence tasks.
+                            </div>
+                        `
+                    },
+                    'selective': {
+                        title: 'Selective Information Processing',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>Learned Attention and Filtering</h4>
+                                <p>LSTM gates act as learned attention mechanisms, deciding what information to process, store, and output at each time step.</p>
+                            </div>
+                            
+                            <div class="modal-code">
+# Selective processing at each step:
+
+1. Forget Gate: "What should I stop remembering?"
+   - Context changes, irrelevant info, completed tasks
+   
+2. Input Gate: "What new info should I store?"
+   - Important facts, novel information, task updates
+   
+3. Output Gate: "What should I reveal now?"
+   - Task-relevant memories, current focus, context
+
+# Result: Information flows selectively through network
+                            </div>
+                            
+                            <h4 style="color: #0d9488; margin: 20px 0;">Types of Selectivity:</h4>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Temporal Selectivity:</strong><br>
+                                • Recent vs distant information<br>
+                                • Event-driven vs background processing<br>
+                                • Deadline-sensitive vs persistent memory<br>
+                                • Transient vs permanent storage
+                            </div>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Content Selectivity:</strong><br>
+                                • Task-relevant vs irrelevant information<br>
+                                • High vs low confidence predictions<br>
+                                • Factual vs stylistic content<br>
+                                • Signal vs noise discrimination
+                            </div>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Context Selectivity:</strong><br>
+                                • Query-dependent information access<br>
+                                • Mode-specific processing (train vs test)<br>
+                                • User-personalized filtering<br>
+                                • Domain-adaptive behavior
+                            </div>
+                            
+                            <h4 style="color: #0d9488; margin: 20px 0;">Examples of Learned Selectivity:</h4>
+                            
+                            <div class="modal-code">
+# Example 1: Language translation
+English: "The red car is fast"
+French:  "La voiture rouge est rapide"
+
+# Gender agreement task:
+# Input gate: High for "car" (need gender info)
+# Cell state: Stores "car = feminine in French"  
+# Output gate: High when processing "rouge" (adjective)
+# Result: Correct agreement "voiture rouge"
+
+# Example 2: Time series anomaly detection
+Normal pattern: [10, 12, 11, 13, 10, 12...]
+Anomaly: [10, 12, 11, 47, 10, 12...]
+
+# Forget gate: Low for anomaly (don't let it corrupt pattern)
+# Input gate: Low for anomaly (don't store as normal)
+# Output gate: High for anomaly (alert system)
+# Result: Anomaly detected but pattern preserved
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(139, 92, 246, 0.1); border-radius: 10px;">
+                                <strong>🧠 Cognitive Parallel:</strong><br>
+                                Similar to human selective attention - we constantly filter what to focus on, remember, and act upon from the overwhelming stream of sensory input.
+                            </div>
+                        `
+                    },
+                    'flexible': {
+                        title: 'Flexible Architecture',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>LSTM as Building Block</h4>
+                                <p>LSTMs can be combined and configured in various ways to solve different types of sequence learning problems.</p>
+                            </div>
+                            
+                            <h4 style="color: #0d9488; margin: 20px 0;">Architecture Variations:</h4>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>1. Stacked LSTMs:</strong><br>
+                                • Multiple LSTM layers in sequence<br>
+                                • Each layer learns different abstraction levels<br>
+                                • Lower layers: syntax, higher layers: semantics<br>
+                                • Improved capacity for complex patterns
+                            </div>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>2. Bidirectional LSTMs:</strong><br>
+                                • Forward and backward LSTM layers<br>
+                                • Access to both past and future context<br>
+                                • Better for tasks where full sequence is available<br>
+                                • Common in NLP and speech recognition
+                            </div>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>3. Sequence-to-Sequence:</strong><br>
+                                • Encoder LSTM processes input sequence<br>
+                                • Decoder LSTM generates output sequence<br>
+                                • Different input and output lengths<br>
+                                • Foundation for translation, summarization
+                            </div>
+                            
+                            <div class="modal-code">
+# Architecture examples:
+
+# 1. Stacked LSTM
+x → LSTM₁ → LSTM₂ → LSTM₃ → output
+    (low)   (mid)   (high)
+    syntax  phrases semantics
+
+# 2. Bidirectional LSTM  
+    Forward:  h₁→ h₂→ h₃→ h₄→
+    Backward: ←h₁ ←h₂ ←h₃ ←h₄
+    Output:   [h₁,h₁] [h₂,h₂] [h₃,h₃] [h₄,h₄]
+
+# 3. Sequence-to-Sequence
+    Encoder: x₁ x₂ x₃ → [context_vector]
+    Decoder: [context] → y₁ y₂ y₄ y₅
+                            </div>
+                            
+                            <h4 style="color: #0d9488; margin: 20px 0;">Task-Specific Configurations:</h4>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Classification Tasks:</strong><br>
+                                • Many-to-One: Sequence → Single prediction<br>
+                                • Use final hidden state or pooling<br>
+                                • Examples: Sentiment analysis, document classification
+                            </div>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Sequence Labeling:</strong><br>
+                                • Many-to-Many: Each input gets a label<br>
+                                • Use hidden state at each time step<br>
+                                • Examples: POS tagging, named entity recognition
+                            </div>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Generation Tasks:</strong><br>
+                                • One-to-Many: Single input → Sequence output<br>
+                                • Feed output back as next input<br>
+                                • Examples: Image captioning, text generation
+                            </div>
+                            
+                            <div class="modal-code">
+# Modern applications:
+
+# Speech Recognition (2012-2015):
+Audio → CNN → BiLSTM → CTC → Text
+# Revolutionized accuracy
+
+# Machine Translation (2014-2017):  
+Text₁ → LSTM Encoder → Attention → LSTM Decoder → Text₂
+# Enabled practical neural translation
+
+# Language Modeling (2015-2018):
+Previous words → LSTM → Next word probability
+# Foundation for GPT-style models
+
+# Current role:
+LSTMs → Transformers (2017+)
+# But LSTM principles live on in memory mechanisms
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(251, 191, 36, 0.1); border-radius: 10px;">
+                                <strong>🔮 Legacy:</strong><br>
+                                While Transformers dominate now, LSTM's gating mechanisms inspired attention, and its memory concepts influence modern architectures like Memory Networks and Neural Turing Machines.
+                            </div>
+                        `
+                    }
+                };
+                
+                const adv = advantages[advType];
+                if (adv) {
+                    modal.show(adv.title, adv.content);
+                }
+            });
+        });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week10_Slide184.html';
+            } else if (e.key === 'ArrowRight') {
+                window.location.href = 'Week10_Slide186.html';
+            }
+        });
+    </script>
+</body>
+</html>

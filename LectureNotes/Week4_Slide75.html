@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Common Kernels (Linear, RBF, Polynomial)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .kernels-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .kernel-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            animation: slideInFromBottom 1s ease-out calc(0.2s * var(--index)) both;
+        }
+
+        .kernel-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 25px 50px rgba(13, 148, 136, 0.15);
+            border-color: #0d9488;
+        }
+
+        .kernel-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .kernel-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .kernel-name {
+            font-size: 1.5em;
+            color: #0d9488;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .kernel-formula {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 15px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+            margin: 15px 0;
+            font-size: 0.95em;
+        }
+
+        .kernel-properties {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .kernel-property {
+            padding: 8px 0;
+            color: #475569;
+            font-size: 0.9em;
+            border-bottom: 1px solid rgba(13, 148, 136, 0.1);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .kernel-property:last-child {
+            border-bottom: none;
+        }
+
+        .property-label {
+            font-weight: 600;
+            color: #0d9488;
+        }
+
+        .use-cases {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .use-cases-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+
+        .use-cases-list {
+            font-size: 0.85em;
+            color: #475569;
+            line-height: 1.4;
+        }
+
+        .comparison-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.8s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+            text-align: center;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .comparison-table th {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .comparison-table td {
+            background: #ffffff;
+            padding: 18px;
+            text-align: center;
+            border-bottom: 1px solid #e5e7eb;
+            vertical-align: middle;
+            transition: all 0.3s ease;
+        }
+
+        .comparison-table tr:hover td {
+            background: rgba(13, 148, 136, 0.05);
+        }
+
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .aspect-label {
+            font-weight: 600;
+            color: #0d9488;
+            text-align: left;
+        }
+
+        .rating {
+            font-size: 1.2em;
+        }
+
+        .rating.excellent { color: #10b981; }
+        .rating.good { color: #f59e0b; }
+        .rating.moderate { color: #ef4444; }
+
+        .interactive-playground {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 1s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .playground-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .parameter-controls {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .parameter-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .parameter-label {
+            font-size: 0.9em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .parameter-slider {
+            width: 100px;
+            height: 5px;
+            border-radius: 5px;
+            background: #e5e7eb;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .parameter-slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #0d9488;
+            cursor: pointer;
+        }
+
+        .parameter-value {
+            font-size: 0.8em;
+            color: #475569;
+            font-weight: 600;
+        }
+
+        .kernel-selector {
+            display: flex;
+            gap: 10px;
+        }
+
+        .kernel-btn {
+            padding: 8px 16px;
+            background: rgba(13, 148, 136, 0.1);
+            border: 2px solid #0d9488;
+            border-radius: 8px;
+            color: #0d9488;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .kernel-btn.active {
+            background: #0d9488;
+            color: white;
+        }
+
+        .kernel-btn:hover:not(.active) {
+            background: rgba(13, 148, 136, 0.2);
+        }
+
+        .visualization-area {
+            width: 100%;
+            height: 300px;
+            background: #1e293b;
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+
+        .data-point {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            transition: all 0.5s ease;
+        }
+
+        .class-positive { background: #10b981; }
+        .class-negative { background: #ef4444; }
+
+        .decision-boundary {
+            position: absolute;
+            pointer-events: none;
+            opacity: 0.8;
+        }
+
+        .boundary-linear { 
+            height: 2px; 
+            background: #5eead4;
+            transform-origin: center;
+        }
+
+        .boundary-poly { 
+            border: 2px solid #fbbf24;
+            border-radius: 50%;
+            background: none;
+        }
+
+        .boundary-rbf {
+            border: 2px solid #f97316;
+            background: none;
+            border-radius: 50%;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @media (max-width: 1200px) {
+            .kernels-grid { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+        }
+
+        @media (max-width: 768px) {
+            .parameter-controls { flex-wrap: wrap; gap: 10px; }
+            .kernel-selector { flex-wrap: wrap; }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    
+    <div class="course-info">CS5710 - Week 4</div>
+    <div class="slide-number">Slide 75 of 80</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Common Kernels</h1>
+        
+        <div class="kernels-grid">
+            <!-- Linear Kernel -->
+            <div class="kernel-card" style="--index: 1;">
+                <div class="kernel-header">
+                    <div class="kernel-icon">📏</div>
+                    <div class="kernel-name">Linear Kernel</div>
+                </div>
+                
+                <div class="kernel-formula">
+                    K(x, y) = x<sup>T</sup>y + c
+                </div>
+                
+                <ul class="kernel-properties">
+                    <li class="kernel-property">
+                        <span class="property-label">Complexity:</span>
+                        <span>O(n)</span>
+                    </li>
+                    <li class="kernel-property">
+                        <span class="property-label">Parameters:</span>
+                        <span>c (optional constant)</span>
+                    </li>
+                    <li class="kernel-property">
+                        <span class="property-label">Decision Boundary:</span>
+                        <span>Linear (hyperplane)</span>
+                    </li>
+                    <li class="kernel-property">
+                        <span class="property-label">Overfitting Risk:</span>
+                        <span>Low</span>
+                    </li>
+                </ul>
+                
+                <div class="use-cases">
+                    <div class="use-cases-title">🎯 Best For:</div>
+                    <div class="use-cases-list">
+                        • High-dimensional data (text, genes)<br>
+                        • Linearly separable problems<br>
+                        • Large datasets (fast training)<br>
+                        • When interpretability is crucial
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Polynomial Kernel -->
+            <div class="kernel-card" style="--index: 2;">
+                <div class="kernel-header">
+                    <div class="kernel-icon">📈</div>
+                    <div class="kernel-name">Polynomial Kernel</div>
+                </div>
+                
+                <div class="kernel-formula">
+                    K(x, y) = (x<sup>T</sup>y + c)<sup>d</sup>
+                </div>
+                
+                <ul class="kernel-properties">
+                    <li class="kernel-property">
+                        <span class="property-label">Complexity:</span>
+                        <span>O(n<sup>d</sup>)</span>
+                    </li>
+                    <li class="kernel-property">
+                        <span class="property-label">Parameters:</span>
+                        <span>d (degree), c (constant)</span>
+                    </li>
+                    <li class="kernel-property">
+                        <span class="property-label">Decision Boundary:</span>
+                        <span>Polynomial curves</span>
+                    </li>
+                    <li class="kernel-property">
+                        <span class="property-label">Overfitting Risk:</span>
+                        <span>Medium-High</span>
+                    </li>
+                </ul>
+                
+                <div class="use-cases">
+                    <div class="use-cases-title">🎯 Best For:</div>
+                    <div class="use-cases-list">
+                        • Image classification<br>
+                        • Natural language processing<br>
+                        • Problems with smooth boundaries<br>
+                        • When global structure matters
+                    </div>
+                </div>
+            </div>
+            
+            <!-- RBF Kernel -->
+            <div class="kernel-card" style="--index: 3;">
+                <div class="kernel-header">
+                    <div class="kernel-icon">🎯</div>
+                    <div class="kernel-name">RBF Kernel</div>
+                </div>
+                
+                <div class="kernel-formula">
+                    K(x, y) = exp(-γ||x - y||<sup>2</sup>)
+                </div>
+                
+                <ul class="kernel-properties">
+                    <li class="kernel-property">
+                        <span class="property-label">Complexity:</span>
+                        <span>O(n)</span>
+                    </li>
+                    <li class="kernel-property">
+                        <span class="property-label">Parameters:</span>
+                        <span>γ (gamma)</span>
+                    </li>
+                    <li class="kernel-property">
+                        <span class="property-label">Decision Boundary:</span>
+                        <span>Complex, localized</span>
+                    </li>
+                    <li class="kernel-property">
+                        <span class="property-label">Overfitting Risk:</span>
+                        <span>Medium (tunable)</span>
+                    </li>
+                </ul>
+                
+                <div class="use-cases">
+                    <div class="use-cases-title">🎯 Best For:</div>
+                    <div class="use-cases-list">
+                        • Most general-purpose problems<br>
+                        • Complex non-linear patterns<br>
+                        • Medium-sized datasets<br>
+                        • When local patterns matter
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="comparison-section">
+            <h2 class="section-title">Kernel Comparison Matrix</h2>
+            
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Aspect</th>
+                        <th>Linear</th>
+                        <th>Polynomial</th>
+                        <th>RBF</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="aspect-label">Training Speed</td>
+                        <td><span class="rating excellent">★★★</span> Fast</td>
+                        <td><span class="rating good">★★☆</span> Medium</td>
+                        <td><span class="rating good">★★☆</span> Medium</td>
+                    </tr>
+                    <tr>
+                        <td class="aspect-label">Memory Usage</td>
+                        <td><span class="rating excellent">★★★</span> Low</td>
+                        <td><span class="rating moderate">★☆☆</span> High</td>
+                        <td><span class="rating good">★★☆</span> Medium</td>
+                    </tr>
+                    <tr>
+                        <td class="aspect-label">Flexibility</td>
+                        <td><span class="rating moderate">★☆☆</span> Low</td>
+                        <td><span class="rating good">★★☆</span> Medium</td>
+                        <td><span class="rating excellent">★★★</span> High</td>
+                    </tr>
+                    <tr>
+                        <td class="aspect-label">Interpretability</td>
+                        <td><span class="rating excellent">★★★</span> High</td>
+                        <td><span class="rating good">★★☆</span> Medium</td>
+                        <td><span class="rating moderate">★☆☆</span> Low</td>
+                    </tr>
+                    <tr>
+                        <td class="aspect-label">Parameter Tuning</td>
+                        <td><span class="rating excellent">★★★</span> Minimal</td>
+                        <td><span class="rating good">★★☆</span> Medium</td>
+                        <td><span class="rating good">★★☆</span> Important</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="interactive-playground">
+            <div class="playground-header">
+                <h2 class="section-title">Interactive Kernel Comparison</h2>
+                
+                <div class="parameter-controls">
+                    <div class="parameter-group">
+                        <div class="parameter-label">Degree (d)</div>
+                        <input type="range" class="parameter-slider" id="degreeSlider" min="1" max="5" value="2">
+                        <div class="parameter-value" id="degreeValue">2</div>
+                    </div>
+                    
+                    <div class="parameter-group">
+                        <div class="parameter-label">Gamma (γ)</div>
+                        <input type="range" class="parameter-slider" id="gammaSlider" min="0.1" max="5" step="0.1" value="1">
+                        <div class="parameter-value" id="gammaValue">1.0</div>
+                    </div>
+                    
+                    <div class="kernel-selector">
+                        <button class="kernel-btn active" onclick="selectKernel('linear', this)">Linear</button>
+                        <button class="kernel-btn" onclick="selectKernel('polynomial', this)">Polynomial</button>
+                        <button class="kernel-btn" onclick="selectKernel('rbf', this)">RBF</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="visualization-area" id="visualizationArea">
+                <!-- Sample data points -->
+                <div class="data-point class-positive" style="top: 80px; left: 200px;"></div>
+                <div class="data-point class-positive" style="top: 120px; left: 180px;"></div>
+                <div class="data-point class-positive" style="top: 160px; left: 220px;"></div>
+                <div class="data-point class-positive" style="top: 100px; left: 350px;"></div>
+                <div class="data-point class-positive" style="top: 140px; left: 370px;"></div>
+                
+                <div class="data-point class-negative" style="top: 50px; left: 100px;"></div>
+                <div class="data-point class-negative" style="top: 50px; left: 450px;"></div>
+                <div class="data-point class-negative" style="top: 200px; left: 100px;"></div>
+                <div class="data-point class-negative" style="top: 200px; left: 450px;"></div>
+                <div class="data-point class-negative" style="top: 250px; left: 275px;"></div>
+                
+                <!-- Decision boundary (will be updated by JavaScript) -->
+                <div class="decision-boundary boundary-linear" id="decisionBoundary" style="width: 400px; top: 150px; left: 100px;"></div>
+            </div>
+            
+            <div style="margin-top: 15px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px; text-align: center;">
+                <strong>Instructions:</strong> 🟢 Green = Class +1 &nbsp; 🔴 Red = Class -1 &nbsp; 
+                Adjust parameters and try different kernels to see how decision boundaries change!
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week4_Slide74.html" class="nav-btn">← Previous</a>
+        <a href="Week4_Slide76.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+    (function() {
+        const overlay = document.getElementById('modalOverlay');
+        const titleEl = document.getElementById('modalTitle');
+        const contentEl = document.getElementById('modalContent');
+        const closeBtn = document.getElementById('modalClose');
+        window.showModal = function(title, content) {
+            titleEl.textContent = title;
+            contentEl.innerHTML = content;
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        };
+        window.closeModal = function() {
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        };
+        closeBtn.addEventListener('click', window.closeModal);
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) window.closeModal(); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && overlay.classList.contains('active')) window.closeModal(); });
+    })();
+</script>
+</body>
+</html>

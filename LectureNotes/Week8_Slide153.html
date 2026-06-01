@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Dropout Regularization</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .concept-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .implementation-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .dropout-principle {
+            padding: 20px;
+            margin: 15px 0;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .dropout-principle:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .code-box {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 15px;
+            font-family: 'Courier New', monospace;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: pre;
+            font-size: 0.9em;
+        }
+
+        .code-box:hover {
+            transform: scale(1.02);
+            box-shadow: 0 15px 30px rgba(30, 41, 59, 0.3);
+        }
+
+        .comparison-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin-top: 25px;
+        }
+
+        .comparison-card {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            padding: 25px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid #14b8a6;
+        }
+
+        .comparison-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .card-title {
+            font-size: 1.3em;
+            color: #0d9488;
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .dropout-visual {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+            border-radius: 15px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .dropout-visual:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .dropout-rate {
+            font-size: 2.5em;
+            color: #0d9488;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 30px 40px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            margin-top: 40px;
+        }
+
+        .nav-btn {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 10px 20px rgba(13, 148, 136, 0.2);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.3);
+        }
+
+        .floating-elements {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .floating-el {
+            position: absolute;
+            color: rgba(13, 148, 136, 0.1);
+            animation: float 20s infinite ease-in-out;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 2em;
+            cursor: pointer;
+            color: #666;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            color: #1e293b;
+            line-height: 1.8;
+        }
+
+        .modal-content h4 {
+            color: #0d9488;
+            margin: 20px 0 10px;
+            font-size: 1.3em;
+        }
+
+        .modal-content p {
+            margin: 10px 0;
+        }
+
+        .modal-content code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .modal-content pre {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 15px;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 25px;
+            border-radius: 15px;
+            font-weight: 600;
+            color: #0d9488;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 25px;
+            border-radius: 15px;
+            font-weight: 600;
+            color: #0d9488;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { opacity: 0; transform: translateY(-50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideInFromLeft {
+            from { opacity: 0; transform: translateX(-50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes slideInFromRight {
+            from { opacity: 0; transform: translateX(50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes slideInFromBottom {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-20px) rotate(90deg); }
+            50% { transform: translateY(0) rotate(180deg); }
+            75% { transform: translateY(20px) rotate(270deg); }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    
+    <div class="course-info">CS5710 - Week 8</div>
+    <div class="slide-number">Slide 153 of 160</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Dropout Regularization</h1>
+        
+        <div class="content-layout">
+            <div class="concept-section">
+                <h2 class="section-title">Core Concept</h2>
+                
+                <div class="dropout-principle">
+                    <strong>What is Dropout?</strong><br>
+                    Randomly deactivating neurons during training to prevent overfitting
+                </div>
+                
+                <div class="dropout-principle">
+                    <strong>How it Works</strong><br>
+                    Each neuron has probability p of being "dropped out" during training
+                </div>
+                
+                <div class="dropout-principle">
+                    <strong>Key Insight</strong><br>
+                    Forces network to learn robust features that work with different neuron combinations
+                </div>
+                
+                <div class="dropout-visual">
+                    <div>Common Dropout Rates</div>
+                    <div class="dropout-rate">0.2 - 0.5</div>
+                    <div>Click to explore different rates</div>
+                </div>
+            </div>
+            
+            <div class="implementation-section">
+                <h2 class="section-title">Implementation</h2>
+                
+                <div class="code-box">
+# Training phase
+def dropout_forward(x, dropout_rate=0.5, training=True):
+    if training:
+        mask = np.random.rand(*x.shape) > dropout_rate
+        x = x * mask
+        x = x / (1 - dropout_rate)  # Scale up
+    return x
+
+# Inference phase  
+def dropout_inference(x):
+    return x  # No dropout during inference</div>
+                
+                <div class="code-box">
+# PyTorch implementation
+import torch.nn as nn
+
+model = nn.Sequential(
+    nn.Linear(784, 256),
+    nn.ReLU(),
+    nn.Dropout(0.5),  # 50% dropout
+    nn.Linear(256, 128),
+    nn.ReLU(),
+    nn.Dropout(0.3),  # 30% dropout
+    nn.Linear(128, 10)
+)</div>
+            </div>
+        </div>
+        
+        <div class="comparison-section">
+            <h2 class="section-title">Dropout Strategies</h2>
+            
+            <div class="comparison-grid">
+                <div class="comparison-card">
+                    <div class="card-title">Standard Dropout</div>
+                    <ul>
+                        <li>Random neuron deactivation</li>
+                        <li>Uniform probability</li>
+                        <li>Most common approach</li>
+                        <li>Works well for fully connected layers</li>
+                    </ul>
+                </div>
+                
+                <div class="comparison-card">
+                    <div class="card-title">Spatial Dropout</div>
+                    <ul>
+                        <li>Drops entire feature maps</li>
+                        <li>Better for convolutional layers</li>
+                        <li>Preserves spatial structure</li>
+                        <li>Used in CNNs</li>
+                    </ul>
+                </div>
+                
+                <div class="comparison-card">
+                    <div class="card-title">DropConnect</div>
+                    <ul>
+                        <li>Drops connections, not neurons</li>
+                        <li>More fine-grained control</li>
+                        <li>Computationally expensive</li>
+                        <li>Better generalization</li>
+                    </ul>
+                </div>
+                
+                <div class="comparison-card">
+                    <div class="card-title">Variational Dropout</div>
+                    <ul>
+                        <li>Learned dropout rates</li>
+                        <li>Adaptive to data</li>
+                        <li>Bayesian interpretation</li>
+                        <li>Automatic sparsity</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="navigation">
+        <a href="Week8_Slide152.html" class="nav-btn">← Previous</a>
+        <a href="Week8_Slide154.html" class="nav-btn">Next →</a>
+    </div>
+    
+    <div class="footer">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+    
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+        
+        const modal = new ModalSystem();
+        
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            const symbols = ['∇', 'θ', 'λ', 'α', 'β', 'γ', 'δ', 'ε', 'η', 'μ', 'σ', 'ω'];
+            
+            for (let i = 0; i < 35; i++) {
+                const el = document.createElement('div');
+                el.className = 'floating-el';
+                el.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+                el.style.left = Math.random() * 100 + '%';
+                el.style.top = Math.random() * 100 + '%';
+                el.style.fontSize = (Math.random() * 30 + 20) + 'px';
+                el.style.animationDelay = Math.random() * 20 + 's';
+                el.style.animationDuration = (Math.random() * 20 + 20) + 's';
+                container.appendChild(el);
+            }
+        }
+        
+        // Dropout principles interaction
+        document.querySelectorAll('.dropout-principle').forEach((principle) => {
+            principle.addEventListener('click', function() {
+                const title = this.querySelector('strong').textContent;
+                
+                const contents = {
+                    'What is Dropout?': `
+                        <div class="modal-highlight">
+                            <h4>The Dropout Technique</h4>
+                            <p>Dropout is a regularization technique that prevents neural networks from overfitting by randomly "dropping out" (deactivating) neurons during training.</p>
+                        </div>
+                        
+                        <h4>Key Characteristics:</h4>
+                        <ul>
+                            <li><strong>Random Selection:</strong> Each neuron has a probability p of being temporarily removed</li>
+                            <li><strong>Training Only:</strong> Applied only during training, not during inference</li>
+                            <li><strong>Ensemble Effect:</strong> Creates an implicit ensemble of exponentially many neural networks</li>
+                            <li><strong>Co-adaptation Prevention:</strong> Prevents neurons from relying too heavily on specific other neurons</li>
+                        </ul>
+                        
+                        <h4>Mathematical Formulation:</h4>
+                        <pre>
+During training:
+r ~ Bernoulli(p)
+y = r * x / p
+
+During inference:
+y = x
+                        </pre>
+                        
+                        <h4>Historical Context:</h4>
+                        <p>Introduced by Hinton et al. in 2012, dropout was inspired by the success of model averaging and the genetic concept of sexual reproduction, where genes must work well with random combinations of other genes.</p>
+                    `,
+                    
+                    'How it Works': `
+                        <div class="modal-highlight">
+                            <h4>Dropout Mechanism</h4>
+                            <p>During each training iteration, dropout randomly selects neurons to deactivate, forcing the network to learn redundant representations.</p>
+                        </div>
+                        
+                        <h4>Step-by-Step Process:</h4>
+                        <ol>
+                            <li><strong>Forward Pass:</strong>
+                                <ul>
+                                    <li>Generate random mask for each layer</li>
+                                    <li>Multiply activations by mask</li>
+                                    <li>Scale remaining activations by 1/(1-p)</li>
+                                </ul>
+                            </li>
+                            <li><strong>Backward Pass:</strong>
+                                <ul>
+                                    <li>Gradients only flow through active neurons</li>
+                                    <li>Dropped neurons receive zero gradient</li>
+                                </ul>
+                            </li>
+                            <li><strong>Inference:</strong>
+                                <ul>
+                                    <li>All neurons are active</li>
+                                    <li>No scaling needed (inverted dropout)</li>
+                                </ul>
+                            </li>
+                        </ol>
+                        
+                        <h4>Implementation Details:</h4>
+                        <pre>
+# Inverted Dropout (preferred)
+mask = (np.random.rand(*shape) < keep_prob)
+output = input * mask / keep_prob
+
+# Original Dropout
+mask = (np.random.rand(*shape) < keep_prob)
+output_train = input * mask
+output_test = input * keep_prob
+                        </pre>
+                        
+                        <h4>Why Scaling?</h4>
+                        <p>Scaling ensures that the expected value of activations remains the same during training and inference, maintaining network behavior consistency.</p>
+                    `,
+                    
+                    'Key Insight': `
+                        <div class="modal-highlight">
+                            <h4>Why Dropout Works</h4>
+                            <p>Dropout forces the network to learn robust, distributed representations that don't rely on any single pathway.</p>
+                        </div>
+                        
+                        <h4>Theoretical Understanding:</h4>
+                        <ul>
+                            <li><strong>Ensemble Learning:</strong> Training with dropout approximates training an ensemble of 2^n possible sub-networks</li>
+                            <li><strong>Feature Robustness:</strong> Features must be useful in many different contexts</li>
+                            <li><strong>Reduced Co-adaptation:</strong> Neurons can't rely on specific other neurons always being present</li>
+                            <li><strong>Noise Injection:</strong> Acts as a form of noise that improves generalization</li>
+                        </ul>
+                        
+                        <h4>Biological Inspiration:</h4>
+                        <p>Sexual reproduction mixes genes from two parents, ensuring genes work well with different combinations. Similarly, dropout ensures neurons work well with different combinations of other neurons.</p>
+                        
+                        <h4>Connection to Other Techniques:</h4>
+                        <ul>
+                            <li><strong>Bagging:</strong> Similar to bootstrap aggregating but more efficient</li>
+                            <li><strong>L2 Regularization:</strong> Dropout can be shown to approximate L2 regularization for linear models</li>
+                            <li><strong>Data Augmentation:</strong> Creates different views of the data through network perturbation</li>
+                        </ul>
+                        
+                        <h4>Practical Benefits:</h4>
+                        <pre>
+• Reduces overfitting by 10-30% typically
+• No additional hyperparameters to store
+• Computationally efficient
+• Works well with other regularization
+• Improves gradient flow
+                        </pre>
+                    `
+                };
+                
+                modal.show(title, contents[title]);
+            });
+        });
+        
+        // Code boxes interaction
+        document.querySelectorAll('.code-box').forEach((box, index) => {
+            box.addEventListener('click', function() {
+                const titles = ['NumPy Implementation', 'PyTorch Implementation'];
+                const contents = [
+                    `
+                        <div class="modal-highlight">
+                            <h4>Complete NumPy Dropout Implementation</h4>
+                        </div>
+                        
+                        <pre>
+import numpy as np
+
+class Dropout:
+    def __init__(self, dropout_rate=0.5):
+        self.dropout_rate = dropout_rate
+        self.mask = None
+        
+    def forward(self, x, training=True):
+        if training:
+            # Generate dropout mask
+            self.mask = np.random.binomial(
+                1, 1-self.dropout_rate, size=x.shape
+            ) / (1-self.dropout_rate)
+            return x * self.mask
+        else:
+            return x
+    
+    def backward(self, dout):
+        # Gradients only flow through kept neurons
+        return dout * self.mask
+
+# Example usage
+layer = Dropout(0.5)
+x = np.random.randn(100, 256)
+
+# Training
+output_train = layer.forward(x, training=True)
+print(f"Active neurons: {np.mean(layer.mask > 0):.2%}")
+
+# Inference
+output_test = layer.forward(x, training=False)
+print(f"All neurons active during inference")
+                        </pre>
+                        
+                        <h4>Advanced Variations:</h4>
+                        <pre>
+# Adaptive Dropout
+class AdaptiveDropout:
+    def __init__(self, initial_rate=0.5):
+        self.rate = initial_rate
+        
+    def update_rate(self, epoch, max_epochs):
+        # Decrease dropout over time
+        self.rate = self.initial_rate * (1 - epoch/max_epochs)
+        
+# Targeted Dropout
+class TargetedDropout:
+    def __init__(self, rates_per_neuron):
+        self.rates = rates_per_neuron
+        
+    def forward(self, x):
+        mask = np.random.rand(*x.shape) > self.rates
+        return x * mask / (1 - self.rates)
+                        </pre>
+                    `,
+                    
+                    `
+                        <div class="modal-highlight">
+                            <h4>PyTorch Dropout Examples</h4>
+                        </div>
+                        
+                        <pre>
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+# Basic Dropout Layer
+class BasicNetwork(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.fc1 = nn.Linear(784, 256)
+        self.dropout1 = nn.Dropout(0.5)
+        self.fc2 = nn.Linear(256, 128)
+        self.dropout2 = nn.Dropout(0.3)
+        self.fc3 = nn.Linear(128, 10)
+        
+    def forward(self, x):
+        x = F.relu(self.fc1(x))
+        x = self.dropout1(x)
+        x = F.relu(self.fc2(x))
+        x = self.dropout2(x)
+        x = self.fc3(x)
+        return x
+
+# Spatial Dropout for CNNs
+class CNNWithSpatialDropout(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = nn.Conv2d(3, 64, 3)
+        self.dropout2d = nn.Dropout2d(0.2)
+        self.conv2 = nn.Conv2d(64, 128, 3)
+        
+    def forward(self, x):
+        x = F.relu(self.conv1(x))
+        x = self.dropout2d(x)  # Drops entire channels
+        x = F.relu(self.conv2(x))
+        return x
+
+# Alpha Dropout for SELU activation
+class SELUNetwork(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.fc1 = nn.Linear(784, 256)
+        self.dropout = nn.AlphaDropout(0.1)
+        
+    def forward(self, x):
+        x = F.selu(self.fc1(x))
+        x = self.dropout(x)  # Maintains self-normalizing
+        return x
+
+# Training vs Evaluation mode
+model = BasicNetwork()
+
+# Training mode - dropout active
+model.train()
+output_train = model(input_data)
+
+# Evaluation mode - dropout inactive
+model.eval()
+with torch.no_grad():
+    output_eval = model(input_data)
+                        </pre>
+                        
+                        <h4>Best Practices:</h4>
+                        <ul>
+                            <li>Use <code>model.train()</code> and <code>model.eval()</code> to control dropout</li>
+                            <li>Start with p=0.5 for hidden layers, p=0.2 for input</li>
+                            <li>Use Dropout2d for convolutional layers</li>
+                            <li>Consider AlphaDropout with SELU activations</li>
+                            <li>Reduce dropout rate for smaller networks</li>
+                        </ul>
+                    `
+                ];
+                
+                modal.show(titles[index], contents[index]);
+            });
+        });
+        
+        // Dropout visual interaction
+        document.querySelector('.dropout-visual').addEventListener('click', function() {
+            modal.show('Dropout Rate Guidelines', `
+                <div class="modal-highlight">
+                    <h4>Choosing the Right Dropout Rate</h4>
+                    <p>The optimal dropout rate depends on the layer type, network size, and dataset complexity.</p>
+                </div>
+                
+                <h4>Recommended Rates by Layer Type:</h4>
+                <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+                    <tr style="background: #ccfbf1;">
+                        <th style="padding: 10px; text-align: left;">Layer Type</th>
+                        <th style="padding: 10px; text-align: left;">Typical Rate</th>
+                        <th style="padding: 10px; text-align: left;">Rationale</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border-top: 1px solid #ddd;">Input Layer</td>
+                        <td style="padding: 10px; border-top: 1px solid #ddd;">0.1 - 0.2</td>
+                        <td style="padding: 10px; border-top: 1px solid #ddd;">Preserve most input information</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border-top: 1px solid #ddd;">Hidden Layers</td>
+                        <td style="padding: 10px; border-top: 1px solid #ddd;">0.3 - 0.5</td>
+                        <td style="padding: 10px; border-top: 1px solid #ddd;">Balance regularization and capacity</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border-top: 1px solid #ddd;">Convolutional</td>
+                        <td style="padding: 10px; border-top: 1px solid #ddd;">0.1 - 0.3</td>
+                        <td style="padding: 10px; border-top: 1px solid #ddd;">CNNs have built-in regularization</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border-top: 1px solid #ddd;">Recurrent</td>
+                        <td style="padding: 10px; border-top: 1px solid #ddd;">0.2 - 0.4</td>
+                        <td style="padding: 10px; border-top: 1px solid #ddd;">Applied to connections, not states</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border-top: 1px solid #ddd;">Output Layer</td>
+                        <td style="padding: 10px; border-top: 1px solid #ddd;">0</td>
+                        <td style="padding: 10px; border-top: 1px solid #ddd;">Never drop output neurons</td>
+                    </tr>
+                </table>
+                
+                <h4>Factors Affecting Dropout Rate:</h4>
+                <ul>
+                    <li><strong>Network Size:</strong> Larger networks can handle higher dropout rates</li>
+                    <li><strong>Dataset Size:</strong> Small datasets benefit from higher dropout</li>
+                    <li><strong>Task Complexity:</strong> Complex tasks may need lower dropout to maintain capacity</li>
+                    <li><strong>Other Regularization:</strong> Reduce dropout if using L2, batch norm, etc.</li>
+                </ul>
+                
+                <h4>Empirical Guidelines:</h4>
+                <pre>
+if overfitting_severe:
+    dropout_rate = 0.5 - 0.7
+elif overfitting_moderate:
+    dropout_rate = 0.3 - 0.5
+elif overfitting_mild:
+    dropout_rate = 0.1 - 0.3
+else:
+    dropout_rate = 0.0 - 0.2
+                </pre>
+                
+                <h4>Rate Schedule Strategies:</h4>
+                <pre>
+# Linear decay
+rate = initial_rate * (1 - epoch / max_epochs)
+
+# Exponential decay
+rate = initial_rate * decay_factor ** epoch
+
+# Step decay
+if epoch < 50:
+    rate = 0.5
+elif epoch < 100:
+    rate = 0.3
+else:
+    rate = 0.1
+                </pre>
+            `);
+        });
+        
+        // Comparison cards interaction
+        document.querySelectorAll('.comparison-card').forEach((card) => {
+            card.addEventListener('click', function() {
+                const cardTitle = this.querySelector('.card-title').textContent;
+                
+                const contents = {
+                    'Standard Dropout': `
+                        <div class="modal-highlight">
+                            <h4>Standard Dropout Details</h4>
+                            <p>The original and most widely used dropout technique, suitable for most neural network architectures.</p>
+                        </div>
+                        
+                        <h4>Implementation:</h4>
+                        <pre>
+def standard_dropout(x, rate=0.5, training=True):
+    if not training:
+        return x
+    
+    # Binary mask with probability (1-rate)
+    mask = np.random.binomial(1, 1-rate, x.shape)
+    
+    # Apply mask and scale
+    return x * mask / (1-rate)
+                        </pre>
+                        
+                        <h4>Advantages:</h4>
+                        <ul>
+                            <li>Simple to implement and understand</li>
+                            <li>Computationally efficient</li>
+                            <li>Works well with most architectures</li>
+                            <li>Proven effectiveness across many domains</li>
+                            <li>No additional parameters to learn</li>
+                        </ul>
+                        
+                        <h4>Best Use Cases:</h4>
+                        <ul>
+                            <li>Fully connected layers in MLPs</li>
+                            <li>Hidden layers in deep networks</li>
+                            <li>When overfitting is the main concern</li>
+                            <li>Large networks with many parameters</li>
+                        </ul>
+                        
+                        <h4>Limitations:</h4>
+                        <ul>
+                            <li>May not preserve spatial structure in CNNs</li>
+                            <li>Fixed dropout rate may not be optimal</li>
+                            <li>Can slow convergence if rate too high</li>
+                        </ul>
+                    `,
+                    
+                    'Spatial Dropout': `
+                        <div class="modal-highlight">
+                            <h4>Spatial Dropout (Dropout2D)</h4>
+                            <p>Designed for convolutional layers, drops entire feature maps instead of individual neurons.</p>
+                        </div>
+                        
+                        <h4>Implementation:</h4>
+                        <pre>
+def spatial_dropout(x, rate=0.2):
+    # x shape: (batch, channels, height, width)
+    if len(x.shape) != 4:
+        raise ValueError("Expected 4D tensor")
+    
+    # Create mask for channels
+    batch, channels, h, w = x.shape
+    mask = np.random.binomial(1, 1-rate, (batch, channels, 1, 1))
+    
+    # Broadcast mask across spatial dimensions
+    return x * mask / (1-rate)
+                        </pre>
+                        
+                        <h4>Why Spatial Dropout?</h4>
+                        <ul>
+                            <li>Adjacent pixels are highly correlated</li>
+                            <li>Standard dropout doesn't work well for conv layers</li>
+                            <li>Preserves semantic information in feature maps</li>
+                            <li>Forces network to learn redundant feature detectors</li>
+                        </ul>
+                        
+                        <h4>Use Cases:</h4>
+                        <ul>
+                            <li>Between convolutional layers in CNNs</li>
+                            <li>Image segmentation networks</li>
+                            <li>Object detection models</li>
+                            <li>Any architecture with spatial features</li>
+                        </ul>
+                        
+                        <h4>PyTorch Example:</h4>
+                        <pre>
+model = nn.Sequential(
+    nn.Conv2d(3, 64, 3),
+    nn.ReLU(),
+    nn.Dropout2d(0.2),  # Spatial dropout
+    nn.Conv2d(64, 128, 3),
+    nn.ReLU(),
+    nn.Dropout2d(0.3)
+)
+                        </pre>
+                    `,
+                    
+                    'DropConnect': `
+                        <div class="modal-highlight">
+                            <h4>DropConnect</h4>
+                            <p>Instead of dropping neurons, DropConnect randomly drops connections (weights) between layers.</p>
+                        </div>
+                        
+                        <h4>Mathematical Formulation:</h4>
+                        <pre>
+Standard Linear: y = Wx + b
+DropConnect:     y = (W ⊙ M)x + b
+
+where M is a binary mask matrix
+                        </pre>
+                        
+                        <h4>Implementation:</h4>
+                        <pre>
+class DropConnect(nn.Module):
+    def __init__(self, in_features, out_features, drop_rate=0.5):
+        super().__init__()
+        self.weight = nn.Parameter(torch.randn(out_features, in_features))
+        self.bias = nn.Parameter(torch.zeros(out_features))
+        self.drop_rate = drop_rate
+        
+    def forward(self, x):
+        if self.training:
+            # Create mask for weights
+            mask = torch.bernoulli(
+                torch.ones_like(self.weight) * (1 - self.drop_rate)
+            )
+            masked_weight = self.weight * mask / (1 - self.drop_rate)
+        else:
+            masked_weight = self.weight
+            
+        return F.linear(x, masked_weight, self.bias)
+                        </pre>
+                        
+                        <h4>Advantages over Dropout:</h4>
+                        <ul>
+                            <li>More fine-grained regularization</li>
+                            <li>Better theoretical properties</li>
+                            <li>Can achieve better generalization</li>
+                            <li>Each unit receives input but with noisy weights</li>
+                        </ul>
+                        
+                        <h4>Disadvantages:</h4>
+                        <ul>
+                            <li>Higher computational cost</li>
+                            <li>More memory intensive</li>
+                            <li>Harder to implement efficiently</li>
+                            <li>Less commonly supported in frameworks</li>
+                        </ul>
+                        
+                        <h4>When to Use:</h4>
+                        <p>Consider DropConnect when standard dropout is insufficient and you need stronger regularization, especially in fully connected layers of smaller networks.</p>
+                    `,
+                    
+                    'Variational Dropout': `
+                        <div class="modal-highlight">
+                            <h4>Variational Dropout</h4>
+                            <p>A Bayesian approach where dropout rates are learned during training, providing automatic sparsity.</p>
+                        </div>
+                        
+                        <h4>Key Concepts:</h4>
+                        <ul>
+                            <li><strong>Learned Dropout Rates:</strong> Each weight has its own dropout rate</li>
+                            <li><strong>Variational Inference:</strong> Based on variational Bayes framework</li>
+                            <li><strong>Automatic Relevance Determination:</strong> Learns which connections are important</li>
+                            <li><strong>Sparse Networks:</strong> Can prune unnecessary connections</li>
+                        </ul>
+                        
+                        <h4>Implementation Sketch:</h4>
+                        <pre>
+class VariationalDropout(nn.Module):
+    def __init__(self, in_features, out_features):
+        super().__init__()
+        self.weight_mu = nn.Parameter(torch.randn(out_features, in_features))
+        self.weight_log_sigma = nn.Parameter(torch.zeros(out_features, in_features))
+        
+    def forward(self, x):
+        if self.training:
+            # Sample weights from learned distribution
+            epsilon = torch.randn_like(self.weight_mu)
+            weight = self.weight_mu + torch.exp(self.weight_log_sigma) * epsilon
+        else:
+            weight = self.weight_mu
+            
+        return F.linear(x, weight)
+    
+    def kl_divergence(self):
+        # KL divergence for regularization
+        kl = 0.5 * torch.sum(
+            torch.exp(2 * self.weight_log_sigma) 
+            + self.weight_mu ** 2 - 1 
+            - 2 * self.weight_log_sigma
+        )
+        return kl
+                        </pre>
+                        
+                        <h4>Benefits:</h4>
+                        <ul>
+                            <li>Automatic hyperparameter tuning</li>
+                            <li>Network compression through pruning</li>
+                            <li>Better uncertainty estimates</li>
+                            <li>Principled Bayesian approach</li>
+                        </ul>
+                        
+                        <h4>Research Papers:</h4>
+                        <ul>
+                            <li>Kingma et al. (2015): "Variational Dropout and the Local Reparameterization Trick"</li>
+                            <li>Molchanov et al. (2017): "Variational Dropout Sparsifies Deep Neural Networks"</li>
+                        </ul>
+                        
+                        <h4>When to Use:</h4>
+                        <p>Ideal for scenarios requiring network compression, uncertainty quantification, or when you want to avoid manual tuning of dropout rates.</p>
+                    `
+                };
+                
+                modal.show(cardTitle, contents[cardTitle]);
+            });
+        });
+        
+        // Initialize components
+        createFloatingElements();
+        
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            const modalActive = modal.overlay.classList.contains('active');
+            if (modalActive) {
+                if (e.key === 'Escape') modal.close();
+                return;
+            }
+            if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week8_Slide152.html';
+            }
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault();
+                window.location.href = 'Week8_Slide154.html';
+            }
+        });
+    </script>
+</body>
+</html>

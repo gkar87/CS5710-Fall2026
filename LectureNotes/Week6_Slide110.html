@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Interactive Clustering Visualization</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .demo-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            margin-bottom: 40px;
+        }
+
+        .controls-panel {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-label {
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #0d9488;
+        }
+
+        .control-button {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .control-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(13, 148, 136, 0.3);
+        }
+
+        .control-select {
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            padding: 10px 15px;
+            border-radius: 10px;
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .visualization-canvas {
+            width: 100%;
+            height: 500px;
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 15px;
+            border: 2px solid #14b8a6;
+            position: relative;
+            overflow: hidden;
+            cursor: crosshair;
+        }
+
+        .data-point {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #64748b;
+            transform: translate(-50%, -50%);
+            transition: all 0.3s ease;
+            border: 2px solid white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .data-point.cluster-0 { background: #ef4444; }
+        .data-point.cluster-1 { background: #3b82f6; }
+        .data-point.cluster-2 { background: #10b981; }
+        .data-point.cluster-3 { background: #f59e0b; }
+        .data-point.cluster-4 { background: #8b5cf6; }
+
+        .cluster-center {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 3px solid #134e4a;
+            background: rgba(255, 255, 255, 0.9);
+            transform: translate(-50%, -50%);
+            transition: all 0.5s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .info-panel {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .info-card {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 15px;
+            padding: 20px;
+            border-left: 4px solid #14b8a6;
+        }
+
+        .info-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 10px;
+        }
+
+        .info-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #134e4a;
+        }
+
+        .algorithm-info {
+            margin-top: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .instructions {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.9s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            margin-top: 30px;
+        }
+
+        .instruction-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .instruction-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 12px;
+            transition: transform 0.3s ease;
+        }
+
+        .instruction-item:hover {
+            transform: translateX(5px);
+        }
+
+        .instruction-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: float 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        @media (max-width: 768px) {
+            .controls-panel { flex-direction: column; }
+            .info-grid { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    
+    <div class="course-info">CS5710 - Week 6</div>
+    <div class="slide-number">Slide 110 of 120</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Interactive Clustering Visualization</h1>
+        
+        <div class="demo-section">
+            <div class="controls-panel">
+                <div class="control-group">
+                    <label class="control-label">Algorithm</label>
+                    <select class="control-select" id="algorithmSelect">
+                        <option value="kmeans">K-Means</option>
+                        <option value="hierarchical">Hierarchical</option>
+                        <option value="dbscan">DBSCAN</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">Clusters (k)</label>
+                    <select class="control-select" id="clusterSelect">
+                        <option value="2">2</option>
+                        <option value="3" selected>3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                    </select>
+                </div>
+                
+                <button class="control-button" id="generateData">Generate Random Data</button>
+                <button class="control-button" id="runClustering">Run Clustering</button>
+                <button class="control-button" id="resetDemo">Reset</button>
+            </div>
+            
+            <div class="visualization-canvas" id="canvas"></div>
+        </div>
+
+        <div class="info-panel">
+            <div class="info-grid">
+                <div class="info-card">
+                    <div class="info-title">Data Points</div>
+                    <div class="info-value" id="pointCount">0</div>
+                </div>
+                
+                <div class="info-card">
+                    <div class="info-title">Clusters Found</div>
+                    <div class="info-value" id="clusterCount">0</div>
+                </div>
+                
+                <div class="info-card">
+                    <div class="info-title">Iterations</div>
+                    <div class="info-value" id="iterationCount">0</div>
+                </div>
+                
+                <div class="info-card">
+                    <div class="info-title">Inertia</div>
+                    <div class="info-value" id="inertiaValue">-</div>
+                </div>
+            </div>
+            
+            <div class="algorithm-info" id="algorithmInfo">
+                <strong>K-Means:</strong> Click on the canvas to add data points, then run clustering to see how K-means partitions the data into k clusters.
+            </div>
+        </div>
+
+        <div class="instructions">
+            <h2 style="color: #0d9488; margin-bottom: 20px;">🎯 How to Use</h2>
+            
+            <div class="instruction-grid">
+                <div class="instruction-item">
+                    <div class="instruction-icon">1</div>
+                    <div>Click on the canvas to add data points</div>
+                </div>
+                
+                <div class="instruction-item">
+                    <div class="instruction-icon">2</div>
+                    <div>Choose your clustering algorithm</div>
+                </div>
+                
+                <div class="instruction-item">
+                    <div class="instruction-icon">3</div>
+                    <div>Set the number of clusters (k)</div>
+                </div>
+                
+                <div class="instruction-item">
+                    <div class="instruction-icon">4</div>
+                    <div>Click "Run Clustering" to see results</div>
+                </div>
+                
+                <div class="instruction-item">
+                    <div class="instruction-icon">5</div>
+                    <div>Try different algorithms and parameters</div>
+                </div>
+                
+                <div class="instruction-item">
+                    <div class="instruction-icon">6</div>
+                    <div>Use "Generate Random Data" for quick demos</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week6_Slide109.html" class="nav-btn">← Previous</a>
+        <a href="Week6_Slide111.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Clustering Demo System
+        class ClusteringDemo {
+            constructor() {
+                this.canvas = document.getElementById('canvas');
+                this.algorithmSelect = document.getElementById('algorithmSelect');
+                this.clusterSelect = document.getElementById('clusterSelect');
+                this.generateBtn = document.getElementById('generateData');
+                this.clusterBtn = document.getElementById('runClustering');
+                this.resetBtn = document.getElementById('resetDemo');
+                this.algorithmInfo = document.getElementById('algorithmInfo');
+                
+                this.dataPoints = [];
+                this.clusterCenters = [];
+                this.currentClusters = [];
+                
+                this.initializeEvents();
+                this.updateAlgorithmInfo();
+            }
+            
+            initializeEvents() {
+                this.canvas.addEventListener('click', (e) => this.addDataPoint(e));
+                this.algorithmSelect.addEventListener('change', () => this.updateAlgorithmInfo());
+                this.generateBtn.addEventListener('click', () => this.generateRandomData());
+                this.clusterBtn.addEventListener('click', () => this.runClustering());
+                this.resetBtn.addEventListener('click', () => this.reset());
+            }
+            
+            addDataPoint(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                const x = ((e.clientX - rect.left) / rect.width) * 100;
+                const y = ((e.clientY - rect.top) / rect.height) * 100;
+                
+                const point = document.createElement('div');
+                point.className = 'data-point';
+                point.style.left = x + '%';
+                point.style.top = y + '%';
+                
+                this.canvas.appendChild(point);
+                this.dataPoints.push({ x, y, element: point });
+                this.updateStats();
+            }
+            
+            generateRandomData() {
+                this.reset();
+                for (let i = 0; i < 50; i++) {
+                    const x = Math.random() * 100;
+                    const y = Math.random() * 100;
+                    
+                    const point = document.createElement('div');
+                    point.className = 'data-point';
+                    point.style.left = x + '%';
+                    point.style.top = y + '%';
+                    
+                    this.canvas.appendChild(point);
+                    this.dataPoints.push({ x, y, element: point });
+                }
+                this.updateStats();
+            }
+            
+            runClustering() {
+                if (this.dataPoints.length === 0) {
+                    alert('Please add some data points first!');
+                    return;
+                }
+                
+                const algorithm = this.algorithmSelect.value;
+                const k = parseInt(this.clusterSelect.value);
+                
+                if (algorithm === 'kmeans') {
+                    this.runKMeans(k);
+                } else if (algorithm === 'hierarchical') {
+                    this.runHierarchical(k);
+                } else if (algorithm === 'dbscan') {
+                    this.runDBSCAN();
+                }
+            }
+            
+            runKMeans(k) {
+                // Simple K-means implementation
+                let centroids = this.initializeCentroids(k);
+                let iterations = 0;
+                let converged = false;
+                
+                while (!converged && iterations < 100) {
+                    const assignments = this.assignPointsToCentroids(centroids);
+                    const newCentroids = this.updateCentroids(assignments, k);
+                    
+                    converged = this.centroidsConverged(centroids, newCentroids);
+                    centroids = newCentroids;
+                    iterations++;
+                    
+                    // Animate the process
+                    setTimeout(() => {
+                        this.visualizeClusters(assignments, centroids);
+                    }, iterations * 100);
+                }
+                
+                document.getElementById('iterationCount').textContent = iterations;
+                this.calculateInertia(centroids);
+            }
+            
+            runHierarchical(k) {
+                // Simplified hierarchical clustering
+                let clusters = this.dataPoints.map((point, i) => ({ points: [i], centroid: point }));
+                
+                while (clusters.length > k) {
+                    let minDistance = Infinity;
+                    let mergeIndices = [0, 1];
+                    
+                    for (let i = 0; i < clusters.length; i++) {
+                        for (let j = i + 1; j < clusters.length; j++) {
+                            const dist = this.calculateDistance(clusters[i].centroid, clusters[j].centroid);
+                            if (dist < minDistance) {
+                                minDistance = dist;
+                                mergeIndices = [i, j];
+                            }
+                        }
+                    }
+                    
+                    // Merge clusters
+                    const [i, j] = mergeIndices;
+                    const mergedPoints = [...clusters[i].points, ...clusters[j].points];
+                    const centroid = this.calculateCentroid(mergedPoints.map(idx => this.dataPoints[idx]));
+                    
+                    clusters[i] = { points: mergedPoints, centroid };
+                    clusters.splice(j, 1);
+                }
+                
+                this.visualizeHierarchicalClusters(clusters);
+            }
+            
+            runDBSCAN() {
+                const eps = 15; // Distance threshold
+                const minPts = 3; // Minimum points for core
+                
+                const clusters = [];
+                const visited = new Set();
+                const noise = new Set();
+                
+                for (let i = 0; i < this.dataPoints.length; i++) {
+                    if (visited.has(i)) continue;
+                    visited.add(i);
+                    
+                    const neighbors = this.findNeighbors(i, eps);
+                    
+                    if (neighbors.length < minPts) {
+                        noise.add(i);
+                    } else {
+                        const cluster = [];
+                        this.expandCluster(i, neighbors, cluster, visited, eps, minPts);
+                        clusters.push(cluster);
+                    }
+                }
+                
+                this.visualizeDBSCANClusters(clusters, noise);
+            }
+            
+            initializeCentroids(k) {
+                const centroids = [];
+                for (let i = 0; i < k; i++) {
+                    centroids.push({
+                        x: Math.random() * 100,
+                        y: Math.random() * 100
+                    });
+                }
+                return centroids;
+            }
+            
+            assignPointsToCentroids(centroids) {
+                return this.dataPoints.map(point => {
+                    let minDistance = Infinity;
+                    let assignedCluster = 0;
+                    
+                    centroids.forEach((centroid, i) => {
+                        const distance = this.calculateDistance(point, centroid);
+                        if (distance < minDistance) {
+                            minDistance = distance;
+                            assignedCluster = i;
+                        }
+                    });
+                    
+                    return assignedCluster;
+                });
+            }
+            
+            updateCentroids(assignments, k) {
+                const newCentroids = [];
+                
+                for (let i = 0; i < k; i++) {
+                    const clusterPoints = this.dataPoints.filter((_, idx) => assignments[idx] === i);
+                    if (clusterPoints.length > 0) {
+                        newCentroids.push(this.calculateCentroid(clusterPoints));
+                    } else {
+                        newCentroids.push({ x: Math.random() * 100, y: Math.random() * 100 });
+                    }
+                }
+                
+                return newCentroids;
+            }
+            
+            calculateCentroid(points) {
+                const x = points.reduce((sum, point) => sum + point.x, 0) / points.length;
+                const y = points.reduce((sum, point) => sum + point.y, 0) / points.length;
+                return { x, y };
+            }
+            
+            calculateDistance(p1, p2) {
+                return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
+            }
+            
+            centroidsConverged(oldCentroids, newCentroids) {
+                return oldCentroids.every((centroid, i) => 
+                    this.calculateDistance(centroid, newCentroids[i]) < 1
+                );
+            }
+            
+            findNeighbors(pointIndex, eps) {
+                const neighbors = [];
+                const point = this.dataPoints[pointIndex];
+                
+                this.dataPoints.forEach((other, i) => {
+                    if (i !== pointIndex && this.calculateDistance(point, other) <= eps) {
+                        neighbors.push(i);
+                    }
+                });
+                
+                return neighbors;
+            }
+            
+            expandCluster(pointIndex, neighbors, cluster, visited, eps, minPts) {
+                cluster.push(pointIndex);
+                
+                for (let i = 0; i < neighbors.length; i++) {
+                    const neighborIndex = neighbors[i];
+                    
+                    if (!visited.has(neighborIndex)) {
+                        visited.add(neighborIndex);
+                        const newNeighbors = this.findNeighbors(neighborIndex, eps);
+                        
+                        if (newNeighbors.length >= minPts) {
+                            neighbors.push(...newNeighbors);
+                        }
+                    }
+                    
+                    if (!cluster.includes(neighborIndex)) {
+                        cluster.push(neighborIndex);
+                    }
+                }
+            }
+            
+            visualizeClusters(assignments, centroids) {
+                this.clearClusterCenters();
+                
+                assignments.forEach((clusterIndex, i) => {
+                    this.dataPoints[i].element.className = `data-point cluster-${clusterIndex}`;
+                });
+                
+                centroids.forEach(centroid => {
+                    const center = document.createElement('div');
+                    center.className = 'cluster-center';
+                    center.style.left = centroid.x + '%';
+                    center.style.top = centroid.y + '%';
+                    this.canvas.appendChild(center);
+                    this.clusterCenters.push(center);
+                });
+                
+                document.getElementById('clusterCount').textContent = centroids.length;
+            }
+            
+            visualizeHierarchicalClusters(clusters) {
+                this.clearClusterCenters();
+                
+                clusters.forEach((cluster, clusterIndex) => {
+                    cluster.points.forEach(pointIndex => {
+                        this.dataPoints[pointIndex].element.className = `data-point cluster-${clusterIndex}`;
+                    });
+                });
+                
+                document.getElementById('clusterCount').textContent = clusters.length;
+                document.getElementById('iterationCount').textContent = 'N/A';
+            }
+            
+            visualizeDBSCANClusters(clusters, noise) {
+                this.clearClusterCenters();
+                
+                clusters.forEach((cluster, clusterIndex) => {
+                    cluster.forEach(pointIndex => {
+                        this.dataPoints[pointIndex].element.className = `data-point cluster-${clusterIndex}`;
+                    });
+                });
+                
+                noise.forEach(pointIndex => {
+                    this.dataPoints[pointIndex].element.className = 'data-point';
+                    this.dataPoints[pointIndex].element.style.background = '#64748b';
+                });
+                
+                document.getElementById('clusterCount').textContent = clusters.length;
+                document.getElementById('iterationCount').textContent = 'N/A';
+            }
+            
+            calculateInertia(centroids) {
+                let inertia = 0;
+                this.dataPoints.forEach((point, i) => {
+                    const clusterIndex = parseInt(point.element.className.split('cluster-')[1]) || 0;
+                    if (centroids[clusterIndex]) {
+                        inertia += Math.pow(this.calculateDistance(point, centroids[clusterIndex]), 2);
+                    }
+                });
+                document.getElementById('inertiaValue').textContent = inertia.toFixed(2);
+            }
+            
+            clearClusterCenters() {
+                this.clusterCenters.forEach(center => center.remove());
+                this.clusterCenters = [];
+            }
+            
+            updateStats() {
+                document.getElementById('pointCount').textContent = this.dataPoints.length;
+            }
+            
+            updateAlgorithmInfo() {
+                const algorithm = this.algorithmSelect.value;
+                const info = {
+                    'kmeans': 'K-Means: Partitions data into k clusters by minimizing within-cluster sum of squares. Centers are shown as black circles.',
+                    'hierarchical': 'Hierarchical: Builds a tree of clusters by iteratively merging the closest pairs. No centroids shown.',
+                    'dbscan': 'DBSCAN: Finds clusters of arbitrary shape based on density. Grey points are considered noise.'
+                };
+                this.algorithmInfo.innerHTML = `<strong>${algorithm.toUpperCase()}:</strong> ${info[algorithm]}`;
+            }
+            
+            reset() {
+                this.dataPoints.forEach(point => point.element.remove());
+                this.clearClusterCenters();
+                this.dataPoints = [];
+                this.currentClusters = [];
+                
+                document.getElementById('pointCount').textContent = '0';
+                document.getElementById('clusterCount').textContent = '0';
+                document.getElementById('iterationCount').textContent = '0';
+                document.getElementById('inertiaValue').textContent = '-';
+            }
+        }
+
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Initialize
+        const demo = new ClusteringDemo();
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week6_Slide109.html';
+            } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                if (!modal.overlay.classList.contains('active')) {
+                    window.location.href = 'Week6_Slide111.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

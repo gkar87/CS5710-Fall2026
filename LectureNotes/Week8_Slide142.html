@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Perceptron Model</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .model-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .math-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .perceptron-diagram {
+            width: 100%;
+            height: 350px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 25px;
+        }
+
+        .formula-box {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 25px;
+            border-radius: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            margin: 20px 0;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .history-banner {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .component-list {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .component-item {
+            padding: 20px;
+            margin: 15px 0;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .component-item:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .timeline {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+            position: relative;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            z-index: 0;
+        }
+
+        .timeline-item {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 15px;
+            border: 2px solid #14b8a6;
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .timeline-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.2);
+        }
+
+        .timeline-year {
+            font-weight: 600;
+            color: #0d9488;
+            font-size: 1.1em;
+        }
+
+        .timeline-event {
+            font-size: 0.9em;
+            color: #475569;
+            margin-top: 5px;
+        }
+
+        /* Interactive Perceptron Canvas */
+        #perceptronCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .control-panel {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            background: rgba(255,255,255,0.9);
+            padding: 10px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .control-btn {
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(13, 148, 136, 0.3);
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .timeline { flex-direction: column; gap: 20px; }
+            .timeline::before { display: none; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    
+    <div class="course-info">CS5710 - Week 8</div>
+    <div class="slide-number">Slide 142 of 160</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">⚡ The Perceptron Model</h1>
+        
+        <div class="content-layout">
+            <div class="model-section">
+                <h2 class="section-title">Perceptron Architecture</h2>
+                
+                <div class="perceptron-diagram">
+                    <canvas id="perceptronCanvas"></canvas>
+                    <div class="control-panel">
+                        <button class="control-btn" onclick="perceptronViz.randomizeInputs()">Random Inputs</button>
+                        <button class="control-btn" onclick="perceptronViz.toggleAnimation()">Toggle Animation</button>
+                    </div>
+                </div>
+                
+                <ul class="component-list">
+                    <li class="component-item" data-modal="inputs">
+                        <strong>📥 Inputs (x₁, x₂, ..., xₙ)</strong><br>
+                        Feature values from the data
+                    </li>
+                    <li class="component-item" data-modal="weights">
+                        <strong>⚖️ Weights (w₁, w₂, ..., wₙ)</strong><br>
+                        Importance of each input feature
+                    </li>
+                    <li class="component-item" data-modal="bias">
+                        <strong>➕ Bias (b)</strong><br>
+                        Threshold adjustment term
+                    </li>
+                    <li class="component-item" data-modal="activation">
+                        <strong>🎯 Activation Function</strong><br>
+                        Step function for binary output
+                    </li>
+                </ul>
+            </div>
+
+            <div class="math-section">
+                <h2 class="section-title">Mathematical Formulation</h2>
+                
+                <div class="formula-box">
+                    <strong>// Linear Combination</strong><br>
+                    z = Σ(wᵢ × xᵢ) + b<br><br>
+                    
+                    <strong>// Activation (Step Function)</strong><br>
+                    y = {<br>
+                    &nbsp;&nbsp;1, if z ≥ 0<br>
+                    &nbsp;&nbsp;0, if z < 0<br>
+                    }<br><br>
+                    
+                    <strong>// Compact Form</strong><br>
+                    y = sign(w·x + b)
+                </div>
+                
+                <div style="padding: 25px; background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%); border-radius: 15px; margin-top: 25px;">
+                    <h3 style="color: #0d9488; margin-bottom: 15px;">Key Properties</h3>
+                    <ul style="list-style: none; line-height: 2;">
+                        <li>✓ Linear decision boundary</li>
+                        <li>✓ Binary classification only</li>
+                        <li>✓ Single layer architecture</li>
+                        <li>✓ Can learn linearly separable patterns</li>
+                        <li>✗ Cannot solve XOR problem</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="history-banner">
+            <h2 class="section-title">Historical Development</h2>
+            
+            <div class="timeline">
+                <div class="timeline-item" data-modal="mcculloch">
+                    <div class="timeline-year">1943</div>
+                    <div class="timeline-event">McCulloch-Pitts Neuron</div>
+                </div>
+                <div class="timeline-item" data-modal="rosenblatt">
+                    <div class="timeline-year">1958</div>
+                    <div class="timeline-event">Rosenblatt's Perceptron</div>
+                </div>
+                <div class="timeline-item" data-modal="minsky">
+                    <div class="timeline-year">1969</div>
+                    <div class="timeline-event">Minsky-Papert Critique</div>
+                </div>
+                <div class="timeline-item" data-modal="revival">
+                    <div class="timeline-year">1980s</div>
+                    <div class="timeline-event">Neural Network Revival</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week8_Slide141.html" class="nav-btn">← Previous</a>
+        <a href="Week8_Slide143.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+            }
+            
+            open(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Modal content definitions
+        const modalContents = {
+            inputs: {
+                title: "Perceptron Inputs",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Input Features</strong><br>
+                        The perceptron takes multiple input values representing features of the data.
+                    </div>
+                    <p><strong>Examples:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>Image pixels for digit recognition</li>
+                        <li>Word frequencies for spam detection</li>
+                        <li>Sensor readings for decision making</li>
+                        <li>Any numerical features from your dataset</li>
+                    </ul>
+                    <div class="modal-code">
+                    # Example input vector<br>
+                    x = [0.5, -0.3, 0.8, 0.1]<br>
+                    # Each value is a feature
+                    </div>
+                `
+            },
+            weights: {
+                title: "Weights and Their Role",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Weight Parameters</strong><br>
+                        Weights determine the importance and influence of each input feature.
+                    </div>
+                    <p><strong>Key Concepts:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>Positive weights: Feature supports positive class</li>
+                        <li>Negative weights: Feature supports negative class</li>
+                        <li>Large magnitude: Feature is important</li>
+                        <li>Near zero: Feature has little influence</li>
+                    </ul>
+                    <div class="modal-code">
+                    # Weight vector<br>
+                    w = [0.7, -0.4, 0.9, -0.2]<br>
+                    # Learned through training
+                    </div>
+                `
+            },
+            bias: {
+                title: "Bias Term",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>The Bias Parameter</strong><br>
+                        Bias allows the decision boundary to shift away from the origin.
+                    </div>
+                    <p><strong>Why Bias is Important:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>Without bias: Decision boundary must pass through origin</li>
+                        <li>With bias: Flexible positioning of decision boundary</li>
+                        <li>Acts as a threshold for activation</li>
+                        <li>Equivalent to adding x₀=1 with weight w₀=b</li>
+                    </ul>
+                    <div class="modal-code">
+                    # Decision without bias<br>
+                    z = w·x<br>
+                    # Decision with bias<br>
+                    z = w·x + b
+                    </div>
+                `
+            },
+            activation: {
+                title: "Step Activation Function",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Binary Decision Making</strong><br>
+                        The step function converts the linear combination into a binary output.
+                    </div>
+                    <p><strong>Step Function Properties:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>Output is either 0 or 1</li>
+                        <li>Non-differentiable at z=0</li>
+                        <li>Creates hard decision boundary</li>
+                        <li>Simple but limited expressiveness</li>
+                    </ul>
+                    <div class="modal-code">
+                    def step_function(z):<br>
+                    &nbsp;&nbsp;return 1 if z >= 0 else 0<br><br>
+                    # Or using sign function<br>
+                    y = sign(z)  # Returns -1 or +1
+                    </div>
+                `
+            },
+            mcculloch: {
+                title: "McCulloch-Pitts Neuron (1943)",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>The First Artificial Neuron</strong><br>
+                        Warren McCulloch and Walter Pitts created the first mathematical model of a neuron.
+                    </div>
+                    <p><strong>Key Contributions:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>Binary inputs and outputs</li>
+                        <li>Fixed threshold logic</li>
+                        <li>Could compute any Boolean function</li>
+                        <li>Foundation for neural computation</li>
+                    </ul>
+                    <p style="margin-top: 20px;"><em>"A logical calculus of ideas immanent in nervous activity"</em></p>
+                `
+            },
+            rosenblatt: {
+                title: "Rosenblatt's Perceptron (1958)",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>The Learning Machine</strong><br>
+                        Frank Rosenblatt developed the perceptron with a learning algorithm.
+                    </div>
+                    <p><strong>Innovations:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>Automatic weight adjustment</li>
+                        <li>Convergence theorem for linearly separable data</li>
+                        <li>Hardware implementation (Mark I Perceptron)</li>
+                        <li>Could learn from examples</li>
+                    </ul>
+                    <p style="margin-top: 20px;">The Mark I Perceptron was a physical machine with 400 photocells!</p>
+                `
+            },
+            minsky: {
+                title: "Minsky-Papert Critique (1969)",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Perceptron Limitations</strong><br>
+                        Marvin Minsky and Seymour Papert proved fundamental limitations of single-layer perceptrons.
+                    </div>
+                    <p><strong>Key Findings:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>Cannot solve XOR problem</li>
+                        <li>Limited to linearly separable patterns</li>
+                        <li>Cannot represent certain functions</li>
+                        <li>Led to first "AI Winter"</li>
+                    </ul>
+                    <p style="margin-top: 20px;">This critique temporarily halted neural network research but ultimately led to multi-layer networks.</p>
+                `
+            },
+            revival: {
+                title: "Neural Network Revival (1980s)",
+                content: `
+                    <div class="modal-highlight">
+                        <strong>The Comeback</strong><br>
+                        Multi-layer perceptrons and backpropagation overcame earlier limitations.
+                    </div>
+                    <p><strong>Breakthroughs:</strong></p>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li>Backpropagation algorithm (Rumelhart, Hinton, Williams)</li>
+                        <li>Hidden layers solve XOR</li>
+                        <li>Universal approximation theorem</li>
+                        <li>Practical applications emerge</li>
+                    </ul>
+                    <p style="margin-top: 20px;">The perceptron's limitations actually paved the way for deep learning!</p>
+                `
+            }
+        };
+
+        // Add click handlers
+        document.querySelectorAll('[data-modal]').forEach(item => {
+            item.addEventListener('click', () => {
+                const modalKey = item.dataset.modal;
+                const content = modalContents[modalKey];
+                if (content) {
+                    modal.open(content.title, content.content);
+                }
+            });
+        });
+
+        // Perceptron Visualization
+        class PerceptronVisualization {
+            constructor() {
+                this.canvas = document.getElementById('perceptronCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.inputs = [0.5, 0.8, -0.3, 0.6];
+                this.weights = [0.7, -0.4, 0.9, -0.2];
+                this.bias = 0.3;
+                this.animating = true;
+                this.animationPhase = 0;
+                this.resizeCanvas();
+                window.addEventListener('resize', () => this.resizeCanvas());
+            }
+            
+            resizeCanvas() {
+                const container = this.canvas.parentElement;
+                this.canvas.width = container.clientWidth;
+                this.canvas.height = container.clientHeight;
+            }
+            
+            randomizeInputs() {
+                this.inputs = this.inputs.map(() => Math.random() * 2 - 1);
+            }
+            
+            toggleAnimation() {
+                this.animating = !this.animating;
+            }
+            
+            calculateOutput() {
+                let sum = this.bias;
+                for (let i = 0; i < this.inputs.length; i++) {
+                    sum += this.inputs[i] * this.weights[i];
+                }
+                return sum >= 0 ? 1 : 0;
+            }
+            
+            draw() {
+                const ctx = this.ctx;
+                const width = this.canvas.width;
+                const height = this.canvas.height;
+                
+                ctx.clearRect(0, 0, width, height);
+                
+                // Calculate positions
+                const inputX = width * 0.2;
+                const neuronX = width * 0.6;
+                const outputX = width * 0.85;
+                const centerY = height / 2;
+                
+                // Draw input nodes
+                const inputSpacing = height / (this.inputs.length + 1);
+                for (let i = 0; i < this.inputs.length; i++) {
+                    const y = inputSpacing * (i + 1);
+                    
+                    // Connection line
+                    ctx.beginPath();
+                    ctx.moveTo(inputX, y);
+                    ctx.lineTo(neuronX, centerY);
+                    ctx.strokeStyle = this.weights[i] > 0 ? '#14b8a6' : '#ef4444';
+                    ctx.lineWidth = Math.abs(this.weights[i]) * 3 + 1;
+                    ctx.stroke();
+                    
+                    // Input node
+                    ctx.beginPath();
+                    ctx.arc(inputX, y, 20, 0, Math.PI * 2);
+                    ctx.fillStyle = this.inputs[i] > 0 ? '#5eead4' : '#fca5a5';
+                    ctx.fill();
+                    ctx.strokeStyle = '#134e4a';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    
+                    // Input value
+                    ctx.fillStyle = '#134e4a';
+                    ctx.font = '12px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(this.inputs[i].toFixed(2), inputX, y + 4);
+                    
+                    // Input label
+                    ctx.fillText(`x${i+1}`, inputX - 40, y + 4);
+                }
+                
+                // Draw perceptron neuron
+                const output = this.calculateOutput();
+                
+                // Neuron body
+                ctx.beginPath();
+                ctx.arc(neuronX, centerY, 35, 0, Math.PI * 2);
+                const gradient = ctx.createRadialGradient(neuronX, centerY, 0, neuronX, centerY, 35);
+                gradient.addColorStop(0, output ? '#0d9488' : '#64748b');
+                gradient.addColorStop(1, output ? '#14b8a6' : '#94a3b8');
+                ctx.fillStyle = gradient;
+                ctx.fill();
+                ctx.strokeStyle = '#134e4a';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                
+                // Sigma symbol
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 24px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('Σ', neuronX, centerY + 8);
+                
+                // Bias
+                ctx.fillStyle = '#0d9488';
+                ctx.font = '14px Arial';
+                ctx.fillText(`b=${this.bias.toFixed(1)}`, neuronX, centerY - 50);
+                
+                // Output connection
+                ctx.beginPath();
+                ctx.moveTo(neuronX + 35, centerY);
+                ctx.lineTo(outputX - 20, centerY);
+                ctx.strokeStyle = output ? '#0d9488' : '#64748b';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                
+                // Output node
+                ctx.beginPath();
+                ctx.arc(outputX, centerY, 20, 0, Math.PI * 2);
+                ctx.fillStyle = output ? '#0d9488' : '#e2e8f0';
+                ctx.fill();
+                ctx.strokeStyle = '#134e4a';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Output value
+                ctx.fillStyle = output ? 'white' : '#134e4a';
+                ctx.font = 'bold 16px Arial';
+                ctx.fillText(output, outputX, centerY + 5);
+                
+                // Output label
+                ctx.fillStyle = '#134e4a';
+                ctx.font = '14px Arial';
+                ctx.fillText('y', outputX + 35, centerY + 4);
+                
+                // Animation phase
+                if (this.animating) {
+                    this.animationPhase += 0.02;
+                    
+                    // Animated signal
+                    for (let i = 0; i < this.inputs.length; i++) {
+                        const y = inputSpacing * (i + 1);
+                        const progress = (this.animationPhase % 1);
+                        const signalX = inputX + (neuronX - inputX) * progress;
+                        const signalY = y + (centerY - y) * progress;
+                        
+                        ctx.beginPath();
+                        ctx.arc(signalX, signalY, 5, 0, Math.PI * 2);
+                        ctx.fillStyle = '#fbbf24';
+                        ctx.fill();
+                    }
+                }
+            }
+            
+            animate() {
+                this.draw();
+                requestAnimationFrame(() => this.animate());
+            }
+        }
+
+        const perceptronViz = new PerceptronVisualization();
+        perceptronViz.animate();
+
+        // Floating elements animation
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 20; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (18 + Math.random() * 10) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                if (!modal.overlay.classList.contains('active')) {
+                    window.location.href = 'Week8_Slide143.html';
+                }
+            } else if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week8_Slide141.html';
+            }
+        });
+    </script>
+</body>
+</html>

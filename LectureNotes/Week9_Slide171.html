@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - VGGNet Architecture</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px 25px;
+            border-radius: 25px;
+            font-weight: 600;
+            color: #0d9488;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            font-size: 1.1em;
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px 25px;
+            border-radius: 25px;
+            font-weight: 600;
+            color: #0d9488;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            font-size: 1.1em;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.2em;
+            text-align: center;
+            margin-bottom: 40px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        @keyframes slideInFromTop {
+            0% { transform: translateY(-50px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        .vgg-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            padding: 30px;
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(13, 148, 136, 0.1);
+            border: 2px solid rgba(13, 148, 136, 0.1);
+            margin-bottom: 30px;
+            animation: fadeIn 1s ease-out 0.3s both;
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            text-align: center;
+            border-bottom: 3px solid #0d9488;
+            padding-bottom: 10px;
+        }
+
+        .vgg-variants {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .variant-card {
+            background: linear-gradient(135deg, #e6fffa 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .variant-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.2);
+            border-color: #0d9488;
+        }
+
+        .variant-name {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: #0d9488;
+            margin-bottom: 10px;
+        }
+
+        .variant-layers {
+            font-size: 0.9em;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+
+        .variant-params {
+            font-size: 0.85em;
+            color: #64748b;
+        }
+
+        .architecture-blocks {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            overflow-x: auto;
+            padding: 20px 0;
+            margin: 20px 0;
+        }
+
+        .block-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .block-group:hover {
+            transform: scale(1.1);
+        }
+
+        .conv-block {
+            background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 5px 0;
+            min-width: 100px;
+            text-align: center;
+            font-weight: 600;
+            box-shadow: 0 4px 10px rgba(13, 148, 136, 0.3);
+        }
+
+        .pool-block {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 5px;
+            min-width: 100px;
+            text-align: center;
+            font-weight: 600;
+            box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
+        }
+
+        .fc-block {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 5px 0;
+            min-width: 100px;
+            text-align: center;
+            font-weight: 600;
+            box-shadow: 0 4px 10px rgba(124, 58, 237, 0.3);
+        }
+
+        .key-features {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .feature-box {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(13, 148, 136, 0.1);
+            border: 2px solid rgba(13, 148, 136, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .feature-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(13, 148, 136, 0.15);
+            border-color: #0d9488;
+        }
+
+        .feature-title {
+            font-size: 1.3em;
+            color: #0d9488;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .feature-content {
+            font-size: 1em;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            margin: 5% auto;
+            padding: 40px;
+            border-radius: 25px;
+            width: 80%;
+            max-width: 900px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .close {
+            color: #64748b;
+            float: right;
+            font-size: 35px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            text-align: center;
+            border-radius: 50%;
+            line-height: 35px;
+        }
+
+        .close:hover {
+            color: #0d9488;
+            background: rgba(13, 148, 136, 0.1);
+            transform: rotate(90deg);
+        }
+
+        .modal h2 {
+            color: #0d9488;
+            font-size: 2em;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #0d9488;
+            padding-bottom: 10px;
+        }
+
+        .modal-text {
+            font-size: 1.1em;
+            line-height: 1.6;
+            color: #1e293b;
+            margin-bottom: 20px;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+    
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="course-info">CS5710 - Week 9</div>
+    <div class="slide-number">Slide 171 of 180</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">VGGNet Architecture</h1>
+        
+        <div class="vgg-container">
+            <h2 class="section-title">VGG Family (2014)</h2>
+            
+            <div class="vgg-variants">
+                <div class="variant-card" onclick="showModal('vgg11Modal')">
+                    <div class="variant-name">VGG-11</div>
+                    <div class="variant-layers">11 weight layers</div>
+                    <div class="variant-params">133M parameters</div>
+                </div>
+                
+                <div class="variant-card" onclick="showModal('vgg16Modal')">
+                    <div class="variant-name">VGG-16</div>
+                    <div class="variant-layers">16 weight layers</div>
+                    <div class="variant-params">138M parameters</div>
+                </div>
+                
+                <div class="variant-card" onclick="showModal('vgg19Modal')">
+                    <div class="variant-name">VGG-19</div>
+                    <div class="variant-layers">19 weight layers</div>
+                    <div class="variant-params">144M parameters</div>
+                </div>
+            </div>
+            
+            <h2 class="section-title">VGG-16 Architecture</h2>
+            
+            <div class="architecture-blocks">
+                <div class="block-group" onclick="showModal('block1Modal')">
+                    <div class="conv-block">Conv 3×3, 64</div>
+                    <div class="conv-block">Conv 3×3, 64</div>
+                    <div class="pool-block">MaxPool 2×2</div>
+                </div>
+                
+                <div class="block-group" onclick="showModal('block2Modal')">
+                    <div class="conv-block">Conv 3×3, 128</div>
+                    <div class="conv-block">Conv 3×3, 128</div>
+                    <div class="pool-block">MaxPool 2×2</div>
+                </div>
+                
+                <div class="block-group" onclick="showModal('block3Modal')">
+                    <div class="conv-block">Conv 3×3, 256</div>
+                    <div class="conv-block">Conv 3×3, 256</div>
+                    <div class="conv-block">Conv 3×3, 256</div>
+                    <div class="pool-block">MaxPool 2×2</div>
+                </div>
+                
+                <div class="block-group" onclick="showModal('block4Modal')">
+                    <div class="conv-block">Conv 3×3, 512</div>
+                    <div class="conv-block">Conv 3×3, 512</div>
+                    <div class="conv-block">Conv 3×3, 512</div>
+                    <div class="pool-block">MaxPool 2×2</div>
+                </div>
+                
+                <div class="block-group" onclick="showModal('block5Modal')">
+                    <div class="conv-block">Conv 3×3, 512</div>
+                    <div class="conv-block">Conv 3×3, 512</div>
+                    <div class="conv-block">Conv 3×3, 512</div>
+                    <div class="pool-block">MaxPool 2×2</div>
+                </div>
+                
+                <div class="block-group" onclick="showModal('fcModal')">
+                    <div class="fc-block">FC 4096</div>
+                    <div class="fc-block">FC 4096</div>
+                    <div class="fc-block">FC 1000</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="key-features">
+            <div class="feature-box" onclick="showModal('simplicityModal')">
+                <div class="feature-title">🎯 Architectural Simplicity</div>
+                <div class="feature-content">
+                    Uniform use of 3×3 convolutions with stride 1, pad 1 and 2×2 max pooling with stride 2 throughout the network.
+                </div>
+            </div>
+            
+            <div class="feature-box" onclick="showModal('depthModal')">
+                <div class="feature-title">📊 Depth Matters</div>
+                <div class="feature-content">
+                    Demonstrated that deeper networks with smaller filters outperform shallower networks with larger filters.
+                </div>
+            </div>
+            
+            <div class="feature-box" onclick="showModal('receptiveModal')">
+                <div class="feature-title">🔍 Effective Receptive Fields</div>
+                <div class="feature-content">
+                    Two 3×3 conv layers have same receptive field as one 5×5 layer but with fewer parameters and more non-linearity.
+                </div>
+            </div>
+            
+            <div class="feature-box" onclick="showModal('performanceModal')">
+                <div class="feature-title">🏆 Competition Performance</div>
+                <div class="feature-content">
+                    2nd place in ILSVRC 2014 classification (7.3% top-5 error), 1st place in localization task.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="vgg11Modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('vgg11Modal')">&times;</span>
+            <h2>📐 VGG-11 Architecture</h2>
+            
+            <div class="modal-highlight">
+                <strong>Configuration A:</strong> 11 weight layers (8 conv + 3 FC)
+            </div>
+            
+            <div class="modal-code">
+# VGG-11 Architecture
+Conv3-64 → MaxPool
+Conv3-128 → MaxPool
+Conv3-256 → Conv3-256 → MaxPool
+Conv3-512 → Conv3-512 → MaxPool
+Conv3-512 → Conv3-512 → MaxPool
+FC-4096 → FC-4096 → FC-1000
+
+# PyTorch Implementation
+class VGG11(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.features = nn.Sequential(
+            nn.Conv2d(3, 64, 3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(2, 2),
+            
+            nn.Conv2d(64, 128, 3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(2, 2),
+            # ... continue pattern
+        )
+            </div>
+            
+            <div class="modal-text">
+                <strong>Parameters:</strong> 132.9M<br>
+                <strong>FLOPs:</strong> 7.6B<br>
+                <strong>Top-5 Error:</strong> 10.4%<br><br>
+                Simplest VGG variant, good balance between accuracy and efficiency.
+            </div>
+        </div>
+    </div>
+
+    <div id="vgg16Modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('vgg16Modal')">&times;</span>
+            <h2>🌟 VGG-16 Architecture (Most Popular)</h2>
+            
+            <div class="modal-highlight">
+                <strong>Configuration D:</strong> 16 weight layers (13 conv + 3 FC)
+            </div>
+            
+            <div class="modal-code">
+# VGG-16 Complete Architecture
+def make_vgg16():
+    layers = []
+    in_channels = 3
+    
+    # Configuration: [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 
+    #                 512, 512, 512, 'M', 512, 512, 512, 'M']
+    cfg = [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 
+           512, 512, 512, 'M', 512, 512, 512, 'M']
+    
+    for v in cfg:
+        if v == 'M':
+            layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
+        else:
+            layers += [nn.Conv2d(in_channels, v, kernel_size=3, padding=1),
+                      nn.BatchNorm2d(v),
+                      nn.ReLU(inplace=True)]
+            in_channels = v
+    
+    return nn.Sequential(*layers)
+
+# Feature dimensions through network:
+# Input: 224×224×3
+# Block1: 224×224×64 → 112×112×64
+# Block2: 112×112×128 → 56×56×128
+# Block3: 56×56×256 → 28×28×256
+# Block4: 28×28×512 → 14×14×512
+# Block5: 14×14×512 → 7×7×512
+# FC: 7×7×512 = 25088 → 4096 → 4096 → 1000
+            </div>
+            
+            <div class="modal-text">
+                <strong>Why VGG-16 is Special:</strong><br>
+                • Most widely used for transfer learning<br>
+                • Excellent feature extractor<br>
+                • Pre-trained weights readily available<br>
+                • Good trade-off between depth and computation
+            </div>
+        </div>
+    </div>
+
+    <div id="vgg19Modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('vgg19Modal')">&times;</span>
+            <h2>🔥 VGG-19 Architecture</h2>
+            
+            <div class="modal-highlight">
+                <strong>Configuration E:</strong> 19 weight layers (16 conv + 3 FC)
+            </div>
+            
+            <div class="modal-text">
+                VGG-19 adds 3 more convolutional layers compared to VGG-16:
+                • Extra conv layer in blocks 3, 4, and 5
+                • Marginal improvement over VGG-16 (~0.1% better)
+                • More computational cost for minimal gain
+            </div>
+            
+            <div class="modal-code">
+# VGG-19 vs VGG-16 Comparison
+vgg16_cfg = [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 
+             512, 512, 512, 'M', 512, 512, 512, 'M']
+
+vgg19_cfg = [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 256, 'M', 
+             512, 512, 512, 512, 'M', 512, 512, 512, 512, 'M']
+             #    ↑ extra           ↑ extra           ↑ extra
+
+# Performance Metrics:
+# VGG-16: 138M params, 15.5B FLOPs, 7.3% top-5 error
+# VGG-19: 144M params, 19.6B FLOPs, 7.3% top-5 error
+            </div>
+            
+            <div class="modal-text">
+                <strong>Insight:</strong> Diminishing returns with depth - VGG-19 shows that simply adding more layers doesn't always improve performance significantly.
+            </div>
+        </div>
+    </div>
+
+    <div id="block1Modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('block1Modal')">&times;</span>
+            <h2>🔷 Block 1: Initial Feature Extraction</h2>
+            
+            <div class="modal-highlight">
+                <strong>Architecture:</strong> Conv3-64 → Conv3-64 → MaxPool2
+            </div>
+            
+            <div class="modal-code">
+# Block 1 Implementation
+self.block1 = nn.Sequential(
+    nn.Conv2d(3, 64, kernel_size=3, padding=1),  # 224×224×3 → 224×224×64
+    nn.ReLU(inplace=True),
+    nn.Conv2d(64, 64, kernel_size=3, padding=1), # 224×224×64 → 224×224×64
+    nn.ReLU(inplace=True),
+    nn.MaxPool2d(kernel_size=2, stride=2)        # 224×224×64 → 112×112×64
+)
+
+# Receptive field calculation:
+# After conv1: 3×3
+# After conv2: 5×5
+# After pool: 6×6
+            </div>
+            
+            <div class="modal-text">
+                <strong>Purpose:</strong> Captures low-level features like edges, corners, and simple textures<br>
+                <strong>Parameters:</strong> 3×3×3×64 + 3×3×64×64 = 38,720<br>
+                <strong>Feature Maps:</strong> 64 channels detecting basic patterns
+            </div>
+        </div>
+    </div>
+
+    <div id="block2Modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('block2Modal')">&times;</span>
+            <h2>🔷 Block 2: Mid-Level Features</h2>
+            
+            <div class="modal-highlight">
+                <strong>Architecture:</strong> Conv3-128 → Conv3-128 → MaxPool2
+            </div>
+            
+            <div class="modal-code">
+# Block 2 Implementation
+self.block2 = nn.Sequential(
+    nn.Conv2d(64, 128, kernel_size=3, padding=1),  # 112×112×64 → 112×112×128
+    nn.ReLU(inplace=True),
+    nn.Conv2d(128, 128, kernel_size=3, padding=1), # 112×112×128 → 112×112×128
+    nn.ReLU(inplace=True),
+    nn.MaxPool2d(kernel_size=2, stride=2)          # 112×112×128 → 56×56×128
+)
+
+# Feature visualization at this stage shows:
+# - Texture patterns
+# - Shape components
+# - Color blobs
+            </div>
+            
+            <div class="modal-text">
+                <strong>Doubling Channels:</strong> From 64 to 128 to capture more complex patterns<br>
+                <strong>Spatial Reduction:</strong> From 112×112 to 56×56 for computational efficiency<br>
+                <strong>Parameters:</strong> 221,440
+            </div>
+        </div>
+    </div>
+
+    <div id="block3Modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('block3Modal')">&times;</span>
+            <h2>🔷 Block 3: Complex Pattern Detection</h2>
+            
+            <div class="modal-highlight">
+                <strong>Architecture:</strong> Conv3-256 → Conv3-256 → Conv3-256 → MaxPool2
+            </div>
+            
+            <div class="modal-code">
+# Block 3 - First block with 3 conv layers
+self.block3 = nn.Sequential(
+    nn.Conv2d(128, 256, kernel_size=3, padding=1),
+    nn.ReLU(inplace=True),
+    nn.Conv2d(256, 256, kernel_size=3, padding=1),
+    nn.ReLU(inplace=True),
+    nn.Conv2d(256, 256, kernel_size=3, padding=1),  # Extra conv layer
+    nn.ReLU(inplace=True),
+    nn.MaxPool2d(kernel_size=2, stride=2)
+)
+
+# Why 3 conv layers?
+# - Increased receptive field (5×5 → 7×7 → 9×9)
+# - More non-linearity for complex features
+# - Better gradient flow than single deep layer
+            </div>
+            
+            <div class="modal-text">
+                <strong>Feature Complexity:</strong> Detects object parts, complex textures<br>
+                <strong>Parameters:</strong> 1,475,328<br>
+                <strong>Receptive Field:</strong> Effective 28×28 pixels in original image
+            </div>
+        </div>
+    </div>
+
+    <div id="block4Modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('block4Modal')">&times;</span>
+            <h2>🔷 Block 4: High-Level Features</h2>
+            
+            <div class="modal-highlight">
+                <strong>Architecture:</strong> Conv3-512 → Conv3-512 → Conv3-512 → MaxPool2
+            </div>
+            
+            <div class="modal-code">
+# Block 4 Implementation
+self.block4 = nn.Sequential(
+    nn.Conv2d(256, 512, kernel_size=3, padding=1),  # 28×28×256 → 28×28×512
+    nn.ReLU(inplace=True),
+    nn.Conv2d(512, 512, kernel_size=3, padding=1),
+    nn.ReLU(inplace=True),
+    nn.Conv2d(512, 512, kernel_size=3, padding=1),
+    nn.ReLU(inplace=True),
+    nn.MaxPool2d(kernel_size=2, stride=2)           # → 14×14×512
+)
+
+# At this depth:
+# - Features represent semantic parts
+# - Can detect faces, wheels, windows, etc.
+# - Highly discriminative for classification
+            </div>
+            
+            <div class="modal-text">
+                <strong>Channel Explosion:</strong> 512 channels for rich representation<br>
+                <strong>Spatial Size:</strong> 14×14 maintaining spatial relationships<br>
+                <strong>Parameters:</strong> 5,899,776
+            </div>
+        </div>
+    </div>
+
+    <div id="block5Modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('block5Modal')">&times;</span>
+            <h2>🔷 Block 5: Abstract Representations</h2>
+            
+            <div class="modal-highlight">
+                <strong>Architecture:</strong> Conv3-512 → Conv3-512 → Conv3-512 → MaxPool2
+            </div>
+            
+            <div class="modal-code">
+# Block 5 - Final convolutional block
+self.block5 = nn.Sequential(
+    nn.Conv2d(512, 512, kernel_size=3, padding=1),
+    nn.ReLU(inplace=True),
+    nn.Conv2d(512, 512, kernel_size=3, padding=1),
+    nn.ReLU(inplace=True),
+    nn.Conv2d(512, 512, kernel_size=3, padding=1),
+    nn.ReLU(inplace=True),
+    nn.MaxPool2d(kernel_size=2, stride=2)  # → 7×7×512
+)
+
+# Final feature maps:
+# - 7×7 spatial resolution
+# - 512 channels
+# - Total: 7×7×512 = 25,088 features for classification
+            </div>
+            
+            <div class="modal-text">
+                <strong>Abstract Features:</strong> Entire objects and scenes<br>
+                <strong>Global Context:</strong> Large receptive field covers most of input<br>
+                <strong>Ready for Classification:</strong> Flattened to feed into FC layers
+            </div>
+        </div>
+    </div>
+
+    <div id="fcModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('fcModal')">&times;</span>
+            <h2>🔗 Fully Connected Classifier</h2>
+            
+            <div class="modal-highlight">
+                <strong>Architecture:</strong> FC-4096 → FC-4096 → FC-1000
+            </div>
+            
+            <div class="modal-code">
+# Classifier Implementation
+self.classifier = nn.Sequential(
+    nn.Linear(512 * 7 * 7, 4096),  # 25,088 → 4096
+    nn.ReLU(inplace=True),
+    nn.Dropout(p=0.5),
+    
+    nn.Linear(4096, 4096),         # 4096 → 4096
+    nn.ReLU(inplace=True),
+    nn.Dropout(p=0.5),
+    
+    nn.Linear(4096, 1000)          # 4096 → 1000 classes
+)
+
+# Parameter count in FC layers:
+# FC1: 25,088 × 4,096 = 102,760,448 (74% of total!)
+# FC2: 4,096 × 4,096 = 16,777,216
+# FC3: 4,096 × 1,000 = 4,096,000
+# Total FC: 123,633,664 parameters
+            </div>
+            
+            <div class="modal-text">
+                <strong>Problem:</strong> FC layers contain 89% of parameters<br>
+                <strong>Modern Solution:</strong> Global Average Pooling instead of FC layers<br>
+                <strong>Transfer Learning:</strong> Often replace these layers for new tasks
+            </div>
+        </div>
+    </div>
+
+    <div id="simplicityModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('simplicityModal')">&times;</span>
+            <h2>🎯 Architectural Simplicity</h2>
+            
+            <div class="modal-highlight">
+                <strong>Design Principle:</strong> Use only 3×3 convolutions and 2×2 max pooling
+            </div>
+            
+            <div class="modal-code">
+# VGG Design Rules:
+1. All conv layers: 3×3 filters, stride 1, pad 1 (preserves spatial size)
+2. All pool layers: 2×2 max pool, stride 2 (halves spatial size)
+3. Double channels after each pooling: 64 → 128 → 256 → 512
+4. Stack multiple 3×3 convs instead of larger filters
+
+# Why this works:
+def receptive_field_comparison():
+    # One 5×5 conv:
+    params_5x5 = 5 * 5 * C * C = 25C²
+    
+    # Two 3×3 convs:
+    params_3x3 = 2 * (3 * 3 * C * C) = 18C²
+    
+    # Savings: 28% fewer parameters
+    # Bonus: Extra non-linearity from 2 ReLUs vs 1
+            </div>
+            
+            <div class="modal-text">
+                <strong>Benefits:</strong><br>
+                • Easy to implement and understand<br>
+                • Uniform architecture throughout<br>
+                • No hyperparameter tuning for filter sizes<br>
+                • Influenced all future CNN designs
+            </div>
+        </div>
+    </div>
+
+    <div id="depthModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('depthModal')">&times;</span>
+            <h2>📊 Depth Matters</h2>
+            
+            <div class="modal-highlight">
+                <strong>Key Finding:</strong> Deeper networks with small filters > Shallow networks with large filters
+            </div>
+            
+            <div class="modal-code">
+# Depth Experiment Results:
+Network        Depth    Top-5 Error
+VGG-11         11       10.4%
+VGG-13         13       9.9%
+VGG-16         16       8.1%
+VGG-19         19       8.0%
+
+# Comparison with AlexNet:
+AlexNet:  8 layers, 11×11, 5×5 filters → 15.3% error
+VGG-16:  16 layers, only 3×3 filters   → 8.1% error
+
+# Why deeper is better:
+1. More non-linear transformations
+2. More abstract feature hierarchies
+3. Better discrimination capability
+            </div>
+            
+            <div class="modal-text">
+                <strong>Lesson Learned:</strong> Depth is crucial for representation learning, but there's a limit (VGG-19 barely improves over VGG-16)<br><br>
+                <strong>This inspired:</strong> ResNet's solution to train even deeper networks (152 layers!)
+            </div>
+        </div>
+    </div>
+
+    <div id="receptiveModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('receptiveModal')">&times;</span>
+            <h2>🔍 Effective Receptive Fields</h2>
+            
+            <div class="modal-highlight">
+                <strong>Key Insight:</strong> Stack of small filters = Large filter with benefits
+            </div>
+            
+            <div class="modal-code">
+# Receptive Field Calculations:
+
+# Single 7×7 conv:
+Parameters: 7 × 7 × C_in × C_out = 49C²
+Non-linearities: 1
+
+# Three 3×3 convs:
+Parameters: 3 × (3 × 3 × C × C) = 27C²
+Non-linearities: 3
+Savings: 45% fewer parameters!
+
+# Receptive field growth:
+Layer 1: 3×3
+Layer 2: 3×3 → 5×5 (each pixel sees 5×5 of input)
+Layer 3: 3×3 → 7×7 (each pixel sees 7×7 of input)
+
+# Visual representation:
+Input:  [x x x x x x x]
+Conv1:  [ o o o     ]  3×3 receptive field
+Conv2:    [ O O O ]    5×5 receptive field  
+Conv3:      [ Θ ]      7×7 receptive field
+            </div>
+            
+            <div class="modal-text">
+                <strong>Advantages of stacking:</strong><br>
+                • Fewer parameters (more efficient)<br>
+                • More non-linearities (better learning)<br>
+                • Better gradient flow<br>
+                • Implicit regularization through decomposition
+            </div>
+        </div>
+    </div>
+
+    <div id="performanceModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('performanceModal')">&times;</span>
+            <h2>🏆 Competition Performance</h2>
+            
+            <div class="modal-highlight">
+                <strong>ILSVRC 2014 Results:</strong><br>
+                • Classification: 2nd place (7.3% top-5 error)<br>
+                • Localization: 1st place
+            </div>
+            
+            <div class="modal-code">
+# Training Details:
+optimizer = SGD(lr=0.01, momentum=0.9, weight_decay=5e-4)
+batch_size = 256
+epochs = 74
+
+# Learning rate schedule:
+lr = 0.01  # Initial
+lr /= 10   # When validation error plateaus
+
+# Data augmentation:
+- Random crops: 224×224 from 256×256
+- Random horizontal flips
+- Random RGB color shift
+
+# Multi-scale training:
+scales = [256, 384, 512]  # Train on different scales
+# At test: Dense evaluation over multiple scales
+# Average predictions for final result
+
+# Ensemble:
+# Combined 2 VGG-16 + 2 VGG-19 models
+# Result: 7.3% → 6.8% top-5 error
+            </div>
+            
+            <div class="modal-text">
+                <strong>Legacy:</strong><br>
+                • Standard architecture for transfer learning<br>
+                • Pre-trained features used in countless applications<br>
+                • Influenced design of ResNet, DenseNet, etc.<br>
+                • Still competitive for many tasks today
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week9_Slide170.html" class="nav-btn">← Previous</a>
+        <a href="Week9_Slide172.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        function showModal(modalId) {
+            document.getElementById(modalId).style.display = "block";
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = "none";
+        }
+
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = "none";
+            }
+        }
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                var modals = document.getElementsByClassName('modal');
+                for (var i = 0; i < modals.length; i++) {
+                    modals[i].style.display = 'none';
+                }
+            } else if (event.key === 'ArrowLeft') {
+                window.location.href = 'Week9_Slide170.html';
+            } else if (event.key === 'ArrowRight') {
+                window.location.href = 'Week9_Slide172.html';
+            }
+        });
+    
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                if (this.closeBtn) {
+                    this.closeBtn.addEventListener('click', () => this.close());
+                }
+                if (this.overlay) {
+                    this.overlay.addEventListener('click', (e) => {
+                        if (e.target === this.overlay) this.close();
+                    });
+                }
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                if (this.title) this.title.textContent = title;
+                if (this.content) this.content.innerHTML = content;
+                if (this.overlay) {
+                    this.overlay.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                }
+            }
+            
+            close() {
+                if (this.overlay) {
+                    this.overlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+            }
+        }
+
+        const modal = new ModalSystem();
+
+    </script>
+</body>
+</html>

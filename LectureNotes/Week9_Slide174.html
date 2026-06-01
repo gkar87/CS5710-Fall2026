@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Fine-tuning Pre-trained Models</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px 25px;
+            border-radius: 25px;
+            font-weight: 600;
+            color: #0d9488;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            font-size: 1.1em;
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px 25px;
+            border-radius: 25px;
+            font-weight: 600;
+            color: #0d9488;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            font-size: 1.1em;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.2em;
+            text-align: center;
+            margin-bottom: 40px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        @keyframes slideInFromTop {
+            0% { transform: translateY(-50px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .workflow-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            padding: 35px;
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(13, 148, 136, 0.1);
+            border: 2px solid rgba(13, 148, 136, 0.1);
+            margin-bottom: 30px;
+            animation: fadeIn 1s ease-out 0.3s both;
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        .technique-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            padding: 30px;
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(13, 148, 136, 0.1);
+            border: 2px solid rgba(13, 148, 136, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            animation: fadeInUp 1s ease-out 0.5s both;
+        }
+
+        @keyframes fadeInUp {
+            0% { transform: translateY(30px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        .technique-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(13, 148, 136, 0.2);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .workflow-steps {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 25px;
+        }
+
+        .workflow-step {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            flex: 1;
+            margin: 0 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .workflow-step:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.3);
+        }
+
+        .step-number {
+            font-size: 2em;
+            font-weight: 700;
+            color: #0d9488;
+            margin-bottom: 10px;
+        }
+
+        .step-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #134e4a;
+        }
+
+        .tips-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .tip-item {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 15px;
+            margin: 12px 0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid #0d9488;
+        }
+
+        .tip-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 8px 20px rgba(13, 148, 136, 0.2);
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .floating-elements {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.6;
+            animation: float 20s linear infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) translateX(-20px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.6; }
+            90% { opacity: 0.6; }
+            100% { transform: translateY(-100px) translateX(100px) rotate(360deg); opacity: 0; }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 9</div>
+    <div class="slide-number">Slide 174 of 180</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">🎯 Fine-tuning Pre-trained Models</h1>
+        
+        <div class="workflow-section">
+            <h2 class="section-title">🔧 Fine-tuning Workflow</h2>
+            <div class="workflow-steps">
+                <div class="workflow-step" onclick="showStep1()">
+                    <div class="step-number">1</div>
+                    <div class="step-title">Load Pre-trained</div>
+                </div>
+                <div class="workflow-step" onclick="showStep2()">
+                    <div class="step-number">2</div>
+                    <div class="step-title">Modify Architecture</div>
+                </div>
+                <div class="workflow-step" onclick="showStep3()">
+                    <div class="step-number">3</div>
+                    <div class="step-title">Freeze Layers</div>
+                </div>
+                <div class="workflow-step" onclick="showStep4()">
+                    <div class="step-number">4</div>
+                    <div class="step-title">Train New Layers</div>
+                </div>
+                <div class="workflow-step" onclick="showStep5()">
+                    <div class="step-number">5</div>
+                    <div class="step-title">Unfreeze & Fine-tune</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-grid">
+            <div class="technique-card" onclick="showLayerStrategy()">
+                <h2 class="section-title">📊 Layer Selection Strategy</h2>
+                <ul class="tips-list">
+                    <li class="tip-item">
+                        <strong>Early Layers:</strong> Generic features (edges, textures)
+                    </li>
+                    <li class="tip-item">
+                        <strong>Middle Layers:</strong> Shape and object parts
+                    </li>
+                    <li class="tip-item">
+                        <strong>Late Layers:</strong> Task-specific features
+                    </li>
+                    <li class="tip-item">
+                        <strong>Classifier:</strong> Always replace for new task
+                    </li>
+                </ul>
+            </div>
+
+            <div class="technique-card" onclick="showLearningRates()">
+                <h2 class="section-title">⚡ Learning Rate Strategies</h2>
+                <ul class="tips-list">
+                    <li class="tip-item">
+                        <strong>Differential Rates:</strong> Lower for pre-trained layers
+                    </li>
+                    <li class="tip-item">
+                        <strong>Warm-up:</strong> Start with very low LR
+                    </li>
+                    <li class="tip-item">
+                        <strong>Cosine Annealing:</strong> Gradual reduction
+                    </li>
+                    <li class="tip-item">
+                        <strong>1cycle Policy:</strong> Cyclic learning rates
+                    </li>
+                </ul>
+            </div>
+
+            <div class="technique-card" onclick="showDataRequirements()">
+                <h2 class="section-title">📈 Data Requirements</h2>
+                <ul class="tips-list">
+                    <li class="tip-item">
+                        <strong>< 1K samples:</strong> Feature extraction only
+                    </li>
+                    <li class="tip-item">
+                        <strong>1K-10K:</strong> Fine-tune top layers
+                    </li>
+                    <li class="tip-item">
+                        <strong>10K-100K:</strong> Fine-tune most layers
+                    </li>
+                    <li class="tip-item">
+                        <strong>> 100K:</strong> Consider training from scratch
+                    </li>
+                </ul>
+            </div>
+
+            <div class="technique-card" onclick="showBestPractices()">
+                <h2 class="section-title">✅ Best Practices</h2>
+                <ul class="tips-list">
+                    <li class="tip-item">
+                        <strong>Batch Norm:</strong> Be careful with statistics
+                    </li>
+                    <li class="tip-item">
+                        <strong>Data Augmentation:</strong> Essential for small datasets
+                    </li>
+                    <li class="tip-item">
+                        <strong>Regularization:</strong> Dropout in new layers
+                    </li>
+                    <li class="tip-item">
+                        <strong>Monitoring:</strong> Watch for overfitting
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week9_Slide173.html" class="nav-btn">← Previous</a>
+        <a href="Week9_Slide175.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Modal content functions
+        function showStep1() {
+            modal.show('Step 1: Load Pre-trained Model', `
+                <div class="modal-highlight">
+                    <strong>Starting with a Strong Foundation</strong>
+                </div>
+                
+                <p><strong>Loading Pre-trained Weights:</strong></p>
+                
+                <div class="modal-code">
+# TensorFlow/Keras
+from tensorflow.keras.applications import ResNet50
+base_model = ResNet50(
+    weights='imagenet',  # Pre-trained on ImageNet
+    include_top=False,   # Exclude final classification layer
+    input_shape=(224, 224, 3)
+)
+
+# PyTorch
+import torchvision.models as models
+model = models.resnet50(pretrained=True)
+# Remove final layer
+model = torch.nn.Sequential(*list(model.children())[:-1])
+                </div>
+                
+                <p><strong>Key Decisions:</strong></p>
+                <ul>
+                    <li>• <strong>include_top=False:</strong> Remove original classifier</li>
+                    <li>• <strong>pooling:</strong> 'avg' or 'max' or None</li>
+                    <li>• <strong>input_shape:</strong> Match your data or resize</li>
+                </ul>
+                
+                <p><strong>Memory Considerations:</strong></p>
+                <ul>
+                    <li>• ResNet50: ~98MB download</li>
+                    <li>• VGG16: ~528MB download</li>
+                    <li>• EfficientNetB7: ~256MB download</li>
+                </ul>
+                
+                <p><strong>Tip:</strong> Models are cached locally after first download.</p>
+            `);
+        }
+
+        function showStep2() {
+            modal.show('Step 2: Modify Architecture', `
+                <div class="modal-highlight">
+                    <strong>Adapting the Model to Your Task</strong>
+                </div>
+                
+                <p><strong>Adding Custom Layers:</strong></p>
+                
+                <div class="modal-code">
+# Create new model with custom top
+from tensorflow.keras import layers, Model
+
+# Get base model output
+base_output = base_model.output
+
+# Add custom layers
+x = layers.GlobalAveragePooling2D()(base_output)
+x = layers.Dense(256, activation='relu')(x)
+x = layers.Dropout(0.5)(x)
+x = layers.Dense(128, activation='relu')(x)
+x = layers.Dropout(0.5)(x)
+
+# Final classification layer
+predictions = layers.Dense(
+    num_classes, 
+    activation='softmax',
+    name='predictions'
+)(x)
+
+# Create final model
+model = Model(inputs=base_model.input, outputs=predictions)
+                </div>
+                
+                <p><strong>Architecture Patterns:</strong></p>
+                <ul>
+                    <li>• <strong>Simple:</strong> Base → GlobalPool → Dense → Output</li>
+                    <li>• <strong>With Regularization:</strong> Add Dropout layers</li>
+                    <li>• <strong>Deep Head:</strong> Multiple Dense layers</li>
+                    <li>• <strong>Wide Head:</strong> Larger Dense layers (512, 1024)</li>
+                </ul>
+                
+                <p><strong>For Different Tasks:</strong></p>
+                <ul>
+                    <li>• <strong>Binary Classification:</strong> Dense(1, activation='sigmoid')</li>
+                    <li>• <strong>Multi-class:</strong> Dense(n, activation='softmax')</li>
+                    <li>• <strong>Regression:</strong> Dense(1, activation='linear')</li>
+                    <li>• <strong>Multi-label:</strong> Dense(n, activation='sigmoid')</li>
+                </ul>
+            `);
+        }
+
+        function showStep3() {
+            modal.show('Step 3: Freeze Layers', `
+                <div class="modal-highlight">
+                    <strong>Controlling What Gets Trained</strong>
+                </div>
+                
+                <p><strong>Layer Freezing Strategies:</strong></p>
+                
+                <div class="modal-code">
+# Strategy 1: Freeze entire base model
+base_model.trainable = False
+
+# Strategy 2: Freeze specific layers
+for layer in base_model.layers[:100]:
+    layer.trainable = False
+
+# Strategy 3: Freeze by layer name pattern
+for layer in base_model.layers:
+    if 'conv1' in layer.name or 'conv2' in layer.name:
+        layer.trainable = False
+
+# Check trainable status
+print(f"Total layers: {len(model.layers)}")
+print(f"Trainable layers: {len([l for l in model.layers if l.trainable])}")
+print(f"Non-trainable params: {model.non_trainable_weights}")
+                </div>
+                
+                <p><strong>When to Freeze What:</strong></p>
+                <ul>
+                    <li>• <strong>Similar Domain:</strong> Freeze fewer layers</li>
+                    <li>• <strong>Different Domain:</strong> Freeze more layers initially</li>
+                    <li>• <strong>Very Small Dataset:</strong> Freeze entire base</li>
+                    <li>• <strong>Large Dataset:</strong> Can fine-tune more layers</li>
+                </ul>
+                
+                <p><strong>ResNet50 Freezing Guide:</strong></p>
+                <ul>
+                    <li>• Layers 0-49: First residual block (most generic)</li>
+                    <li>• Layers 50-99: Second block</li>
+                    <li>• Layers 100-142: Third block</li>
+                    <li>• Layers 143-175: Fourth block (most specific)</li>
+                </ul>
+                
+                <p><strong>Important:</strong> Batch Normalization layers should usually stay frozen to maintain statistics.</p>
+            `);
+        }
+
+        function showStep4() {
+            modal.show('Step 4: Train New Layers', `
+                <div class="modal-highlight">
+                    <strong>Initial Training Phase</strong>
+                </div>
+                
+                <p><strong>Training Only the Classifier:</strong></p>
+                
+                <div class="modal-code">
+# Compile with higher learning rate for new layers
+model.compile(
+    optimizer=Adam(learning_rate=0.001),
+    loss='categorical_crossentropy',
+    metrics=['accuracy']
+)
+
+# Train for a few epochs (warm-up)
+history = model.fit(
+    train_generator,
+    epochs=10,  # Warm-up epochs
+    validation_data=val_generator,
+    callbacks=[
+        ReduceLROnPlateau(patience=3, factor=0.5),
+        EarlyStopping(patience=5, restore_best_weights=True)
+    ]
+)
+
+# Monitor training
+plt.plot(history.history['loss'], label='train_loss')
+plt.plot(history.history['val_loss'], label='val_loss')
+plt.legend()
+plt.show()
+                </div>
+                
+                <p><strong>Why Train New Layers First?</strong></p>
+                <ul>
+                    <li>• Random initialization needs larger updates</li>
+                    <li>• Prevents disrupting good pre-trained features</li>
+                    <li>• Allows classifier to adapt to base features</li>
+                    <li>• Faster convergence in later fine-tuning</li>
+                </ul>
+                
+                <p><strong>Typical Settings:</strong></p>
+                <ul>
+                    <li>• Learning Rate: 0.001 - 0.01</li>
+                    <li>• Epochs: 5-20 (until validation plateaus)</li>
+                    <li>• Batch Size: As large as GPU allows</li>
+                    <li>• Data Augmentation: Apply if needed</li>
+                </ul>
+            `);
+        }
+
+        function showStep5() {
+            modal.show('Step 5: Unfreeze & Fine-tune', `
+                <div class="modal-highlight">
+                    <strong>Careful Adaptation of Pre-trained Layers</strong>
+                </div>
+                
+                <p><strong>Progressive Unfreezing:</strong></p>
+                
+                <div class="modal-code">
+# Unfreeze last few layers of base model
+base_model.trainable = True
+
+# Keep early layers frozen
+fine_tune_at = 140  # Layer to start fine-tuning from
+
+for layer in base_model.layers[:fine_tune_at]:
+    layer.trainable = False
+
+# Recompile with MUCH lower learning rate
+model.compile(
+    optimizer=Adam(learning_rate=0.0001/10),  # 10x lower
+    loss='categorical_crossentropy',
+    metrics=['accuracy']
+)
+
+# Continue training
+fine_tune_epochs = 30
+total_epochs = 10 + fine_tune_epochs
+
+history_fine = model.fit(
+    train_generator,
+    epochs=total_epochs,
+    initial_epoch=history.epoch[-1],
+    validation_data=val_generator,
+    callbacks=[
+        CosineAnnealingScheduler(T_max=fine_tune_epochs),
+        ModelCheckpoint('best_model.h5', save_best_only=True)
+    ]
+)
+                </div>
+                
+                <p><strong>Critical Rules:</strong></p>
+                <ul>
+                    <li>• Use 10-100x lower learning rate</li>
+                    <li>• Unfreeze gradually (not all at once)</li>
+                    <li>• Monitor for overfitting carefully</li>
+                    <li>• Save checkpoints frequently</li>
+                </ul>
+                
+                <p><strong>Advanced Techniques:</strong></p>
+                <ul>
+                    <li>• <strong>Discriminative LR:</strong> Different LR per layer group</li>
+                    <li>• <strong>Gradual Unfreezing:</strong> Unfreeze one block at a time</li>
+                    <li>• <strong>Cyclic LR:</strong> Use learning rate cycles</li>
+                    <li>• <strong>SWA:</strong> Stochastic Weight Averaging</li>
+                </ul>
+            `);
+        }
+
+        function showLayerStrategy() {
+            modal.show('Layer Selection Strategy', `
+                <div class="modal-highlight">
+                    <strong>Understanding Layer Hierarchies</strong>
+                </div>
+                
+                <p><strong>What Different Layers Learn:</strong></p>
+                
+                <div class="modal-code">
+# Visualizing layer specialization
+Conv Layer 1-2: Edges, colors, textures
+    ↓ (Keep frozen for most tasks)
+Conv Layer 3-5: Corners, simple patterns
+    ↓ (Usually keep frozen)
+Conv Layer 6-10: Object parts, shapes
+    ↓ (Consider fine-tuning)
+Conv Layer 11-15: Complex patterns
+    ↓ (Often fine-tune)
+Conv Layer 16+: Task-specific features
+    ↓ (Usually fine-tune)
+Classifier: Task predictions
+    (Always replace and train)
+                </div>
+                
+                <p><strong>Decision Framework:</strong></p>
+                
+                <table style="width:100%; margin: 20px 0;">
+                    <tr>
+                        <th style="text-align:left; padding:10px;">Scenario</th>
+                        <th style="text-align:left; padding:10px;">Strategy</th>
+                    </tr>
+                    <tr>
+                        <td style="padding:10px;">Same domain (e.g., ImageNet → CIFAR)</td>
+                        <td style="padding:10px;">Fine-tune last 30-50% layers</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:10px;">Related domain (e.g., Photos → Artwork)</td>
+                        <td style="padding:10px;">Fine-tune last 50-70% layers</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:10px;">Different domain (e.g., Natural → Medical)</td>
+                        <td style="padding:10px;">May need to fine-tune 70-90% layers</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:10px;">Very small dataset (< 1000)</td>
+                        <td style="padding:10px;">Only train classifier</td>
+                    </tr>
+                </table>
+                
+                <p><strong>Practical Example:</strong></p>
+                <div class="modal-code">
+# For ResNet50 with custom dataset
+if dataset_size < 1000:
+    freeze_until = -2  # Only classifier
+elif dataset_size < 5000:
+    freeze_until = 140  # Last residual block
+elif dataset_size < 20000:
+    freeze_until = 80   # Last two blocks
+else:
+    freeze_until = 40   # Most of network trainable
+                </div>
+            `);
+        }
+
+        function showLearningRates() {
+            modal.show('Learning Rate Strategies', `
+                <div class="modal-highlight">
+                    <strong>Optimizing Learning Rates for Fine-tuning</strong>
+                </div>
+                
+                <p><strong>1. Differential Learning Rates:</strong></p>
+                
+                <div class="modal-code">
+# Different LR for different layer groups
+def setup_differential_lr(model):
+    # Group 1: Early layers (frozen or very low LR)
+    early_layers = model.layers[:50]
+    
+    # Group 2: Middle layers (low LR)
+    middle_layers = model.layers[50:140]
+    
+    # Group 3: Late layers (medium LR)
+    late_layers = model.layers[140:175]
+    
+    # Group 4: New layers (high LR)
+    new_layers = model.layers[175:]
+    
+    # Apply different learning rates
+    optimizer = Adam()
+    optimizer.lr = {
+        early_layers: 0.00001,
+        middle_layers: 0.0001,
+        late_layers: 0.001,
+        new_layers: 0.01
+    }
+                </div>
+                
+                <p><strong>2. Learning Rate Schedules:</strong></p>
+                
+                <div class="modal-code">
+# Cosine Annealing
+def cosine_annealing(epoch, lr):
+    epochs = 50
+    lr_min = 0.00001
+    lr_max = 0.001
+    return lr_min + 0.5 * (lr_max - lr_min) * (
+        1 + np.cos(epoch / epochs * np.pi)
+    )
+
+# One Cycle Policy
+def one_cycle(epoch, lr):
+    peak_epoch = 15
+    if epoch < peak_epoch:
+        return lr * (epoch / peak_epoch)
+    else:
+        return lr * (0.1 ** ((epoch - peak_epoch) / (50 - peak_epoch)))
+
+# Warm Restart
+def warm_restart(epoch, lr):
+    cycle_length = 10
+    if epoch % cycle_length == 0:
+        return initial_lr
+    return lr * 0.9
+                </div>
+                
+                <p><strong>3. Best Practices:</strong></p>
+                <ul>
+                    <li>• Start with LR finder to find optimal range</li>
+                    <li>• Use 10x lower LR for pre-trained vs new layers</li>
+                    <li>• Reduce LR when validation loss plateaus</li>
+                    <li>• Consider warm-up for first few epochs</li>
+                </ul>
+            `);
+        }
+
+        function showDataRequirements() {
+            modal.show('Data Requirements Guide', `
+                <div class="modal-highlight">
+                    <strong>How Much Data Do You Need?</strong>
+                </div>
+                
+                <p><strong>Dataset Size Guidelines:</strong></p>
+                
+                <div class="modal-code">
+# < 100 samples per class
+strategy = "feature_extraction_only"
+freeze_base = True
+train_epochs = 20-50
+augmentation = "heavy"
+
+# 100-500 samples per class
+strategy = "fine_tune_last_block"
+freeze_until = -30  # Last 30 layers
+train_epochs = 30-100
+augmentation = "moderate_to_heavy"
+
+# 500-1000 samples per class
+strategy = "fine_tune_half_network"
+freeze_until = len(model.layers) // 2
+train_epochs = 50-150
+augmentation = "moderate"
+
+# > 1000 samples per class
+strategy = "fine_tune_most_network"
+freeze_until = 20  # Only earliest layers
+train_epochs = 100+
+augmentation = "light_to_moderate"
+                </div>
+                
+                <p><strong>Data Quality vs Quantity:</strong></p>
+                <ul>
+                    <li>• 100 high-quality images > 1000 poor images</li>
+                    <li>• Balanced classes important</li>
+                    <li>• Clean labels critical</li>
+                    <li>• Representative variety needed</li>
+                </ul>
+                
+                <p><strong>Augmentation Strategies by Data Size:</strong></p>
+                
+                <table style="width:100%; margin: 20px 0;">
+                    <tr>
+                        <th style="text-align:left; padding:10px;">Data Size</th>
+                        <th style="text-align:left; padding:10px;">Augmentation Level</th>
+                    </tr>
+                    <tr>
+                        <td style="padding:10px;">< 1K total</td>
+                        <td style="padding:10px;">Heavy (10-20x augmentation)</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:10px;">1K - 10K</td>
+                        <td style="padding:10px;">Moderate (5-10x)</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:10px;">10K - 50K</td>
+                        <td style="padding:10px;">Light (2-5x)</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:10px;">> 50K</td>
+                        <td style="padding:10px;">Minimal (1-2x)</td>
+                    </tr>
+                </table>
+                
+                <p><strong>Warning Signs of Insufficient Data:</strong></p>
+                <ul>
+                    <li>• Large gap between train and validation accuracy</li>
+                    <li>• Validation loss increases while training decreases</li>
+                    <li>• Model memorizes training examples</li>
+                    <li>• Poor generalization to new examples</li>
+                </ul>
+            `);
+        }
+
+        function showBestPractices() {
+            modal.show('Fine-tuning Best Practices', `
+                <div class="modal-highlight">
+                    <strong>Professional Tips for Success</strong>
+                </div>
+                
+                <p><strong>1. Batch Normalization Considerations:</strong></p>
+                
+                <div class="modal-code">
+# Option 1: Keep BN layers frozen (recommended)
+for layer in model.layers:
+    if isinstance(layer, BatchNormalization):
+        layer.trainable = False
+
+# Option 2: Fine-tune BN with very small dataset
+# Use training=False during inference
+model.predict(x, training=False)
+
+# Option 3: Update BN statistics gradually
+class FineTuneBN(Callback):
+    def on_epoch_begin(self, epoch, logs=None):
+        if epoch > 10:  # After warm-up
+            for layer in self.model.layers:
+                if isinstance(layer, BatchNormalization):
+                    layer.trainable = True
+                </div>
+                
+                <p><strong>2. Monitoring and Debugging:</strong></p>
+                
+                <div class="modal-code">
+# Track multiple metrics
+metrics_to_track = [
+    'accuracy',
+    'top_k_categorical_accuracy',
+    'precision',
+    'recall',
+    AUC(name='auc')
+]
+
+# Use callbacks for monitoring
+callbacks = [
+    TensorBoard(log_dir='./logs'),
+    ModelCheckpoint('best_model.h5', monitor='val_loss'),
+    EarlyStopping(patience=10, restore_best_weights=True),
+    ReduceLROnPlateau(patience=5, factor=0.5),
+    CSVLogger('training.csv')
+]
+                </div>
+                
+                <p><strong>3. Common Pitfalls to Avoid:</strong></p>
+                <ul>
+                    <li>• ❌ Using same LR for all layers</li>
+                    <li>• ❌ Unfreezing all layers at once</li>
+                    <li>• ❌ Not using data augmentation</li>
+                    <li>• ❌ Ignoring class imbalance</li>
+                    <li>• ❌ Training for too many epochs</li>
+                </ul>
+                
+                <p><strong>4. Advanced Techniques:</strong></p>
+                <ul>
+                    <li>• <strong>Mixup:</strong> Blend training examples</li>
+                    <li>• <strong>CutMix:</strong> Mix patches from different images</li>
+                    <li>• <strong>Label Smoothing:</strong> Prevent overconfidence</li>
+                    <li>• <strong>Knowledge Distillation:</strong> Learn from ensemble</li>
+                    <li>• <strong>Pseudo-labeling:</strong> Use unlabeled data</li>
+                </ul>
+                
+                <p><strong>5. Production Checklist:</strong></p>
+                <ul>
+                    <li>✅ Test on holdout set</li>
+                    <li>✅ Check inference speed</li>
+                    <li>✅ Optimize model size if needed</li>
+                    <li>✅ Test on edge cases</li>
+                    <li>✅ Document preprocessing steps</li>
+                    <li>✅ Version control model and data</li>
+                </ul>
+            `);
+        }
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 30; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 20 + 's';
+                element.style.animationDuration = (Math.random() * 15 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Initialize
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (!modal.overlay.classList.contains('active')) {
+                if (e.key === 'ArrowRight') {
+                    window.location.href = 'Week9_Slide175.html';
+                } else if (e.key === 'ArrowLeft') {
+                    window.location.href = 'Week9_Slide173.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

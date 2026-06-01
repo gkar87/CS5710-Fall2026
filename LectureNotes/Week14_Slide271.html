@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - AutoML and Neural Architecture Search</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .automl-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .nas-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .automl-component {
+            padding: 20px;
+            margin: 15px 0;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .automl-component:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .component-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .component-desc {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .tools-showcase {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .tools-title {
+            font-size: 2em;
+            color: #0d9488;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+        }
+
+        .tool-card {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid #14b8a6;
+        }
+
+        .tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.2);
+            border-color: #0d9488;
+        }
+
+        .tool-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+
+        .tool-name {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #0d9488;
+        }
+
+        .tool-type {
+            font-size: 0.85em;
+            color: #14b8a6;
+            font-weight: 500;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .tool-desc {
+            font-size: 0.9em;
+            color: #475569;
+            line-height: 1.4;
+        }
+
+        /* Navigation */
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        /* Course Info */
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 25px;
+            border-radius: 15px;
+            font-weight: 600;
+            color: #0d9488;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            z-index: 100;
+            font-size: 1.1em;
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 25px;
+            border-radius: 15px;
+            font-weight: 600;
+            color: #0d9488;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            z-index: 100;
+            font-size: 1.1em;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 900px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 2em;
+            color: #0d9488;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 2.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            line-height: 1;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .modal-close:hover {
+            color: #0d9488;
+            background: rgba(13, 148, 136, 0.1);
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            color: #1e293b;
+            line-height: 1.8;
+            font-size: 1.1em;
+        }
+
+        .modal-content h4 {
+            color: #0d9488;
+            margin: 25px 0 15px 0;
+            font-size: 1.3em;
+        }
+
+        .modal-content p {
+            margin-bottom: 15px;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-left: 4px solid #0d9488;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            font-weight: 500;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #99f6e4;
+            padding: 20px;
+            border-radius: 12px;
+            font-family: 'Courier New', monospace;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+
+        /* Animations */
+        @keyframes slideInFromTop {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInFromLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-60px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInFromRight {
+            from {
+                opacity: 0;
+                transform: translateX(60px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInFromBottom {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Floating Elements */
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 14</div>
+    <div class="slide-number">Slide 271 of 280</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">AutoML & Neural Architecture Search</h1>
+        
+        <div class="content-layout">
+            <div class="automl-section">
+                <h2 class="section-title">🤖 AutoML Pipeline</h2>
+                
+                <div class="automl-component" data-component="data-preprocessing">
+                    <div class="component-title">📊 Data Preprocessing</div>
+                    <div class="component-desc">Automated feature engineering, cleaning, and transformation</div>
+                </div>
+                
+                <div class="automl-component" data-component="model-selection">
+                    <div class="component-title">🔍 Model Selection</div>
+                    <div class="component-desc">Automatic algorithm comparison and hyperparameter optimization</div>
+                </div>
+                
+                <div class="automl-component" data-component="feature-engineering">
+                    <div class="component-title">⚙️ Feature Engineering</div>
+                    <div class="component-desc">Automatic feature creation, selection, and encoding</div>
+                </div>
+                
+                <div class="automl-component" data-component="ensemble-methods">
+                    <div class="component-title">🎭 Ensemble Methods</div>
+                    <div class="component-desc">Automated model combination and stacking strategies</div>
+                </div>
+            </div>
+
+            <div class="nas-section">
+                <h2 class="section-title">🏗️ Neural Architecture Search</h2>
+                
+                <div class="automl-component" data-component="search-space">
+                    <div class="component-title">🌐 Search Space</div>
+                    <div class="component-desc">Defining possible network architectures and operations</div>
+                </div>
+                
+                <div class="automl-component" data-component="search-strategy">
+                    <div class="component-title">🎯 Search Strategy</div>
+                    <div class="component-desc">Reinforcement learning, evolutionary, or gradient-based optimization</div>
+                </div>
+                
+                <div class="automl-component" data-component="performance-estimation">
+                    <div class="component-title">📈 Performance Estimation</div>
+                    <div class="component-desc">Early stopping, weight sharing, and proxy tasks</div>
+                </div>
+                
+                <div class="automl-component" data-component="architecture-evaluation">
+                    <div class="component-title">🧪 Architecture Evaluation</div>
+                    <div class="component-desc">Efficient methods to assess architecture quality</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tools-showcase">
+            <h2 class="tools-title">🛠️ AutoML Tools & Platforms</h2>
+            
+            <div class="tools-grid">
+                <div class="tool-card" data-tool="google-automl">
+                    <div class="tool-icon">🔍</div>
+                    <div class="tool-name">Google Cloud AutoML</div>
+                    <div class="tool-type">Cloud Platform</div>
+                    <div class="tool-desc">Enterprise-grade AutoML with custom models for vision, text, and tabular data</div>
+                </div>
+                
+                <div class="tool-card" data-tool="h2o-ai">
+                    <div class="tool-icon">💧</div>
+                    <div class="tool-name">H2O.ai</div>
+                    <div class="tool-type">Open Source</div>
+                    <div class="tool-desc">Distributed machine learning platform with automatic feature engineering</div>
+                </div>
+                
+                <div class="tool-card" data-tool="auto-sklearn">
+                    <div class="tool-icon">🐍</div>
+                    <div class="tool-name">Auto-sklearn</div>
+                    <div class="tool-type">Python Library</div>
+                    <div class="tool-desc">Automated sklearn pipeline optimization with meta-learning</div>
+                </div>
+                
+                <div class="tool-card" data-tool="tpot">
+                    <div class="tool-icon">🧬</div>
+                    <div class="tool-name">TPOT</div>
+                    <div class="tool-type">Genetic Programming</div>
+                    <div class="tool-desc">Evolutionary algorithm for automated ML pipeline optimization</div>
+                </div>
+                
+                <div class="tool-card" data-tool="automl-gs">
+                    <div class="tool-icon">⚡</div>
+                    <div class="tool-name">AutoML-GS</div>
+                    <div class="tool-type">Lightweight Tool</div>
+                    <div class="tool-desc">Simple AutoML with genetic search for model selection</div>
+                </div>
+                
+                <div class="tool-card" data-tool="optuna">
+                    <div class="tool-icon">🎯</div>
+                    <div class="tool-name">Optuna</div>
+                    <div class="tool-type">Hyperparameter Tuning</div>
+                    <div class="tool-desc">Advanced hyperparameter optimization with pruning and parallel execution</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week14_Slide270.html" class="nav-btn">← Previous</a>
+        <a href="Week14_Slide272.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // AutoML Tool Details
+        const toolDetails = {
+            'google-automl': {
+                title: 'Google Cloud AutoML - Enterprise AI Platform',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Google's Vision:</strong> Make machine learning accessible to developers with limited ML expertise through automated model development.
+                    </div>
+                    
+                    <h4>🎯 Key Products</h4>
+                    <p><strong>AutoML Vision:</strong> Image classification and object detection</p>
+                    <p><strong>AutoML Natural Language:</strong> Text classification and sentiment analysis</p>
+                    <p><strong>AutoML Translation:</strong> Custom translation models</p>
+                    <p><strong>AutoML Tables:</strong> Structured data prediction (regression/classification)</p>
+                    <p><strong>AutoML Video Intelligence:</strong> Video content analysis</p>
+                    
+                    <h4>💰 Pricing & Scale</h4>
+                    <div class="modal-code">
+# AutoML Tables Pricing (2024):
+- Training: $19.32 per hour
+- Prediction: $1.16 per 1000 predictions (online)
+- Batch prediction: $0.76 per 1000 predictions
+
+# Typical Costs:
+- Small model (< 10k rows): $50-200
+- Medium model (100k rows): $500-2000  
+- Large model (1M+ rows): $5000-20000
+
+# Scale Limits:
+- Max dataset size: 100 GB
+- Max features: 1000 columns
+- Max training time: 72 hours
+                    </div>
+                    
+                    <h4>🚀 Advantages</h4>
+                    <p>• <strong>No coding required:</strong> GUI-based model building</p>
+                    <p>• <strong>Enterprise-grade:</strong> 99.9% uptime SLA, enterprise security</p>
+                    <p>• <strong>Integration:</strong> Seamless with Google Cloud ecosystem</p>
+                    <p>• <strong>AutoML capabilities:</strong> Automated feature engineering, hyperparameter tuning</p>
+                    <p>• <strong>Explainability:</strong> Feature importance and model insights</p>
+                    
+                    <h4>⚠️ Limitations</h4>
+                    <p>• <strong>Cost:</strong> Expensive for large datasets and frequent retraining</p>
+                    <p>• <strong>Customization:</strong> Limited control over model architecture</p>
+                    <p>• <strong>Vendor lock-in:</strong> Tied to Google Cloud ecosystem</p>
+                    <p>• <strong>Data privacy:</strong> Data processed on Google servers</p>
+                    
+                    <h4>🏢 Best Use Cases</h4>
+                    <p><strong>Enterprise ML:</strong> Companies needing quick ML deployment without ML expertise</p>
+                    <p><strong>Proof of Concepts:</strong> Rapid prototyping to demonstrate ML value</p>
+                    <p><strong>Domain-specific models:</strong> Custom models for niche use cases</p>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                        <strong>💼 Success Story:</strong> Airbus uses AutoML Vision to detect cloud coverage in satellite imagery, reducing analysis time from hours to minutes.
+                    </div>
+                `
+            },
+            'h2o-ai': {
+                title: 'H2O.ai - Open Source AutoML Pioneer',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Mission:</strong> Democratize AI by making machine learning accessible, scalable, and efficient for everyone.
+                    </div>
+                    
+                    <h4>🛠️ Product Suite</h4>
+                    <p><strong>H2O-3:</strong> Open-source distributed ML platform</p>
+                    <p><strong>H2O AutoML:</strong> Automated machine learning for tabular data</p>
+                    <p><strong>H2O Wave:</strong> Real-time ML app development framework</p>
+                    <p><strong>H2O Driverless AI:</strong> Enterprise automated ML platform</p>
+                    <p><strong>H2O MLOps:</strong> Model deployment and monitoring</p>
+                    
+                    <h4>🏆 AutoML Capabilities</h4>
+                    <div class="modal-code">
+# H2O AutoML Process:
+1. Data Ingestion:
+   - Automatic data type detection
+   - Missing value handling
+   - Feature engineering (interactions, aggregations)
+
+2. Model Training:
+   - Gradient Boosting Machines (GBM, XGBoost)
+   - Random Forest, Deep Learning
+   - GLM, Naive Bayes, Stacked Ensembles
+
+3. Model Selection:
+   - Cross-validation for model validation
+   - Leaderboard ranking by performance metrics
+   - Automatic ensemble creation
+
+# Python Example:
+import h2o
+from h2o.automl import H2OAutoML
+
+h2o.init()
+aml = H2OAutoML(max_models=20, seed=1)
+aml.train(x=x, y=y, training_frame=train)
+                    </div>
+                    
+                    <h4>📊 Performance Benchmarks</h4>
+                    <p>• <strong>Kaggle Performance:</strong> H2O consistently ranks in top 10% of competitions</p>
+                    <p>• <strong>Speed:</strong> 10-100x faster than traditional ML pipelines</p>
+                    <p>• <strong>Accuracy:</strong> Often matches or exceeds manual feature engineering</p>
+                    <p>• <strong>Scalability:</strong> Handles datasets with billions of rows</p>
+                    
+                    <h4>💡 Unique Features</h4>
+                    <p><strong>Explainable AI:</strong> LIME, SHAP, and model-specific explanations</p>
+                    <p><strong>MLI (Machine Learning Interpretability):</strong> Built-in model interpretation</p>
+                    <p><strong>Time Series:</strong> Specialized AutoML for time series forecasting</p>
+                    <p><strong>Multi-target:</strong> Simultaneous prediction of multiple targets</p>
+                    
+                    <h4>🏢 Enterprise Adoption</h4>
+                    <p><strong>2000+ companies</strong> use H2O.ai including:</p>
+                    <p>• <strong>Financial:</strong> Capital One, PayPal, Progressive Insurance</p>
+                    <p>• <strong>Healthcare:</strong> Kaiser Permanente, Humana</p>
+                    <p>• <strong>Retail:</strong> Walmart, Macy's</p>
+                    <p>• <strong>Technology:</strong> Nvidia, Intel</p>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                        <strong>🎯 Why Choose H2O:</strong> Perfect balance of open-source accessibility and enterprise features. Great for teams wanting ML power without vendor lock-in.
+                    </div>
+                `
+            },
+            'auto-sklearn': {
+                title: 'Auto-sklearn - Academic Excellence Meets Practical ML',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Academic Origins:</strong> Developed by University of Freiburg, auto-sklearn brings cutting-edge AutoML research to Python's scikit-learn ecosystem.
+                    </div>
+                    
+                    <h4>🧠 Core Innovation</h4>
+                    <p>Auto-sklearn extends scikit-learn with three key innovations:</p>
+                    <p>• <strong>Meta-learning:</strong> Uses prior knowledge from similar datasets</p>
+                    <p>• <strong>Ensembling:</strong> Combines multiple models for better performance</p>
+                    <p>• <strong>Bayesian optimization:</strong> Intelligent hyperparameter search</p>
+                    
+                    <h4>⚙️ Technical Architecture</h4>
+                    <div class="modal-code">
+# Auto-sklearn Workflow:
+1. Meta-learning Initialization:
+   - Analyze dataset characteristics (# features, samples, skewness)
+   - Recommend initial configurations based on similar datasets
+   
+2. Bayesian Optimization:
+   - SMAC (Sequential Model-based Algorithm Configuration)
+   - Gaussian Process surrogate model
+   - Expected Improvement acquisition function
+   
+3. Ensemble Construction:
+   - Forward selection with cross-validation
+   - Ensemble weights optimized for validation performance
+   - Automatic model selection and combination
+
+# Python Usage:
+import autosklearn.classification
+automl = autosklearn.classification.AutoSklearnClassifier(
+    time_left_for_this_task=120,
+    per_run_time_limit=30
+)
+automl.fit(X_train, y_train)
+predictions = automl.predict(X_test)
+                    </div>
+                    
+                    <h4>📈 Performance Results</h4>
+                    <p><strong>140 Datasets Benchmark:</strong> Auto-sklearn outperforms human experts on 60% of datasets</p>
+                    <p><strong>Competition Results:</strong> Won ChaLearn AutoML challenge 2015-2016</p>
+                    <p><strong>Time Efficiency:</strong> Achieves strong baselines in under 1 hour</p>
+                    <p><strong>Robustness:</strong> Consistent performance across diverse data types</p>
+                    
+                    <h4>🎯 Supported Algorithms</h4>
+                    <p><strong>Classification (15 algorithms):</strong> Random Forest, SVM, Neural Networks, Gradient Boosting, etc.</p>
+                    <p><strong>Regression (14 algorithms):</strong> Ridge, Lasso, SVR, Gaussian Process, etc.</p>
+                    <p><strong>Preprocessing (110+ configurations):</strong> Scaling, encoding, feature selection, etc.</p>
+                    
+                    <h4>✅ Advantages</h4>
+                    <p>• <strong>Scikit-learn compatibility:</strong> Drop-in replacement for sklearn models</p>
+                    <p>• <strong>Research-backed:</strong> Built on solid theoretical foundations</p>
+                    <p>• <strong>Open source:</strong> Free and transparent algorithms</p>
+                    <p>• <strong>Meta-learning:</strong> Learns from experience across datasets</p>
+                    <p>• <strong>Comprehensive:</strong> Covers entire ML pipeline automatically</p>
+                    
+                    <h4>⚠️ Limitations</h4>
+                    <p>• <strong>Computational cost:</strong> Can be slow for very large datasets</p>
+                    <p>• <strong>Memory usage:</strong> Ensemble models can be memory-intensive</p>
+                    <p>• <strong>Deep learning:</strong> Limited neural network architectures</p>
+                    <p>• <strong>Time series:</strong> Not optimized for temporal data</p>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                        <strong>🎓 Perfect for:</strong> Data scientists who want automated ML with theoretical rigor. Ideal for research, prototyping, and when you need to understand "why" the system made certain choices.
+                    </div>
+                `
+            },
+            'tpot': {
+                title: 'TPOT - Genetic Programming Meets AutoML',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Evolutionary Approach:</strong> TPOT uses genetic programming to automatically design and optimize machine learning pipelines.
+                    </div>
+                    
+                    <h4>🧬 Genetic Programming Principles</h4>
+                    <p>TPOT treats ML pipelines as genetic individuals that evolve over generations:</p>
+                    <p>• <strong>Population:</strong> Set of ML pipelines with different configurations</p>
+                    <p>• <strong>Selection:</strong> Best-performing pipelines reproduce</p>
+                    <p>• <strong>Crossover:</strong> Combine elements from parent pipelines</p>
+                    <p>• <strong>Mutation:</strong> Random modifications to explore new configurations</p>
+                    <p>• <strong>Fitness:</strong> Cross-validation performance score</p>
+                    
+                    <h4>🔬 Evolution Process</h4>
+                    <div class="modal-code">
+# TPOT Pipeline Evolution:
+Generation 1: Random pipelines
+├── StandardScaler → RandomForest (CV: 0.82)
+├── MinMaxScaler → SVM (CV: 0.79) 
+├── PCA → GradientBoosting (CV: 0.85) ← Best
+└── RobustScaler → LogisticRegression (CV: 0.77)
+
+Generation 2: Evolve from best performers
+├── PCA → GradientBoosting (CV: 0.85) [Parent]
+├── PCA → XGBoost (CV: 0.87) [Mutation]
+├── StandardScaler → GradientBoosting (CV: 0.83) [Crossover]
+└── SelectKBest → PCA → GradientBoosting (CV: 0.89) [New best]
+
+# Python Example:
+from tpot import TPOTClassifier
+tpot = TPOTClassifier(
+    generations=50,
+    population_size=100,
+    verbosity=2,
+    random_state=42
+)
+tpot.fit(X_train, y_train)
+print(tpot.score(X_test, y_test))
+tpot.export('best_pipeline.py')  # Export optimized code!
+                    </div>
+                    
+                    <h4>🚀 Unique Features</h4>
+                    <p><strong>Code Generation:</strong> Exports optimized pipeline as readable Python code</p>
+                    <p><strong>Feature Construction:</strong> Automatically creates polynomial and interaction features</p>
+                    <p><strong>Pipeline Optimization:</strong> Optimizes entire workflow, not just hyperparameters</p>
+                    <p><strong>Scikit-learn Native:</strong> Uses sklearn components throughout</p>
+                    
+                    <h4>🏆 Competition Success</h4>
+                    <p>• <strong>GECCO 2016:</strong> Won "Human vs AI" ML competition</p>
+                    <p>• <strong>Kaggle:</strong> Consistent top 10% performance with minimal tuning</p>
+                    <p>• <strong>Research:</strong> 1000+ citations in academic literature</p>
+                    
+                    <h4>⚖️ Pros & Cons</h4>
+                    <p><strong>✅ Advantages:</strong></p>
+                    <p>• Explores creative pipeline combinations humans might miss</p>
+                    <p>• Generates interpretable, executable Python code</p>
+                    <p>• No hyperparameter tuning required</p>
+                    <p>• Built-in parallel processing support</p>
+                    
+                    <p><strong>❌ Limitations:</strong></p>
+                    <p>• Can be computationally expensive (hours to days)</p>
+                    <p>• Stochastic nature means results vary between runs</p>
+                    <p>• Limited to scikit-learn ecosystem</p>
+                    <p>• May overfit with complex pipelines</p>
+                    
+                    <h4>🎯 Best Applications</h4>
+                    <p><strong>Research & Development:</strong> Discovering novel ML approaches</p>
+                    <p><strong>Baseline Creation:</strong> Quick competitive baselines for competitions</p>
+                    <p><strong>Pipeline Inspiration:</strong> Ideas for manual pipeline development</p>
+                    <p><strong>Educational:</strong> Understanding ML pipeline possibilities</p>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                        <strong>🔬 Research Impact:</strong> TPOT has discovered several novel ML pipeline configurations that are now used as standard practices in the ML community.
+                    </div>
+                `
+            },
+            'automl-gs': {
+                title: 'AutoML-GS - Grid Search Meets Intelligent Automation',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Smart Grid Search:</strong> AutoML-GS provides an intelligent, time-aware approach to automated machine learning with elegant simplicity.
+                    </div>
+                    
+                    <h4>🎯 Design Philosophy</h4>
+                    <p>AutoML-GS balances automation with transparency:</p>
+                    <p>• <strong>Time-boxed:</strong> Respects your computational budget</p>
+                    <p>• <strong>Interpretable:</strong> Clear reasoning for model selection</p>
+                    <p>• <strong>Lightweight:</strong> Minimal dependencies and overhead</p>
+                    <p>• <strong>Practical:</strong> Focuses on real-world performance over academic metrics</p>
+                    
+                    <h4>⚙️ Intelligent Grid Search</h4>
+                    <div class="modal-code">
+# AutoML-GS Workflow:
+1. Smart Preprocessing:
+   - Automatic encoding for categorical variables
+   - Intelligent missing value handling
+   - Feature scaling based on algorithm requirements
+
+2. Algorithm Selection:
+   - Gradient Boosting (XGBoost, LightGBM, CatBoost)
+   - Random Forest variants
+   - Linear models (Ridge, Lasso, Elastic Net)
+   - Neural networks (simple architectures)
+
+3. Hyperparameter Optimization:
+   - Curriculum learning: Start simple, increase complexity
+   - Early stopping based on validation performance
+   - Adaptive grid refinement around promising regions
+
+# Example Usage:
+from automl_gs import automl_gs
+model = automl_gs.AutoMLSearch(
+    dataset='data.csv',
+    target_col='target',
+    time_limit=60  # minutes
+)
+model.train()
+predictions = model.predict('test.csv')
+                    </div>
+                    
+                    <h4>⚡ Speed Optimizations</h4>
+                    <p><strong>Early Stopping:</strong> Abandons unpromising configurations quickly</p>
+                    <p><strong>Warm Starting:</strong> Reuses computation from similar configurations</p>
+                    <p><strong>Parallel Processing:</strong> Multi-core hyperparameter search</p>
+                    <p><strong>Smart Defaults:</strong> Starts with high-probability configurations</p>
+                    
+                    <h4>📊 Performance Characteristics</h4>
+                    <p>• <strong>Speed:</strong> 5-10x faster than exhaustive grid search</p>
+                    <p>• <strong>Quality:</strong> Achieves 95%+ of optimal performance</p>
+                    <p>• <strong>Consistency:</strong> Reproducible results with fixed seeds</p>
+                    <p>• <strong>Memory:</strong> Efficient memory usage, handles large datasets</p>
+                    
+                    <h4>🔍 Transparency Features</h4>
+                    <div class="modal-code">
+# AutoML-GS Outputs:
+📋 Search Log:
+- Tried 47 configurations in 60 minutes
+- Best: XGBoost (CV: 0.892, Test: 0.887)
+- Top 5 configs saved with performance metrics
+
+📈 Performance Report:
+- Feature importance rankings
+- Cross-validation scores by algorithm
+- Hyperparameter sensitivity analysis
+- Model complexity vs performance trade-offs
+
+📁 Artifacts Generated:
+- best_model.pkl (trained model)
+- config_log.csv (all tried configurations)  
+- feature_importance.png (visualization)
+- performance_report.html (detailed analysis)
+                    </div>
+                    
+                    <h4>🎯 Ideal Use Cases</h4>
+                    <p><strong>Time-constrained Projects:</strong> Need good results within specific time limits</p>
+                    <p><strong>Production Pipelines:</strong> Reliable, consistent model training</p>
+                    <p><strong>A/B Testing:</strong> Quick model comparisons for business experiments</p>
+                    <p><strong>Educational:</strong> Understanding hyperparameter importance</p>
+                    
+                    <h4>⚖️ Trade-offs</h4>
+                    <p><strong>Strengths:</strong></p>
+                    <p>• Excellent time/performance trade-off</p>
+                    <p>• Highly interpretable results</p>
+                    <p>• Production-ready code output</p>
+                    <p>• Minimal learning curve</p>
+                    
+                    <p><strong>Limitations:</strong></p>
+                    <p>• Smaller algorithm library than competitors</p>
+                    <p>• Less sophisticated ensemble methods</p>
+                    <p>• Limited automated feature engineering</p>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                        <strong>💼 Business Value:</strong> Perfect for teams that need "good enough" models quickly and want to understand exactly what the system did. Great for production environments where transparency matters.
+                    </div>
+                `
+            },
+            'optuna': {
+                title: 'Optuna - Next-Generation Hyperparameter Optimization',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Modern HPO Framework:</strong> Optuna represents the state-of-the-art in hyperparameter optimization with advanced algorithms and exceptional flexibility.
+                    </div>
+                    
+                    <h4>🧠 Advanced Optimization Algorithms</h4>
+                    <p><strong>TPE (Tree-structured Parzen Estimator):</strong> Default algorithm, excellent for mixed parameter types</p>
+                    <p><strong>CMA-ES:</strong> Evolution strategy for continuous optimization</p>
+                    <p><strong>Random Search:</strong> Baseline for comparison</p>
+                    <p><strong>Grid Search:</strong> Exhaustive search for small spaces</p>
+                    <p><strong>Quasi-Monte Carlo:</strong> Better space coverage than random</p>
+                    
+                    <h4>🏗️ Flexible Architecture</h4>
+                    <div class="modal-code">
+# Optuna Study Example:
+import optuna
+
+def objective(trial):
+    # Dynamic hyperparameter suggestion
+    classifier = trial.suggest_categorical('classifier', 
+                                          ['SVM', 'RandomForest'])
+    
+    if classifier == 'SVM':
+        svm_c = trial.suggest_float('svm_c', 1e-10, 1e10, log=True)
+        model = SVC(C=svm_c)
+    else:
+        rf_n_estimators = trial.suggest_int('rf_n_estimators', 
+                                           10, 1000)
+        model = RandomForest(n_estimators=rf_n_estimators)
+    
+    # Train and evaluate
+    model.fit(X_train, y_train)
+    accuracy = model.score(X_val, y_val)
+    
+    return accuracy
+
+# Create and run study
+study = optuna.create_study(direction='maximize')
+study.optimize(objective, n_trials=100)
+
+# Best parameters
+print(study.best_params)
+print(study.best_value)
+                    </div>
+                    
+                    <h4>🚀 Advanced Features</h4>
+                    <p><strong>Pruning:</strong> Early stopping for unpromising trials (Median, Hyperband, ASHA)</p>
+                    <p><strong>Multi-objective:</strong> Optimize multiple metrics simultaneously</p>
+                    <p><strong>Distributed:</strong> Parallel optimization across multiple machines</p>
+                    <p><strong>Visualization:</strong> Rich plotting and analysis tools</p>
+                    <p><strong>Storage:</strong> Database backend for persistence and sharing</p>
+                    
+                    <h4>📊 Pruning Algorithms</h4>
+                    <div class="modal-code">
+# Pruning Strategies:
+1. MedianPruner:
+   - Stops trials performing below median
+   - Good for stable metrics
+   
+2. HyperbandPruner:  
+   - Successive halving with multiple brackets
+   - Excellent for neural network training
+   
+3. ASHAPruner:
+   - Asynchronous Successive Halving
+   - Handles variable trial durations
+   
+# Example with Pruning:
+study = optuna.create_study(
+    pruner=optuna.pruners.MedianPruner(
+        n_startup_trials=5,
+        n_warmup_steps=10,
+        interval_steps=1
+    )
+)
+                    </div>
+                    
+                    <h4>🎯 Integration Ecosystem</h4>
+                    <p><strong>ML Frameworks:</strong> TensorFlow, PyTorch, scikit-learn, XGBoost, LightGBM</p>
+                    <p><strong>Deep Learning:</strong> Keras, Fast.ai, Catalyst, PytorchLightning</p>
+                    <p><strong>AutoML:</strong> Auto-sklearn, FLAML integration</p>
+                    <p><strong>Visualization:</strong> Plotly, matplotlib, TensorBoard</p>
+                    <p><strong>Databases:</strong> SQLite, PostgreSQL, MySQL, Redis</p>
+                    
+                    <h4>📈 Performance Benefits</h4>
+                    <p>• <strong>10-100x faster:</strong> Compared to grid search</p>
+                    <p>• <strong>Smarter sampling:</strong> TPE learns from previous trials</p>
+                    <p>• <strong>Resource efficient:</strong> Pruning saves 50-90% compute time</p>
+                    <p>• <strong>Scalable:</strong> Handles thousands of parameters</p>
+                    
+                    <h4>🏢 Industry Adoption</h4>
+                    <p><strong>4000+ GitHub stars</strong>, used by:</p>
+                    <p>• <strong>Tech:</strong> Microsoft, NVIDIA, Preferred Networks</p>
+                    <p>• <strong>Research:</strong> Top universities and labs worldwide</p>
+                    <p>• <strong>Startups:</strong> ML-focused companies building production systems</p>
+                    
+                    <h4>💡 Advanced Use Cases</h4>
+                    <p><strong>Neural Architecture Search:</strong> Optimize network topology</p>
+                    <p><strong>Data Augmentation:</strong> Find optimal augmentation strategies</p>
+                    <p><strong>Feature Engineering:</strong> Select optimal feature transformations</p>
+                    <p><strong>Multi-fidelity:</strong> Trade accuracy for speed in early stages</p>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                        <strong>🔥 Why Optuna Wins:</strong> The most flexible and powerful HPO framework available. If you're serious about ML optimization and want cutting-edge algorithms with production-grade reliability, Optuna is the gold standard.
+                    </div>
+                `
+            }
+        };
+
+        // AutoML component details
+        const componentDetails = {
+            'data-preprocessing': {
+                title: 'Automated Data Preprocessing',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Goal:</strong> Automatically clean, transform, and prepare raw data for machine learning without manual intervention.
+                    </div>
+                    
+                    <h4>🔧 Key Tasks</h4>
+                    <p><strong>Missing Data Handling:</strong> Automatic imputation strategies (mean, median, KNN, MICE)</p>
+                    <p><strong>Outlier Detection:</strong> Statistical and ML-based anomaly detection</p>
+                    <p><strong>Data Type Detection:</strong> Automatic inference of numerical, categorical, temporal features</p>
+                    <p><strong>Encoding:</strong> One-hot, label, target encoding for categorical variables</p>
+                    <p><strong>Scaling:</strong> Standardization, normalization, robust scaling</p>
+                    
+                    <h4>🤖 Intelligent Preprocessing</h4>
+                    <div class="modal-code">
+# AutoML Preprocessing Pipeline:
+1. Data Profiling:
+   - Statistical analysis of each feature
+   - Distribution analysis and skewness detection
+   - Correlation analysis and multicollinearity detection
+
+2. Smart Transformations:
+   - Log/Box-Cox for skewed distributions
+   - Polynomial features for non-linear relationships
+   - Time-based feature extraction (day, month, season)
+
+3. Feature Selection:
+   - Univariate statistical tests
+   - Recursive feature elimination
+   - L1 regularization for sparse features
+                    </div>
+                    
+                    <h4>📊 Example Workflow</h4>
+                    <p><strong>Input:</strong> Raw CSV with mixed data types</p>
+                    <p><strong>AutoML Process:</strong></p>
+                    <p>• Detect 50% missing values in 'age' column → Use median imputation</p>
+                    <p>• Identify 'category' as high-cardinality categorical → Apply target encoding</p>
+                    <p>• Find right-skewed 'income' → Apply log transformation</p>
+                    <p>• Detect temporal patterns in 'timestamp' → Extract cyclical features</p>
+                    
+                    <h4>⚡ Benefits</h4>
+                    <p>• Reduces data science workflow from days to hours</p>
+                    <p>• Eliminates common preprocessing errors</p>
+                    <p>• Discovers non-obvious data patterns</p>
+                    <p>• Ensures reproducible preprocessing pipelines</p>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                        <strong>💡 Pro Tip:</strong> While AutoML preprocessing is powerful, domain expertise is still valuable for handling domain-specific data quirks and business logic.
+                    </div>
+                `
+            },
+            'search-space': {
+                title: 'Neural Architecture Search Space Design',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>Core Challenge:</strong> Defining a comprehensive yet computationally tractable space of possible neural network architectures.
+                    </div>
+                    
+                    <h4>🏗️ Architecture Components</h4>
+                    <div class="modal-code">
+# Search Space Dimensions:
+
+1. Operations:
+   - Convolution (1x1, 3x3, 5x5, dilated)
+   - Pooling (max, average, global)
+   - Activation functions (ReLU, Swish, GELU)
+   - Normalization (BatchNorm, LayerNorm, GroupNorm)
+   - Skip connections and residual blocks
+
+2. Topology:
+   - Number of layers (depth)
+   - Layer connections (sequential, skip, dense)
+   - Branch structures (parallel paths)
+   - Multi-scale feature fusion
+
+3. Hyperparameters:
+   - Channel widths
+   - Kernel sizes
+   - Stride patterns
+   - Dropout rates
+                    </div>
+                    
+                    <h4>🎯 Popular Search Spaces</h4>
+                    <p><strong>NASNet Search Space:</strong> Fixed cell structure with variable operations</p>
+                    <p><strong>DARTS Space:</strong> Continuous relaxation of discrete architecture choices</p>
+                    <p><strong>EfficientNet Space:</strong> Compound scaling of depth, width, and resolution</p>
+                    <p><strong>RegNet Space:</strong> Network design principles based on population statistics</p>
+                    
+                    <h4>📈 Search Space Evolution</h4>
+                    <p><strong>Early NAS (2016-2018):</strong> Simple chain structures, basic operations</p>
+                    <p><strong>Modern NAS (2019-2021):</strong> Complex topologies, attention mechanisms</p>
+                    <p><strong>Current Trend (2022+):</strong> Vision transformers, hybrid architectures</p>
+                    
+                    <h4>⚖️ Design Trade-offs</h4>
+                    <p><strong>Expressivity vs Efficiency:</strong> Larger search spaces find better architectures but require more computation</p>
+                    <p><strong>Specificity vs Generality:</strong> Task-specific vs general-purpose architecture families</p>
+                    <p><strong>Manual vs Automated:</strong> Human priors vs learned architectural patterns</p>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                        <strong>🔬 Research Frontier:</strong> Current work focuses on hardware-aware search spaces that optimize for mobile/edge deployment constraints.
+                    </div>
+                `
+            },
+            'search-strategy': {
+                title: 'NAS Search Strategy Methods',
+                content: `
+                    <div class="modal-highlight">
+                        <strong>The Optimization Challenge:</strong> Efficiently navigate the vast space of possible architectures to find high-performing designs.
+                    </div>
+                    
+                    <h4>🔄 Major Approaches</h4>
+                    
+                    <p><strong>1. Reinforcement Learning (RL)</strong></p>
+                    <div class="modal-code">
+# RL-based NAS (NASNet approach):
+Controller RNN → Architecture String → Train & Evaluate → Reward Signal
+
+Advantages:
+- Can handle discrete architecture choices
+- Learns from previous architecture evaluations
+- Naturally handles sequential decision making
+
+Challenges:
+- Sample inefficient (requires many architecture evaluations)
+- Difficult to train controller effectively
+                    </div>
+                    
+                    <p><strong>2. Evolutionary Algorithms</strong></p>
+                    <p>• Population-based search with mutation and crossover</p>
+                    <p>• Examples: NSGA-II for multi-objective NAS, regularized evolution</p>
+                    <p>• Good for multi-objective optimization (accuracy vs efficiency)</p>
+                    
+                    <p><strong>3. Gradient-Based Methods (DARTS)</strong></p>
+                    <div class="modal-code">
+# Differentiable Architecture Search:
+1. Continuous relaxation: Replace discrete choices with weighted combinations
+2. Joint optimization: Train architecture weights and model parameters
+3. Derivation: Use gradient descent on validation loss w.r.t. architecture
+
+Benefits:
+- Much faster than RL/evolutionary methods
+- Can leverage gradient-based optimizers
+- Memory efficient with weight sharing
+
+Limitations:
+- Continuous relaxation may not capture discrete nature
+- Architecture rankings may differ from true performance
+                    </div>
+                    
+                    <p><strong>4. Bayesian Optimization</strong></p>
+                    <p>• Model architecture performance with Gaussian processes</p>
+                    <p>• Balance exploration vs exploitation</p>
+                    <p>• Sample efficient but limited to smaller search spaces</p>
+                    
+                    <h4>⚡ Efficiency Improvements</h4>
+                    <p><strong>Weight Sharing:</strong> Share weights across similar architectures</p>
+                    <p><strong>Early Stopping:</strong> Predict final performance from early training</p>
+                    <p><strong>Proxy Tasks:</strong> Use smaller datasets/models for architecture ranking</p>
+                    <p><strong>Progressive Search:</strong> Start simple, gradually increase complexity</p>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                        <strong>🎯 Current Best Practice:</strong> Hybrid approaches combining multiple strategies, such as evolutionary algorithms with gradient-based fine-tuning.
+                    </div>
+                `
+            }
+        };
+
+
+        // Attach click handlers to AutoML components
+        document.querySelectorAll('.automl-component').forEach(component => {
+            component.addEventListener('click', function() {
+                const componentType = this.dataset.component;
+                const details = componentDetails[componentType];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        // Attach click handlers to tool cards
+        document.querySelectorAll('.tool-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const toolType = this.dataset.tool;
+                const details = toolDetails[toolType];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 15; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 20 + 's';
+                element.style.animationDuration = (Math.random() * 10 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Initialize
+        createFloatingElements();
+        
+        // Test modal system (remove this after debugging)
+        console.log('Modal system initialized:', modal);
+        console.log('Testing modal in 2 seconds...');
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (!modal.overlay.classList.contains('active')) {
+                if (e.key === 'ArrowLeft') {
+                    window.location.href = 'Week14_Slide270.html';
+                } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                    window.location.href = 'Week14_Slide272.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

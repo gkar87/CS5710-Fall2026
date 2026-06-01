@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Classification Problems Introduction</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.2em;
+            text-align: center;
+            margin-bottom: 40px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 30px;
+        }
+
+        .concept-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .comparison-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.6em;
+            color: #0d9488;
+            margin-bottom: 20px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .definition-text {
+            font-size: 1.1em;
+            line-height: 1.7;
+            color: #1e293b;
+            margin-bottom: 25px;
+            padding: 20px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .formula-box {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+            font-size: 1.3em;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        .formula-main {
+            font-size: 1.4em;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(94, 234, 212, 0.2);
+            margin-bottom: 15px;
+        }
+
+        .formula-detail {
+            font-size: 0.85em;
+            color: #94a3b8;
+            line-height: 1.5;
+        }
+
+        .where-section {
+            margin-top: 20px;
+            font-size: 0.95em;
+            line-height: 1.6;
+            color: #1e293b;
+        }
+
+        .where-section strong {
+            color: #0d9488;
+        }
+
+        .method-card {
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid;
+            margin: 15px 0;
+        }
+
+        .method-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .classification-card {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border-color: #f59e0b;
+            color: #92400e;
+        }
+
+        .regression-card {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-color: #14b8a6;
+            color: #0d9488;
+        }
+
+        .method-icon {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .method-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .method-features {
+            list-style: none;
+            text-align: left;
+            font-size: 0.85em;
+        }
+
+        .method-features li {
+            margin: 6px 0;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .method-features li:last-child {
+            border-bottom: none;
+        }
+
+        .examples-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .example-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-top: 25px;
+        }
+
+        .example-card {
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid;
+        }
+
+        .example-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+
+        .spam-card {
+            background: linear-gradient(135deg, #fef2f2, #fecaca);
+            border-color: #ef4444;
+            color: #991b1b;
+        }
+
+        .medical-card {
+            background: linear-gradient(135deg, #f0f9ff, #bae6fd);
+            border-color: #0ea5e9;
+            color: #075985;
+        }
+
+        .image-card {
+            background: linear-gradient(135deg, #faf5ff, #e9d5ff);
+            border-color: #a855f7;
+            color: #6b21a8;
+        }
+
+        .example-icon {
+            font-size: 2.5em;
+            margin-bottom: 12px;
+        }
+
+        .example-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .example-desc {
+            font-size: 0.85em;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .pros-cons-section {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .pros-card, .cons-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.9s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .pros-list, .cons-list {
+            list-style: none;
+            margin-top: 15px;
+        }
+
+        .pros-item, .cons-item {
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .pros-item {
+            background: linear-gradient(135deg, #dcfdf7 0%, #a7f3d0 100%);
+            border-left: 4px solid #10b981;
+        }
+
+        .cons-item {
+            background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%);
+            border-left: 4px solid #ef4444;
+        }
+
+        .pros-item:hover, .cons-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        .item-icon {
+            font-size: 1.1em;
+            flex-shrink: 0;
+        }
+
+        .item-text {
+            font-size: 0.9em;
+            color: #1e293b;
+            line-height: 1.4;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .pros-cons-section { grid-template-columns: 1fr; }
+            .example-grid { grid-template-columns: 1fr; }
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.6em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.4em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.05em;
+            line-height: 1.7;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 18px;
+            border-radius: 12px;
+            margin: 15px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-formula {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 12px 0;
+        }
+    </style>
+    <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 3</div>
+    <div class="slide-number">Slide 41 of 60</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Classification Problems Introduction</h1>
+        
+        <div class="content-layout">
+            <div class="concept-section">
+                <h2 class="section-title">What is Classification?</h2>
+                
+                <div class="definition-text">
+                    <strong>Classification</strong> is a supervised learning problem where the goal is to predict a discrete class label from a set of predefined categories. Unlike regression which predicts continuous values, classification assigns inputs to discrete categories.
+                </div>
+                
+                <div class="formula-box">
+                    <div class="formula-main">Output: y ∈ {Class₁, Class₂, ..., Classₖ}</div>
+                    <div class="formula-detail">Predicting categorical labels</div>
+                </div>
+                
+                <div class="where-section">
+                    <strong>Key Difference from Regression:</strong><br>
+                    • Regression: Continuous output (e.g., price = $250,000)<br>
+                    • Classification: Discrete output (e.g., spam/not spam)
+                </div>
+            </div>
+
+            <div class="comparison-section">
+                <h2 class="section-title">Classification vs Regression</h2>
+                
+                <div class="method-card classification-card" onclick="showModal('Classification', classificationContent)">
+                    <div class="method-icon">📊</div>
+                    <div class="method-title">Classification</div>
+                    <ul class="method-features">
+                        <li>📌 Discrete outputs</li>
+                        <li>🏷️ Category labels</li>
+                        <li>✅ Binary or Multi-class</li>
+                        <li>📈 Evaluation: Accuracy</li>
+                    </ul>
+                </div>
+                
+                <div class="method-card regression-card" onclick="showModal('Regression', regressionContent)">
+                    <div class="method-icon">📉</div>
+                    <div class="method-title">Regression</div>
+                    <ul class="method-features">
+                        <li>📐 Continuous outputs</li>
+                        <li>🔢 Numerical values</li>
+                        <li>📊 Any real number</li>
+                        <li>📏 Evaluation: MSE/R²</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="examples-section">
+            <h2 class="section-title">Real-World Classification Examples</h2>
+            
+            <div class="example-grid">
+                <div class="example-card spam-card" onclick="showModal('Email Spam Detection', spamContent)">
+                    <div class="example-icon">📧</div>
+                    <div class="example-title">Email Spam Detection</div>
+                    <div class="example-desc">Classify emails as spam or not spam based on content, sender, and metadata</div>
+                </div>
+                
+                <div class="example-card medical-card" onclick="showModal('Medical Diagnosis', medicalContent)">
+                    <div class="example-icon">🏥</div>
+                    <div class="example-title">Medical Diagnosis</div>
+                    <div class="example-desc">Predict disease presence/absence based on patient symptoms and test results</div>
+                </div>
+                
+                <div class="example-card image-card" onclick="showModal('Image Classification', imageContent)">
+                    <div class="example-icon">🖼️</div>
+                    <div class="example-title">Image Classification</div>
+                    <div class="example-desc">Identify objects, faces, or activities in images (cat, dog, car, etc.)</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="pros-cons-section">
+            <div class="pros-card">
+                <h2 class="section-title" style="color: #10b981;">Why Classification Matters</h2>
+                <ul class="pros-list">
+                    <li class="pros-item" onclick="showModal('Decision Making', decisionMakingContent)">
+                        <div class="item-icon">🎯</div>
+                        <div class="item-text">Enables automated decision making</div>
+                    </li>
+                    <li class="pros-item" onclick="showModal('Scale', scaleContent)">
+                        <div class="item-icon">📈</div>
+                        <div class="item-text">Scales to large datasets</div>
+                    </li>
+                    <li class="pros-item" onclick="showModal('Consistency', consistencyContent)">
+                        <div class="item-icon">⚡</div>
+                        <div class="item-text">Provides consistent results</div>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="cons-card">
+                <h2 class="section-title" style="color: #ef4444;">Common Challenges</h2>
+                <ul class="cons-list">
+                    <li class="cons-item" onclick="showModal('Class Imbalance', classImbalanceContent)">
+                        <div class="item-icon">⚖️</div>
+                        <div class="item-text">Imbalanced class distributions</div>
+                    </li>
+                    <li class="cons-item" onclick="showModal('Feature Quality', featureQualityContent)">
+                        <div class="item-icon">🔧</div>
+                        <div class="item-text">Feature engineering complexity</div>
+                    </li>
+                    <li class="cons-item" onclick="showModal('Overfitting', overfittingContent)">
+                        <div class="item-icon">🔄</div>
+                        <div class="item-text">Risk of overfitting</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week3_Slide40.html" class="nav-btn">← Previous</a>
+        <a href="Week3_Slide42.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        const classificationContent = `
+            <p><strong>Classification</strong>predicts categorical labels from input features. The model learns a decision boundary that separates different classes in feature space.</p>
+            <div class="modal-highlight">
+                <p><strong>Types of Classification:</strong></p>
+                <ul>
+                    <li><strong>Binary Classification:</strong> Two classes (spam/not spam, malignant/benign)</li>
+                    <li><strong>Multi-class Classification:</strong> Multiple classes (cat/dog/bird)</li>
+                    <li><strong>Multi-label Classification:</strong> Multiple labels per sample</li>
+                </ul>
+            </div>
+            <p><strong>Algorithm Examples:</strong> Logistic Regression, Decision Trees, Support Vector Machines, Neural Networks</p>
+        `;
+
+        const regressionContent = `
+            <p><strong>Regression</strong> predicts continuous numerical values from input features. The output is a scalar that can take any value within a range.</p>
+            <div class="modal-highlight">
+                <p><strong>Types of Regression:</strong></p>
+                <ul>
+                    <li><strong>Linear Regression:</strong> Linear relationship between inputs and output</li>
+                    <li><strong>Polynomial Regression:</strong> Non-linear relationships</li>
+                    <li><strong>Ridge/Lasso Regression:</strong> Regularized versions</li>
+                </ul>
+            </div>
+            <p><strong>Example Outputs:</strong> House price ($250,000), Temperature (72.5°F), Stock price ($145.32)</p>
+        `;
+
+        const spamContent = `
+            <p><strong>Email Spam Detection</strong> classifies emails as spam or legitimate (ham) based on various features.</p>
+            <div class="modal-highlight">
+                <p><strong>Key Features Used:</strong></p>
+                <ul>
+                    <li>Email content (keywords, phrases)</li>
+                    <li>Sender information (email address, domain)</li>
+                    <li>Email headers (subject, timestamps)</li>
+                    <li>Links and attachments</li>
+                    <li>Email formatting</li>
+                </ul>
+            </div>
+            <p><strong>Popular Methods:</strong> Naive Bayes, Logistic Regression, Random Forests</p>
+            <p><strong>Challenge:</strong> Spammers constantly evolve to evade detection</p>
+        `;
+
+        const medicalContent = `
+            <p><strong>Medical Diagnosis</strong> uses patient data to predict the presence or absence of diseases.</p>
+            <div class="modal-highlight">
+                <p><strong>Input Features:</strong></p>
+                <ul>
+                    <li>Patient symptoms (headache, fever, cough)</li>
+                    <li>Test results (blood test, imaging)</li>
+                    <li>Patient history (age, genetics, lifestyle)</li>
+                    <li>Demographic information</li>
+                </ul>
+            </div>
+            <p><strong>Applications:</strong> Cancer detection, diabetes prediction, heart disease diagnosis</p>
+            <p><strong>Critical Consideration:</strong> False negatives (missed diagnoses) are often more costly than false positives</p>
+        `;
+
+        const imageContent = `
+            <p><strong>Image Classification</strong> assigns images to predefined categories based on visual content.</p>
+            <div class="modal-highlight">
+                <p><strong>Process:</strong></p>
+                <ol>
+                    <li>Preprocess image (resize, normalize)</li>
+                    <li>Extract features (or use neural network)</li>
+                    <li>Apply classifier</li>
+                    <li>Output class label</li>
+                </ol>
+            </div>
+            <p><strong>Modern Methods:</strong> CNNs (Convolutional Neural Networks) achieve state-of-the-art results</p>
+            <p><strong>Examples:</strong> Object detection (ImageNet), facial recognition, medical imaging</p>
+        `;
+
+        const decisionMakingContent = `
+            <p>Classification enables automated decision-making at scale without human intervention.</p>
+            <div class="modal-highlight">
+                <p><strong>Benefits:</strong></p>
+                <ul>
+                    <li>24/7 operation</li>
+                    <li>Consistent decisions</li>
+                    <li>Handle large volume</li>
+                    <li>Reduce human error</li>
+                </ul>
+            </div>
+            <p><strong>Applications:</strong> Credit approval, fraud detection, content moderation</p>
+        `;
+
+        const scaleContent = `
+            <p>Classification algorithms can process millions of samples efficiently.</p>
+            <div class="modal-highlight">
+                <p><strong>Scalability Factors:</strong></p>
+                <ul>
+                    <li>Algorithm complexity (O(n) to O(n²))</li>
+                    <li>Data structure efficiency</li>
+                    <li>Parallel processing support</li>
+                </ul>
+            </div>
+            <p><strong>Real-world Scale:</strong> Google processes billions of classifications daily for search, ads, and safety</p>
+        `;
+
+        const consistencyContent = `
+            <p>Machine learning classifiers provide consistent predictions based on learned patterns.</p>
+            <div class="modal-highlight">
+                <p><strong>Consistency Benefits:</strong></p>
+                <ul>
+                    <li>Reproducible results</li>
+                    <li>消除人为错误</li>
+                    <li>Standardized evaluation</li>
+                </ul>
+            </div>
+            <p><strong>Note:</strong> Consistency doesn't mean correctness - models can be systematically wrong</p>
+        `;
+
+        const classImbalanceContent = `
+            <p><strong>Class Imbalance</strong> occurs when one class has significantly more samples than others.</p>
+            <div class="modal-highlight">
+                <p><strong>Examples:</strong></p>
+                <ul>
+                    <li>Fraud detection: 0.1% fraud, 99.9% legitimate</li>
+                    <li>Disease screening: 5% positive, 95% negative</li>
+                </ul>
+            </div>
+            <p><strong>Solutions:</strong></p>
+            <ul>
+                <li>Oversampling (SMOTE)</li>
+                <li>Undersampling</li>
+                <li>Class weights</li>
+                <li>Synthetic data generation</li>
+            </ul>
+        `;
+
+        const featureQualityContent = `
+            <p>Feature engineering is critical for classification success.</p>
+            <div class="modal-highlight">
+                <p><strong>Feature Challenges:</strong></p>
+                <ul>
+                    <li>Missing values</li>
+                    <li>Noisy data</li>
+                    <li>Irrelevant features</li>
+                    <li>High dimensionality</li>
+                </ul>
+            </div>
+            <p><strong>Best Practices:</strong> Feature selection, dimensionality reduction, proper preprocessing</p>
+        `;
+
+        const overfittingContent = `
+            <p><strong>Overfitting</strong> occurs when models learn noise instead of patterns.</p>
+            <div class="modal-highlight">
+                <p><strong>Warning Signs:</strong></p>
+                <ul>
+                    <li>High training accuracy, low test accuracy</li>
+                    <li>Complex decision boundaries</li>
+                    <li>Large number of features</li>
+                </ul>
+            </div>
+            <p><strong>Prevention:</strong></p>
+            <ul>
+                <li>Cross-validation</li>
+                <li>Regularization</li>
+                <li>Simpler models</li>
+                <li>More training data</li>
+            </ul>
+        `;
+
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        function showModal(title, content) {
+            modal.show(title, content);
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (!document.getElementById('modalOverlay').classList.contains('active')) {
+                if (e.key === 'ArrowLeft') {
+                    window.location.href = 'Week3_Slide40.html';
+                } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                    window.location.href = 'Week3_Slide42.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

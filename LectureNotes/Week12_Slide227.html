@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - ROC Curves and AUC</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .roc-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .metrics-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .roc-canvas {
+            width: 100%;
+            height: 400px;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+            cursor: crosshair;
+        }
+
+        .threshold-slider {
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        .threshold-value {
+            text-align: center;
+            font-size: 1.2em;
+            color: #0d9488;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        .auc-card {
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .auc-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .auc-value {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: #0d9488;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .auc-label {
+            text-align: center;
+            color: #64748b;
+            font-size: 1.1em;
+        }
+
+        .interpretation-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .interp-card {
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            border: 2px solid #e0f2fe;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .interp-card:hover {
+            border-color: #0d9488;
+            transform: scale(1.05);
+        }
+
+        .interp-range {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 5px;
+        }
+
+        .interp-desc {
+            font-size: 0.9em;
+            color: #64748b;
+        }
+
+        .threshold-effects {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .effect-item {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            margin: 15px 0;
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .effect-item:hover {
+            transform: translateX(10px);
+            box-shadow: 0 5px 20px rgba(13, 148, 136, 0.2);
+        }
+
+        .effect-icon {
+            font-size: 2em;
+            margin-right: 20px;
+        }
+
+        .effect-content {
+            flex: 1;
+        }
+
+        .effect-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 5px;
+        }
+
+        .effect-desc {
+            color: #64748b;
+            font-size: 0.95em;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .interpretation-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 12</div>
+    <div class="slide-number">Slide 227 of 240</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">ROC Curves and AUC</h1>
+        
+        <div class="content-layout">
+            <div class="roc-section">
+                <h2 class="section-title">Receiver Operating Characteristic</h2>
+                
+                <div class="roc-canvas" id="rocCanvas">
+                    <canvas id="rocChart" style="width: 100%; height: 100%;"></canvas>
+                </div>
+                
+                <div>
+                    <label for="thresholdSlider" style="display: block; margin-top: 20px; color: #0d9488; font-weight: 600;">Decision Threshold:</label>
+                    <input type="range" id="thresholdSlider" class="threshold-slider" min="0" max="100" value="50" style="width: 100%;">
+                    <div class="threshold-value" id="thresholdValue">Threshold: 0.50</div>
+                </div>
+            </div>
+
+            <div class="metrics-section">
+                <h2 class="section-title">Understanding AUC</h2>
+                
+                <div class="auc-card">
+                    <div class="auc-value">0.92</div>
+                    <div class="auc-label">Area Under Curve</div>
+                </div>
+                
+                <div class="interpretation-grid">
+                    <div class="interp-card">
+                        <div class="interp-range">0.9 - 1.0</div>
+                        <div class="interp-desc">Excellent</div>
+                    </div>
+                    <div class="interp-card">
+                        <div class="interp-range">0.8 - 0.9</div>
+                        <div class="interp-desc">Good</div>
+                    </div>
+                    <div class="interp-card">
+                        <div class="interp-range">0.7 - 0.8</div>
+                        <div class="interp-desc">Fair</div>
+                    </div>
+                    <div class="interp-card">
+                        <div class="interp-range">0.6 - 0.7</div>
+                        <div class="interp-desc">Poor</div>
+                    </div>
+                    <div class="interp-card">
+                        <div class="interp-range">0.5 - 0.6</div>
+                        <div class="interp-desc">Fail</div>
+                    </div>
+                    <div class="interp-card">
+                        <div class="interp-range">0.5</div>
+                        <div class="interp-desc">Random</div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 25px; padding: 20px; background: linear-gradient(135deg, #f0fdfa, #ccfbf1); border-radius: 12px;">
+                    <strong style="color: #0d9488;">Current Operating Point:</strong>
+                    <div style="margin-top: 10px; font-size: 0.95em; color: #475569;">
+                        <div>TPR (Sensitivity): <span id="currentTPR" style="font-weight: 600;">0.85</span></div>
+                        <div>FPR (1-Specificity): <span id="currentFPR" style="font-weight: 600;">0.10</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="threshold-effects">
+            <h2 class="section-title">Threshold Selection Trade-offs</h2>
+            
+            <div class="effect-item">
+                <div class="effect-icon">⬆️</div>
+                <div class="effect-content">
+                    <div class="effect-title">Higher Threshold (More Conservative)</div>
+                    <div class="effect-desc">Fewer positive predictions → Higher precision, lower recall</div>
+                </div>
+            </div>
+            
+            <div class="effect-item">
+                <div class="effect-icon">⬇️</div>
+                <div class="effect-content">
+                    <div class="effect-title">Lower Threshold (More Liberal)</div>
+                    <div class="effect-desc">More positive predictions → Higher recall, lower precision</div>
+                </div>
+            </div>
+            
+            <div class="effect-item">
+                <div class="effect-icon">⚖️</div>
+                <div class="effect-content">
+                    <div class="effect-title">Optimal Threshold</div>
+                    <div class="effect-desc">Depends on cost of false positives vs false negatives in your application</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week12_Slide226.html" class="nav-btn">← Previous</a>
+        <a href="Week12_Slide228.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Draw ROC Curve
+        function drawROCCurve() {
+            const canvas = document.getElementById('rocChart');
+            const ctx = canvas.getContext('2d');
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw axes
+            ctx.strokeStyle = '#94a3b8';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(40, canvas.height - 40);
+            ctx.lineTo(canvas.width - 20, canvas.height - 40);
+            ctx.moveTo(40, canvas.height - 40);
+            ctx.lineTo(40, 20);
+            ctx.stroke();
+            
+            // Draw diagonal reference line
+            ctx.strokeStyle = '#e0e7ff';
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(40, canvas.height - 40);
+            ctx.lineTo(canvas.width - 20, 20);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Draw ROC curve
+            ctx.strokeStyle = '#0d9488';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(40, canvas.height - 40);
+            
+            // Simulated ROC points
+            const points = [
+                [0, 0], [0.05, 0.35], [0.1, 0.85], [0.2, 0.92],
+                [0.3, 0.95], [0.5, 0.97], [0.7, 0.98], [1, 1]
+            ];
+            
+            points.forEach(([fpr, tpr]) => {
+                const x = 40 + fpr * (canvas.width - 60);
+                const y = canvas.height - 40 - tpr * (canvas.height - 60);
+                ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+            
+            // Fill area under curve
+            ctx.fillStyle = 'rgba(13, 148, 136, 0.1)';
+            ctx.lineTo(canvas.width - 20, canvas.height - 40);
+            ctx.lineTo(40, canvas.height - 40);
+            ctx.fill();
+            
+            // Labels
+            ctx.fillStyle = '#475569';
+            ctx.font = '14px Segoe UI';
+            ctx.fillText('False Positive Rate', canvas.width / 2 - 50, canvas.height - 10);
+            ctx.save();
+            ctx.translate(15, canvas.height / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('True Positive Rate', -50, 0);
+            ctx.restore();
+            
+            // Draw current operating point
+            const threshold = document.getElementById('thresholdSlider').value / 100;
+            const opIndex = Math.floor(threshold * (points.length - 1));
+            const [opFPR, opTPR] = points[opIndex];
+            const opX = 40 + opFPR * (canvas.width - 60);
+            const opY = canvas.height - 40 - opTPR * (canvas.height - 60);
+            
+            ctx.fillStyle = '#dc2626';
+            ctx.beginPath();
+            ctx.arc(opX, opY, 8, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Update metrics display
+            document.getElementById('currentTPR').textContent = opTPR.toFixed(2);
+            document.getElementById('currentFPR').textContent = opFPR.toFixed(2);
+        }
+
+        // Threshold slider handler
+        document.getElementById('thresholdSlider').addEventListener('input', function() {
+            const value = this.value / 100;
+            document.getElementById('thresholdValue').textContent = `Threshold: ${value.toFixed(2)}`;
+            drawROCCurve();
+        });
+
+        // AUC card click handler
+        document.querySelector('.auc-card').addEventListener('click', function() {
+            modal.show('Area Under the ROC Curve (AUC)', `
+                <div class="modal-highlight">
+                    <strong>AUC = 0.92</strong> (Excellent Performance)
+                </div>
+                <h4>What is AUC?</h4>
+                <p>AUC represents the area under the ROC curve and provides a single measure of model performance across all thresholds.</p>
+                
+                <h4>Interpretation:</h4>
+                <ul style="margin: 20px 0; line-height: 1.8;">
+                    <li><strong>AUC = 1.0:</strong> Perfect classifier</li>
+                    <li><strong>AUC = 0.5:</strong> No better than random guessing</li>
+                    <li><strong>AUC < 0.5:</strong> Worse than random (but can be inverted)</li>
+                </ul>
+                
+                <div class="modal-code">
+                    Probability Interpretation:
+                    AUC = P(score(positive) > score(negative))
+                    
+                    For a random positive and negative sample,
+                    92% chance the model ranks the positive higher.
+                </div>
+                
+                <h4>Advantages of AUC:</h4>
+                <ul style="margin: 20px 0; line-height: 1.8;">
+                    <li>Threshold-independent evaluation</li>
+                    <li>Single number summary of model performance</li>
+                    <li>Useful for comparing models</li>
+                    <li>Works well for imbalanced datasets</li>
+                </ul>
+            `);
+        });
+
+        // Interpretation card click handlers
+        document.querySelectorAll('.interp-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const range = this.querySelector('.interp-range').textContent;
+                const desc = this.querySelector('.interp-desc').textContent;
+                
+                const interpretations = {
+                    '0.9 - 1.0': {
+                        meaning: 'Excellent model performance',
+                        use_cases: 'Medical diagnosis, fraud detection, security systems',
+                        caution: 'Check for overfitting, especially with small datasets'
+                    },
+                    '0.8 - 0.9': {
+                        meaning: 'Good model performance',
+                        use_cases: 'Most production ML systems, recommendation engines',
+                        caution: 'Generally reliable for business decisions'
+                    },
+                    '0.7 - 0.8': {
+                        meaning: 'Fair model performance',
+                        use_cases: 'Initial prototypes, non-critical applications',
+                        caution: 'May need improvement before production use'
+                    },
+                    '0.6 - 0.7': {
+                        meaning: 'Poor model performance',
+                        use_cases: 'Only for very rough estimates or initial exploration',
+                        caution: 'Significant improvement needed'
+                    },
+                    '0.5 - 0.6': {
+                        meaning: 'Model barely better than random',
+                        use_cases: 'Not suitable for any practical application',
+                        caution: 'Fundamental issues with model or data'
+                    },
+                    '0.5': {
+                        meaning: 'Random guessing',
+                        use_cases: 'No predictive value',
+                        caution: 'Model has learned nothing useful'
+                    }
+                };
+                
+                const info = interpretations[range];
+                if (info) {
+                    modal.show(`AUC Range: ${range}`, `
+                        <div class="modal-highlight">
+                            <strong>Performance Level: ${desc}</strong>
+                        </div>
+                        <p><strong>What it means:</strong> ${info.meaning}</p>
+                        <p><strong>Typical use cases:</strong> ${info.use_cases}</p>
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(239, 68, 68, 0.1); border-radius: 10px;">
+                            <strong>⚠️ Important Note:</strong><br>
+                            ${info.caution}
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Effect item click handlers
+        document.querySelectorAll('.effect-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const title = this.querySelector('.effect-title').textContent;
+                
+                const effects = {
+                    'Higher Threshold (More Conservative)': {
+                        example: 'Threshold = 0.8 (only very confident predictions)',
+                        metrics: 'Precision ↑, Recall ↓, False Positives ↓, False Negatives ↑',
+                        when_to_use: 'When false positives are very costly (e.g., expensive medical procedures)',
+                        business_impact: 'Fewer alerts but higher confidence in each alert'
+                    },
+                    'Lower Threshold (More Liberal)': {
+                        example: 'Threshold = 0.2 (accept uncertain predictions)',
+                        metrics: 'Precision ↓, Recall ↑, False Positives ↑, False Negatives ↓',
+                        when_to_use: 'When false negatives are very costly (e.g., cancer screening)',
+                        business_impact: 'More alerts to investigate, higher chance of catching all cases'
+                    },
+                    'Optimal Threshold': {
+                        example: 'Use validation set to find best threshold for your metric',
+                        metrics: 'Balanced based on your specific optimization goal',
+                        when_to_use: 'Depends on relative costs of FP and FN in your domain',
+                        business_impact: 'Maximize business value based on cost-benefit analysis'
+                    }
+                };
+                
+                const info = effects[title];
+                if (info) {
+                    modal.show(`Threshold Strategy: ${title}`, `
+                        <div class="modal-highlight">
+                            <strong>Example:</strong> ${info.example}
+                        </div>
+                        <p><strong>Effect on Metrics:</strong><br>${info.metrics}</p>
+                        <p><strong>When to Use:</strong><br>${info.when_to_use}</p>
+                        <div class="modal-code">
+                            Business Impact:
+                            ${info.business_impact}
+                        </div>
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                            <strong>💡 Pro Tip:</strong><br>
+                            Always validate threshold selection on a held-out dataset to avoid overfitting to your validation metrics.
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        // Canvas click handler for ROC curve
+        document.getElementById('rocCanvas').addEventListener('click', function() {
+            modal.show('Understanding ROC Curves', `
+                <div class="modal-highlight">
+                    <strong>Receiver Operating Characteristic Curve</strong>
+                </div>
+                <h4>What does it show?</h4>
+                <p>ROC curve plots True Positive Rate (Sensitivity) vs False Positive Rate (1-Specificity) at various threshold settings.</p>
+                
+                <h4>Key Points on the Curve:</h4>
+                <ul style="margin: 20px 0; line-height: 1.8;">
+                    <li><strong>(0,0):</strong> Threshold = 1.0, classify nothing as positive</li>
+                    <li><strong>(1,1):</strong> Threshold = 0.0, classify everything as positive</li>
+                    <li><strong>(0,1):</strong> Perfect classifier (ideal point)</li>
+                    <li><strong>Diagonal:</strong> Random classifier baseline</li>
+                </ul>
+                
+                <div class="modal-code">
+                    TPR = TP / (TP + FN) = Sensitivity = Recall
+                    FPR = FP / (FP + TN) = 1 - Specificity
+                </div>
+                
+                <h4>How to Read:</h4>
+                <ul style="margin: 20px 0; line-height: 1.8;">
+                    <li>Curves closer to top-left corner are better</li>
+                    <li>Steeper initial rise indicates good performance</li>
+                    <li>Area under curve (AUC) summarizes overall performance</li>
+                </ul>
+            `);
+        });
+
+        // Initialize components
+        createFloatingElements();
+        drawROCCurve();
+
+        // Resize handler
+        window.addEventListener('resize', drawROCCurve);
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week12_Slide226.html';
+            } else if (e.key === 'ArrowRight' && !modal.overlay.classList.contains('active')) {
+                window.location.href = 'Week12_Slide228.html';
+            }
+        });
+    </script>
+</body>
+</html>

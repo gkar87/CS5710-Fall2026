@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - LightGBM</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .algorithm-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .features-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .intro-text {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .feature-list {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .feature-item {
+            padding: 20px;
+            margin: 15px 0;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 12px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .feature-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .feature-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .feature-desc {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .comparison-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .comparison-table th {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .comparison-table td {
+            padding: 15px;
+            border-bottom: 1px solid rgba(13, 148, 136, 0.1);
+            color: #1e293b;
+        }
+
+        .comparison-table tr:hover {
+            background: rgba(13, 148, 136, 0.05);
+        }
+
+        .code-example {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 25px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+            overflow-x: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .performance-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            border-radius: 15px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    
+    <div class="course-info">CS5710 - Week 5</div>
+    <div class="slide-number">Slide 89 of 100</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">LightGBM</h1>
+        
+        <div class="content-layout">
+            <div class="algorithm-section">
+                <h2 class="section-title">🚀 What is LightGBM?</h2>
+                
+                <div class="intro-text">
+                    <strong>Light Gradient Boosting Machine</strong> is a fast, distributed, high-performance gradient boosting framework that uses tree-based learning algorithms.
+                </div>
+                
+                <div style="font-size: 1.1em; line-height: 1.7; color: #1e293b;">
+                    <strong>Key Innovation:</strong> Leaf-wise Tree Growth
+                    <br><br>
+                    Unlike XGBoost's level-wise growth, LightGBM grows trees <em>leaf-wise</em>:
+                    <br><br>
+                    • Chooses the leaf with max delta loss to grow
+                    <br>
+                    • Can grow deeper, more complex trees
+                    <br>
+                    • Faster convergence with fewer iterations
+                    <br>
+                    • Better accuracy with proper tuning
+                </div>
+
+                <div class="code-example">
+<span style="color: #a78bfa">import</span> lightgbm <span style="color: #a78bfa">as</span> lgb
+<span style="color: #a78bfa">from</span> sklearn.datasets <span style="color: #a78bfa">import</span> load_boston
+<span style="color: #a78bfa">from</span> sklearn.model_selection <span style="color: #a78bfa">import</span> train_test_split
+
+<span style="color: #94a3b8"># Load data</span>
+X, y = load_boston(return_X_y=<span style="color: #f472b6">True</span>)
+X_train, X_test, y_train, y_test = train_test_split(X, y)
+
+<span style="color: #94a3b8"># Create LightGBM dataset</span>
+train_data = lgb.Dataset(X_train, label=y_train)
+valid_data = lgb.Dataset(X_test, label=y_test)
+
+<span style="color: #94a3b8"># Parameters</span>
+params = {
+    <span style="color: #86efac">'objective'</span>: <span style="color: #86efac">'regression'</span>,
+    <span style="color: #86efac">'metric'</span>: <span style="color: #86efac">'rmse'</span>,
+    <span style="color: #86efac">'num_leaves'</span>: <span style="color: #f472b6">31</span>,
+    <span style="color: #86efac">'learning_rate'</span>: <span style="color: #f472b6">0.05</span>,
+    <span style="color: #86efac">'feature_fraction'</span>: <span style="color: #f472b6">0.9</span>
+}
+
+<span style="color: #94a3b8"># Train model</span>
+model = lgb.train(params, train_data, valid_sets=[valid_data])
+                </div>
+            </div>
+
+            <div class="features-section">
+                <h2 class="section-title">⚡ Key Features</h2>
+                
+                <ul class="feature-list">
+                    <li class="feature-item">
+                        <div class="feature-title">🌿 Leaf-wise Growth Strategy</div>
+                        <div class="feature-desc">Grows tree by choosing leaf with max delta loss</div>
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-title">📊 Histogram-based Algorithm</div>
+                        <div class="feature-desc">Bins continuous features into discrete bins for faster training</div>
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-title">🎯 GOSS (Gradient-based One-Side Sampling)</div>
+                        <div class="feature-desc">Keeps instances with large gradients, randomly samples others</div>
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-title">🔄 EFB (Exclusive Feature Bundling)</div>
+                        <div class="feature-desc">Bundles mutually exclusive features to reduce dimensionality</div>
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-title">⏱️ Extremely Fast Training</div>
+                        <div class="feature-desc">Up to 20x faster than XGBoost on some datasets</div>
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-title">💾 Lower Memory Usage</div>
+                        <div class="feature-desc">Histogram-based approach reduces memory by 8x</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="comparison-section">
+            <h2 class="section-title">📈 LightGBM vs XGBoost Comparison</h2>
+            
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>LightGBM</th>
+                        <th>XGBoost</th>
+                        <th>Winner</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Tree Growth</td>
+                        <td>Leaf-wise (best-first)</td>
+                        <td>Level-wise (depth-first)</td>
+                        <td>LightGBM <span class="performance-badge">More Flexible</span></td>
+                    </tr>
+                    <tr>
+                        <td>Training Speed</td>
+                        <td>Very Fast (histogram-based)</td>
+                        <td>Fast (exact/approximate)</td>
+                        <td>LightGBM <span class="performance-badge">~20x Faster</span></td>
+                    </tr>
+                    <tr>
+                        <td>Memory Usage</td>
+                        <td>Low (histogram bins)</td>
+                        <td>Higher (stores values)</td>
+                        <td>LightGBM <span class="performance-badge">8x Less</span></td>
+                    </tr>
+                    <tr>
+                        <td>Categorical Features</td>
+                        <td>Native support</td>
+                        <td>Requires encoding</td>
+                        <td>LightGBM <span class="performance-badge">Direct Support</span></td>
+                    </tr>
+                    <tr>
+                        <td>Accuracy</td>
+                        <td>Often slightly better</td>
+                        <td>Very good</td>
+                        <td>Comparable</td>
+                    </tr>
+                    <tr>
+                        <td>Overfitting Risk</td>
+                        <td>Higher (needs careful tuning)</td>
+                        <td>Lower (level-wise growth)</td>
+                        <td>XGBoost <span class="performance-badge">More Robust</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div style="margin-top: 30px; padding: 20px; background: rgba(13, 148, 136, 0.1); border-radius: 15px;">
+                <strong style="color: #0d9488;">💡 Pro Tip:</strong> LightGBM is excellent for large datasets with many features. 
+                Use <code>max_depth</code> parameter to control overfitting in leaf-wise growth!
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week5_Slide88.html" class="nav-btn">← Previous</a>
+        <a href="Week5_Slide90.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive feature items with modal
+        document.querySelectorAll('.feature-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const title = this.querySelector('.feature-title').textContent;
+                const desc = this.querySelector('.feature-desc').textContent;
+                
+                const details = {
+                    '🌿 Leaf-wise Growth Strategy': {
+                        detail: 'LightGBM grows trees leaf-wise (best-first). It chooses the leaf that will reduce loss the most.',
+                        example: `<pre>Level-wise (XGBoost):     Leaf-wise (LightGBM):
+    1                           1
+   / \\                         / \\
+  2   3                       2   5
+ / \\ / \\                     /
+4 5 6 7                     3</pre>`,
+                        benefit: 'Can achieve better accuracy with fewer leaves, but needs max_depth control to prevent overfitting.'
+                    },
+                    '📊 Histogram-based Algorithm': {
+                        detail: 'Instead of sorting feature values, LightGBM bins continuous values into discrete bins (histograms).',
+                        example: 'Feature values: [1.2, 3.5, 2.1, 8.9, 5.3]<br>Histogram bins: [0-2], [2-4], [4-6], [6-8], [8-10]<br>Result: [bin1, bin2, bin2, bin5, bin3]',
+                        benefit: 'Reduces memory usage by 8x and speeds up training significantly.'
+                    },
+                    '🎯 GOSS (Gradient-based One-Side Sampling)': {
+                        detail: 'Keeps all instances with large gradients and randomly samples instances with small gradients.',
+                        example: 'Large gradient instances: Keep 100%<br>Small gradient instances: Keep 20%<br>Weight small gradient samples by 5x to maintain distribution',
+                        benefit: 'Reduces computation while maintaining accuracy by focusing on hard-to-fit instances.'
+                    },
+                    '🔄 EFB (Exclusive Feature Bundling)': {
+                        detail: 'Bundles mutually exclusive features (features that rarely take non-zero values simultaneously).',
+                        example: 'One-hot encoded features:<br>is_category_A: [1,0,0,0]<br>is_category_B: [0,1,0,0]<br>is_category_C: [0,0,1,0]<br>Bundled into single feature: [A,B,C,D]',
+                        benefit: 'Reduces number of features without information loss, especially effective for sparse features.'
+                    },
+                    '⏱️ Extremely Fast Training': {
+                        detail: 'Combination of histogram-based algorithm, GOSS, and EFB makes LightGBM extremely fast.',
+                        example: 'Dataset: 1M rows, 1000 features<br>XGBoost: 180 seconds<br>LightGBM: 15 seconds<br>Speedup: 12x',
+                        benefit: 'Enables rapid experimentation and hyperparameter tuning on large datasets.'
+                    },
+                    '💾 Lower Memory Usage': {
+                        detail: 'Histogram-based approach stores bin indices instead of continuous values.',
+                        example: 'Float32 value: 4 bytes<br>Histogram bin (256 bins): 1 byte<br>Memory reduction: 75%',
+                        benefit: 'Can handle larger datasets on limited memory systems.'
+                    }
+                };
+                
+                const info = details[title];
+                modal.show(title, `
+                    <div class="modal-highlight">
+                        <strong>${desc}</strong>
+                    </div>
+                    <p>${info.detail}</p>
+                    <div class="modal-code">
+                        ${info.example}
+                    </div>
+                    <p><strong>✨ Benefit:</strong> ${info.benefit}</p>
+                `);
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week5_Slide88.html';
+            } else if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week5_Slide90.html';
+            }
+        });
+
+    </script>
+</body>
+</html>

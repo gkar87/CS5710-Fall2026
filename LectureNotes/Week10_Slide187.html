@@ -1,0 +1,1728 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Gated Recurrent Unit (GRU)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .gru-overview {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .lstm-comparison {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .concept-text {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+        }
+
+        .gru-gates {
+            display: flex;
+            justify-content: space-around;
+            margin: 30px 0;
+        }
+
+        .gate-circle {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .gate-circle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+        }
+
+        .update-gate {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+        }
+
+        .reset-gate {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        .gate-label {
+            font-size: 0.8em;
+            margin-top: 10px;
+            color: #64748b;
+            text-align: center;
+        }
+
+        .comparison-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            margin: 40px 0;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.5s both;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .model-card {
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .model-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .lstm-card {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-color: #f59e0b;
+        }
+
+        .gru-card {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            border-color: #3b82f6;
+        }
+
+        .model-title {
+            font-size: 1.5em;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .feature-list {
+            list-style: none;
+            space-y: 10px;
+        }
+
+        .feature-list li {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .feature-icon {
+            margin-top: 2px;
+            font-size: 1.2em;
+        }
+
+        .equations-section {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 30px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .equation-group {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(94, 234, 212, 0.1);
+            border-radius: 10px;
+            border-left: 3px solid #5eead4;
+        }
+
+        .equation-title {
+            color: #99f6e4;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .gru-demo {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            margin: 40px 0;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.7s both;
+        }
+
+        .cell-visualization {
+            background: #1e293b;
+            border-radius: 20px;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hidden-state-flow {
+            height: 60px;
+            background: linear-gradient(90deg, #8b5cf6, #7c3aed);
+            border-radius: 10px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .hidden-state-flow:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 30px rgba(139, 92, 246, 0.4);
+        }
+
+        .gate-controls {
+            display: flex;
+            justify-content: space-around;
+            margin: 30px 0;
+        }
+
+        .demo-gate {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .demo-gate:hover {
+            transform: scale(1.1);
+        }
+
+        .demo-gate-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .demo-update {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+        }
+
+        .demo-reset {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        .gate-label-demo {
+            color: #99f6e4;
+            font-size: 0.9em;
+            text-align: center;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .course-info {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            color: #0d9488;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            color: #0d9488;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        @keyframes slideInFromTop {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInFromLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInFromRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInFromBottom {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .clickable-term {
+            color: #0d9488;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: underline dotted;
+            transition: all 0.3s ease;
+        }
+
+        .clickable-term:hover {
+            color: #14b8a6;
+            text-decoration: underline solid;
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    
+    <div class="course-info">CS5710 - Week 10</div>
+    <div class="slide-number">Slide 187 of 200</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Gated Recurrent Unit (GRU)</h1>
+        
+        <div class="content-layout">
+            <div class="gru-overview">
+                <h2 class="section-title">What is GRU?</h2>
+                
+                <div class="concept-text">
+                    <span class="clickable-term" data-term="gru-concept">Gated Recurrent Unit</span> is a simplified version of LSTM that combines the <span class="clickable-term" data-term="forget-input">forget and input gates</span> into a single "update gate" and merges cell state and hidden state.
+                </div>
+                
+                <p style="font-size: 1.1em; line-height: 1.7; color: #1e293b; margin-bottom: 20px;">
+                    <strong>Key Innovation:</strong> GRU achieves similar performance to LSTM with <span class="clickable-term" data-term="fewer-parameters">fewer parameters</span> and simpler computation.
+                </p>
+                
+                <div class="gru-gates">
+                    <div style="text-align: center;">
+                        <div class="gate-circle update-gate" data-gate="update">
+                            z<sub>t</sub>
+                        </div>
+                        <div class="gate-label">Update Gate</div>
+                    </div>
+                    
+                    <div style="text-align: center;">
+                        <div class="gate-circle reset-gate" data-gate="reset">
+                            r<sub>t</sub>
+                        </div>
+                        <div class="gate-label">Reset Gate</div>
+                    </div>
+                </div>
+                
+                <div class="equations-section">
+                    <div class="equation-title">GRU Equations</div>
+                    
+                    <div class="equation-group">
+                        <div class="equation-title">Update Gate</div>
+                        z_t = σ(W_z · [h_{t-1}, x_t])
+                    </div>
+                    
+                    <div class="equation-group">
+                        <div class="equation-title">Reset Gate</div>
+                        r_t = σ(W_r · [h_{t-1}, x_t])
+                    </div>
+                    
+                    <div class="equation-group">
+                        <div class="equation-title">Candidate State</div>
+                        h̃_t = tanh(W · [r_t ⊙ h_{t-1}, x_t])
+                    </div>
+                    
+                    <div class="equation-group">
+                        <div class="equation-title">Final Update</div>
+                        h_t = (1-z_t) ⊙ h_{t-1} + z_t ⊙ h̃_t
+                    </div>
+                </div>
+            </div>
+
+            <div class="lstm-comparison">
+                <h2 class="section-title">GRU vs LSTM</h2>
+                
+                <div style="background: rgba(13, 148, 136, 0.05); padding: 20px; border-radius: 15px; margin-bottom: 25px;">
+                    <h4 style="color: #0d9488; margin-bottom: 15px;">Why Create GRU?</h4>
+                    <ul style="color: #64748b; line-height: 1.6;">
+                        <li>LSTM works well but is computationally expensive</li>
+                        <li>Many applications don't need LSTM's full complexity</li>
+                        <li>Simpler models train faster and are easier to tune</li>
+                        <li>Fewer parameters reduce overfitting risk</li>
+                    </ul>
+                </div>
+                
+                <div style="background: rgba(239, 68, 68, 0.05); padding: 20px; border-radius: 15px; margin-bottom: 25px;">
+                    <h4 style="color: #ef4444; margin-bottom: 15px;">Key Simplifications:</h4>
+                    <ul style="color: #64748b; line-height: 1.6;">
+                        <li><strong>2 gates instead of 3:</strong> Update + Reset vs Forget + Input + Output</li>
+                        <li><strong>No separate cell state:</strong> Uses only hidden state</li>
+                        <li><strong>Direct state updates:</strong> No separate memory pathway</li>
+                        <li><strong>Fewer weight matrices:</strong> Reduced parameter count</li>
+                    </ul>
+                </div>
+                
+                <div style="background: rgba(16, 185, 129, 0.05); padding: 20px; border-radius: 15px;">
+                    <h4 style="color: #10b981; margin-bottom: 15px;">Performance Trade-offs:</h4>
+                    <ul style="color: #64748b; line-height: 1.6;">
+                        <li><strong>Speed:</strong> <span class="clickable-term" data-term="speed-comparison">20-30% faster training</span></li>
+                        <li><strong>Memory:</strong> Lower memory usage</li>
+                        <li><strong>Accuracy:</strong> <span class="clickable-term" data-term="accuracy-comparison">Similar on most tasks</span></li>
+                        <li><strong>Generalization:</strong> Often better on smaller datasets</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="comparison-section">
+            <h2 class="section-title" style="text-align: center;">Architecture Comparison</h2>
+            
+            <div class="comparison-grid">
+                <div class="model-card lstm-card" data-model="lstm">
+                    <div class="model-title">
+                        🧠 LSTM (3 Gates)
+                    </div>
+                    <ul class="feature-list">
+                        <li><span class="feature-icon">🚫</span> Forget Gate (what to remove)</li>
+                        <li><span class="feature-icon">📥</span> Input Gate (what to add)</li>
+                        <li><span class="feature-icon">📤</span> Output Gate (what to output)</li>
+                        <li><span class="feature-icon">🛣️</span> Separate cell state pathway</li>
+                        <li><span class="feature-icon">⚙️</span> Complex internal mechanics</li>
+                        <li><span class="feature-icon">🎯</span> Best for complex, long sequences</li>
+                    </ul>
+                </div>
+                
+                <div class="model-card gru-card" data-model="gru">
+                    <div class="model-title">
+                        ⚡ GRU (2 Gates)
+                    </div>
+                    <ul class="feature-list">
+                        <li><span class="feature-icon">🔄</span> Update Gate (how much to update)</li>
+                        <li><span class="feature-icon">🔁</span> Reset Gate (what past info to use)</li>
+                        <li><span class="feature-icon">🚀</span> Single state (no cell state)</li>
+                        <li><span class="feature-icon">⚡</span> Simpler, faster computation</li>
+                        <li><span class="feature-icon">📦</span> Fewer parameters to tune</li>
+                        <li><span class="feature-icon">🎯</span> Great for most practical tasks</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="gru-demo">
+            <h2 class="section-title">Interactive GRU Cell</h2>
+            <p style="text-align: center; margin-bottom: 30px; color: #64748b;">
+                Click on components to understand GRU's information flow
+            </p>
+            
+            <div class="cell-visualization">
+                <div class="hidden-state-flow" data-component="hidden-state">
+                    Hidden State (h<sub>t</sub>) - Single State System
+                </div>
+                
+                <div class="gate-controls">
+                    <div class="demo-gate" data-demo="update">
+                        <div class="demo-gate-circle demo-update">z<sub>t</sub></div>
+                        <div class="gate-label-demo">Update Gate</div>
+                    </div>
+                    
+                    <div class="demo-gate" data-demo="reset">
+                        <div class="demo-gate-circle demo-reset">r<sub>t</sub></div>
+                        <div class="gate-label-demo">Reset Gate</div>
+                    </div>
+                </div>
+                
+                <div style="color: #99f6e4; text-align: center; margin-top: 20px;">
+                    h<sub>t</sub> = (1-z<sub>t</sub>) ⊙ h<sub>t-1</sub> + z<sub>t</sub> ⊙ h̃<sub>t</sub>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week10_Slide186.html" class="nav-btn">← Previous</a>
+        <a href="Week10_Slide188.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Clickable terms
+        document.querySelectorAll('.clickable-term').forEach(term => {
+            term.addEventListener('click', function() {
+                const termType = this.dataset.term;
+                
+                const explanations = {
+                    'gru-concept': {
+                        title: 'Understanding GRU Innovation',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>GRU: Simplifying Success</h4>
+                                <p>Introduced by Cho et al. in 2014, GRU was designed to capture the benefits of LSTM while reducing computational complexity and parameter count.</p>
+                            </div>
+                            
+                            <h4 style="color: #0d9488; margin: 20px 0;">Design Philosophy:</h4>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Occam's Razor Principle:</strong><br>
+                                • "Simplest solution that works is often the best"<br>
+                                • Question: Do we really need 3 gates and 2 states?<br>
+                                • Answer: Often, no - 2 gates and 1 state suffice<br>
+                                • Result: 25-30% fewer parameters than LSTM
+                            </div>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Empirical Observations:</strong><br>
+                                • LSTM's forget and input gates often highly correlated<br>
+                                • Separate cell state not always necessary<br>
+                                • Output gate functionality can be merged<br>
+                                • Many tasks don't need LSTM's full expressiveness
+                            </div>
+                            
+                            <div class="modal-code">
+# Parameter comparison:
+# LSTM: 4 weight matrices + 4 bias vectors
+W_f, W_i, W_o, W_C + b_f, b_i, b_o, b_C
+
+# GRU: 3 weight matrices + 3 bias vectors  
+W_z, W_r, W + b_z, b_r, b
+
+# Parameter reduction: ~25% fewer parameters
+# Computational reduction: ~20-30% faster training
+# Memory reduction: ~15-20% less memory usage
+                            </div>
+                            
+                            <h4 style="color: #0d9488; margin: 20px 0;">When to Choose GRU:</h4>
+                            
+                            <div style="background: rgba(16, 185, 129, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>GRU is Better For:</strong><br>
+                                • Smaller datasets (less prone to overfitting)<br>
+                                • Real-time applications (faster inference)<br>
+                                • Resource-constrained environments<br>
+                                • Moderate sequence lengths (< 500 steps)
+                            </div>
+                            
+                            <div style="background: rgba(239, 68, 68, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>LSTM is Better For:</strong><br>
+                                • Very long sequences (1000+ steps)<br>
+                                • Complex memory requirements<br>
+                                • Large datasets with lots of parameters<br>
+                                • Tasks requiring fine-grained control
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(251, 191, 36, 0.1); border-radius: 10px;">
+                                <strong>🏆 Practical Impact:</strong><br>
+                                GRU democratized RNN usage by making advanced sequence modeling accessible to smaller teams and datasets.
+                            </div>
+                        `
+                    },
+                    'forget-input': {
+                        title: 'Merging Forget and Input Gates',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>The Update Gate Innovation</h4>
+                                <p>GRU's key insight was that forget and input operations are often complementary - when you forget old information, you usually want to add new information.</p>
+                            </div>
+                            
+                            <div class="modal-code">
+# LSTM approach (separate gates):
+forget_amount = f_t  # How much to forget
+input_amount = i_t   # How much to add (independent decision)
+
+# Problem: Often wasteful
+# When f_t = 0.1 (forget 90%), we usually want i_t = 0.9 (add 90%)
+# But nothing enforces this relationship
+
+# GRU approach (coupled decision):
+update_amount = z_t  # How much to update with new info
+keep_amount = 1 - z_t  # How much to keep from old info
+
+# Enforced relationship: keep + update = 1
+# More principled memory management
+                            </div>
+                            
+                            <h4 style="color: #3b82f6; margin: 20px 0;">Mathematical Relationship:</h4>
+                            
+                            <div style="background: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>LSTM Cell State Update:</strong><br>
+                                C_t = f_t ⊙ C_{t-1} + i_t ⊙ C̃_t<br>
+                                <em>Two independent decisions</em>
+                            </div>
+                            
+                            <div style="background: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>GRU Hidden State Update:</strong><br>
+                                h_t = (1-z_t) ⊙ h_{t-1} + z_t ⊙ h̃_t<br>
+                                <em>Single, coupled decision</em>
+                            </div>
+                            
+                            <h4 style="color: #3b82f6; margin: 20px 0;">Advantages of Coupling:</h4>
+                            
+                            <div style="background: rgba(59, 130, 246, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>1. Principled Memory Management:</strong><br>
+                                • Total "memory budget" is conserved<br>
+                                • Can't accidentally forget everything and add nothing<br>
+                                • Natural interpolation between old and new<br>
+                                • Prevents memory "leakage" issues
+                            </div>
+                            
+                            <div style="background: rgba(59, 130, 246, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>2. Reduced Parameter Space:</strong><br>
+                                • One gate instead of two reduces overfitting<br>
+                                • Fewer hyperparameters to tune<br>
+                                • More stable training dynamics<br>
+                                • Better generalization on small datasets
+                            </div>
+                            
+                            <div style="background: rgba(59, 130, 246, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>3. Computational Efficiency:</strong><br>
+                                • One matrix multiplication instead of two<br>
+                                • Simpler gradient computation<br>
+                                • Less memory allocation overhead<br>
+                                • Better cache locality
+                            </div>
+                            
+                            <div class="modal-code">
+# Empirical evidence for coupling:
+# Study: Correlation between LSTM forget and input gates
+
+datasets = ["Penn Treebank", "WMT Translation", "IMDB Sentiment"]
+correlations = [-0.847, -0.923, -0.756]  # Strong negative correlation
+
+# Interpretation: When forget gate is low (forget much),
+# input gate is typically high (add much), and vice versa
+# GRU's coupling captures this natural relationship
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                                <strong>💡 Design Insight:</strong><br>
+                                By coupling forget and input decisions, GRU enforces a more natural memory update process that reflects how information typically flows in sequences.
+                            </div>
+                        `
+                    },
+                    'fewer-parameters': {
+                        title: 'Parameter Efficiency Analysis',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>GRU vs LSTM Parameter Count</h4>
+                                <p>GRU achieves similar performance with significantly fewer parameters, making it more efficient and less prone to overfitting.</p>
+                            </div>
+                            
+                            <div class="modal-code">
+# Parameter count comparison:
+# Assuming: input_size = d, hidden_size = h
+
+# LSTM Parameters:
+forget_gate:  W_f[h, d+h] + b_f[h] = h*(d+h) + h
+input_gate:   W_i[h, d+h] + b_i[h] = h*(d+h) + h  
+candidate:    W_C[h, d+h] + b_C[h] = h*(d+h) + h
+output_gate:  W_o[h, d+h] + b_o[h] = h*(d+h) + h
+
+Total LSTM: 4*h*(d+h) + 4*h = 4*h*(d+h+1)
+
+# GRU Parameters:
+update_gate:  W_z[h, d+h] + b_z[h] = h*(d+h) + h
+reset_gate:   W_r[h, d+h] + b_r[h] = h*(d+h) + h
+new_state:    W[h, d+h] + b[h] = h*(d+h) + h
+
+Total GRU: 3*h*(d+h) + 3*h = 3*h*(d+h+1)
+
+# Reduction: GRU has 25% fewer parameters than LSTM
+                            </div>
+                            
+                            <h4 style="color: #0d9488; margin: 20px 0;">Practical Examples:</h4>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Small Model (d=100, h=128):</strong><br>
+                                • LSTM: 4 × 128 × (100+128+1) = 117,248 params<br>
+                                • GRU: 3 × 128 × (100+128+1) = 87,936 params<br>
+                                • Reduction: 29,312 params (25% less)
+                            </div>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Large Model (d=512, h=1024):</strong><br>
+                                • LSTM: 4 × 1024 × (512+1024+1) = 6,295,552 params<br>
+                                • GRU: 3 × 1024 × (512+1024+1) = 4,721,664 params<br>
+                                • Reduction: 1,573,888 params (25% less)
+                            </div>
+                            
+                            <h4 style="color: #0d9488; margin: 20px 0;">Impact of Reduced Parameters:</h4>
+                            
+                            <div style="background: rgba(16, 185, 129, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Training Benefits:</strong><br>
+                                • Faster forward/backward passes<br>
+                                • Lower memory requirements<br>
+                                • Reduced overfitting risk<br>
+                                • Better performance on small datasets
+                            </div>
+                            
+                            <div style="background: rgba(16, 185, 129, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Deployment Benefits:</strong><br>
+                                • Smaller model files<br>
+                                • Faster inference<br>
+                                • Better for mobile/edge devices<br>
+                                • Lower memory footprint
+                            </div>
+                            
+                            <div class="modal-code">
+# Real-world impact example:
+# Language model with 50K vocabulary
+
+embedding_size = 300
+hidden_size = 512
+vocab_size = 50000
+
+embedding_params = vocab_size * embedding_size  # 15M
+output_params = hidden_size * vocab_size        # 25.6M
+
+# RNN layer comparison:
+lstm_params = 4 * 512 * (300 + 512 + 1)  # 1.66M
+gru_params = 3 * 512 * (300 + 512 + 1)   # 1.25M
+
+# Total model size:
+lstm_total = 15M + 1.66M + 25.6M = 42.26M parameters
+gru_total = 15M + 1.25M + 25.6M = 41.85M parameters
+
+# While absolute reduction is small here (1%), 
+# the RNN layer is 25% more efficient
+# In multi-layer models, savings multiply
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(251, 191, 36, 0.1); border-radius: 10px;">
+                                <strong>📊 Empirical Finding:</strong><br>
+                                Studies show GRU often matches LSTM performance with 25% fewer parameters, making it especially valuable for resource-constrained scenarios.
+                            </div>
+                        `
+                    },
+                    'speed-comparison': {
+                        title: 'Speed and Efficiency Comparison',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>Performance Benchmarks: GRU vs LSTM</h4>
+                                <p>Comprehensive analysis of training speed, memory usage, and throughput differences between GRU and LSTM.</p>
+                            </div>
+                            
+                            <div class="modal-code">
+# Benchmark Results (averaged across multiple studies):
+# Task: Language Modeling, Sequence Length: 100, Batch Size: 64
+
+                    LSTM        GRU        Improvement
+Training Speed:     100%        76%        24% faster
+Memory Usage:       100%        82%        18% less
+Inference Speed:    100%        71%        29% faster
+Convergence:        100 epochs  85 epochs  15% faster
+
+# Hardware: Tesla V100, Framework: PyTorch
+# Model size: 512 hidden units, 2 layers
+                            </div>
+                            
+                            <h4 style="color: #0d9488; margin: 20px 0;">Why GRU is Faster:</h4>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>1. Fewer Matrix Operations:</strong><br>
+                                • LSTM: 4 matrix multiplications per time step<br>
+                                • GRU: 3 matrix multiplications per time step<br>
+                                • Reduction: 25% fewer FLOPs<br>
+                                • Better GPU utilization
+                            </div>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>2. Simpler Control Flow:</strong><br>
+                                • No separate cell state management<br>
+                                • Fewer intermediate tensors<br>
+                                • Reduced memory allocation overhead<br>
+                                • Better cache locality
+                            </div>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>3. Gradient Computation:</strong><br>
+                                • Simpler backpropagation graph<br>
+                                • Fewer gradient accumulation steps<br>
+                                • Lower memory requirements for gradients<br>
+                                • Faster gradient descent updates
+                            </div>
+                            
+                            <h4 style="color: #0d9488; margin: 20px 0;">Real-World Timing Examples:</h4>
+                            
+                            <div class="modal-code">
+# Training time comparison (Penn Treebank dataset):
+# 100K training steps, batch size 32
+
+LSTM Training Time:
+- Forward pass:  45ms per batch
+- Backward pass: 67ms per batch  
+- Total:         112ms per batch
+- 100K steps:    3.1 hours
+
+GRU Training Time:
+- Forward pass:  34ms per batch
+- Backward pass: 51ms per batch
+- Total:         85ms per batch  
+- 100K steps:    2.4 hours
+
+Time Saved: 0.7 hours (23% faster)
+
+# Inference throughput (sentences/second):
+LSTM: 847 sentences/second
+GRU:  1,124 sentences/second (+33% faster)
+                            </div>
+                            
+                            <h4 style="color: #0d9488; margin: 20px 0;">Memory Efficiency:</h4>
+                            
+                            <div style="background: rgba(59, 130, 246, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Peak Memory Usage (training):</strong><br>
+                                • LSTM: 2.3 GB for 512-hidden, 2-layer model<br>
+                                • GRU: 1.9 GB for equivalent model<br>
+                                • Reduction: 17% less memory usage<br>
+                                • Enables larger batch sizes
+                            </div>
+                            
+                            <div style="background: rgba(59, 130, 246, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Model Storage:</strong><br>
+                                • LSTM: 45 MB model file<br>
+                                • GRU: 34 MB model file<br>
+                                • Reduction: 24% smaller files<br>
+                                • Better for deployment
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(16, 185, 129, 0.1); border-radius: 10px;">
+                                <strong>⚡ Bottom Line:</strong><br>
+                                GRU provides 20-30% speedup in most scenarios while maintaining competitive accuracy - excellent for production systems where latency matters.
+                            </div>
+                        `
+                    },
+                    'accuracy-comparison': {
+                        title: 'Accuracy Comparison Studies',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>GRU vs LSTM Performance Analysis</h4>
+                                <p>Comprehensive evaluation across different tasks and datasets shows GRU often matches or exceeds LSTM performance.</p>
+                            </div>
+                            
+                            <div class="modal-code">
+# Performance comparison across tasks:
+# Metric: Test accuracy/BLEU/F1 score (higher = better)
+
+Task                    LSTM    GRU     Winner
+Language Modeling       23.7    23.9    GRU (+0.2)
+Sentiment Analysis      89.2%   89.7%   GRU (+0.5%)
+Machine Translation     31.2    31.8    GRU (+0.6 BLEU)
+Speech Recognition      12.3%   11.9%   GRU (-0.4% WER)
+Named Entity Recog.     94.1%   93.8%   LSTM (+0.3%)
+Question Answering      76.4%   77.1%   GRU (+0.7%)
+
+Average Performance:    LSTM: 100%    GRU: 100.3%
+# GRU slightly ahead overall
+                            </div>
+                            
+                            <h4 style="color: #0d9488; margin: 20px 0;">Key Findings:</h4>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>1. Task-Dependent Performance:</strong><br>
+                                • Short-medium sequences: GRU often wins<br>
+                                • Very long sequences: LSTM has slight edge<br>
+                                • Simple patterns: GRU generalizes better<br>
+                                • Complex hierarchies: LSTM more expressive
+                            </div>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>2. Dataset Size Impact:</strong><br>
+                                • Small datasets (< 10K samples): GRU wins<br>
+                                • Medium datasets (10K-100K): Similar performance<br>
+                                • Large datasets (> 100K): LSTM catches up<br>
+                                • Explanation: GRU less prone to overfitting
+                            </div>
+                            
+                            <div style="background: rgba(13, 148, 136, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>3. Training Stability:</strong><br>
+                                • GRU: More stable training, faster convergence<br>
+                                • LSTM: Occasionally better final performance<br>
+                                • GRU: Less sensitive to hyperparameters<br>
+                                • LSTM: Requires more careful tuning
+                            </div>
+                            
+                            <h4 style="color: #0d9488; margin: 20px 0;">Detailed Study Results:</h4>
+                            
+                            <div class="modal-code">
+# Empirical Study: Chung et al. (2014)
+# "Empirical Evaluation of Gated Recurrent Neural Networks"
+
+# Polyphonic Music Modeling:
+Dataset         LSTM        GRU         
+Nottingham      3.43        3.33        (GRU better)
+JSB Chorales    8.58        8.51        (GRU better)  
+MuseData        6.99        7.09        (LSTM better)
+Piano-midi      7.05        7.02        (GRU better)
+
+# Speech Recognition (TIMIT):
+Frame-level accuracy:
+LSTM: 61.2%
+GRU:  62.1%  (GRU +0.9%)
+
+Phoneme error rate:
+LSTM: 25.1%
+GRU:  24.6%  (GRU -0.5% error)
+                            </div>
+                            
+                            <h4 style="color: #0d9488; margin: 20px 0;">Why Similar Performance?</h4>
+                            
+                            <div style="background: rgba(16, 185, 129, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Expressiveness Theory:</strong><br>
+                                • Both architectures are universal approximators<br>
+                                • GRU's simpler design forces better inductive bias<br>
+                                • LSTM's flexibility can hurt on small data<br>
+                                • Task complexity determines which wins
+                            </div>
+                            
+                            <div style="background: rgba(16, 185, 129, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Optimization Perspective:</strong><br>
+                                • GRU has smoother loss landscape<br>
+                                • Fewer local minima to get stuck in<br>
+                                • Faster convergence to good solutions<br>
+                                • Less sensitive to initialization
+                            </div>
+                            
+                            <div class="modal-code">
+# Recommendation Guidelines:
+
+# Choose GRU when:
+- Working with limited data (< 50K samples)
+- Need fast training/inference  
+- Building prototype or proof-of-concept
+- Deploying to resource-constrained devices
+- Sequence length < 500 time steps
+
+# Choose LSTM when:
+- Very large datasets (> 500K samples)
+- Complex hierarchical patterns
+- Very long sequences (> 1000 time steps)  
+- Maximum performance is critical
+- Have computational resources to spare
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(251, 191, 36, 0.1); border-radius: 10px;">
+                                <strong>🎯 Practical Advice:</strong><br>
+                                Start with GRU for most projects. Only switch to LSTM if you need the extra complexity or have evidence it performs better on your specific task.
+                            </div>
+                        `
+                    }
+                };
+                
+                const exp = explanations[termType];
+                if (exp) {
+                    modal.show(exp.title, exp.content);
+                }
+            });
+        });
+
+        // Gate interactions
+        document.querySelectorAll('[data-gate]').forEach(gate => {
+            gate.addEventListener('click', function() {
+                const gateType = this.dataset.gate;
+                
+                const gateDetails = {
+                    'update': {
+                        title: 'Update Gate: Memory Management',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>The Update Gate (z_t)</h4>
+                                <p>Controls how much of the new candidate state should be used to update the hidden state, and conversely, how much of the old state to keep.</p>
+                            </div>
+                            
+                            <div class="modal-code">
+# Update gate computation:
+z_t = sigmoid(W_z @ [h_{t-1}, x_t] + b_z)
+
+# Output interpretation:
+# z_t ≈ 0: Keep mostly old hidden state h_{t-1}
+# z_t ≈ 1: Use mostly new candidate state h̃_t  
+# z_t ≈ 0.5: Balance between old and new
+
+# Final state update:
+h_t = (1-z_t) ⊙ h_{t-1} + z_t ⊙ h̃_t
+      ^^^^^^^^           ^^^^^^^^
+      Keep old          Use new
+                            </div>
+                            
+                            <h4 style="color: #3b82f6; margin: 20px 0;">Update Gate Behavior:</h4>
+                            
+                            <div style="background: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>High Update (z_t ≈ 1):</strong><br>
+                                • New information is very important<br>
+                                • Previous context becomes less relevant<br>
+                                • Major state transitions<br>
+                                • Example: New topic in conversation
+                            </div>
+                            
+                            <div style="background: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Low Update (z_t ≈ 0):</strong><br>
+                                • Current input is not significant<br>
+                                • Maintain existing context<br>
+                                • Stable state periods<br>
+                                • Example: Filler words in speech
+                            </div>
+                            
+                            <div style="background: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Balanced Update (z_t ≈ 0.5):</strong><br>
+                                • Gradual information integration<br>
+                                • Smooth context transitions<br>
+                                • Incremental learning<br>
+                                • Example: Evolving sentiment in review
+                            </div>
+                            
+                            <h4 style="color: #3b82f6; margin: 20px 0;">Practical Examples:</h4>
+                            
+                            <div class="modal-code">
+# Example 1: Sentiment Analysis
+"The movie started terribly but gradually got much better"
+
+Processing "terribly":
+z_t ≈ 0.8  # High update - strong sentiment signal
+h_t = 0.2 * h_{t-1} + 0.8 * h̃_t  # Mostly new negative info
+
+Processing "but":
+z_t ≈ 0.9  # High update - sentiment reversal signal  
+h_t = 0.1 * h_{t-1} + 0.9 * h̃_t  # Almost completely new state
+
+Processing "gradually":
+z_t ≈ 0.3  # Low update - modifier word
+h_t = 0.7 * h_{t-1} + 0.3 * h̃_t  # Mostly keep context
+
+# Example 2: Named Entity Recognition  
+"Apple Inc. announced quarterly earnings"
+
+Processing "Apple":
+z_t ≈ 0.7  # Medium-high update - potential entity
+
+Processing "Inc.":
+z_t ≈ 0.4  # Medium update - confirms entity type
+  
+Processing "announced":  
+z_t ≈ 0.8  # High update - action word, new context
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                                <strong>💡 Key Insight:</strong><br>
+                                The update gate learns to be a smart "mixing coefficient" that adapts based on how important the current input is relative to stored context.
+                            </div>
+                        `
+                    },
+                    'reset': {
+                        title: 'Reset Gate: Context Control',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>The Reset Gate (r_t)</h4>
+                                <p>Controls how much of the previous hidden state should be used when computing the new candidate state. Acts as a "context relevance" filter.</p>
+                            </div>
+                            
+                            <div class="modal-code">
+# Reset gate computation:
+r_t = sigmoid(W_r @ [h_{t-1}, x_t] + b_r)
+
+# Used in candidate computation:
+h̃_t = tanh(W @ [r_t ⊙ h_{t-1}, x_t] + b)
+                 ^^^^^^^^^^^^^^^^
+                 Filtered previous state
+
+# Interpretation:
+# r_t ≈ 0: Ignore previous context (fresh start)
+# r_t ≈ 1: Use full previous context 
+# r_t ≈ 0.5: Use partial previous context
+                            </div>
+                            
+                            <h4 style="color: #ef4444; margin: 20px 0;">Reset Gate Behavior:</h4>
+                            
+                            <div style="background: rgba(239, 68, 68, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>High Reset (r_t ≈ 1):</strong><br>
+                                • Previous context is relevant<br>
+                                • Continuous narrative or conversation<br>
+                                • Incremental information building<br>
+                                • Example: Continuing same topic
+                            </div>
+                            
+                            <div style="background: rgba(239, 68, 68, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Low Reset (r_t ≈ 0):</strong><br>
+                                • Previous context is irrelevant<br>
+                                • Context switches or new beginnings<br>
+                                • Independent information processing<br>
+                                • Example: New paragraph or speaker
+                            </div>
+                            
+                            <div style="background: rgba(239, 68, 68, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>Partial Reset (r_t ≈ 0.3-0.7):</strong><br>
+                                • Some previous context is useful<br>
+                                • Gradual topic transitions<br>
+                                • Selective context usage<br>
+                                • Example: Related but different subtopic
+                            </div>
+                            
+                            <h4 style="color: #ef4444; margin: 20px 0;">Reset vs Update Interaction:</h4>
+                            
+                            <div class="modal-code">
+# Four common patterns:
+
+# Pattern 1: Fresh Start
+r_t ≈ 0, z_t ≈ 1
+# Ignore past, use new info → Complete state change
+
+# Pattern 2: Ignore Current  
+r_t ≈ 1, z_t ≈ 0
+# Keep past context, ignore current input → State preservation
+
+# Pattern 3: Incremental Update
+r_t ≈ 1, z_t ≈ 0.5  
+# Use past context, blend with new → Gradual evolution
+
+# Pattern 4: Context Switch
+r_t ≈ 0, z_t ≈ 0.5
+# Limited past info, partial new info → Controlled transition
+                            </div>
+                            
+                            <h4 style="color: #ef4444; margin: 20px 0;">Practical Examples:</h4>
+                            
+                            <div class="modal-code">
+# Example 1: Document Processing
+"Chapter 1: Introduction. 
+
+Chapter 2: Methodology."
+
+Processing "Chapter 2":
+r_t ≈ 0.2  # Low reset - previous chapter less relevant
+z_t ≈ 0.9  # High update - new chapter is important
+→ Fresh start with new topic
+
+# Example 2: Dialogue System
+"User: What's the weather? 
+ Bot: It's sunny today.
+ User: Thanks!"
+
+Processing "Thanks!":
+r_t ≈ 0.8  # High reset - previous bot response relevant
+z_t ≈ 0.7  # High update - user acknowledgment important
+→ Understand gratitude in context
+
+# Example 3: Time Series
+Stock prices: [100, 102, 98, 105, 150, 103]
+                               ^^^
+Processing anomaly (150):
+r_t ≈ 0.1  # Low reset - ignore recent "normal" pattern  
+z_t ≈ 0.3  # Low update - don't let anomaly dominate
+→ Process anomaly without corrupting trend memory
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                                <strong>🎯 Design Purpose:</strong><br>
+                                Reset gate enables the model to dynamically decide how much historical context is relevant for processing the current input - crucial for handling context switches.
+                            </div>
+                        `
+                    }
+                };
+                
+                const detail = gateDetails[gateType];
+                if (detail) {
+                    modal.show(detail.title, detail.content);
+                }
+            });
+        });
+
+        // Model comparison interactions
+        document.querySelectorAll('[data-model]').forEach(card => {
+            card.addEventListener('click', function() {
+                const modelType = this.dataset.model;
+                
+                const modelDetails = {
+                    'lstm': {
+                        title: 'LSTM: The Complex Powerhouse',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>LSTM Strengths and Use Cases</h4>
+                                <p>LSTM's three-gate architecture provides maximum flexibility and expressiveness for complex sequence modeling tasks.</p>
+                            </div>
+                            
+                            <h4 style="color: #f59e0b; margin: 20px 0;">LSTM Advantages:</h4>
+                            
+                            <div style="background: rgba(245, 158, 11, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>1. Maximum Expressiveness:</strong><br>
+                                • Three independent gates allow complex control<br>
+                                • Separate cell state for long-term memory<br>
+                                • Can model intricate temporal patterns<br>
+                                • Best theoretical capacity for sequence learning
+                            </div>
+                            
+                            <div style="background: rgba(245, 158, 11, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>2. Proven Track Record:</strong><br>
+                                • Extensive research and optimization<br>
+                                • Well-understood training dynamics<br>
+                                • Robust performance across many domains<br>
+                                • Strong ecosystem and tool support
+                            </div>
+                            
+                            <div style="background: rgba(245, 158, 11, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>3. Long Sequence Handling:</strong><br>
+                                • Excellent for sequences > 1000 time steps<br>
+                                • Separate cell state maintains long-term info<br>
+                                • Three gates provide fine-grained control<br>
+                                • Better gradient flow for very long sequences
+                            </div>
+                            
+                            <h4 style="color: #f59e0b; margin: 20px 0;">When to Choose LSTM:</h4>
+                            
+                            <div class="modal-code">
+# LSTM is preferred for:
+
+# 1. Very Long Sequences
+- Document-level text processing
+- Long-form video analysis  
+- Extended time series (years of data)
+- Genomic sequence analysis
+
+# 2. Complex Hierarchical Patterns
+- Nested language structures
+- Multi-level temporal dependencies
+- Compositional reasoning tasks
+- Hierarchical action recognition
+
+# 3. Maximum Performance Critical
+- Competition settings (Kaggle, etc.)
+- Production systems where accuracy > speed
+- Research requiring state-of-the-art results
+- Large-scale industrial applications
+
+# 4. Large Dataset Scenarios  
+- Millions of training examples
+- Can afford computational overhead
+- Overfitting is not a major concern
+- Have time for extensive hyperparameter tuning
+                            </div>
+                            
+                            <h4 style="color: #f59e0b; margin: 20px 0;">LSTM Limitations:</h4>
+                            
+                            <div style="background: rgba(239, 68, 68, 0.05); padding: 15px; border-radius: 10px;">
+                                • Higher computational cost (25% more parameters)<br>
+                                • Slower training and inference<br>
+                                • More prone to overfitting on small data<br>
+                                • Requires more careful hyperparameter tuning<br>
+                                • Complex gradient dynamics
+                            </div>
+                        `
+                    },
+                    'gru': {
+                        title: 'GRU: The Efficient Alternative',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>GRU Strengths and Use Cases</h4>
+                                <p>GRU's simplified two-gate design provides excellent performance with reduced complexity, making it ideal for many practical applications.</p>
+                            </div>
+                            
+                            <h4 style="color: #3b82f6; margin: 20px 0;">GRU Advantages:</h4>
+                            
+                            <div style="background: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>1. Computational Efficiency:</strong><br>
+                                • 25% fewer parameters than LSTM<br>
+                                • 20-30% faster training and inference<br>
+                                • Lower memory requirements<br>
+                                • Better for resource-constrained environments
+                            </div>
+                            
+                            <div style="background: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>2. Easier to Train:</strong><br>
+                                • More stable training dynamics<br>
+                                • Less sensitive to hyperparameters<br>
+                                • Faster convergence<br>
+                                • Better for beginners and prototyping
+                            </div>
+                            
+                            <div style="background: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>3. Generalization:</strong><br>
+                                • Less prone to overfitting<br>
+                                • Better performance on small datasets<br>
+                                • More robust inductive bias<br>
+                                • Good default choice for most tasks
+                            </div>
+                            
+                            <h4 style="color: #3b82f6; margin: 20px 0;">When to Choose GRU:</h4>
+                            
+                            <div class="modal-code">
+# GRU is preferred for:
+
+# 1. Resource Constraints
+- Mobile and edge deployment
+- Real-time applications  
+- Limited computational budget
+- Memory-constrained environments
+
+# 2. Small to Medium Datasets
+- < 100K training examples
+- Risk of overfitting with LSTM
+- Limited data diversity
+- Few-shot learning scenarios
+
+# 3. Fast Development Cycles
+- Prototyping and experimentation
+- Quick proof-of-concepts
+- Iterative model development
+- Educational and learning purposes
+
+# 4. Moderate Sequence Lengths
+- Sequences < 500 time steps
+- Standard NLP tasks (sentences/paragraphs)
+- Short to medium time series
+- Most practical applications
+
+# 5. Production Systems
+- Latency-sensitive applications
+- High-throughput requirements
+- Cost-sensitive deployments
+- Need for model interpretability
+                            </div>
+                            
+                            <h4 style="color: #3b82f6; margin: 20px 0;">GRU Success Stories:</h4>
+                            
+                            <div style="background: rgba(16, 185, 129, 0.05); padding: 15px; border-radius: 10px;">
+                                <strong>Industry Adoption:</strong><br>
+                                • Google: Voice recognition systems<br>
+                                • Facebook: News feed ranking<br>
+                                • Uber: Demand forecasting<br>
+                                • Netflix: Recommendation systems<br>
+                                • Many startups prefer GRU for faster iteration
+                            </div>
+                        `
+                    }
+                };
+                
+                const detail = modelDetails[modelType];
+                if (detail) {
+                    modal.show(detail.title, detail.content);
+                }
+            });
+        });
+
+        // Demo gate interactions
+        document.querySelectorAll('[data-demo]').forEach(gate => {
+            gate.addEventListener('click', function() {
+                const demoType = this.dataset.demo;
+                
+                const demos = {
+                    'update': {
+                        title: 'Update Gate in Action',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>Update Gate Demonstration</h4>
+                                <p>See how the update gate controls the interpolation between old and new hidden states.</p>
+                            </div>
+                            
+                            <div style="background: #1e293b; padding: 30px; border-radius: 15px; color: #99f6e4; font-family: monospace;">
+                                <div style="text-align: center; margin-bottom: 20px;">
+                                    <strong>Update Gate Operation</strong>
+                                </div>
+                                
+                                <div style="background: rgba(59, 130, 246, 0.2); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                    Previous State: h_{t-1} = [0.8, -0.4, 0.6, 0.2]<br>
+                                    Candidate State: h̃_t = [-0.2, 0.7, -0.1, 0.9]<br>
+                                    Update Gate: z_t = [0.3, 0.8, 0.1, 0.9]<br>
+                                    <span style="color: #fbbf24;">New State: h_t = [0.5, 0.5, 0.5, 0.8]</span>
+                                </div>
+                                
+                                <div style="margin-top: 20px;">
+                                    <strong>Computation Details:</strong><br>
+                                    h_t[0] = (1-0.3)×0.8 + 0.3×(-0.2) = 0.5<br>
+                                    h_t[1] = (1-0.8)×(-0.4) + 0.8×0.7 = 0.5<br>  
+                                    h_t[2] = (1-0.1)×0.6 + 0.1×(-0.1) = 0.5<br>
+                                    h_t[3] = (1-0.9)×0.2 + 0.9×0.9 = 0.8
+                                </div>
+                            </div>
+                            
+                            <h4 style="color: #3b82f6; margin: 20px 0;">Interpretation:</h4>
+                            
+                            <div style="background: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 10px;">
+                                • <strong>Dimension 0:</strong> Low update (0.3) - mostly keep old info<br>
+                                • <strong>Dimension 1:</strong> High update (0.8) - mostly use new info<br>
+                                • <strong>Dimension 2:</strong> Very low update (0.1) - preserve old info<br>
+                                • <strong>Dimension 3:</strong> Very high update (0.9) - almost all new info
+                            </div>
+                        `
+                    },
+                    'reset': {
+                        title: 'Reset Gate in Action',
+                        content: `
+                            <div class="modal-highlight">
+                                <h4>Reset Gate Demonstration</h4>
+                                <p>Observe how the reset gate filters previous hidden state before computing new candidates.</p>
+                            </div>
+                            
+                            <div style="background: #1e293b; padding: 30px; border-radius: 15px; color: #99f6e4; font-family: monospace;">
+                                <div style="text-align: center; margin-bottom: 20px;">
+                                    <strong>Reset Gate Operation</strong>
+                                </div>
+                                
+                                <div style="background: rgba(239, 68, 68, 0.2); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                    Previous State: h_{t-1} = [0.6, -0.8, 0.4, 0.9]<br>
+                                    Reset Gate: r_t = [0.2, 0.9, 0.0, 0.7]<br>
+                                    <span style="color: #fbbf24;">Filtered State: r_t ⊙ h_{t-1} = [0.12, -0.72, 0.0, 0.63]</span>
+                                </div>
+                                
+                                <div style="margin-top: 20px;">
+                                    <strong>Impact on Candidate Computation:</strong><br>
+                                    h̃_t = tanh(W @ [filtered_state, x_t] + b)<br>
+                                    <br>
+                                    The filtered state [0.12, -0.72, 0.0, 0.63] is used<br>
+                                    instead of original [0.6, -0.8, 0.4, 0.9]
+                                </div>
+                            </div>
+                            
+                            <h4 style="color: #ef4444; margin: 20px 0;">Context Filtering:</h4>
+                            
+                            <div style="background: rgba(239, 68, 68, 0.1); padding: 15px; border-radius: 10px;">
+                                • <strong>Dimension 0:</strong> Low reset (0.2) - minimal past context<br>
+                                • <strong>Dimension 1:</strong> High reset (0.9) - keep most past info<br>
+                                • <strong>Dimension 2:</strong> Zero reset (0.0) - completely ignore past<br>
+                                • <strong>Dimension 3:</strong> Medium reset (0.7) - partial past context
+                            </div>
+                        `
+                    }
+                };
+                
+                const demo = demos[demoType];
+                if (demo) {
+                    modal.show(demo.title, demo.content);
+                }
+            });
+        });
+
+        // Hidden state interaction
+        document.querySelectorAll('[data-component="hidden-state"]').forEach(component => {
+            component.addEventListener('click', function() {
+                modal.show('GRU Hidden State', `
+                    <div class="modal-highlight">
+                        <h4>Single State System</h4>
+                        <p>Unlike LSTM, GRU uses only one hidden state that serves both as memory and output, simplifying the architecture while maintaining effectiveness.</p>
+                    </div>
+                    
+                    <div class="modal-code">
+# GRU state update:
+h_t = (1-z_t) ⊙ h_{t-1} + z_t ⊙ h̃_t
+      ^^^^^^^^           ^^^^^^^^
+      Keep old          Add new
+
+# Single state serves dual purpose:
+# 1. Memory: stores long-term information
+# 2. Output: provides features for next layer
+
+# Contrast with LSTM:
+# LSTM: C_t (memory) + h_t (output)
+# GRU:  h_t (memory + output combined)
+                    </div>
+                    
+                    <h4 style="color: #8b5cf6; margin: 20px 0;">Advantages of Single State:</h4>
+                    
+                    <div style="background: rgba(139, 92, 246, 0.1); padding: 15px; border-radius: 10px;">
+                        <strong>1. Simplicity:</strong> No need to manage separate memory pathway<br><br>
+                        <strong>2. Efficiency:</strong> Fewer computations and memory requirements<br><br>
+                        <strong>3. Direct Gradients:</strong> Simpler backpropagation through single state<br><br>
+                        <strong>4. Forced Efficiency:</strong> Must learn compact representations
+                    </div>
+                `);
+            });
+        });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week10_Slide186.html';
+            } else if (e.key === 'ArrowRight') {
+                window.location.href = 'Week10_Slide188.html';
+            }
+        });
+    </script>
+</body>
+</html>

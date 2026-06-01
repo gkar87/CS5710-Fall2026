@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Simple Linear Regression Model</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .model-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .formula-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .hypothesis-box {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+            text-align: center;
+        }
+
+        .hypothesis-formula {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+            margin: 15px 0;
+            letter-spacing: 2px;
+        }
+
+        .parameter-list {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .parameter-item {
+            padding: 15px;
+            margin: 10px 0;
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 12px;
+            border-left: 3px solid #14b8a6;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .parameter-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(13, 148, 136, 0.2);
+        }
+
+        .param-symbol {
+            font-size: 1.3em;
+            color: #0d9488;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .visualization-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .graph-container {
+            position: relative;
+            height: 350px;
+            background: #1e293b;
+            border-radius: 15px;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .scatter-plot {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .axis {
+            stroke: #5eead4;
+            stroke-width: 2;
+        }
+
+        .axis-label {
+            fill: #5eead4;
+            font-size: 14px;
+        }
+
+        .data-point {
+            fill: #14b8a6;
+            stroke: #0d9488;
+            stroke-width: 2;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .data-point:hover {
+            r: 8;
+            fill: #5eead4;
+        }
+
+        .regression-line {
+            stroke: #f59e0b;
+            stroke-width: 3;
+            fill: none;
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: drawLine 2s ease-out 1s forwards;
+        }
+
+        .example-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @keyframes drawLine {
+            to { stroke-dashoffset: 0; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    
+    <div class="course-info">CS5710 - Week 2</div>
+    <div class="slide-number">Slide 22 of 40</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">Simple Linear Regression Model</h1>
+        
+        <div class="content-layout">
+            <div class="model-section">
+                <h2 class="section-title">The Model</h2>
+                
+                <div class="hypothesis-box">
+                    <div style="font-size: 1.1em; margin-bottom: 10px;">Hypothesis Function:</div>
+                    <div class="hypothesis-formula">h(x) = θ₀ + θ₁x</div>
+                    <div style="font-size: 0.9em; color: #475569; margin-top: 10px;">
+                        Predicts output y based on input x
+                    </div>
+                </div>
+                
+                <ul class="parameter-list">
+                    <li class="parameter-item">
+                        <span class="param-symbol">θ₀</span>
+                        <strong>Intercept (bias)</strong> - Where the line crosses y-axis
+                    </li>
+                    <li class="parameter-item">
+                        <span class="param-symbol">θ₁</span>
+                        <strong>Slope (weight)</strong> - Rate of change
+                    </li>
+                    <li class="parameter-item">
+                        <span class="param-symbol">x</span>
+                        <strong>Feature</strong> - Input variable
+                    </li>
+                    <li class="parameter-item">
+                        <span class="param-symbol">y</span>
+                        <strong>Target</strong> - Output we want to predict
+                    </li>
+                </ul>
+            </div>
+
+            <div class="formula-section">
+                <h2 class="section-title">Key Concepts</h2>
+                
+                <div style="background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%); padding: 20px; border-radius: 15px; margin-bottom: 20px;">
+                    <h3 style="color: #0d9488; margin-bottom: 15px;">Why Linear?</h3>
+                    <p style="line-height: 1.6;">We assume a linear relationship between input and output. The model learns the best straight line that fits the data.</p>
+                </div>
+                
+                <div style="background: linear-gradient(135deg, #f0fdfa, #ccfbf1); padding: 20px; border-radius: 15px; margin-bottom: 20px;">
+                    <h3 style="color: #0d9488; margin-bottom: 15px;">Goal</h3>
+                    <p style="line-height: 1.6;">Find optimal values of θ₀ and θ₁ that minimize the difference between predictions h(x) and actual values y.</p>
+                </div>
+                
+                <div class="example-code">
+# Python representation<br>
+def hypothesis(x, theta0, theta1):<br>
+&nbsp;&nbsp;&nbsp;&nbsp;return theta0 + theta1 * x<br>
+<br>
+# Example prediction<br>
+# If θ₀ = 50, θ₁ = 30, x = 2<br>
+# h(2) = 50 + 30*2 = 110
+                </div>
+            </div>
+        </div>
+
+        <div class="visualization-section">
+            <h2 class="section-title">Visualization</h2>
+            <div class="graph-container">
+                <svg class="scatter-plot" viewBox="0 0 800 300">
+                    <!-- Axes -->
+                    <line x1="50" y1="250" x2="750" y2="250" class="axis"/>
+                    <line x1="50" y1="250" x2="50" y2="50" class="axis"/>
+                    
+                    <!-- Axis labels -->
+                    <text x="400" y="290" class="axis-label" text-anchor="middle">Feature (x)</text>
+                    <text x="20" y="150" class="axis-label" text-anchor="middle" transform="rotate(-90 20 150)">Target (y)</text>
+                    
+                    <!-- Data points -->
+                    <circle cx="150" cy="200" r="5" class="data-point"/>
+                    <circle cx="250" cy="170" r="5" class="data-point"/>
+                    <circle cx="350" cy="140" r="5" class="data-point"/>
+                    <circle cx="450" cy="110" r="5" class="data-point"/>
+                    <circle cx="550" cy="80" r="5" class="data-point"/>
+                    <circle cx="200" cy="180" r="5" class="data-point"/>
+                    <circle cx="300" cy="150" r="5" class="data-point"/>
+                    <circle cx="400" cy="130" r="5" class="data-point"/>
+                    <circle cx="500" cy="100" r="5" class="data-point"/>
+                    <circle cx="600" cy="70" r="5" class="data-point"/>
+                    
+                    <!-- Regression line -->
+                    <line x1="100" y1="220" x2="700" y2="60" class="regression-line"/>
+                    
+                    <!-- Legend -->
+                    <circle cx="620" cy="230" r="5" class="data-point"/>
+                    <text x="635" y="235" class="axis-label">Data Points</text>
+                    <line x1="615" y1="210" x2="625" y2="210" stroke="#f59e0b" stroke-width="3"/>
+                    <text x="635" y="215" class="axis-label">h(x) = θ₀ + θ₁x</text>
+                </svg>
+            </div>
+            
+            <div style="margin-top: 20px; text-align: center; color: #475569;">
+                The orange line represents our hypothesis function fitting the blue data points
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week2_Slide21.html" class="nav-btn">← Previous</a>
+        <a href="Week2_Slide23.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating ML elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive parameter items
+        document.querySelectorAll('.parameter-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const symbol = this.querySelector('.param-symbol').textContent;
+                
+                const details = {
+                    'θ₀': {
+                        title: 'Intercept Parameter (θ₀)',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>The y-intercept of our linear model</strong>
+                            </div>
+                            <p>θ₀ represents the predicted value when x = 0. It shifts the entire line up or down.</p>
+                            <div style="background: #1e293b; color: #5eead4; padding: 15px; border-radius: 10px; margin: 15px 0;">
+                                <strong>Example:</strong><br>
+                                Predicting house prices:<br>
+                                θ₀ might represent the base price of a house with 0 square feet (theoretical minimum)
+                            </div>
+                            <p><strong>Initialization:</strong> Often initialized to 0 or a small random value.</p>
+                        `
+                    },
+                    'θ₁': {
+                        title: 'Slope Parameter (θ₁)',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>The slope of our linear model</strong>
+                            </div>
+                            <p>θ₁ determines how much y changes for each unit change in x. It represents the relationship strength.</p>
+                            <div style="background: #1e293b; color: #5eead4; padding: 15px; border-radius: 10px; margin: 15px 0;">
+                                <strong>Example:</strong><br>
+                                Predicting house prices:<br>
+                                θ₁ = $150 means each additional square foot adds $150 to the price
+                            </div>
+                            <p><strong>Sign matters:</strong><br>
+                            • Positive θ₁: Positive correlation<br>
+                            • Negative θ₁: Negative correlation<br>
+                            • θ₁ = 0: No linear relationship</p>
+                        `
+                    },
+                    'x': {
+                        title: 'Feature Variable (x)',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>The input to our model</strong>
+                            </div>
+                            <p>In simple linear regression, we have a single feature that we use to make predictions.</p>
+                            <div style="background: #1e293b; color: #5eead4; padding: 15px; border-radius: 10px; margin: 15px 0;">
+                                <strong>Examples of features:</strong><br>
+                                • House size (sq ft) → Price<br>
+                                • Study hours → Test score<br>
+                                • Temperature → Ice cream sales<br>
+                                • Years of experience → Salary
+                            </div>
+                            <p><strong>Feature Engineering:</strong> Choosing the right feature is crucial for model performance.</p>
+                        `
+                    },
+                    'y': {
+                        title: 'Target Variable (y)',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>The value we want to predict</strong>
+                            </div>
+                            <p>Also called the dependent variable, label, or response. This is what our model learns to predict.</p>
+                            <div style="background: #1e293b; color: #5eead4; padding: 15px; border-radius: 10px; margin: 15px 0;">
+                                <strong>Continuous targets for regression:</strong><br>
+                                • Price (dollars)<br>
+                                • Temperature (degrees)<br>
+                                • Sales (units)<br>
+                                • Score (points)
+                            </div>
+                            <p><strong>Training:</strong> We use known y values to train the model, then predict y for new x values.</p>
+                        `
+                    }
+                };
+                
+                const detail = details[symbol];
+                if (detail) {
+                    modal.show(detail.title, detail.content);
+                }
+            });
+        });
+
+        // Interactive data points
+        document.querySelectorAll('.data-point').forEach(point => {
+            point.addEventListener('click', function(e) {
+                if (this.nextElementSibling && this.nextElementSibling.textContent === 'Data Points') {
+                    return; // Skip legend circle
+                }
+                
+                const x = (parseFloat(this.getAttribute('cx')) - 50) / 700 * 10;
+                const y = (250 - parseFloat(this.getAttribute('cy'))) / 200 * 100;
+                
+                modal.show('Data Point', `
+                    <div class="modal-highlight">
+                        <strong>Training Example</strong>
+                    </div>
+                    <p><strong>Feature (x):</strong> ${x.toFixed(1)}</p>
+                    <p><strong>Target (y):</strong> ${y.toFixed(1)}</p>
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                        <strong>In Training:</strong><br>
+                        This point helps the model learn the relationship between x and y.
+                        The model adjusts θ₀ and θ₁ to minimize the error at this point.
+                    </div>
+                `);
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (!modal.overlay.classList.contains('active')) {
+                if (e.key === 'ArrowLeft') {
+                    window.location.href = 'Week2_Slide21.html';
+                } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                    window.location.href = 'Week2_Slide23.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

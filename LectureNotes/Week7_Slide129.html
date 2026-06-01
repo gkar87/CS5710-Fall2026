@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Linear Discriminant Analysis (LDA)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .lda-overview {
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,253,250,0.95) 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .comparison-section {
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,253,250,0.95) 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .key-concept {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .key-concept:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 30px rgba(13, 148, 136, 0.2);
+        }
+
+        .concept-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 10px;
+        }
+
+        .concept-desc {
+            color: #1e293b;
+            line-height: 1.6;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .comparison-table th {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .comparison-table td {
+            padding: 15px;
+            border-bottom: 1px solid rgba(13, 148, 136, 0.1);
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .comparison-table tr:hover td {
+            background: rgba(13, 148, 136, 0.05);
+        }
+
+        .math-formula {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .math-formula:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 30px rgba(13, 148, 136, 0.15);
+        }
+
+        .algorithm-steps {
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,253,250,0.95) 100%);
+            border-radius: 20px;
+            padding: 40px;
+            margin-top: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+        }
+
+        .step-item {
+            display: flex;
+            align-items: flex-start;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .step-item:hover {
+            transform: translateX(10px);
+        }
+
+        .step-number {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 20px;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 5px;
+        }
+
+        .step-desc {
+            color: #1e293b;
+            line-height: 1.6;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 2em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .modal-close:hover {
+            color: #0d9488;
+            background: rgba(13, 148, 136, 0.1);
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            color: #1e293b;
+            line-height: 1.8;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #99f6e4;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .floating-elements {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            top: 0;
+            left: 0;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: float 20s linear infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <div class="course-info">CS5710 - Week 7</div>
+    <div class="slide-number">Slide 129 of 140</div>
+
+    <div class="slide-container">
+        <h1 class="slide-title">Linear Discriminant Analysis (LDA)</h1>
+
+        <div class="content-layout">
+            <div class="lda-overview">
+                <h2 class="section-title">What is LDA?</h2>
+                
+                <div class="key-concept" onclick="showModal('LDA Purpose', ldaPurposeContent)">
+                    <div class="concept-title">🎯 Supervised Dimensionality Reduction</div>
+                    <div class="concept-desc">LDA finds linear combinations of features that best separate classes</div>
+                </div>
+
+                <div class="key-concept" onclick="showModal('Key Assumptions', ldaAssumptionsContent)">
+                    <div class="concept-title">📊 Gaussian Assumptions</div>
+                    <div class="concept-desc">Assumes normally distributed data with equal covariance matrices</div>
+                </div>
+
+                <div class="math-formula" onclick="showModal('LDA Objective', ldaObjectiveContent)">
+                    J(w) = (w^T S_B w) / (w^T S_W w)
+                </div>
+
+                <div class="key-concept" onclick="showModal('Fisher Criterion', fisherContent)">
+                    <div class="concept-title">🔍 Maximize Class Separation</div>
+                    <div class="concept-desc">Maximizes between-class variance while minimizing within-class variance</div>
+                </div>
+            </div>
+
+            <div class="comparison-section">
+                <h2 class="section-title">LDA vs PCA</h2>
+                
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Aspect</th>
+                            <th>LDA</th>
+                            <th>PCA</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr onclick="showModal('Supervision Comparison', supervisionContent)">
+                            <td><strong>Supervision</strong></td>
+                            <td>Supervised</td>
+                            <td>Unsupervised</td>
+                        </tr>
+                        <tr onclick="showModal('Goal Comparison', goalContent)">
+                            <td><strong>Goal</strong></td>
+                            <td>Maximize class separation</td>
+                            <td>Maximize variance</td>
+                        </tr>
+                        <tr onclick="showModal('Components Comparison', componentsContent)">
+                            <td><strong>Components</strong></td>
+                            <td>At most C-1 (C = classes)</td>
+                            <td>Min(n_samples, n_features)</td>
+                        </tr>
+                        <tr onclick="showModal('Use Cases Comparison', useCasesContent)">
+                            <td><strong>Use Case</strong></td>
+                            <td>Classification preprocessing</td>
+                            <td>General dimensionality reduction</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="algorithm-steps">
+            <h2 class="section-title">LDA Algorithm Steps</h2>
+            
+            <div class="step-item" onclick="showModal('Step 1: Compute Means', step1Content)">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <div class="step-title">Compute Class Means</div>
+                    <div class="step-desc">Calculate mean vectors for each class in the dataset</div>
+                </div>
+            </div>
+
+            <div class="step-item" onclick="showModal('Step 2: Scatter Matrices', step2Content)">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <div class="step-title">Calculate Scatter Matrices</div>
+                    <div class="step-desc">Compute within-class (S_W) and between-class (S_B) scatter matrices</div>
+                </div>
+            </div>
+
+            <div class="step-item" onclick="showModal('Step 3: Eigendecomposition', step3Content)">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <div class="step-title">Solve Eigenvalue Problem</div>
+                    <div class="step-desc">Find eigenvectors of S_W^(-1)S_B</div>
+                </div>
+            </div>
+
+            <div class="step-item" onclick="showModal('Step 4: Project Data', step4Content)">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <div class="step-title">Transform Data</div>
+                    <div class="step-desc">Project data onto selected discriminant vectors</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Structure -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Modal Title</h3>
+                <button class="modal-close" id="modalClose">&times;</button>
+            </div>
+            <div class="modal-content" id="modalContent">
+                Modal content will appear here...
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week7_Slide128.html" class="nav-btn">← Previous</a>
+        <a href="Week7_Slide130.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal content definitions
+        const ldaPurposeContent = `
+            <div class="modal-highlight">
+                <strong>LDA is a supervised technique that uses class labels to find optimal projections</strong>
+            </div>
+            <p>Unlike PCA which is unsupervised, LDA uses class information to find projections that:</p>
+            <ul>
+                <li>• Maximize the distance between class means</li>
+                <li>• Minimize the variance within each class</li>
+                <li>• Create linear decision boundaries between classes</li>
+            </ul>
+            <div class="modal-code">
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+lda = LinearDiscriminantAnalysis(n_components=2)
+X_lda = lda.fit_transform(X, y)
+            </div>
+            <p><strong>Key Applications:</strong></p>
+            <ul>
+                <li>• Face recognition (Fisherfaces)</li>
+                <li>• Document classification</li>
+                <li>• Medical diagnosis</li>
+                <li>• Marketing segmentation</li>
+            </ul>
+        `;
+
+        const ldaAssumptionsContent = `
+            <div class="modal-highlight">
+                <strong>LDA makes several important statistical assumptions</strong>
+            </div>
+            <p><strong>1. Normality:</strong> Features are normally distributed within each class</p>
+            <p><strong>2. Equal Covariance:</strong> All classes share the same covariance matrix</p>
+            <p><strong>3. Independence:</strong> Samples are independently drawn</p>
+            <div class="modal-code">
+# Check assumptions
+from scipy import stats
+
+# Normality test
+for class_label in np.unique(y):
+    class_data = X[y == class_label]
+    _, p_value = stats.normaltest(class_data)
+    print(f"Class {class_label}: p-value = {p_value}")
+            </div>
+            <p><strong>What if assumptions are violated?</strong></p>
+            <ul>
+                <li>• Consider Quadratic Discriminant Analysis (QDA) for unequal covariances</li>
+                <li>• Use robust LDA variants for outliers</li>
+                <li>• Apply transformations to achieve normality</li>
+                <li>• Consider non-linear methods like kernel LDA</li>
+            </ul>
+        `;
+
+        const ldaObjectiveContent = `
+            <div class="modal-highlight">
+                <strong>The Fisher's Linear Discriminant objective function</strong>
+            </div>
+            <p>LDA maximizes the ratio of between-class to within-class scatter:</p>
+            <div class="modal-code">
+J(w) = (w^T S_B w) / (w^T S_W w)
+
+Where:
+• w = projection vector
+• S_B = between-class scatter matrix
+• S_W = within-class scatter matrix
+            </div>
+            <p><strong>Mathematical Formulation:</strong></p>
+            <div class="modal-code">
+S_W = Σ_c Σ_{x∈c} (x - μ_c)(x - μ_c)^T
+S_B = Σ_c N_c (μ_c - μ)(μ_c - μ)^T
+
+• μ_c = mean of class c
+• μ = overall mean
+• N_c = number of samples in class c
+            </div>
+            <p>This is solved as a generalized eigenvalue problem: S_B w = λ S_W w</p>
+        `;
+
+        const fisherContent = `
+            <div class="modal-highlight">
+                <strong>Fisher's Criterion maximizes class separability</strong>
+            </div>
+            <p>The key insight: Project data to maximize the ratio of:</p>
+            <ul>
+                <li>• <strong>Between-class variance:</strong> How far apart class means are</li>
+                <li>• <strong>Within-class variance:</strong> How spread out each class is</li>
+            </ul>
+            <div class="modal-code">
+# Compute Fisher's ratio for a projection
+def fisher_ratio(X, y, w):
+    # Project data
+    X_proj = X @ w
+    
+    # Class means in projected space
+    means = [X_proj[y==c].mean() for c in np.unique(y)]
+    
+    # Between-class variance
+    between_var = np.var(means)
+    
+    # Within-class variance
+    within_var = np.mean([X_proj[y==c].var() for c in np.unique(y)])
+    
+    return between_var / within_var
+            </div>
+            <p><strong>Intuition:</strong> Good projections create tight clusters that are far apart</p>
+        `;
+
+        const supervisionContent = `
+            <div class="modal-highlight">
+                <strong>Supervised vs Unsupervised Dimensionality Reduction</strong>
+            </div>
+            <p><strong>LDA (Supervised):</strong></p>
+            <ul>
+                <li>• Uses class labels during training</li>
+                <li>• Optimizes for class separation</li>
+                <li>• Limited to C-1 dimensions for C classes</li>
+                <li>• Better for classification tasks</li>
+            </ul>
+            <p><strong>PCA (Unsupervised):</strong></p>
+            <ul>
+                <li>• Ignores class labels</li>
+                <li>• Preserves maximum variance</li>
+                <li>• Can extract many components</li>
+                <li>• Better for visualization and compression</li>
+            </ul>
+            <div class="modal-code">
+# Compare LDA vs PCA
+from sklearn.decomposition import PCA
+
+# PCA ignores labels
+pca = PCA(n_components=2)
+X_pca = pca.fit_transform(X)
+
+# LDA uses labels
+lda = LinearDiscriminantAnalysis(n_components=2)
+X_lda = lda.fit_transform(X, y)
+            </div>
+        `;
+
+        const goalContent = `
+            <div class="modal-highlight">
+                <strong>Different Objectives Lead to Different Projections</strong>
+            </div>
+            <p><strong>LDA Goal: Maximize Class Separation</strong></p>
+            <ul>
+                <li>• Finds axes that best discriminate between classes</li>
+                <li>• Preserves class structure</li>
+                <li>• May lose overall variance</li>
+            </ul>
+            <p><strong>PCA Goal: Maximize Variance</strong></p>
+            <ul>
+                <li>• Finds axes of maximum variation</li>
+                <li>• Preserves global structure</li>
+                <li>• May merge classes together</li>
+            </ul>
+            <div class="modal-code">
+# Visualize the difference
+import matplotlib.pyplot as plt
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+# PCA projection
+ax1.scatter(X_pca[:, 0], X_pca[:, 1], c=y)
+ax1.set_title('PCA: Max Variance')
+
+# LDA projection
+ax2.scatter(X_lda[:, 0], X_lda[:, 1], c=y)
+ax2.set_title('LDA: Max Separation')
+            </div>
+        `;
+
+        const componentsContent = `
+            <div class="modal-highlight">
+                <strong>Number of Components Limitation</strong>
+            </div>
+            <p><strong>LDA: Maximum C-1 Components</strong></p>
+            <p>For C classes, LDA can extract at most C-1 meaningful components because:</p>
+            <ul>
+                <li>• Between-class scatter matrix S_B has rank at most C-1</li>
+                <li>• C points in space define a (C-1)-dimensional subspace</li>
+                <li>• Example: 3 classes → maximum 2 LDA components</li>
+            </ul>
+            <p><strong>PCA: Flexible Component Count</strong></p>
+            <ul>
+                <li>• Can extract min(n_samples, n_features) components</li>
+                <li>• Each component captures decreasing variance</li>
+                <li>• Choose components based on variance explained</li>
+            </ul>
+            <div class="modal-code">
+# Example with 4 classes
+n_classes = 4
+max_lda_components = n_classes - 1  # 3
+
+# LDA limited to 3 components
+lda = LinearDiscriminantAnalysis(n_components=max_lda_components)
+
+# PCA can use more
+pca = PCA(n_components=10)  # If features allow
+            </div>
+        `;
+
+        const useCasesContent = `
+            <div class="modal-highlight">
+                <strong>When to Use LDA vs PCA</strong>
+            </div>
+            <p><strong>Use LDA when:</strong></p>
+            <ul>
+                <li>• You have labeled data</li>
+                <li>• Goal is classification</li>
+                <li>• Classes are roughly Gaussian</li>
+                <li>• You want interpretable discriminant directions</li>
+                <li>• Feature reduction for classifiers</li>
+            </ul>
+            <p><strong>Use PCA when:</strong></p>
+            <ul>
+                <li>• No labels available</li>
+                <li>• Goal is visualization or compression</li>
+                <li>• Preserving variance is important</li>
+                <li>• Dealing with high-dimensional data</li>
+                <li>• Preprocessing for clustering</li>
+            </ul>
+            <div class="modal-code">
+# Decision flowchart
+if has_labels and goal == "classification":
+    if gaussian_assumption_holds:
+        use_LDA()
+    else:
+        consider_kernel_LDA()
+elif goal == "visualization" or not has_labels:
+    use_PCA()
+            </div>
+        `;
+
+        const step1Content = `
+            <div class="modal-highlight">
+                <strong>Step 1: Computing Class Means</strong>
+            </div>
+            <p>Calculate the mean vector for each class and the overall mean:</p>
+            <div class="modal-code">
+import numpy as np
+
+def compute_class_means(X, y):
+    classes = np.unique(y)
+    means = {}
+    
+    for c in classes:
+        # Select samples from class c
+        X_c = X[y == c]
+        # Compute mean vector
+        means[c] = np.mean(X_c, axis=0)
+    
+    # Overall mean
+    overall_mean = np.mean(X, axis=0)
+    
+    return means, overall_mean
+
+# Example
+means, mu = compute_class_means(X, y)
+print(f"Class 0 mean: {means[0]}")
+print(f"Overall mean: {mu}")
+            </div>
+            <p><strong>Purpose:</strong> These means are used to compute scatter matrices that measure spread within and between classes.</p>
+        `;
+
+        const step2Content = `
+            <div class="modal-highlight">
+                <strong>Step 2: Computing Scatter Matrices</strong>
+            </div>
+            <p><strong>Within-class scatter matrix (S_W):</strong> Measures spread within each class</p>
+            <div class="modal-code">
+def within_class_scatter(X, y, means):
+    n_features = X.shape[1]
+    S_W = np.zeros((n_features, n_features))
+    
+    for c in np.unique(y):
+        X_c = X[y == c]
+        mean_c = means[c]
+        
+        # Scatter for class c
+        S_c = (X_c - mean_c).T @ (X_c - mean_c)
+        S_W += S_c
+    
+    return S_W
+            </div>
+            <p><strong>Between-class scatter matrix (S_B):</strong> Measures spread between class means</p>
+            <div class="modal-code">
+def between_class_scatter(X, y, means, overall_mean):
+    n_features = X.shape[1]
+    S_B = np.zeros((n_features, n_features))
+    
+    for c in np.unique(y):
+        n_c = np.sum(y == c)
+        mean_diff = (means[c] - overall_mean).reshape(-1, 1)
+        S_B += n_c * (mean_diff @ mean_diff.T)
+    
+    return S_B
+            </div>
+        `;
+
+        const step3Content = `
+            <div class="modal-highlight">
+                <strong>Step 3: Solving the Eigenvalue Problem</strong>
+            </div>
+            <p>Find eigenvectors that maximize the Fisher criterion:</p>
+            <div class="modal-code">
+def solve_lda_eigenproblem(S_W, S_B):
+    # Compute S_W^(-1) * S_B
+    S_W_inv = np.linalg.inv(S_W)
+    matrix = S_W_inv @ S_B
+    
+    # Eigendecomposition
+    eigenvalues, eigenvectors = np.linalg.eig(matrix)
+    
+    # Sort by eigenvalue (descending)
+    idx = eigenvalues.argsort()[::-1]
+    eigenvalues = eigenvalues[idx]
+    eigenvectors = eigenvectors[:, idx]
+    
+    return eigenvalues, eigenvectors
+
+# Select top k eigenvectors
+def select_components(eigenvectors, n_components):
+    return eigenvectors[:, :n_components]
+            </div>
+            <p><strong>Note:</strong> The eigenvectors are the discriminant directions, and eigenvalues indicate their discriminative power.</p>
+            <p><strong>Numerical Stability:</strong> In practice, use generalized eigenvalue problem or SVD for better stability.</p>
+        `;
+
+        const step4Content = `
+            <div class="modal-highlight">
+                <strong>Step 4: Projecting Data</strong>
+            </div>
+            <p>Transform the original data to the new subspace:</p>
+            <div class="modal-code">
+def transform_data(X, W):
+    """
+    Project data onto LDA components
+    X: original data (n_samples, n_features)
+    W: projection matrix (n_features, n_components)
+    """
+    return X @ W
+
+# Complete LDA transformation
+class SimpleLDA:
+    def fit_transform(self, X, y, n_components):
+        # Step 1: Compute means
+        means, overall_mean = compute_class_means(X, y)
+        
+        # Step 2: Scatter matrices
+        S_W = within_class_scatter(X, y, means)
+        S_B = between_class_scatter(X, y, means, overall_mean)
+        
+        # Step 3: Eigendecomposition
+        eigenvalues, eigenvectors = solve_lda_eigenproblem(S_W, S_B)
+        
+        # Step 4: Project data
+        W = select_components(eigenvectors, n_components)
+        X_lda = transform_data(X, W)
+        
+        return X_lda
+            </div>
+            <p><strong>Result:</strong> Data projected to maximize class separation in lower dimensions!</p>
+        `;
+
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Global function for onclick handlers
+        function showModal(title, content) {
+            modal.show(title, content);
+        }
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 30; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 20 + 's';
+                element.style.animationDuration = (Math.random() * 15 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Initialize components
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (!modal.overlay.classList.contains('active')) {
+                if (e.key === 'ArrowLeft') {
+                    window.location.href = 'Week7_Slide128.html';
+                } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                    window.location.href = 'Week7_Slide130.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

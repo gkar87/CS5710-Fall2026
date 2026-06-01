@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - DBSCAN Parameters (eps, min_samples)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .parameters-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .parameter-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            transition: transform 0.3s ease;
+            animation: slideInFromLeft 1s ease-out;
+        }
+
+        .parameter-card:nth-child(2) {
+            animation: slideInFromRight 1s ease-out;
+        }
+
+        .parameter-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .eps-card { border-left: 5px solid #3b82f6; }
+        .minpts-card { border-left: 5px solid #f59e0b; }
+
+        .param-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .param-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8em;
+            font-weight: bold;
+            color: white;
+        }
+
+        .eps-icon { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .minpts-icon { background: linear-gradient(135deg, #f59e0b, #d97706); }
+
+        .param-title {
+            font-size: 1.8em;
+            font-weight: 600;
+        }
+
+        .eps-card .param-title { color: #1e40af; }
+        .minpts-card .param-title { color: #92400e; }
+
+        .param-definition {
+            font-size: 1.1em;
+            line-height: 1.7;
+            color: #374151;
+            margin-bottom: 25px;
+            padding: 20px;
+            border-radius: 15px;
+        }
+
+        .eps-card .param-definition { background: rgba(59, 130, 246, 0.1); }
+        .minpts-card .param-definition { background: rgba(245, 158, 11, 0.1); }
+
+        .param-effects {
+            list-style: none;
+        }
+
+        .effect-item {
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            font-size: 0.95em;
+            color: #4b5563;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .effect-item:last-child {
+            border-bottom: none;
+        }
+
+        .interactive-demo {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.5s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+            text-align: center;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .demo-controls {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .control-label {
+            font-size: 1em;
+            font-weight: 600;
+            color: #0d9488;
+        }
+
+        .control-slider {
+            width: 200px;
+            height: 8px;
+            border-radius: 5px;
+            background: rgba(13, 148, 136, 0.2);
+            outline: none;
+            appearance: none;
+        }
+
+        .control-slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+
+        .control-value {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #134e4a;
+            background: rgba(13, 148, 136, 0.1);
+            padding: 5px 15px;
+            border-radius: 20px;
+        }
+
+        .demo-canvas {
+            width: 100%;
+            height: 400px;
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 15px;
+            border: 2px solid #14b8a6;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .demo-point {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #64748b;
+            transform: translate(-50%, -50%);
+            transition: all 0.3s ease;
+        }
+
+        .demo-point.clustered { border: 2px solid white; }
+        .demo-point.noise { background: #ef4444 !important; }
+
+        .cluster-0 { background: #ef4444 !important; }
+        .cluster-1 { background: #3b82f6 !important; }
+        .cluster-2 { background: #10b981 !important; }
+        .cluster-3 { background: #f59e0b !important; }
+        .cluster-4 { background: #8b5cf6 !important; }
+
+        .demo-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            border-left: 3px solid #14b8a6;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #0d9488;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #64748b;
+        }
+
+        .tuning-guide {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.8s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .guide-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 25px;
+        }
+
+        .guide-card {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 15px;
+            padding: 25px;
+            border-left: 4px solid #14b8a6;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .guide-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .guide-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 15px;
+        }
+
+        .guide-text {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.6;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: float 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        @media (max-width: 768px) {
+            .parameters-grid { grid-template-columns: 1fr; }
+            .guide-grid { grid-template-columns: 1fr; }
+            .demo-stats { grid-template-columns: repeat(2, 1fr); }
+            .slide-title { font-size: 2.5em; }
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+    
+    <div class="course-info">CS5710 - Week 6</div>
+    <div class="slide-number">Slide 113 of 120</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">DBSCAN Parameters (eps, min_samples)</h1>
+        
+        <div class="parameters-grid">
+            <div class="parameter-card eps-card">
+                <div class="param-header">
+                    <div class="param-icon eps-icon">ε</div>
+                    <div class="param-title">Epsilon (ε)</div>
+                </div>
+                
+                <div class="param-definition">
+                    The <strong>maximum distance</strong> between two points for them to be considered neighbors. It defines the radius of the neighborhood around each point.
+                </div>
+                
+                <ul class="param-effects">
+                    <li class="effect-item">
+                        <span>🔵</span> Too small: Many points become noise, over-fragmentation
+                    </li>
+                    <li class="effect-item">
+                        <span>🔴</span> Too large: Distinct clusters merge together
+                    </li>
+                    <li class="effect-item">
+                        <span>⚖️</span> Just right: Natural cluster boundaries preserved
+                    </li>
+                    <li class="effect-item">
+                        <span>📏</span> Units matter: Should match your data scale
+                    </li>
+                    <li class="effect-item">
+                        <span>🎯</span> K-distance graph helps find optimal value
+                    </li>
+                </ul>
+            </div>
+
+            <div class="parameter-card minpts-card">
+                <div class="param-header">
+                    <div class="param-icon minpts-icon">M</div>
+                    <div class="param-title">Min Samples</div>
+                </div>
+                
+                <div class="param-definition">
+                    The <strong>minimum number of points</strong> required in a neighborhood (including the center point) for a point to be classified as a core point.
+                </div>
+                
+                <ul class="param-effects">
+                    <li class="effect-item">
+                        <span>🔽</span> Too small: More noise classified as clusters
+                    </li>
+                    <li class="effect-item">
+                        <span>🔼</span> Too large: Smaller clusters become noise
+                    </li>
+                    <li class="effect-item">
+                        <span>📊</span> Rule of thumb: 2 × dimensionality
+                    </li>
+                    <li class="effect-item">
+                        <span>🎲</span> Higher dimensions need higher min_samples
+                    </li>
+                    <li class="effect-item">
+                        <span>⚡</span> Minimum value should be 3 for meaningful clusters
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="interactive-demo">
+            <h2 class="section-title">🎮 Interactive Parameter Tuning</h2>
+            
+            <div class="demo-controls">
+                <div class="control-group">
+                    <label class="control-label">Epsilon (ε)</label>
+                    <input type="range" class="control-slider" id="epsSlider" min="5" max="50" value="20">
+                    <div class="control-value" id="epsValue">20</div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">Min Samples</label>
+                    <input type="range" class="control-slider" id="minPtsSlider" min="2" max="10" value="4">
+                    <div class="control-value" id="minPtsValue">4</div>
+                </div>
+            </div>
+            
+            <div class="demo-canvas" id="demoCanvas"></div>
+            
+            <div class="demo-stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalPoints">50</div>
+                    <div class="stat-label">Total Points</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="clustersFound">0</div>
+                    <div class="stat-label">Clusters</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="noisePoints">0</div>
+                    <div class="stat-label">Noise Points</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="clusteringAccuracy">0%</div>
+                    <div class="stat-label">Quality Score</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tuning-guide">
+            <h2 class="section-title">🎯 Parameter Tuning Guidelines</h2>
+            
+            <div class="guide-grid">
+                <div class="guide-card">
+                    <div class="guide-title">K-Distance Graph Method</div>
+                    <div class="guide-text">
+                        Plot the distance to the k-th nearest neighbor for each point (sorted). The "elbow" or steep change indicates optimal ε. Use k = min_samples - 1.
+                    </div>
+                </div>
+                
+                <div class="guide-card">
+                    <div class="guide-title">Domain Knowledge Approach</div>
+                    <div class="guide-text">
+                        Use your understanding of the data. If clustering cities, ε might be geographical distance. For customer data, consider meaningful business metrics.
+                    </div>
+                </div>
+                
+                <div class="guide-card">
+                    <div class="guide-title">Grid Search Validation</div>
+                    <div class="guide-text">
+                        Try multiple parameter combinations and use silhouette score or other clustering metrics to evaluate quality. Cross-validate results.
+                    </div>
+                </div>
+                
+                <div class="guide-card">
+                    <div class="guide-title">Dimensionality Considerations</div>
+                    <div class="guide-text">
+                        Higher dimensions require larger min_samples (rule: 2×D) and careful ε selection due to curse of dimensionality. Consider dimensionality reduction first.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week6_Slide112.html" class="nav-btn">← Previous</a>
+        <a href="Week6_Slide114.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // DBSCAN Parameter Demo
+        class DBSCANDemo {
+            constructor() {
+                this.canvas = document.getElementById('demoCanvas');
+                this.epsSlider = document.getElementById('epsSlider');
+                this.minPtsSlider = document.getElementById('minPtsSlider');
+                this.epsValue = document.getElementById('epsValue');
+                this.minPtsValue = document.getElementById('minPtsValue');
+                
+                this.points = [];
+                this.generateRandomData();
+                this.setupEventListeners();
+                this.runClustering();
+            }
+            
+            setupEventListeners() {
+                this.epsSlider.addEventListener('input', () => {
+                    this.epsValue.textContent = this.epsSlider.value;
+                    this.runClustering();
+                });
+                
+                this.minPtsSlider.addEventListener('input', () => {
+                    this.minPtsValue.textContent = this.minPtsSlider.value;
+                    this.runClustering();
+                });
+            }
+            
+            generateRandomData() {
+                this.points = [];
+                this.canvas.innerHTML = '';
+                
+                // Generate clustered data
+                const clusters = [
+                    { center: [25, 30], points: 15 },
+                    { center: [75, 25], points: 12 },
+                    { center: [60, 70], points: 10 },
+                    { center: [20, 80], points: 8 }
+                ];
+                
+                clusters.forEach((cluster, clusterIndex) => {
+                    for (let i = 0; i < cluster.points; i++) {
+                        const angle = Math.random() * 2 * Math.PI;
+                        const radius = Math.random() * 80 + 20;
+                        const x = cluster.center[0] + Math.cos(angle) * radius;
+                        const y = cluster.center[1] + Math.sin(angle) * radius;
+                        
+                        if (x >= 5 && x <= 95 && y >= 5 && y <= 95) {
+                            this.points.push({ x, y, trueCluster: clusterIndex });
+                        }
+                    }
+                });
+                
+                // Add some noise points
+                for (let i = 0; i < 5; i++) {
+                    this.points.push({
+                        x: Math.random() * 90 + 5,
+                        y: Math.random() * 90 + 5,
+                        trueCluster: -1
+                    });
+                }
+                
+                // Create DOM elements
+                this.points.forEach((point, index) => {
+                    const element = document.createElement('div');
+                    element.className = 'demo-point';
+                    element.style.left = point.x + '%';
+                    element.style.top = point.y + '%';
+                    this.canvas.appendChild(element);
+                    point.element = element;
+                    point.index = index;
+                });
+            }
+            
+            runClustering() {
+                const eps = parseFloat(this.epsSlider.value);
+                const minPts = parseInt(this.minPtsSlider.value);
+                
+                // Reset all points
+                this.points.forEach(point => {
+                    point.cluster = -1;
+                    point.visited = false;
+                    point.isCore = false;
+                    point.element.className = 'demo-point';
+                });
+                
+                let clusterIndex = 0;
+                
+                // DBSCAN algorithm
+                this.points.forEach(point => {
+                    if (point.visited) return;
+                    point.visited = true;
+                    
+                    const neighbors = this.getNeighbors(point, eps);
+                    
+                    if (neighbors.length >= minPts) {
+                        // Core point - start new cluster
+                        point.isCore = true;
+                        this.expandCluster(point, neighbors, clusterIndex, eps, minPts);
+                        clusterIndex++;
+                    }
+                });
+                
+                // Update visualization
+                this.updateVisualization();
+                this.updateStats(clusterIndex);
+            }
+            
+            getNeighbors(point, eps) {
+                const neighbors = [];
+                const canvasRect = this.canvas.getBoundingClientRect();
+                const epsPixels = (eps / 100) * Math.min(canvasRect.width, canvasRect.height);
+                
+                this.points.forEach(other => {
+                    const dx = (point.x - other.x) * canvasRect.width / 100;
+                    const dy = (point.y - other.y) * canvasRect.height / 100;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance <= epsPixels) {
+                        neighbors.push(other);
+                    }
+                });
+                
+                return neighbors;
+            }
+            
+            expandCluster(point, neighbors, clusterIndex, eps, minPts) {
+                point.cluster = clusterIndex;
+                
+                for (let i = 0; i < neighbors.length; i++) {
+                    const neighbor = neighbors[i];
+                    
+                    if (!neighbor.visited) {
+                        neighbor.visited = true;
+                        const neighborNeighbors = this.getNeighbors(neighbor, eps);
+                        
+                        if (neighborNeighbors.length >= minPts) {
+                            neighbor.isCore = true;
+                            neighbors.push(...neighborNeighbors.filter(n => !neighbors.includes(n)));
+                        }
+                    }
+                    
+                    if (neighbor.cluster === -1) {
+                        neighbor.cluster = clusterIndex;
+                    }
+                }
+            }
+            
+            updateVisualization() {
+                this.points.forEach(point => {
+                    if (point.cluster === -1) {
+                        point.element.className = 'demo-point noise';
+                    } else {
+                        point.element.className = `demo-point clustered cluster-${point.cluster % 5}`;
+                    }
+                });
+            }
+            
+            updateStats(numClusters) {
+                const noiseCount = this.points.filter(p => p.cluster === -1).length;
+                const clusteredPoints = this.points.length - noiseCount;
+                
+                // Calculate quality score based on how well it matches true clusters
+                let correctAssignments = 0;
+                this.points.forEach(point => {
+                    if (point.trueCluster === -1 && point.cluster === -1) {
+                        correctAssignments++; // Correctly identified noise
+                    } else if (point.trueCluster !== -1 && point.cluster !== -1) {
+                        correctAssignments++; // Correctly clustered (simplified)
+                    }
+                });
+                
+                const quality = Math.round((correctAssignments / this.points.length) * 100);
+                
+                document.getElementById('totalPoints').textContent = this.points.length;
+                document.getElementById('clustersFound').textContent = numClusters;
+                document.getElementById('noisePoints').textContent = noiseCount;
+                document.getElementById('clusteringAccuracy').textContent = quality + '%';
+            }
+        }
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Interactive parameter cards
+        document.querySelectorAll('.parameter-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const isEps = this.classList.contains('eps-card');
+                
+                const title = isEps ? 'Epsilon (ε) Parameter Details' : 'Min Samples Parameter Details';
+                const content = isEps ? 
+                    `<p><strong>Mathematical Role:</strong> ε defines the maximum distance for neighborhood queries: N_ε(p) = {q : distance(p,q) ≤ ε}</p>
+                     <p><strong>Choosing ε:</strong> Use k-distance graph where k = minPts-1. Look for the "elbow" point where distances increase rapidly.</p>
+                     <p><strong>Common Mistakes:</strong> Using the same ε for different data scales, not considering feature normalization, ignoring domain-specific distance metrics.</p>
+                     <p><strong>Advanced Tips:</strong> Consider using different distance metrics (Manhattan, Cosine) based on your data type and domain.</p>` :
+                    `<p><strong>Mathematical Role:</strong> Defines density threshold: |N_ε(p)| ≥ minPts for core points. Controls cluster granularity and noise sensitivity.</p>
+                     <p><strong>Choosing minPts:</strong> Rule of thumb: 2×dimensionality. For 2D data, try 4-6. For high dimensions, increase proportionally.</p>
+                     <p><strong>Trade-offs:</strong> Lower values create more small clusters but more noise. Higher values merge small clusters but may break up legitimate clusters.</p>
+                     <p><strong>Practical Advice:</strong> Start with 4-5, then adjust based on domain knowledge and clustering quality metrics.</p>`;
+                
+                modal.show(title, `<div class="modal-highlight">${content}</div>`);
+            });
+        });
+
+        // Interactive guide cards
+        document.querySelectorAll('.guide-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('.guide-title').textContent;
+                
+                const details = {
+                    'K-Distance Graph Method': 'Plot k-distances in ascending order. The optimal ε is at the "knee" where the curve changes slope dramatically. This indicates the transition from dense regions to sparse regions.',
+                    'Domain Knowledge Approach': 'Consider what constitutes "closeness" in your domain. For geographical data, use actual distances. For customer data, consider business-relevant similarity measures.',
+                    'Grid Search Validation': 'Test parameter combinations systematically. Use internal validation metrics like silhouette coefficient, or external metrics if you have ground truth labels.',
+                    'Dimensionality Considerations': 'High-dimensional spaces suffer from the curse of dimensionality. Distances become less meaningful. Consider PCA or t-SNE for dimensionality reduction before clustering.'
+                };
+                
+                modal.show(title + ' - Detailed Guide', `
+                    <div class="modal-highlight">
+                        ${details[title]}
+                    </div>
+                `);
+            });
+        });
+
+        // Initialize
+        const demo = new DBSCANDemo();
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week6_Slide112.html';
+            } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                if (!modal.overlay.classList.contains('active')) {
+                    window.location.href = 'Week6_Slide114.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

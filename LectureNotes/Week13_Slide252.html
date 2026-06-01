@@ -1,0 +1,2575 @@
+<!DOCTYPE html>
+<!-- Updated by OpenCode on 2026-05-02 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS5710 - Time Series Forecasting</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #134e4a;
+            overflow-x: hidden;
+        }
+
+        .slide-container {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #0d9488;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: slideInFromTop 1.2s ease-out;
+            font-weight: 700;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .methods-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromLeft 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .applications-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromRight 1s ease-out 0.3s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            border-radius: 2px;
+        }
+
+        .method-card {
+            padding: 25px;
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            border-radius: 15px;
+            border-left: 4px solid #0d9488;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .method-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.15);
+        }
+
+        .method-title {
+            font-weight: 600;
+            color: #0d9488;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .method-desc {
+            font-size: 0.95em;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .app-grid {
+            display: grid;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .app-card {
+            padding: 20px;
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border-radius: 12px;
+            border: 2px solid #14b8a6;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .app-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .app-icon {
+            font-size: 1.8em;
+            margin-bottom: 10px;
+        }
+
+        .app-title {
+            font-size: 1em;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #0d9488;
+        }
+
+        .app-desc {
+            font-size: 0.85em;
+            color: #475569;
+            line-height: 1.4;
+        }
+
+        .demo-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+            border: 1px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .chart-container {
+            background: #1e293b;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            min-height: 300px;
+            position: relative;
+        }
+
+        .time-series-chart {
+            width: 100%;
+            height: 250px;
+            position: relative;
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .chart-line {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(90deg, #5eead4, #14b8a6);
+            border-radius: 1px;
+        }
+
+        .forecast-line {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(90deg, #f59e0b, #ef4444);
+            border-radius: 1px;
+            opacity: 0.8;
+        }
+
+        .control-panel {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .demo-button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border: none;
+            border-radius: 20px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px;
+            font-size: 0.9em;
+        }
+
+        .demo-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(13, 148, 136, 0.3);
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: mlFloat 18s linear infinite;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            border: 2px solid rgba(13, 148, 136, 0.2);
+            border-radius: 30px;
+            color: #134e4a;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4);
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        .course-info {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,253,250,0.9));
+            padding: 12px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            color: #134e4a;
+            font-weight: 600;
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(60px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes mlFloat {
+            0% { transform: translateY(100vh) translateX(-30px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) translateX(120px) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .slide-title { font-size: 2.5em; }
+            .control-panel { grid-template-columns: 1fr; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #0d9488;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+
+        .modal-highlight {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #0d9488;
+        }
+
+        .modal-code {
+            background: #1e293b;
+            color: #5eead4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+    </style>
+  <script src="navigation.js"></script>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Title</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-content" id="modalContent">Content</div>
+        </div>
+    </div>
+
+    <div class="course-info">CS5710 - Week 13</div>
+    <div class="slide-number">Slide 252 of 260</div>
+    
+    <div class="slide-container">
+        <h1 class="slide-title">📈 Time Series Forecasting</h1>
+        
+        <div class="content-layout">
+            <div class="methods-section">
+                <h2 class="section-title">🔧 Forecasting Methods</h2>
+                
+                <div class="method-card" data-method="arima" onclick="showModal('Click for details', '<p>Details about this method.</p>')">
+                    <div class="method-title">📊 ARIMA Models</div>
+                    <div class="method-desc">AutoRegressive Integrated Moving Average for stationary time series</div>
+                </div>
+                
+                <div class="method-card" data-method="lstm" onclick="showModal('Click for details', '<p>Details about this method.</p>')">
+                    <div class="method-title">🧠 LSTM Networks</div>
+                    <div class="method-desc">Long Short-Term Memory networks for sequential data prediction</div>
+                </div>
+                
+                <div class="method-card" data-method="prophet" onclick="showModal('Click for details', '<p>Details about this method.</p>')">
+                    <div class="method-title">🔮 Prophet</div>
+                    <div class="method-desc">Facebook's tool for forecasting with seasonal components</div>
+                </div>
+                
+                <div class="method-card" data-method="exponential" onclick="showModal('Click for details', '<p>Details about this method.</p>')">
+                    <div class="method-title">📉 Exponential Smoothing</div>
+                    <div class="method-desc">Weighted averages with exponentially decreasing weights</div>
+                </div>
+                
+                <div class="method-card" data-method="sarima" onclick="showModal('Click for details', '<p>Details about this method.</p>')">
+                    <div class="method-title">🔄 SARIMA</div>
+                    <div class="method-desc">Seasonal ARIMA for data with strong seasonal patterns</div>
+                </div>
+                
+                <div class="method-card" data-method="transformer" onclick="showModal('Click for details', '<p>Details about this method.</p>')">
+                    <div class="method-title">🎯 Transformer Models</div>
+                    <div class="method-desc">Attention-based models for long-range dependencies</div>
+                </div>
+            </div>
+
+            <div class="applications-section">
+                <h2 class="section-title">🚀 Applications</h2>
+                
+                <div class="app-grid">
+                    <div class="app-card" data-app="finance">
+                        <div class="app-icon">💰</div>
+                        <div class="app-title">Financial Markets</div>
+                        <div class="app-desc">Stock prices, crypto, trading algorithms</div>
+                    </div>
+                    
+                    <div class="app-card" data-app="demand">
+                        <div class="app-icon">📦</div>
+                        <div class="app-title">Demand Forecasting</div>
+                        <div class="app-desc">Inventory, supply chain optimization</div>
+                    </div>
+                    
+                    <div class="app-card" data-app="energy">
+                        <div class="app-icon">⚡</div>
+                        <div class="app-title">Energy Planning</div>
+                        <div class="app-desc">Power grid, renewable energy prediction</div>
+                    </div>
+                    
+                    <div class="app-card" data-app="weather">
+                        <div class="app-icon">🌤️</div>
+                        <div class="app-title">Weather & Climate</div>
+                        <div class="app-desc">Temperature, rainfall, climate modeling</div>
+                    </div>
+                    
+                    <div class="app-card" data-app="health">
+                        <div class="app-icon">🏥</div>
+                        <div class="app-title">Healthcare</div>
+                        <div class="app-desc">Disease spread, patient monitoring</div>
+                    </div>
+                    
+                    <div class="app-card" data-app="traffic">
+                        <div class="app-icon">🚗</div>
+                        <div class="app-title">Traffic Prediction</div>
+                        <div class="app-desc">Urban planning, route optimization</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2 class="section-title">📊 Interactive Forecasting Demo</h2>
+            
+            <div style="text-align: center; margin-bottom: 20px;">
+                <strong style="color: #0d9488; font-size: 1.2em;">
+                    Generate time series data and experiment with different forecasting models
+                </strong>
+            </div>
+            
+            <div class="chart-container">
+                <div class="time-series-chart" id="timeSeriesChart">
+                    <!-- Chart will be drawn here -->
+                </div>
+            </div>
+            
+            <div class="control-panel">
+                <div>
+                    <button class="demo-button" id="generateData">📊 Generate Data</button>
+                    <button class="demo-button" id="addNoise">🔀 Add Noise</button>
+                </div>
+                
+                <div>
+                    <button class="demo-button" id="forecastARIMA">📈 ARIMA Forecast</button>
+                    <button class="demo-button" id="forecastLSTM">🧠 LSTM Forecast</button>
+                </div>
+                
+                <div>
+                    <button class="demo-button" id="forecastProphet">🔮 Prophet Forecast</button>
+                    <button class="demo-button" id="clearChart">🧹 Clear Chart</button>
+                </div>
+            </div>
+            
+            <div style="margin-top: 20px; text-align: center;">
+                <div style="background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%); padding: 15px; border-radius: 10px; display: inline-block;">
+                    <span style="color: #5eead4;">🟢 Historical Data</span> &nbsp;&nbsp;
+                    <span style="color: #f59e0b;">🟡 Forecast</span> &nbsp;&nbsp;
+                    <span style="color: #ef4444;">🔴 Prediction Interval</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <a href="Week13_Slide251.html" class="nav-btn">← Previous</a>
+        <a href="Week13_Slide253.html" class="nav-btn">Next →</a>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; left: 30px; color: #64748b; font-size: 0.9em;">
+        <strong>Prepared by Dr. Gorkem Kar</strong>
+    </div>
+
+    <script>
+        // Modal System
+        class ModalSystem {
+            constructor() {
+                this.overlay = document.getElementById('modalOverlay');
+                this.title = document.getElementById('modalTitle');
+                this.content = document.getElementById('modalContent');
+                this.closeBtn = document.getElementById('modalClose');
+                
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            }
+            
+            show(title, content) {
+                this.title.textContent = title;
+                this.content.innerHTML = content;
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            close() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        const modal = new ModalSystem();
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Time Series Forecasting Demo
+        class TimeSeriesDemo {
+            constructor() {
+                this.chartElement = document.getElementById('timeSeriesChart');
+                this.data = [];
+                this.forecast = [];
+                this.setupControls();
+                this.generateInitialData();
+            }
+            
+            setupControls() {
+                document.getElementById('generateData').addEventListener('click', () => this.generateData());
+                document.getElementById('addNoise').addEventListener('click', () => this.addNoise());
+                document.getElementById('forecastARIMA').addEventListener('click', () => this.forecastARIMA());
+                document.getElementById('forecastLSTM').addEventListener('click', () => this.forecastLSTM());
+                document.getElementById('forecastProphet').addEventListener('click', () => this.forecastProphet());
+                document.getElementById('clearChart').addEventListener('click', () => this.clearChart());
+            }
+            
+            generateInitialData() {
+                this.generateData();
+            }
+            
+            generateData() {
+                this.clearChart();
+                this.data = [];
+                
+                // Generate synthetic time series with trend and seasonality
+                for (let i = 0; i < 100; i++) {
+                    const trend = i * 0.5;
+                    const seasonal = 10 * Math.sin(i * 0.2) + 5 * Math.cos(i * 0.1);
+                    const noise = (Math.random() - 0.5) * 2;
+                    const value = 50 + trend + seasonal + noise;
+                    this.data.push({x: i, y: value});
+                }
+                
+                this.drawChart();
+            }
+            
+            addNoise() {
+                this.data = this.data.map(point => ({
+                    x: point.x,
+                    y: point.y + (Math.random() - 0.5) * 10
+                }));
+                this.drawChart();
+            }
+            
+            drawChart() {
+                this.chartElement.innerHTML = '';
+                
+                if (this.data.length === 0) return;
+                
+                const maxX = Math.max(...this.data.map(p => p.x));
+                const maxY = Math.max(...this.data.map(p => p.y));
+                const minY = Math.min(...this.data.map(p => p.y));
+                
+                // Draw data points and lines
+                for (let i = 0; i < this.data.length - 1; i++) {
+                    const current = this.data[i];
+                    const next = this.data[i + 1];
+                    
+                    const x1 = (current.x / maxX) * 100;
+                    const y1 = ((maxY - current.y) / (maxY - minY)) * 100;
+                    const x2 = (next.x / maxX) * 100;
+                    const y2 = ((maxY - next.y) / (maxY - minY)) * 100;
+                    
+                    const line = document.createElement('div');
+                    line.className = 'chart-line';
+                    const length = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+                    const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+                    
+                    line.style.left = x1 + '%';
+                    line.style.top = y1 + '%';
+                    line.style.width = length + '%';
+                    line.style.transform = `rotate(${angle}deg)`;
+                    line.style.transformOrigin = '0 50%';
+                    
+                    this.chartElement.appendChild(line);
+                }
+                
+                // Draw forecast if available
+                if (this.forecast.length > 0) {
+                    for (let i = 0; i < this.forecast.length - 1; i++) {
+                        const current = this.forecast[i];
+                        const next = this.forecast[i + 1];
+                        
+                        const x1 = (current.x / (maxX + this.forecast.length)) * 100;
+                        const y1 = ((maxY - current.y) / (maxY - minY)) * 100;
+                        const x2 = (next.x / (maxX + this.forecast.length)) * 100;
+                        const y2 = ((maxY - next.y) / (maxY - minY)) * 100;
+                        
+                        const line = document.createElement('div');
+                        line.className = 'forecast-line';
+                        const length = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+                        const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+                        
+                        line.style.left = x1 + '%';
+                        line.style.top = y1 + '%';
+                        line.style.width = length + '%';
+                        line.style.transform = `rotate(${angle}deg)`;
+                        line.style.transformOrigin = '0 50%';
+                        
+                        this.chartElement.appendChild(line);
+                    }
+                }
+            }
+            
+            forecastARIMA() {
+                this.generateForecast('ARIMA', 'AutoRegressive Integrated Moving Average model');
+            }
+            
+            forecastLSTM() {
+                this.generateForecast('LSTM', 'Long Short-Term Memory neural network');
+            }
+            
+            forecastProphet() {
+                this.generateForecast('Prophet', 'Facebook Prophet forecasting tool');
+            }
+            
+            generateForecast(method, description) {
+                if (this.data.length === 0) {
+                    this.generateData();
+                }
+                
+                // Simulate forecast generation
+                this.forecast = [];
+                const lastPoint = this.data[this.data.length - 1];
+                const trend = (this.data[this.data.length - 1].y - this.data[this.data.length - 10].y) / 10;
+                
+                for (let i = 0; i < 20; i++) {
+                    const x = lastPoint.x + i + 1;
+                    const trendComponent = lastPoint.y + trend * (i + 1);
+                    const seasonal = 5 * Math.sin((x) * 0.2);
+                    const uncertainty = (Math.random() - 0.5) * (i + 1) * 0.5;
+                    const y = trendComponent + seasonal + uncertainty;
+                    
+                    this.forecast.push({x, y});
+                }
+                
+                this.drawChart();
+                
+                modal.show(`📈 ${method} Forecast Results`, `
+                    <div class="modal-highlight">
+                        <strong>Forecasting Method: ${method}</strong>
+                    </div>
+                    <p><strong>Description:</strong> ${description}</p>
+                    <p><strong>Training Data:</strong> ${this.data.length} data points</p>
+                    <p><strong>Forecast Horizon:</strong> ${this.forecast.length} periods ahead</p>
+                    
+                    <div class="modal-code">
+# ${method} Implementation
+import pandas as pd
+import numpy as np
+${this.getMethodCode(method)}
+
+# Prepare time series data
+ts = pd.Series(data, index=pd.date_range('2023-01-01', periods=${this.data.length}, freq='D'))
+
+# Fit model and generate forecast
+model = ${method}Model()
+model.fit(ts)
+forecast = model.predict(steps=${this.forecast.length})
+
+# Evaluation metrics
+mae = np.mean(np.abs(forecast - actual))
+rmse = np.sqrt(np.mean((forecast - actual)**2))
+mape = np.mean(np.abs((forecast - actual) / actual)) * 100
+
+print(f"MAE: {mae:.2f}")
+print(f"RMSE: {rmse:.2f}")
+print(f"MAPE: {mape:.1f}%")
+                    </div>
+                    
+                    <div style="margin-top: 20px;">
+                        <h4>🎯 Forecast Performance:</h4>
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            <li><strong>Mean Absolute Error:</strong> ${(Math.random() * 5 + 2).toFixed(2)}</li>
+                            <li><strong>Root Mean Square Error:</strong> ${(Math.random() * 8 + 3).toFixed(2)}</li>
+                            <li><strong>Mean Absolute Percentage Error:</strong> ${(Math.random() * 10 + 5).toFixed(1)}%</li>
+                            <li><strong>Confidence Interval:</strong> 95%</li>
+                        </ul>
+                    </div>
+                    
+                    <p><strong>💡 Model Insights:</strong> ${this.getModelInsights(method)}</p>
+                `);
+            }
+            
+            getMethodCode(method) {
+                const codes = {
+                    'ARIMA': `from statsmodels.tsa.arima.model import ARIMA
+# Auto ARIMA for automatic parameter selection
+from pmdarima import auto_arima
+
+# Find optimal parameters
+model = auto_arima(ts, seasonal=True, stepwise=True, suppress_warnings=True)
+print(f"Best model: ARIMA{model.order} x {model.seasonal_order}")
+
+# Fit ARIMA model
+arima_model = ARIMA(ts, order=model.order, seasonal_order=model.seasonal_order)`,
+                    'LSTM': `import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import LSTM, Dense, Dropout
+from sklearn.preprocessing import MinMaxScaler
+
+# Scale data
+scaler = MinMaxScaler()
+scaled_data = scaler.fit_transform(ts.values.reshape(-1, 1))
+
+# Create LSTM model
+model = Sequential([
+    LSTM(50, return_sequences=True, input_shape=(sequence_length, 1)),
+    Dropout(0.2),
+    LSTM(50, return_sequences=False),
+    Dropout(0.2),
+    Dense(25),
+    Dense(1)
+])
+
+model.compile(optimizer='adam', loss='mse')`,
+                    'Prophet': `from prophet import Prophet
+
+# Prepare Prophet data format
+df = pd.DataFrame({'ds': ts.index, 'y': ts.values})
+
+# Create and fit Prophet model
+model = Prophet(
+    daily_seasonality=True,
+    weekly_seasonality=True,
+    yearly_seasonality=True,
+    changepoint_prior_scale=0.05
+)`
+                };
+                return codes[method] || 'model = ForecastingModel()';
+            }
+            
+            getModelInsights(method) {
+                const insights = {
+                    'ARIMA': 'Model captured trend and seasonal patterns well. Residuals show minimal autocorrelation, indicating good fit.',
+                    'LSTM': 'Neural network learned complex non-linear patterns. Model shows strong performance on recent trends.',
+                    'Prophet': 'Automatic seasonality detection identified weekly and monthly patterns. Changepoints detected at data breaks.'
+                };
+                return insights[method] || 'Model performance within expected ranges for this dataset.';
+            }
+            
+            clearChart() {
+                this.chartElement.innerHTML = '';
+                this.data = [];
+                this.forecast = [];
+            }
+        }
+
+        // Method Details
+        document.querySelectorAll('.method-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const method = this.dataset.method;
+                
+                const methodDetails = {
+                    'arima': {
+                        title: '📊 ARIMA Models',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>AutoRegressive Integrated Moving Average</strong>
+                            </div>
+                            <p><strong>🔢 ARIMA(p,d,q) Components:</strong></p>
+                            <ul style="margin: 15px 0; padding-left: 20px;">
+                                <li><strong>AR(p):</strong> AutoRegressive - uses past values</li>
+                                <li><strong>I(d):</strong> Integrated - differencing for stationarity</li>
+                                <li><strong>MA(q):</strong> Moving Average - uses past forecast errors</li>
+                            </ul>
+                            <div class="modal-code">
+import pandas as pd
+from statsmodels.tsa.arima.model import ARIMA
+from statsmodels.tsa.stattools import adfuller
+
+# Check stationarity
+def check_stationarity(ts):
+    result = adfuller(ts)
+    print(f'ADF Statistic: {result[0]}')
+    print(f'p-value: {result[1]}')
+    return result[1] < 0.05  # Stationary if p < 0.05
+
+# ARIMA model fitting
+model = ARIMA(ts, order=(2, 1, 2))  # ARIMA(2,1,2)
+model_fit = model.fit()
+
+# Generate forecast
+forecast = model_fit.forecast(steps=30)
+conf_int = model_fit.get_forecast(steps=30).conf_int()
+
+# Model diagnostics
+print(model_fit.summary())
+model_fit.plot_diagnostics(figsize=(12, 8))
+                            </div>
+                            <p><strong>✅ Best for:</strong> Stationary time series, linear relationships, short-term forecasting</p>
+                            <p><strong>❌ Limitations:</strong> Assumes linearity, requires stationarity, sensitive to outliers</p>
+                        `
+                    },
+                    'lstm': {
+                        title: '🧠 LSTM Networks',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Long Short-Term Memory Networks</strong>
+                            </div>
+                            <p><strong>🧠 LSTM Architecture:</strong></p>
+                            <ul style="margin: 15px 0; padding-left: 20px;">
+                                <li><strong>Forget Gate:</strong> Decides what to forget from cell state</li>
+                                <li><strong>Input Gate:</strong> Decides what new information to store</li>
+                                <li><strong>Output Gate:</strong> Controls what parts of cell state to output</li>
+                                <li><strong>Cell State:</strong> Long-term memory component</li>
+                            </ul>
+                            <div class="modal-code">
+import numpy as np
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import LSTM, Dense, Dropout
+from sklearn.preprocessing import MinMaxScaler
+
+# Prepare data for LSTM
+def create_sequences(data, seq_length):
+    X, y = [], []
+    for i in range(len(data) - seq_length):
+        X.append(data[i:(i + seq_length)])
+        y.append(data[i + seq_length])
+    return np.array(X), np.array(y)
+
+# Scale data
+scaler = MinMaxScaler(feature_range=(0, 1))
+scaled_data = scaler.fit_transform(data.reshape(-1, 1))
+
+# Create sequences
+seq_length = 60  # Use 60 time steps to predict next value
+X, y = create_sequences(scaled_data, seq_length)
+
+# Build LSTM model
+model = Sequential([
+    LSTM(50, return_sequences=True, input_shape=(seq_length, 1)),
+    Dropout(0.2),
+    LSTM(50, return_sequences=True),
+    Dropout(0.2),
+    LSTM(50),
+    Dropout(0.2),
+    Dense(1)
+])
+
+model.compile(optimizer='adam', loss='mse', metrics=['mae'])
+
+# Train model
+history = model.fit(X, y, epochs=100, batch_size=32, validation_split=0.2)
+
+# Generate predictions
+predictions = model.predict(X_test)
+predictions = scaler.inverse_transform(predictions)
+                            </div>
+                            <p><strong>✅ Best for:</strong> Non-linear patterns, long sequences, complex dependencies</p>
+                            <p><strong>❌ Limitations:</strong> Requires large datasets, computationally expensive, black box</p>
+                        `
+                    },
+                    'prophet': {
+                        title: '🔮 Facebook Prophet',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Practical forecasting tool for business time series</strong>
+                            </div>
+                            <p><strong>🔧 Prophet Components:</strong></p>
+                            <ul style="margin: 15px 0; padding-left: 20px;">
+                                <li><strong>Trend:</strong> Non-linear growth with changepoints</li>
+                                <li><strong>Seasonality:</strong> Yearly, weekly, daily patterns</li>
+                                <li><strong>Holidays:</strong> Custom holiday effects</li>
+                                <li><strong>External Regressors:</strong> Additional predictive features</li>
+                            </ul>
+                            <div class="modal-code">
+from prophet import Prophet
+import pandas as pd
+
+# Prepare data (Prophet requires 'ds' and 'y' columns)
+df = pd.DataFrame({
+    'ds': pd.date_range('2020-01-01', periods=len(data), freq='D'),
+    'y': data
+})
+
+# Create Prophet model with custom settings
+model = Prophet(
+    growth='linear',              # 'linear' or 'logistic'
+    daily_seasonality=True,       # Model daily patterns
+    weekly_seasonality=True,      # Model weekly patterns
+    yearly_seasonality=True,      # Model yearly patterns
+    seasonality_mode='additive', # 'additive' or 'multiplicative'
+    changepoint_prior_scale=0.05, # Flexibility of trend changes
+    seasonality_prior_scale=10.0   # Flexibility of seasonality
+)
+
+# Add custom seasonalities
+model.add_seasonality(
+    name='monthly',
+    period=30.5,
+    fourier_order=5
+)
+
+# Add holidays
+holidays = pd.DataFrame({
+    'holiday': 'christmas',
+    'ds': pd.to_datetime(['2020-12-25', '2021-12-25', '2022-12-25']),
+    'lower_window': 0,
+    'upper_window': 1,
+})
+model.add_holidays(holidays)
+
+# Fit model
+model.fit(df)
+
+# Create future dataframe and predict
+future = model.make_future_dataframe(periods=365)  # 1 year ahead
+forecast = model.predict(future)
+
+# Visualize results
+fig1 = model.plot(forecast)
+fig2 = model.plot_components(forecast)
+
+# Cross-validation
+from prophet.diagnostics import cross_validation, performance_metrics
+cv_results = cross_validation(model, initial='730 days', period='180 days', horizon='365 days')
+df_p = performance_metrics(cv_results)
+                            </div>
+                            <p><strong>✅ Best for:</strong> Business forecasting, seasonal data, interpretable results, handling missing data</p>
+                            <p><strong>❌ Limitations:</strong> Less flexible than ML models, assumes additive/multiplicative seasonality</p>
+                        `
+                    },
+                    'exponential': {
+                        title: '📉 Exponential Smoothing',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Weighted averages with exponentially decreasing weights</strong>
+                            </div>
+                            <p><strong>📈 Smoothing Methods:</strong></p>
+                            <ul style="margin: 15px 0; padding-left: 20px;">
+                                <li><strong>Simple (SES):</strong> Only level component</li>
+                                <li><strong>Double (Holt):</strong> Level + trend</li>
+                                <li><strong>Triple (Holt-Winters):</strong> Level + trend + seasonality</li>
+                            </ul>
+                            <div class="modal-code">
+from statsmodels.tsa.holtwinters import ExponentialSmoothing
+import numpy as np
+
+# Simple Exponential Smoothing
+def simple_exponential_smoothing(data, alpha):
+    result = [data[0]]  # First prediction is first observation
+    for i in range(1, len(data)):
+        result.append(alpha * data[i] + (1 - alpha) * result[i-1])
+    return result
+
+# Holt's Linear Trend
+class HoltsMethod:
+    def __init__(self, alpha=0.3, beta=0.3):
+        self.alpha = alpha  # Level smoothing
+        self.beta = beta    # Trend smoothing
+    
+    def fit_predict(self, data, h=1):
+        level = data[0]
+        trend = data[1] - data[0]
+        predictions = []
+        
+        for i in range(1, len(data)):
+            level_prev = level
+            level = self.alpha * data[i] + (1 - self.alpha) * (level + trend)
+            trend = self.beta * (level - level_prev) + (1 - self.beta) * trend
+            predictions.append(level + trend)
+        
+        # Forecast h steps ahead
+        forecast = []
+        for i in range(h):
+            forecast.append(level + (i + 1) * trend)
+        
+        return predictions, forecast
+
+# Holt-Winters Seasonal
+model = ExponentialSmoothing(
+    data,
+    trend='add',          # 'add', 'mul', or None
+    seasonal='add',       # 'add', 'mul', or None
+    seasonal_periods=12   # Length of seasonal cycle
+)
+
+model_fit = model.fit(
+    smoothing_level=0.3,     # Alpha
+    smoothing_trend=0.2,     # Beta
+    smoothing_seasonal=0.1   # Gamma
+)
+
+# Generate forecast
+forecast = model_fit.forecast(steps=24)
+conf_int = model_fit.get_forecast(steps=24).conf_int()
+
+# Model parameters
+print(f"Level smoothing (alpha): {model_fit.params['smoothing_level']:.3f}")
+print(f"Trend smoothing (beta): {model_fit.params['smoothing_trend']:.3f}")
+print(f"Seasonal smoothing (gamma): {model_fit.params['smoothing_seasonal']:.3f}")
+                            </div>
+                            <p><strong>✅ Best for:</strong> Short-term forecasting, simple implementation, real-time updates</p>
+                            <p><strong>❌ Limitations:</strong> Limited to exponential patterns, poor for complex seasonality</p>
+                        `
+                    },
+                    'sarima': {
+                        title: '🔄 SARIMA Models',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Seasonal AutoRegressive Integrated Moving Average</strong>
+                            </div>
+                            <p><strong>🔢 SARIMA(p,d,q)(P,D,Q)s Components:</strong></p>
+                            <ul style="margin: 15px 0; padding-left: 20px;">
+                                <li><strong>(p,d,q):</strong> Non-seasonal AR, differencing, MA</li>
+                                <li><strong>(P,D,Q):</strong> Seasonal AR, differencing, MA</li>
+                                <li><strong>s:</strong> Length of seasonal cycle</li>
+                            </ul>
+                            <div class="modal-code">
+from statsmodels.tsa.statespace.sarimax import SARIMAX
+from statsmodels.tsa.seasonal import seasonal_decompose
+import itertools
+
+# Seasonal decomposition
+decomposition = seasonal_decompose(ts, model='additive', period=12)
+trend = decomposition.trend
+seasonal = decomposition.seasonal
+residual = decomposition.resid
+
+# Grid search for optimal SARIMA parameters
+def sarima_grid_search(ts, seasonal_period):
+    p = d = q = range(0, 3)
+    P = D = Q = range(0, 2)
+    
+    # Generate all combinations
+    pdq = list(itertools.product(p, d, q))
+    seasonal_pdq = list(itertools.product(P, D, Q, [seasonal_period]))
+    
+    best_aic = float('inf')
+    best_params = None
+    
+    for param in pdq:
+        for param_seasonal in seasonal_pdq:
+            try:
+                model = SARIMAX(ts,
+                               order=param,
+                               seasonal_order=param_seasonal,
+                               enforce_stationarity=False,
+                               enforce_invertibility=False)
+                
+                results = model.fit(disp=False)
+                
+                if results.aic < best_aic:
+                    best_aic = results.aic
+                    best_params = (param, param_seasonal)
+                    
+            except:
+                continue
+    
+    return best_params, best_aic
+
+# Find best parameters
+best_params, best_aic = sarima_grid_search(ts, seasonal_period=12)
+print(f"Best SARIMA{best_params[0]} x {best_params[1]} - AIC: {best_aic:.2f}")
+
+# Fit best model
+model = SARIMAX(ts,
+               order=best_params[0],
+               seasonal_order=best_params[1],
+               enforce_stationarity=False,
+               enforce_invertibility=False)
+
+model_fit = model.fit(disp=False)
+
+# Generate forecast
+forecast = model_fit.get_forecast(steps=24)
+forecast_mean = forecast.predicted_mean
+forecast_ci = forecast.conf_int()
+
+# Model diagnostics
+print(model_fit.summary())
+model_fit.plot_diagnostics(figsize=(15, 12))
+                            </div>
+                            <p><strong>✅ Best for:</strong> Strong seasonal patterns, quarterly/monthly data, economic time series</p>
+                            <p><strong>❌ Limitations:</strong> Parameter selection complexity, assumes linear seasonality</p>
+                        `
+                    },
+                    'transformer': {
+                        title: '🎯 Transformer Models',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Attention-based models for time series forecasting</strong>
+                            </div>
+                            <p><strong>🔍 Transformer Advantages:</strong></p>
+                            <ul style="margin: 15px 0; padding-left: 20px;">
+                                <li><strong>Self-Attention:</strong> Captures long-range dependencies</li>
+                                <li><strong>Parallel Processing:</strong> Faster training than RNNs</li>
+                                <li><strong>Positional Encoding:</strong> Understands sequence order</li>
+                                <li><strong>Multi-Head Attention:</strong> Multiple attention patterns</li>
+                            </ul>
+                            <div class="modal-code">
+import torch
+import torch.nn as nn
+import numpy as np
+from torch.nn import TransformerEncoder, TransformerEncoderLayer
+
+class TimeSeriesTransformer(nn.Module):
+    def __init__(self, feature_size=1, num_layers=6, dropout=0.1, nhead=8):
+        super(TimeSeriesTransformer, self).__init__()
+        self.model_type = 'Transformer'
+        self.src_mask = None
+        self.pos_encoder = PositionalEncoding(feature_size, dropout)
+        
+        encoder_layers = TransformerEncoderLayer(
+            d_model=feature_size,
+            nhead=nhead,
+            dropout=dropout,
+            batch_first=True
+        )
+        
+        self.transformer_encoder = TransformerEncoder(encoder_layers, num_layers)
+        self.decoder = nn.Linear(feature_size, 1)
+        
+    def forward(self, src):
+        src = self.pos_encoder(src)
+        output = self.transformer_encoder(src, self.src_mask)
+        output = self.decoder(output[:, -1, :])  # Use last time step
+        return output
+
+class PositionalEncoding(nn.Module):
+    def __init__(self, d_model, dropout=0.1, max_len=5000):
+        super(PositionalEncoding, self).__init__()
+        self.dropout = nn.Dropout(p=dropout)
+        
+        pe = torch.zeros(max_len, d_model)
+        position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
+        
+        div_term = torch.exp(torch.arange(0, d_model, 2).float() * 
+                           (-np.log(10000.0) / d_model))
+        
+        pe[:, 0::2] = torch.sin(position * div_term)
+        pe[:, 1::2] = torch.cos(position * div_term)
+        pe = pe.unsqueeze(0).transpose(0, 1)
+        
+        self.register_buffer('pe', pe)
+    
+    def forward(self, x):
+        x = x + self.pe[:x.size(0), :]
+        return self.dropout(x)
+
+# Training the model
+model = TimeSeriesTransformer(feature_size=64, num_layers=6, nhead=8)
+criterion = nn.MSELoss()
+optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+
+# Training loop
+for epoch in range(num_epochs):
+    for batch_idx, (data, target) in enumerate(train_loader):
+        optimizer.zero_grad()
+        output = model(data)
+        loss = criterion(output, target)
+        loss.backward()
+        optimizer.step()
+
+# Inference
+model.eval()
+with torch.no_grad():
+    predictions = model(test_data)
+    predictions = scaler.inverse_transform(predictions.numpy())
+
+# Attention Visualization
+def visualize_attention(model, data):
+    model.eval()
+    with torch.no_grad():
+        # Extract attention weights from transformer layers
+        attention_weights = []
+        for layer in model.transformer_encoder.layers:
+            # Get attention weights from multi-head attention
+            attn_output, attn_weights = layer.self_attn(data, data, data)
+            attention_weights.append(attn_weights)
+    return attention_weights
+                            </div>
+                            <p><strong>✅ Best for:</strong> Long sequences, complex patterns, multivariate forecasting</p>
+                            <p><strong>❌ Limitations:</strong> Computationally intensive, requires large datasets, complex architecture</p>
+                        `
+                    }
+                };
+                
+                const details = methodDetails[method];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        // Application Details
+        document.querySelectorAll('.app-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const app = this.dataset.app;
+                
+                const appDetails = {
+                    'finance': {
+                        title: '💰 Financial Market Forecasting',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Predicting stock prices, crypto, and market trends</strong>
+                            </div>
+                            <p><strong>📈 Applications:</strong></p>
+                            <ul style="margin: 15px 0; padding-left: 20px;">
+                                <li>Stock price prediction and algorithmic trading</li>
+                                <li>Cryptocurrency volatility forecasting</li>
+                                <li>Risk management and portfolio optimization</li>
+                                <li>Market sentiment analysis and trend detection</li>
+                            </ul>
+                            <div class="modal-code">
+# Financial time series forecasting
+import yfinance as yf
+import pandas as pd
+from prophet import Prophet
+
+# Download stock data
+ticker = "AAPL"
+stock_data = yf.download(ticker, start="2020-01-01", end="2023-12-31")
+
+# Prepare data for Prophet
+df = pd.DataFrame({
+    'ds': stock_data.index,
+    'y': stock_data['Close']
+})
+
+# Add technical indicators as regressors
+stock_data['SMA_20'] = stock_data['Close'].rolling(20).mean()
+stock_data['RSI'] = calculate_rsi(stock_data['Close'])
+stock_data['MACD'] = calculate_macd(stock_data['Close'])
+
+df['sma_20'] = stock_data['SMA_20']
+df['rsi'] = stock_data['RSI']
+df['macd'] = stock_data['MACD']
+
+# Create Prophet model with external regressors
+model = Prophet(
+    growth='linear',
+    daily_seasonality=False,
+    weekly_seasonality=True,
+    yearly_seasonality=True,
+    changepoint_prior_scale=0.05
+)
+
+# Add regressors
+model.add_regressor('sma_20')
+model.add_regressor('rsi')
+model.add_regressor('macd')
+
+# Fit model
+model.fit(df.dropna())
+
+# Create future dataframe
+future = model.make_future_dataframe(periods=30)
+# Add future regressor values (you'd need to forecast these too)
+
+# Generate forecast
+forecast = model.predict(future)
+
+# Risk metrics
+returns = stock_data['Close'].pct_change().dropna()
+volatility = returns.std() * np.sqrt(252)  # Annualized volatility
+var_95 = np.percentile(returns, 5)  # Value at Risk
+sharpe_ratio = returns.mean() / returns.std() * np.sqrt(252)
+
+print(f"Annual Volatility: {volatility:.2%}")
+print(f"VaR (95%): {var_95:.2%}")
+print(f"Sharpe Ratio: {sharpe_ratio:.2f}")
+                            </div>
+                            <p><strong>⚠️ Challenges:</strong> High volatility, non-stationary data, market regime changes, external events</p>
+                        `
+                    },
+                    'demand': {
+                        title: '📦 Demand Forecasting & Supply Chain',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Optimizing inventory and supply chain operations</strong>
+                            </div>
+                            <p><strong>📊 Demand Forecasting Types:</strong></p>
+                            <ul style="margin: 15px 0; padding-left: 20px;">
+                                <li><strong>Product Demand:</strong> Individual SKU forecasting</li>
+                                <li><strong>Category Demand:</strong> Product category aggregation</li>
+                                <li><strong>Regional Demand:</strong> Geographic demand patterns</li>
+                                <li><strong>Promotional Impact:</strong> Marketing campaign effects</li>
+                            </ul>
+                            <div class="modal-code">
+# Multi-level demand forecasting
+import pandas as pd
+from prophet import Prophet
+import numpy as np
+
+class DemandForecaster:
+    def __init__(self):
+        self.models = {}
+        self.hierarchical_structure = {}
+    
+    def prepare_features(self, sales_data):
+        df = sales_data.copy()
+        
+        # Calendar features
+        df['month'] = df['date'].dt.month
+        df['day_of_week'] = df['date'].dt.dayofweek
+        df['is_weekend'] = df['day_of_week'].isin([5, 6]).astype(int)
+        df['is_holiday'] = self.get_holiday_indicator(df['date'])
+        
+        # Promotional features
+        df['promo_lag1'] = df['promotion'].shift(1)
+        df['promo_lag2'] = df['promotion'].shift(2)
+        df['price_elasticity'] = df['sales'] / df['price']
+        
+        # Seasonal features
+        df['season'] = df['month'].map({
+            12: 'winter', 1: 'winter', 2: 'winter',
+            3: 'spring', 4: 'spring', 5: 'spring',
+            6: 'summer', 7: 'summer', 8: 'summer',
+            9: 'fall', 10: 'fall', 11: 'fall'
+        })
+        
+        return df
+    
+    def fit_hierarchical_models(self, data):
+        # Bottom-up approach: SKU -> Category -> Total
+        for sku in data['sku'].unique():
+            sku_data = data[data['sku'] == sku]
+            
+            # Prepare Prophet data
+            prophet_df = pd.DataFrame({
+                'ds': sku_data['date'],
+                'y': sku_data['sales']
+            })
+            
+            # Add external regressors
+            prophet_df['promotion'] = sku_data['promotion']
+            prophet_df['price'] = sku_data['price']
+            prophet_df['competitor_price'] = sku_data['competitor_price']
+            
+            # Create and fit model
+            model = Prophet(
+                growth='linear',
+                daily_seasonality=False,
+                weekly_seasonality=True,
+                yearly_seasonality=True
+            )
+            
+            model.add_regressor('promotion')
+            model.add_regressor('price')
+            model.add_regressor('competitor_price')
+            
+            # Add custom seasonalities
+            model.add_seasonality(
+                name='monthly',
+                period=30.5,
+                fourier_order=5
+            )
+            
+            model.fit(prophet_df)
+            self.models[sku] = model
+    
+    def forecast_demand(self, sku, periods=30, scenarios=None):
+        if sku not in self.models:
+            raise ValueError(f"No model trained for SKU: {sku}")
+        
+        model = self.models[sku]
+        
+        # Create future dataframe
+        future = model.make_future_dataframe(periods=periods)
+        
+        # Add scenario-based regressors
+        if scenarios:
+            future['promotion'] = scenarios.get('promotion', 0)
+            future['price'] = scenarios.get('price', 10.0)
+            future['competitor_price'] = scenarios.get('competitor_price', 12.0)
+        
+        # Generate forecast
+        forecast = model.predict(future)
+        
+        return forecast
+    
+    def calculate_safety_stock(self, forecast_data, service_level=0.95):
+        # Calculate safety stock based on forecast uncertainty
+        forecast_error = np.std(forecast_data['yhat'] - forecast_data['y'])
+        z_score = 1.645 if service_level == 0.95 else 2.33  # 95% or 99%
+        safety_stock = z_score * forecast_error
+        return safety_stock
+    
+    def optimize_inventory(self, forecasts, costs):
+        # Economic Order Quantity (EOQ) with forecast
+        holding_cost = costs['holding_cost_per_unit']
+        ordering_cost = costs['ordering_cost']
+        
+        annual_demand = forecasts['yhat'].sum() * (365 / len(forecasts))
+        
+        eoq = np.sqrt(2 * annual_demand * ordering_cost / holding_cost)
+        reorder_point = forecasts['yhat'].mean() * costs['lead_time_days'] + \
+                       self.calculate_safety_stock(forecasts)
+        
+        return {
+            'eoq': eoq,
+            'reorder_point': reorder_point,
+            'annual_demand': annual_demand
+        }
+
+# Usage example
+forecaster = DemandForecaster()
+forecaster.fit_hierarchical_models(sales_data)
+
+# Scenario planning
+scenarios = {
+    'baseline': {'promotion': 0, 'price': 10.0, 'competitor_price': 12.0},
+    'promotion': {'promotion': 1, 'price': 8.0, 'competitor_price': 12.0},
+    'price_war': {'promotion': 0, 'price': 10.0, 'competitor_price': 9.0}
+}
+
+for scenario_name, scenario in scenarios.items():
+    forecast = forecaster.forecast_demand('SKU_001', periods=90, scenarios=scenario)
+    print(f"{scenario_name} scenario: {forecast['yhat'].sum():.0f} units")
+                            </div>
+                            <p><strong>💡 Business Impact:</strong> 15-30% reduction in stockouts, 10-20% inventory cost savings</p>
+                        `
+                    },
+                    'energy': {
+                        title: '⚡ Energy Demand & Grid Planning',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Forecasting energy consumption and renewable generation</strong>
+                            </div>
+                            <p><strong>🔌 Energy Forecasting Applications:</strong></p>
+                            <ul style="margin: 15px 0; padding-left: 20px;">
+                                <li><strong>Load Forecasting:</strong> Electricity demand prediction</li>
+                                <li><strong>Renewable Generation:</strong> Solar/wind power output</li>
+                                <li><strong>Price Forecasting:</strong> Energy market prices</li>
+                                <li><strong>Grid Balancing:</strong> Supply-demand optimization</li>
+                            </ul>
+                            <div class="modal-code">
+# Energy demand forecasting with multiple features
+import pandas as pd
+import numpy as np
+from prophet import Prophet
+from sklearn.ensemble import RandomForestRegressor
+
+class EnergyForecaster:
+    def __init__(self):
+        self.load_model = None
+        self.price_model = None
+        self.renewable_model = None
+    
+    def prepare_energy_features(self, data):
+        df = data.copy()
+        
+        # Temporal features
+        df['hour'] = df['timestamp'].dt.hour
+        df['day_of_week'] = df['timestamp'].dt.dayofweek
+        df['month'] = df['timestamp'].dt.month
+        df['is_weekend'] = df['day_of_week'].isin([5, 6]).astype(int)
+        
+        # Weather features (critical for energy)
+        df['temp_squared'] = df['temperature'] ** 2  # Cooling/heating load
+        df['humidity_temp'] = df['humidity'] * df['temperature']
+        df['wind_speed_squared'] = df['wind_speed'] ** 2
+        
+        # Economic indicators
+        df['industrial_activity'] = self.get_industrial_index(df['timestamp'])
+        df['population_factor'] = self.get_population_growth(df['timestamp'])
+        
+        # Lag features
+        for lag in [1, 7, 24, 168]:  # 1h, 1d, 1d, 1w lags
+            df[f'load_lag_{lag}h'] = df['electricity_load'].shift(lag)
+        
+        return df
+    
+    def forecast_electricity_load(self, historical_data, forecast_horizon=24):
+        # Prepare features
+        df = self.prepare_energy_features(historical_data)
+        
+        # Multiple model ensemble
+        models = {}
+        
+        # Prophet for trend and seasonality
+        prophet_df = pd.DataFrame({
+            'ds': df['timestamp'],
+            'y': df['electricity_load']
+        })
+        
+        prophet_df['temperature'] = df['temperature']
+        prophet_df['humidity'] = df['humidity']
+        prophet_df['is_weekend'] = df['is_weekend']
+        
+        prophet_model = Prophet(
+            growth='linear',
+            daily_seasonality=True,
+            weekly_seasonality=True,
+            yearly_seasonality=True
+        )
+        
+        prophet_model.add_regressor('temperature')
+        prophet_model.add_regressor('humidity')
+        prophet_model.add_regressor('is_weekend')
+        
+        # Add custom seasonalities for energy
+        prophet_model.add_seasonality(
+            name='hourly',
+            period=1,  # Daily pattern
+            fourier_order=10
+        )
+        
+        prophet_model.fit(prophet_df.dropna())
+        models['prophet'] = prophet_model
+        
+        # Random Forest for complex interactions
+        feature_cols = ['hour', 'day_of_week', 'month', 'temperature', 
+                       'humidity', 'wind_speed', 'is_weekend',
+                       'temp_squared', 'humidity_temp']
+        
+        rf_model = RandomForestRegressor(
+            n_estimators=100,
+            max_depth=10,
+            random_state=42
+        )
+        
+        X = df[feature_cols].dropna()
+        y = df['electricity_load'].loc[X.index]
+        rf_model.fit(X, y)
+        models['random_forest'] = rf_model
+        
+        return models
+    
+    def forecast_renewable_generation(self, weather_forecast):
+        # Solar power forecasting
+        def solar_power_model(solar_irradiance, cloud_cover, temperature):
+            # Simplified solar PV model
+            efficiency = 0.2 * (1 - 0.004 * (temperature - 25))  # Temperature coefficient
+            cloud_factor = 1 - cloud_cover / 100
+            power = solar_irradiance * efficiency * cloud_factor
+            return np.maximum(0, power)  # No negative power
+        
+        # Wind power forecasting
+        def wind_power_model(wind_speed):
+            # Simplified wind turbine power curve
+            cut_in = 3.5  # m/s
+            rated = 14    # m/s
+            cut_out = 25  # m/s
+            
+            power = np.where(
+                wind_speed < cut_in, 0,
+                np.where(
+                    wind_speed < rated,
+                    (wind_speed ** 3 - cut_in ** 3) / (rated ** 3 - cut_in ** 3),
+                    np.where(wind_speed < cut_out, 1, 0)
+                )
+            )
+            return power
+        
+        forecasts = pd.DataFrame()
+        forecasts['timestamp'] = weather_forecast['timestamp']
+        forecasts['solar_power'] = solar_power_model(
+            weather_forecast['solar_irradiance'],
+            weather_forecast['cloud_cover'],
+            weather_forecast['temperature']
+        )
+        forecasts['wind_power'] = wind_power_model(
+            weather_forecast['wind_speed']
+        )
+        
+        return forecasts
+    
+    def grid_optimization(self, load_forecast, renewable_forecast, storage_capacity):
+        # Simple grid balancing with battery storage
+        df = pd.DataFrame({
+            'load': load_forecast,
+            'renewable': renewable_forecast,
+            'net_load': load_forecast - renewable_forecast
+        })
+        
+        # Battery optimization
+        battery_soc = storage_capacity * 0.5  # Start at 50% state of charge
+        battery_schedule = []
+        
+        for i, row in df.iterrows():
+            net_load = row['net_load']
+            
+            if net_load > 0:  # Need to discharge battery or use grid
+                discharge = min(net_load, battery_soc, storage_capacity * 0.1)  # Max 10% per hour
+                battery_soc -= discharge
+                grid_import = max(0, net_load - discharge)
+                grid_export = 0
+            else:  # Excess renewable, charge battery or export
+                charge = min(-net_load, storage_capacity - battery_soc, storage_capacity * 0.1)
+                battery_soc += charge
+                grid_export = max(0, -net_load - charge)
+                grid_import = 0
+            
+            battery_schedule.append({
+                'hour': i,
+                'battery_soc': battery_soc,
+                'grid_import': grid_import,
+                'grid_export': grid_export,
+                'renewable_curtailment': max(0, -net_load - charge)
+            })
+        
+        return pd.DataFrame(battery_schedule)
+
+# Real-time energy forecasting
+forecaster = EnergyForecaster()
+load_models = forecaster.forecast_electricity_load(historical_energy_data)
+renewable_forecast = forecaster.forecast_renewable_generation(weather_forecast)
+
+# Grid optimization
+optimization_results = forecaster.grid_optimization(
+    load_forecast=load_forecast['yhat'],
+    renewable_forecast=renewable_forecast['solar_power'] + renewable_forecast['wind_power'],
+    storage_capacity=100  # MWh
+)
+
+print(f"Total grid import: {optimization_results['grid_import'].sum():.1f} MWh")
+print(f"Total renewable curtailment: {optimization_results['renewable_curtailment'].sum():.1f} MWh")
+                            </div>
+                            <p><strong>🌱 Impact:</strong> Optimizes renewable integration, reduces carbon emissions, improves grid stability</p>
+                        `
+                    },
+                    'weather': {
+                        title: '🌤️ Weather & Climate Forecasting',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Predicting weather patterns and climate change</strong>
+                            </div>
+                            <p><strong>🌡️ Weather Forecasting Types:</strong></p>
+                            <ul style="margin: 15px 0; padding-left: 20px;">
+                                <li><strong>Short-term:</strong> 1-7 day weather predictions</li>
+                                <li><strong>Seasonal:</strong> Monthly to seasonal climate outlook</li>
+                                <li><strong>Climate:</strong> Long-term climate change projections</li>
+                                <li><strong>Extreme Events:</strong> Hurricane, flood, drought prediction</li>
+                            </ul>
+                            <div class="modal-code">
+# Weather forecasting with ensemble methods
+import numpy as np
+import pandas as pd
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.neural_network import MLPRegressor
+from prophet import Prophet
+
+class WeatherForecaster:
+    def __init__(self):
+        self.temperature_models = {}
+        self.precipitation_models = {}
+        self.ensemble_weights = {}
+    
+    def prepare_weather_features(self, data):
+        df = data.copy()
+        
+        # Temporal features
+        df['day_of_year'] = df['date'].dt.dayofyear
+        df['month'] = df['date'].dt.month
+        df['season'] = df['month'].map({
+            12: 0, 1: 0, 2: 0,  # Winter
+            3: 1, 4: 1, 5: 1,   # Spring
+            6: 2, 7: 2, 8: 2,   # Summer
+            9: 3, 10: 3, 11: 3  # Fall
+        })
+        
+        # Atmospheric features
+        df['pressure_tendency'] = df['pressure'].diff()
+        df['temp_range'] = df['max_temp'] - df['min_temp']
+        df['dew_point_spread'] = df['temperature'] - df['dew_point']
+        
+        # Climate indices (simplified)
+        df['nao_index'] = self.calculate_nao_index(df['date'])  # North Atlantic Oscillation
+        df['enso_index'] = self.calculate_enso_index(df['date'])  # El Niño Southern Oscillation
+        
+        # Lag features for persistence
+        for lag in [1, 2, 3, 7, 30]:
+            df[f'temp_lag_{lag}d'] = df['temperature'].shift(lag)
+            df[f'precip_lag_{lag}d'] = df['precipitation'].shift(lag)
+        
+        # Moving averages
+        df['temp_ma_7d'] = df['temperature'].rolling(7).mean()
+        df['temp_ma_30d'] = df['temperature'].rolling(30).mean()
+        
+        return df
+    
+    def forecast_temperature(self, historical_data, forecast_days=7):
+        df = self.prepare_weather_features(historical_data)
+        
+        # Ensemble of models
+        models = {}
+        
+        # 1. Prophet for trend and seasonality
+        prophet_df = pd.DataFrame({
+            'ds': df['date'],
+            'y': df['temperature']
+        })
+        
+        prophet_df['pressure'] = df['pressure']
+        prophet_df['humidity'] = df['humidity']
+        
+        prophet_model = Prophet(
+            growth='linear',
+            daily_seasonality=True,
+            weekly_seasonality=False,
+            yearly_seasonality=True,
+            changepoint_prior_scale=0.01  # More conservative for weather
+        )
+        
+        prophet_model.add_regressor('pressure')
+        prophet_model.add_regressor('humidity')
+        
+        # Custom seasonality for temperature
+        prophet_model.add_seasonality(
+            name='seasonal_temp',
+            period=365.25,
+            fourier_order=20
+        )
+        
+        prophet_model.fit(prophet_df.dropna())
+        models['prophet'] = prophet_model
+        
+        # 2. Random Forest for non-linear relationships
+        feature_cols = ['day_of_year', 'month', 'pressure', 'humidity',
+                       'pressure_tendency', 'temp_range', 'dew_point_spread',
+                       'temp_lag_1d', 'temp_lag_2d', 'temp_ma_7d']
+        
+        rf_data = df[feature_cols + ['temperature']].dropna()
+        rf_model = RandomForestRegressor(
+            n_estimators=200,
+            max_depth=15,
+            min_samples_split=5,
+            random_state=42
+        )
+        
+        X = rf_data[feature_cols]
+        y = rf_data['temperature']
+        rf_model.fit(X, y)
+        models['random_forest'] = rf_model
+        
+        # 3. Neural Network for complex patterns
+        nn_model = MLPRegressor(
+            hidden_layer_sizes=(100, 50, 25),
+            max_iter=1000,
+            random_state=42,
+            early_stopping=True
+        )
+        
+        nn_model.fit(X, y)
+        models['neural_network'] = nn_model
+        
+        return models
+    
+    def ensemble_forecast(self, models, future_features):
+        # Weighted ensemble of predictions
+        predictions = {}
+        
+        # Prophet prediction
+        prophet_forecast = models['prophet'].predict(future_features['prophet_df'])
+        predictions['prophet'] = prophet_forecast['yhat'].values
+        
+        # Random Forest prediction
+        rf_features = future_features['rf_features']
+        predictions['random_forest'] = models['random_forest'].predict(rf_features)
+        
+        # Neural Network prediction
+        predictions['neural_network'] = models['neural_network'].predict(rf_features)
+        
+        # Dynamic ensemble weights based on recent performance
+        weights = {
+            'prophet': 0.4,      # Good for trends and seasonality
+            'random_forest': 0.4, # Good for feature interactions
+            'neural_network': 0.2  # Good for complex patterns
+        }
+        
+        # Weighted average
+        ensemble_forecast = np.zeros(len(predictions['prophet']))
+        for model_name, pred in predictions.items():
+            ensemble_forecast += weights[model_name] * pred
+        
+        # Uncertainty estimation
+        model_variance = np.var([pred for pred in predictions.values()], axis=0)
+        prediction_interval = 1.96 * np.sqrt(model_variance)  # 95% CI
+        
+        return {
+            'forecast': ensemble_forecast,
+            'lower_bound': ensemble_forecast - prediction_interval,
+            'upper_bound': ensemble_forecast + prediction_interval,
+            'individual_models': predictions
+        }
+    
+    def extreme_weather_detection(self, forecast_data, historical_data):
+        # Detect potential extreme weather events
+        temp_percentiles = np.percentile(historical_data['temperature'], [5, 95])
+        precip_percentile = np.percentile(historical_data['precipitation'], 95)
+        
+        alerts = []
+        
+        for i, (temp, precip) in enumerate(zip(forecast_data['temperature'], 
+                                             forecast_data['precipitation'])):
+            if temp < temp_percentiles[0]:
+                alerts.append(f"Day {i+1}: Extreme cold warning ({temp:.1f}°C)")
+            elif temp > temp_percentiles[1]:
+                alerts.append(f"Day {i+1}: Extreme heat warning ({temp:.1f}°C)")
+            
+            if precip > precip_percentile:
+                alerts.append(f"Day {i+1}: Heavy precipitation warning ({precip:.1f}mm)")
+        
+        return alerts
+    
+    def climate_change_projection(self, historical_data, projection_years=30):
+        # Simple climate trend analysis
+        df = historical_data.copy()
+        df['year'] = df['date'].dt.year
+        
+        # Calculate annual averages
+        annual_temp = df.groupby('year')['temperature'].mean()
+        annual_precip = df.groupby('year')['precipitation'].sum()
+        
+        # Linear trend fitting
+        years = annual_temp.index.values.reshape(-1, 1)
+        
+        from sklearn.linear_model import LinearRegression
+        
+        temp_trend = LinearRegression().fit(years, annual_temp.values)
+        precip_trend = LinearRegression().fit(years, annual_precip.values)
+        
+        # Project future climate
+        future_years = np.arange(years[-1][0] + 1, years[-1][0] + projection_years + 1)
+        future_temp = temp_trend.predict(future_years.reshape(-1, 1))
+        future_precip = precip_trend.predict(future_years.reshape(-1, 1))
+        
+        return {
+            'temperature_trend': temp_trend.coef_[0],  # °C/year
+            'precipitation_trend': precip_trend.coef_[0],  # mm/year
+            'projected_temperature': dict(zip(future_years, future_temp)),
+            'projected_precipitation': dict(zip(future_years, future_precip))
+        }
+
+# Weather forecasting system
+weather_forecaster = WeatherForecaster()
+temp_models = weather_forecaster.forecast_temperature(historical_weather_data)
+
+# Generate 7-day forecast
+ensemble_results = weather_forecaster.ensemble_forecast(temp_models, future_weather_features)
+
+# Check for extreme weather
+extreme_alerts = weather_forecaster.extreme_weather_detection(
+    ensemble_results, historical_weather_data
+)
+
+# Climate projection
+climate_projection = weather_forecaster.climate_change_projection(
+    historical_weather_data, projection_years=50
+)
+
+print(f"Temperature trend: {climate_projection['temperature_trend']:.3f}°C/year")
+for alert in extreme_alerts:
+    print(f"⚠️  {alert}")
+                            </div>
+                            <p><strong>🌍 Significance:</strong> Critical for agriculture, disaster preparedness, and climate adaptation planning</p>
+                        `
+                    },
+                    'health': {
+                        title: '🏥 Healthcare & Epidemiological Forecasting',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Predicting disease spread and healthcare resource needs</strong>
+                            </div>
+                            <p><strong>🦠 Healthcare Forecasting Applications:</strong></p>
+                            <ul style="margin: 15px 0; padding-left: 20px;">
+                                <li><strong>Epidemic Modeling:</strong> Disease outbreak prediction (COVID-19, flu)</li>
+                                <li><strong>Hospital Capacity:</strong> ICU beds, staffing requirements</li>
+                                <li><strong>Patient Monitoring:</strong> Vital signs trend analysis</li>
+                                <li><strong>Drug Demand:</strong> Pharmaceutical supply planning</li>
+                            </ul>
+                            <div class="modal-code">
+# Epidemiological forecasting with SIR model
+import numpy as np
+import pandas as pd
+from scipy.integrate import odeint
+from prophet import Prophet
+import matplotlib.pyplot as plt
+
+class EpidemicForecaster:
+    def __init__(self):
+        self.sir_params = {}
+        self.hospital_models = {}
+    
+    def sir_model(self, y, t, beta, gamma):
+        """SIR (Susceptible-Infected-Recovered) model"""
+        S, I, R = y
+        N = S + I + R  # Total population
+        
+        dSdt = -beta * S * I / N
+        dIdt = beta * S * I / N - gamma * I
+        dRdt = gamma * I
+        
+        return dSdt, dIdt, dRdt
+    
+    def fit_sir_model(self, case_data, population):
+        """Fit SIR model to observed case data"""
+        from scipy.optimize import minimize
+        
+        def objective(params):
+            beta, gamma = params
+            if beta <= 0 or gamma <= 0:
+                return 1e10
+            
+            # Initial conditions
+            I0 = case_data.iloc[0]
+            S0 = population - I0
+            R0 = 0
+            
+            # Time points
+            t = np.arange(len(case_data))
+            
+            # Solve ODE
+            sol = odeint(self.sir_model, [S0, I0, R0], t, args=(beta, gamma))
+            predicted_infected = sol[:, 1]
+            
+            # Calculate error
+            error = np.sum((predicted_infected - case_data.values) ** 2)
+            return error
+        
+        # Optimize parameters
+        result = minimize(objective, [0.3, 0.1], bounds=[(0.01, 2), (0.01, 1)])
+        beta_opt, gamma_opt = result.x
+        
+        # Calculate R0 (basic reproduction number)
+        R0 = beta_opt / gamma_opt
+        
+        self.sir_params = {
+            'beta': beta_opt,
+            'gamma': gamma_opt,
+            'R0': R0
+        }
+        
+        return self.sir_params
+    
+    def forecast_epidemic(self, initial_conditions, days_ahead=30):
+        """Forecast epidemic progression using fitted SIR model"""
+        S0, I0, R0 = initial_conditions
+        t = np.arange(days_ahead)
+        
+        sol = odeint(self.sir_model, [S0, I0, R0], t, 
+                    args=(self.sir_params['beta'], self.sir_params['gamma']))
+        
+        forecast_df = pd.DataFrame({
+            'day': t,
+            'susceptible': sol[:, 0],
+            'infected': sol[:, 1],
+            'recovered': sol[:, 2],
+            'new_cases': np.diff(np.concatenate([[R0], sol[:, 2]]))  # Daily new cases
+        })
+        
+        return forecast_df
+    
+    def forecast_hospital_capacity(self, case_forecast, hospitalization_rate=0.05):
+        """Forecast hospital resource needs"""
+        # Hospital admission parameters
+        avg_length_of_stay = 7  # days
+        icu_rate = 0.2  # 20% of hospitalizations need ICU
+        ventilator_rate = 0.1  # 10% need ventilators
+        
+        hospital_forecast = case_forecast.copy()
+        
+        # Calculate hospitalizations
+        hospital_forecast['new_hospitalizations'] = (
+            hospital_forecast['new_cases'] * hospitalization_rate
+        )
+        
+        # Calculate bed occupancy (rolling sum for length of stay)
+        hospital_forecast['total_beds_needed'] = (
+            hospital_forecast['new_hospitalizations']
+            .rolling(window=avg_length_of_stay, min_periods=1)
+            .sum()
+        )
+        
+        hospital_forecast['icu_beds_needed'] = (
+            hospital_forecast['total_beds_needed'] * icu_rate
+        )
+        
+        hospital_forecast['ventilators_needed'] = (
+            hospital_forecast['total_beds_needed'] * ventilator_rate
+        )
+        
+        return hospital_forecast
+    
+    def patient_deterioration_risk(self, patient_data):
+        """Predict patient deterioration using vital signs"""
+        from sklearn.ensemble import RandomForestClassifier
+        
+        # Feature engineering for patient monitoring
+        features = patient_data.copy()
+        
+        # Vital sign trends
+        features['temp_trend'] = features['temperature'].diff()
+        features['bp_systolic_trend'] = features['bp_systolic'].diff()
+        features['heart_rate_trend'] = features['heart_rate'].diff()
+        features['oxygen_sat_trend'] = features['oxygen_saturation'].diff()
+        
+        # Rolling statistics
+        for window in [4, 8, 12]:  # 4, 8, 12 hour windows
+            features[f'temp_std_{window}h'] = features['temperature'].rolling(window).std()
+            features[f'hr_mean_{window}h'] = features['heart_rate'].rolling(window).mean()
+            features[f'bp_range_{window}h'] = (
+                features['bp_systolic'].rolling(window).max() - 
+                features['bp_systolic'].rolling(window).min()
+            )
+        
+        # Early warning scores (simplified NEWS score)
+        def calculate_news_score(row):
+            score = 0
+            
+            # Respiratory rate
+            if row['respiratory_rate'] <= 8 or row['respiratory_rate'] >= 25:
+                score += 3
+            elif row['respiratory_rate'] <= 11 or row['respiratory_rate'] >= 21:
+                score += 1
+            
+            # Oxygen saturation
+            if row['oxygen_saturation'] <= 91:
+                score += 3
+            elif row['oxygen_saturation'] <= 93:
+                score += 2
+            elif row['oxygen_saturation'] <= 95:
+                score += 1
+            
+            # Temperature
+            if row['temperature'] <= 35.0:
+                score += 3
+            elif row['temperature'] >= 39.1:
+                score += 2
+            elif row['temperature'] >= 38.1:
+                score += 1
+            
+            # Blood pressure
+            if row['bp_systolic'] <= 90:
+                score += 3
+            elif row['bp_systolic'] <= 100:
+                score += 2
+            elif row['bp_systolic'] >= 220:
+                score += 3
+            
+            # Heart rate
+            if row['heart_rate'] <= 40:
+                score += 3
+            elif row['heart_rate'] >= 131:
+                score += 3
+            elif row['heart_rate'] >= 111 or row['heart_rate'] <= 50:
+                score += 1
+            
+            return score
+        
+        features['news_score'] = features.apply(calculate_news_score, axis=1)
+        
+        return features
+    
+    def drug_demand_forecast(self, prescription_data, epidemic_forecast):
+        """Forecast pharmaceutical demand during epidemic"""
+        # Drug categories affected by epidemic
+        drug_multipliers = {
+            'antivirals': 3.0,      # 3x increase during epidemic
+            'antibiotics': 1.5,     # Secondary infections
+            'pain_relievers': 2.0,  # Symptom management
+            'ventilator_drugs': 5.0, # ICU medications
+            'vaccines': 10.0        # If available
+        }
+        
+        baseline_demand = prescription_data.groupby('drug_category')['quantity'].mean()
+        
+        forecast_demand = {}
+        for category, multiplier in drug_multipliers.items():
+            if category in baseline_demand.index:
+                # Scale demand based on epidemic progression
+                epidemic_factor = epidemic_forecast['infected'].max() / epidemic_forecast['infected'].iloc[0]
+                adjusted_multiplier = 1 + (multiplier - 1) * min(epidemic_factor, 1)
+                
+                forecast_demand[category] = {
+                    'baseline': baseline_demand[category],
+                    'peak_demand': baseline_demand[category] * adjusted_multiplier,
+                    'total_additional': baseline_demand[category] * (adjusted_multiplier - 1) * len(epidemic_forecast)
+                }
+        
+        return forecast_demand
+
+# Epidemic forecasting example
+forecaster = EpidemicForecaster()
+
+# Fit SIR model to historical case data
+sir_params = forecaster.fit_sir_model(daily_cases, population=1000000)
+print(f"Basic reproduction number (R0): {sir_params['R0']:.2f}")
+
+# Forecast epidemic progression
+current_state = [950000, 1000, 49000]  # S, I, R
+epidemic_forecast = forecaster.forecast_epidemic(current_state, days_ahead=60)
+
+# Forecast hospital capacity needs
+hospital_forecast = forecaster.forecast_hospital_capacity(epidemic_forecast)
+
+print(f"Peak hospital beds needed: {hospital_forecast['total_beds_needed'].max():.0f}")
+print(f"Peak ICU beds needed: {hospital_forecast['icu_beds_needed'].max():.0f}")
+
+# Drug demand forecasting
+drug_forecast = forecaster.drug_demand_forecast(prescription_history, epidemic_forecast)
+for drug, demand in drug_forecast.items():
+    print(f"{drug}: {demand['peak_demand']:.0f} units (vs {demand['baseline']:.0f} baseline)")
+                            </div>
+                            <p><strong>🏥 Impact:</strong> Saves lives through early intervention, optimizes resource allocation, prevents healthcare system collapse</p>
+                        `
+                    },
+                    'traffic': {
+                        title: '🚗 Traffic & Transportation Forecasting',
+                        content: `
+                            <div class="modal-highlight">
+                                <strong>Predicting traffic patterns and optimizing transportation</strong>
+                            </div>
+                            <p><strong>🛣️ Transportation Applications:</strong></p>
+                            <ul style="margin: 15px 0; padding-left: 20px;">
+                                <li><strong>Traffic Flow:</strong> Real-time congestion prediction</li>
+                                <li><strong>Route Optimization:</strong> Dynamic navigation systems</li>
+                                <li><strong>Public Transit:</strong> Bus/train scheduling optimization</li>
+                                <li><strong>Urban Planning:</strong> Infrastructure capacity planning</li>
+                            </ul>
+                            <div class="modal-code">
+# Traffic flow forecasting and optimization
+import pandas as pd
+import numpy as np
+from prophet import Prophet
+from sklearn.ensemble import GradientBoostingRegressor
+import networkx as nx
+
+class TrafficForecaster:
+    def __init__(self):
+        self.flow_models = {}
+        self.incident_models = {}
+        self.route_optimizer = None
+    
+    def prepare_traffic_features(self, traffic_data):
+        df = traffic_data.copy()
+        
+        # Temporal features
+        df['hour'] = df['timestamp'].dt.hour
+        df['day_of_week'] = df['timestamp'].dt.dayofweek
+        df['month'] = df['timestamp'].dt.month
+        df['is_weekend'] = df['day_of_week'].isin([5, 6]).astype(int)
+        df['is_holiday'] = self.get_holiday_indicator(df['timestamp'])
+        
+        # Rush hour indicators
+        df['is_morning_rush'] = ((df['hour'] >= 7) & (df['hour'] <= 9) & ~df['is_weekend']).astype(int)
+        df['is_evening_rush'] = ((df['hour'] >= 17) & (df['hour'] <= 19) & ~df['is_weekend']).astype(int)
+        
+        # Weather impact on traffic
+        df['weather_impact'] = 0
+        df.loc[df['weather'] == 'rain', 'weather_impact'] = 0.8  # 80% capacity reduction
+        df.loc[df['weather'] == 'snow', 'weather_impact'] = 0.6  # 60% capacity reduction
+        df.loc[df['weather'] == 'fog', 'weather_impact'] = 0.7   # 70% capacity reduction
+        
+        # Event impact
+        df['special_event'] = self.get_event_indicator(df['timestamp'], df['location'])
+        
+        # Historical averages for comparison
+        df['hourly_average'] = df.groupby(['location', 'hour'])['traffic_volume'].transform('mean')
+        df['daily_average'] = df.groupby(['location', 'day_of_week'])['traffic_volume'].transform('mean')
+        
+        # Lag features
+        for lag in [1, 2, 24, 168]:  # 1h, 2h, 1d, 1w
+            df[f'volume_lag_{lag}h'] = df.groupby('location')['traffic_volume'].shift(lag)
+        
+        return df
+    
+    def forecast_traffic_flow(self, historical_data, location):
+        """Forecast traffic flow for specific location"""
+        df = self.prepare_traffic_features(historical_data)
+        location_data = df[df['location'] == location].copy()
+        
+        # Multiple model ensemble
+        models = {}
+        
+        # Prophet for trend and seasonality
+        prophet_df = pd.DataFrame({
+            'ds': location_data['timestamp'],
+            'y': location_data['traffic_volume']
+        })
+        
+        # Add regressors
+        prophet_df['is_weekend'] = location_data['is_weekend']
+        prophet_df['weather_impact'] = location_data['weather_impact']
+        prophet_df['special_event'] = location_data['special_event']
+        
+        prophet_model = Prophet(
+            growth='linear',
+            daily_seasonality=True,
+            weekly_seasonality=True,
+            yearly_seasonality=True
+        )
+        
+        prophet_model.add_regressor('is_weekend')
+        prophet_model.add_regressor('weather_impact')
+        prophet_model.add_regressor('special_event')
+        
+        # Custom seasonalities for traffic patterns
+        prophet_model.add_seasonality(
+            name='hourly',
+            period=1,  # Daily pattern
+            fourier_order=15
+        )
+        
+        prophet_model.fit(prophet_df.dropna())
+        models['prophet'] = prophet_model
+        
+        # Gradient Boosting for complex interactions
+        feature_cols = ['hour', 'day_of_week', 'is_weekend', 'is_morning_rush',
+                       'is_evening_rush', 'weather_impact', 'special_event',
+                       'hourly_average', 'volume_lag_1h', 'volume_lag_24h']
+        
+        gb_data = location_data[feature_cols + ['traffic_volume']].dropna()
+        gb_model = GradientBoostingRegressor(
+            n_estimators=200,
+            max_depth=8,
+            learning_rate=0.1,
+            random_state=42
+        )
+        
+        X = gb_data[feature_cols]
+        y = gb_data['traffic_volume']
+        gb_model.fit(X, y)
+        models['gradient_boosting'] = gb_model
+        
+        return models
+    
+    def predict_incident_probability(self, traffic_conditions):
+        """Predict probability of traffic incidents"""
+        from sklearn.linear_model import LogisticRegression
+        
+        # Features that correlate with incidents
+        features = traffic_conditions.copy()
+        
+        # Traffic density and flow features
+        features['density'] = features['traffic_volume'] / features['road_capacity']
+        features['speed_variance'] = features['speed'].rolling(window=6).std()
+        features['volume_change'] = features['traffic_volume'].diff()
+        
+        # Weather and time features
+        features['visibility_poor'] = (features['visibility'] < 1000).astype(int)
+        features['peak_hour'] = features['is_morning_rush'] | features['is_evening_rush']
+        
+        # Historical incident rate
+        features['location_risk'] = features.groupby('location')['has_incident'].transform('mean')
+        
+        # Logistic regression for incident prediction
+        feature_cols = ['density', 'speed_variance', 'volume_change', 'weather_impact',
+                       'visibility_poor', 'peak_hour', 'location_risk']
+        
+        X = features[feature_cols].fillna(0)
+        y = features['has_incident']
+        
+        incident_model = LogisticRegression(random_state=42)
+        incident_model.fit(X, y)
+        
+        # Predict incident probabilities
+        incident_prob = incident_model.predict_proba(X)[:, 1]
+        features['incident_probability'] = incident_prob
+        
+        return features, incident_model
+    
+    def optimize_traffic_signals(self, intersection_data, traffic_forecast):
+        """Optimize traffic signal timing based on predicted flows"""
+        signal_optimization = {}
+        
+        for intersection in intersection_data['intersection_id'].unique():
+            intersection_traffic = traffic_forecast[
+                traffic_forecast['intersection_id'] == intersection
+            ]
+            
+            # Calculate optimal green time for each direction
+            total_volume = intersection_traffic.groupby('direction')['predicted_volume'].sum()
+            total_capacity = intersection_traffic.groupby('direction')['capacity'].first().sum()
+            
+            # Webster's formula for optimal cycle time
+            lost_time = 4  # seconds per phase
+            num_phases = len(total_volume)
+            critical_ratios = total_volume / intersection_traffic.groupby('direction')['capacity'].first()
+            
+            optimal_cycle = (1.5 * lost_time + 5) / (1 - critical_ratios.sum())
+            optimal_cycle = min(max(optimal_cycle, 60), 120)  # Constrain between 60-120 seconds
+            
+            # Allocate green time proportionally
+            effective_green = optimal_cycle - num_phases * lost_time
+            green_times = {}
+            
+            for direction in total_volume.index:
+                proportion = critical_ratios[direction] / critical_ratios.sum()
+                green_times[direction] = effective_green * proportion
+            
+            signal_optimization[intersection] = {
+                'cycle_time': optimal_cycle,
+                'green_times': green_times,
+                'level_of_service': self.calculate_los(critical_ratios.sum())
+            }
+        
+        return signal_optimization
+    
+    def calculate_los(self, volume_capacity_ratio):
+        """Calculate Level of Service based on volume/capacity ratio"""
+        if volume_capacity_ratio <= 0.60:
+            return 'A'  # Free flow
+        elif volume_capacity_ratio <= 0.70:
+            return 'B'  # Reasonably free flow
+        elif volume_capacity_ratio <= 0.80:
+            return 'C'  # Stable flow
+        elif volume_capacity_ratio <= 0.90:
+            return 'D'  # Approaching unstable flow
+        elif volume_capacity_ratio <= 1.00:
+            return 'E'  # Unstable flow
+        else:
+            return 'F'  # Forced or breakdown flow
+    
+    def dynamic_route_optimization(self, origin, destination, traffic_network, current_conditions):
+        """Find optimal route considering real-time traffic"""
+        # Create weighted graph based on travel times
+        G = nx.DiGraph()
+        
+        for edge in traffic_network.itertuples():
+            # Calculate travel time based on current conditions
+            base_time = edge.distance / edge.speed_limit
+            congestion_factor = current_conditions.get(edge.road_id, 1.0)
+            travel_time = base_time * congestion_factor
+            
+            G.add_edge(edge.start_node, edge.end_node, 
+                      weight=travel_time, road_id=edge.road_id)
+        
+        # Find shortest path (minimum travel time)
+        try:
+            optimal_route = nx.shortest_path(G, origin, destination, weight='weight')
+            total_time = nx.shortest_path_length(G, origin, destination, weight='weight')
+            
+            # Alternative routes
+            alternative_routes = []
+            for i in range(3):  # Find up to 3 alternatives
+                try:
+                    # Remove edges from previous routes to find alternatives
+                    G_alt = G.copy()
+                    if i > 0:
+                        for j in range(len(optimal_route) - 1):
+                            if G_alt.has_edge(optimal_route[j], optimal_route[j+1]):
+                                G_alt.remove_edge(optimal_route[j], optimal_route[j+1])
+                    
+                    alt_route = nx.shortest_path(G_alt, origin, destination, weight='weight')
+                    alt_time = nx.shortest_path_length(G_alt, origin, destination, weight='weight')
+                    
+                    if alt_time <= total_time * 1.2:  # Within 20% of optimal
+                        alternative_routes.append({
+                            'route': alt_route,
+                            'travel_time': alt_time,
+                            'time_difference': alt_time - total_time
+                        })
+                except:
+                    break
+            
+            return {
+                'optimal_route': optimal_route,
+                'travel_time': total_time,
+                'alternative_routes': alternative_routes
+            }
+        
+        except nx.NetworkXNoPath:
+            return {'error': 'No path found between origin and destination'}
+    
+    def public_transit_optimization(self, ridership_forecast, vehicle_capacity):
+        """Optimize public transit scheduling"""
+        schedule_optimization = {}
+        
+        for route in ridership_forecast['route'].unique():
+            route_data = ridership_forecast[ridership_forecast['route'] == route]
+            
+            # Calculate required frequency based on demand
+            peak_demand = route_data.groupby('hour')['predicted_ridership'].max()
+            required_vehicles = np.ceil(peak_demand / vehicle_capacity)
+            
+            # Optimize headway (time between vehicles)
+            optimal_headway = {}
+            for hour in range(24):
+                hour_demand = peak_demand.get(hour, 0)
+                if hour_demand > 0:
+                    vehicles_needed = max(1, np.ceil(hour_demand / vehicle_capacity))
+                    headway = 60 / vehicles_needed  # minutes
+                    optimal_headway[hour] = max(5, min(headway, 30))  # 5-30 min range
+                else:
+                    optimal_headway[hour] = 30  # Off-peak default
+            
+            schedule_optimization[route] = {
+                'peak_vehicles_needed': required_vehicles.max(),
+                'hourly_headway': optimal_headway,
+                'total_daily_trips': sum(60 / h for h in optimal_headway.values()),
+                'load_factor': (peak_demand.sum() / (required_vehicles.sum() * vehicle_capacity))
+            }
+        
+        return schedule_optimization
+
+# Traffic forecasting and optimization system
+traffic_forecaster = TrafficForecaster()
+
+# Forecast traffic flow for major highway
+highway_models = traffic_forecaster.forecast_traffic_flow(historical_traffic, 'Highway_101')
+
+# Predict incident probabilities
+incident_data, incident_model = traffic_forecaster.predict_incident_probability(current_traffic)
+
+# Optimize traffic signals
+signal_optimization = traffic_forecaster.optimize_traffic_signals(
+    intersection_data, traffic_forecast
+)
+
+# Dynamic route optimization
+route_result = traffic_forecaster.dynamic_route_optimization(
+    origin='A', destination='B', traffic_network, current_congestion
+)
+
+print(f"Optimal route: {' -> '.join(route_result['optimal_route'])}")
+print(f"Estimated travel time: {route_result['travel_time']:.1f} minutes")
+
+for intersection, optimization in signal_optimization.items():
+    print(f"Intersection {intersection}: {optimization['cycle_time']:.0f}s cycle, LOS {optimization['level_of_service']}")
+                            </div>
+                            <p><strong>🚦 Benefits:</strong> Reduces commute times by 15-25%, cuts emissions, improves urban mobility</p>
+                        `
+                    }
+                };
+                
+                const details = appDetails[app];
+                if (details) {
+                    modal.show(details.title, details.content);
+                }
+            });
+        });
+
+        // Initialize components
+        createFloatingElements();
+        const timeSeriesDemo = new TimeSeriesDemo();
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
+                window.location.href = 'Week13_Slide251.html';
+            } else if (e.key === 'ArrowRight' || (e.key === ' ' && !modal.overlay.classList.contains('active'))) {
+                window.location.href = 'Week13_Slide253.html';
+            }
+        });
+
+    </script>
+</body>
+</html>
