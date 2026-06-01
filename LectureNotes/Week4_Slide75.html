@@ -808,19 +808,355 @@
         const titleEl = document.getElementById('modalTitle');
         const contentEl = document.getElementById('modalContent');
         const closeBtn = document.getElementById('modalClose');
+
         window.showModal = function(title, content) {
             titleEl.textContent = title;
             contentEl.innerHTML = content;
             overlay.classList.add('active');
             document.body.style.overflow = 'hidden';
         };
+
         window.closeModal = function() {
             overlay.classList.remove('active');
             document.body.style.overflow = '';
         };
+
+        // Add click handlers for kernel cards
+        document.querySelectorAll('.kernel-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const kernelName = this.querySelector('.kernel-name').textContent;
+
+                const kernelDetails = {
+                    'Linear Kernel': {
+                        description: 'The Linear Kernel is the simplest kernel function that computes the dot product between input vectors. It does not transform the data to a higher-dimensional space.',
+                        formula: `K(x, y) = x<sup>T</sup>y + c
+
+Where:
+• x, y = input vectors
+• c = optional constant term (default 0)
+• No implicit feature mapping`,
+                        mathematics: `<strong>Mathematical Properties:</strong><br>
+• Corresponds to standard linear SVM in original space<br>
+• Decision boundary: w<sup>T</sup>x + b = 0 (hyperplane)<br>
+• Number of parameters: n (feature dimensions) + 1 (bias)<br>
+• No implicit dimensionality increase`,
+                        implementation: `from sklearn.svm import SVC
+from sklearn.preprocessing import StandardScaler
+
+# Scale features (important!)
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+# Linear kernel SVM
+linear_svm = SVC(
+    kernel='linear',
+    C=1.0,              # Regularization
+    random_state=42
+)
+
+linear_svm.fit(X_train_scaled, y_train)
+
+# Get support vectors
+print(f"Support vectors: {linear_svm.n_support_}")
+print(f"Coefficients shape: {linear_svm.coef_.shape}")
+
+# The decision function is linear: w^T x + b
+predictions = linear_svm.predict(X_test_scaled)`,
+                        pros: 'Fastest training and prediction, minimal memory usage, highly interpretable (can extract feature weights), works well for high-dimensional data (text, genomics), less prone to overfitting, good baseline model',
+                        cons: 'Cannot model non-linear relationships, limited expressiveness for complex patterns, poor performance on non-linearly separable data, requires feature engineering for non-linear problems',
+                        whenToUse: 'Use for high-dimensional sparse data (text classification, TF-IDF features), when training speed is critical (millions of samples), when interpretability is required (need to explain feature importance), as a baseline before trying complex kernels, when data is approximately linearly separable',
+                        complexity: 'Training: O(n² × d) to O(n³ × d) depending on solver, Prediction: O(n_sv × d) where n_sv = support vectors',
+                        realWorld: `<strong>Real-World Applications:</strong><br>
+• Text classification (spam detection, sentiment analysis)<br>
+• Genomics (high-dimensional gene expression data)<br>
+• Financial data (risk scoring with many features)<br>
+• Medical diagnosis with tabular features`
+                    },
+                    'Polynomial Kernel': {
+                        description: 'The Polynomial Kernel computes a polynomial function of the dot product between input vectors, enabling SVM to learn polynomial decision boundaries.',
+                        formula: `K(x, y) = (x<sup>T</sup>y + c)<sup>d</sup>
+
+Where:
+• d = degree of polynomial (typically 2-4)
+• c = constant term (default 1)
+• Implicitly maps to feature space of dimension ~O(n^d)`,
+                        mathematics: `<strong>Mathematical Properties:</strong><br>
+• For d=2: Creates all pairwise feature interactions<br>
+• For d=3: Includes all 3-way interactions<br>
+• Feature space dimension: C(n+d, d) ≈ n^d / d!<br>
+• Decision boundary: polynomial curve/surface<br>
+• Includes lower-degree terms (c affects this)`,
+                        implementation: `from sklearn.svm import SVC
+
+# Polynomial kernel SVM
+poly_svm = SVC(
+    kernel='poly',
+    degree=3,           # Polynomial degree
+    coef0=1.0,          # Independent term 'c'
+    gamma='scale',      # Kernel coefficient (1/(n_features × X.var()))
+    C=1.0,
+    random_state=42
+)
+
+poly_svm.fit(X_train_scaled, y_train)
+
+# Example: degree=2 for 2D input creates 5D feature space
+# [x1, x2] -> [x1², x1*x2, x2², x1, x2, 1]
+
+# Predict
+predictions = poly_svm.predict(X_test_scaled)
+print(f"Support vectors: {poly_svm.n_support_}")
+
+# Degree comparison
+for d in [2, 3, 4]:
+    model = SVC(kernel='poly', degree=d)
+    model.fit(X_train_scaled, y_train)
+    score = model.score(X_test_scaled, y_test)
+    print(f"Degree {d}: Accuracy = {score:.3f}")`,
+                        pros: 'Models polynomial relationships naturally, includes lower-order interactions (unlike pure polynomial regression), good for image recognition (spatial relationships), interpretable in terms of feature interactions, global decision boundaries (smooth)',
+                        cons: 'Computationally expensive for high degrees, many hyperparameters (d, c, gamma), prone to overfitting with high d, numerical instability for large d, memory intensive',
+                        whenToUse: 'Use for image classification (spatial pixel relationships), natural language processing (word interactions), problems with known polynomial structure, when feature interactions are important, computer vision tasks (texture recognition)',
+                        degreeGuidelines: `<strong>Degree Selection Guidelines:</strong><br>
+• d=2: Quadratic boundaries, captures pairwise interactions<br>
+• d=3: Cubic boundaries, 3-way interactions (most common)<br>
+• d=4: Complex boundaries, rarely needed<br>
+• d≥5: Usually leads to overfitting, avoid<br><br>
+<strong>Rule of thumb:</strong> Start with d=2 or 3, validate with cross-validation`,
+                        complexity: 'Training: O(n² × d × n_features), Prediction: O(n_sv × d × n_features)',
+                        realWorld: `<strong>Real-World Applications:</strong><br>
+• Image classification (digit recognition, object detection)<br>
+• Bioinformatics (protein structure prediction)<br>
+• Speech recognition (acoustic modeling)<br>
+• Computer vision (face recognition with feature interactions)`
+                    },
+                    'RBF Kernel': {
+                        description: 'The Radial Basis Function (RBF) or Gaussian Kernel is the most popular kernel for SVMs. It maps data to an infinite-dimensional space and can handle highly complex, non-linear patterns.',
+                        formula: `K(x, y) = exp(-γ||x - y||²)
+
+Where:
+• γ (gamma) = 1 / (2σ²) controls width of Gaussian
+• ||x - y|| = Euclidean distance
+• Maps to infinite-dimensional Hilbert space
+• Output range: [0, 1], equals 1 when x=y`,
+                        mathematics: `<strong>Mathematical Properties:</strong><br>
+• Also called Gaussian kernel<br>
+• Infinite-dimensional feature mapping (Taylor expansion)<br>
+• Localized: only nearby points have influence<br>
+• γ controls "reach": high γ = local, low γ = global<br>
+• Universal approximator: can approximate any continuous function<br>
+• Translation invariant: K(x,y) = K(x-y, 0)`,
+                        implementation: `from sklearn.svm import SVC
+
+# RBF kernel SVM
+rbf_svm = SVC(
+    kernel='rbf',
+    gamma='scale',      # Default: 1/(n_features × X.var())
+    C=1.0,
+    random_state=42
+)
+
+rbf_svm.fit(X_train_scaled, y_train)
+predictions = rbf_svm.predict(X_test_scaled)
+
+# Gamma comparison (crucial for RBF!)
+import numpy as np
+
+gammas = [0.001, 0.01, 0.1, 1.0]
+for gamma in gammas:
+    model = SVC(kernel='rbf', gamma=gamma, C=1.0)
+    model.fit(X_train_scaled, y_train)
+    train_score = model.score(X_train_scaled, y_train)
+    test_score = model.score(X_test_scaled, y_test)
+    print(f"γ={gamma:5.3f}: Train={train_score:.3f}, Test={test_score:.3f}")
+
+# Manual gamma setting
+# gamma = 'scale' uses 1 / (n_features × X.var())
+# gamma = 'auto' uses 1 / n_features
+# Or set explicitly: gamma=0.1
+
+# Grid search for optimal gamma
+from sklearn.model_selection import GridSearchCV
+
+param_grid = {
+    'C': [0.1, 1, 10, 100],
+    'gamma': [0.001, 0.01, 0.1, 1]
+}
+
+grid = GridSearchCV(SVC(kernel='rbf'), param_grid, cv=5)
+grid.fit(X_train_scaled, y_train)
+print(f"Best params: {grid.best_params_}")`,
+                        pros: 'Most versatile - works for most problems, handles complex non-linear patterns, fewer hyperparameters than polynomial (just γ and C), less prone to numerical instability, robust to outliers (with proper γ), universal approximator',
+                        cons: 'Requires careful hyperparameter tuning (γ and C), can overfit with high γ (too local), computationally intensive for large datasets, less interpretable than linear, sensitive to feature scaling (must standardize)',
+                        whenToUse: 'Use as default kernel for non-linear problems, when data is not high-dimensional (< 1000 features), for complex pattern recognition tasks, when you don\'t know data distribution, for most computer vision and time series problems',
+                        gammaGuidelines: `<strong>Gamma Selection Guidelines:</strong><br>
+• <strong>Low γ (0.001-0.01):</strong> Smooth, global decision boundaries (may underfit)<br>
+• <strong>Medium γ (0.1-1):</strong> Balanced, works for most problems<br>
+• <strong>High γ (10+):</strong> Highly localized boundaries (will overfit)<br><br>
+<strong>Automatic settings:</strong><br>
+• gamma='scale': 1/(n_features × var(X)) - recommended default<br>
+• gamma='auto': 1/n_features - simpler alternative<br><br>
+<strong>Tip:</strong> Always scale features before using RBF! Use StandardScaler or MinMaxScaler.`,
+                        complexity: 'Training: O(n² × n_features) to O(n³ × n_features), Prediction: O(n_sv × n_features)',
+                        realWorld: `<strong>Real-World Applications:</strong><br>
+• Image recognition (face detection, object classification)<br>
+• Time series classification (activity recognition, ECG analysis)<br>
+• Bioinformatics (protein classification, disease prediction)<br>
+• Anomaly detection (fraud detection, network intrusion)<br>
+• Most Kaggle competitions on structured data`,
+                        keyInsight: 'RBF is the "Swiss Army knife" of SVM kernels - when in doubt, start with RBF. It works well for most non-linear problems and is easier to tune than polynomial kernels.'
+                    }
+                };
+
+                const detail = kernelDetails[kernelName];
+                if (detail) {
+                    let modalHTML = `
+                        <div class="modal-highlight">
+                            <strong>Overview:</strong><br>
+                            ${detail.description}
+                        </div>
+                        <h4 style="color: #0d9488; margin: 20px 0 10px;">Formula & Mathematics:</h4>
+                        <div class="modal-code">${detail.formula}</div>
+                        <div class="modal-highlight" style="background: rgba(251, 191, 36, 0.1);">
+                            ${detail.mathematics}
+                        </div>
+                        <h4 style="color: #0d9488; margin: 20px 0 10px;">Implementation:</h4>
+                        <div class="modal-code">${detail.implementation}</div>
+                        <p style="margin-top: 15px;"><strong>✅ Advantages:</strong> ${detail.pros}</p>
+                        <p style="margin-top: 10px;"><strong>⚠️ Limitations:</strong> ${detail.cons}</p>
+                        <p style="margin-top: 10px;"><strong>🎯 When to Use:</strong> ${detail.whenToUse}</p>`;
+
+                    if (detail.degreeGuidelines || detail.gammaGuidelines) {
+                        modalHTML += `
+                        <h4 style="color: #0d9488; margin: 20px 0 10px;">Parameter Guidelines:</h4>
+                        <div class="modal-highlight" style="background: rgba(99, 102, 241, 0.1);">
+                            ${detail.degreeGuidelines || detail.gammaGuidelines}
+                        </div>`;
+                    }
+
+                    modalHTML += `
+                        <div style="margin-top: 15px; padding: 15px; background: rgba(236, 72, 153, 0.1); border-radius: 10px;">
+                            <strong>⚡ Complexity:</strong> ${detail.complexity}
+                        </div>
+                        <div style="margin-top: 15px; padding: 15px; background: rgba(251, 191, 36, 0.1); border-radius: 10px;">
+                            ${detail.realWorld}
+                        </div>`;
+
+                    if (detail.keyInsight) {
+                        modalHTML += `
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(13, 148, 136, 0.1); border-radius: 10px;">
+                            <strong>💡 Key Insight:</strong><br>
+                            ${detail.keyInsight}
+                        </div>`;
+                    }
+
+                    showModal(kernelName, modalHTML);
+                }
+            });
+        });
+
+        // Interactive playground functionality
+        const degreeSlider = document.getElementById('degreeSlider');
+        const gammaSlider = document.getElementById('gammaSlider');
+        const degreeValue = document.getElementById('degreeValue');
+        const gammaValue = document.getElementById('gammaValue');
+        const decisionBoundary = document.getElementById('decisionBoundary');
+
+        let currentKernel = 'linear';
+
+        // Global selectKernel function
+        window.selectKernel = function(kernel, button) {
+            currentKernel = kernel;
+
+            // Update active button
+            document.querySelectorAll('.kernel-btn').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+
+            updateVisualization();
+        };
+
+        function updateVisualization() {
+            const degree = parseInt(degreeSlider.value);
+            const gamma = parseFloat(gammaSlider.value);
+
+            // Update displayed values
+            degreeValue.textContent = degree;
+            gammaValue.textContent = gamma.toFixed(1);
+
+            // Remove old boundary
+            decisionBoundary.className = 'decision-boundary';
+
+            // Update visualization based on kernel
+            switch(currentKernel) {
+                case 'linear':
+                    decisionBoundary.className = 'decision-boundary boundary-linear';
+                    decisionBoundary.style.width = '400px';
+                    decisionBoundary.style.height = '2px';
+                    decisionBoundary.style.top = '150px';
+                    decisionBoundary.style.left = '100px';
+                    decisionBoundary.style.transform = 'rotate(-5deg)';
+                    decisionBoundary.style.borderRadius = '0';
+                    break;
+
+                case 'polynomial':
+                    decisionBoundary.className = 'decision-boundary boundary-poly';
+                    const polySize = 150 + degree * 30;
+                    decisionBoundary.style.width = polySize + 'px';
+                    decisionBoundary.style.height = polySize + 'px';
+                    decisionBoundary.style.top = (150 - polySize/2) + 'px';
+                    decisionBoundary.style.left = (300 - polySize/2) + 'px';
+                    decisionBoundary.style.transform = 'rotate(0deg)';
+                    decisionBoundary.style.borderRadius = '50%';
+                    break;
+
+                case 'rbf':
+                    decisionBoundary.className = 'decision-boundary boundary-rbf';
+                    const rbfSize = Math.max(50, 300 - gamma * 40);
+                    decisionBoundary.style.width = rbfSize + 'px';
+                    decisionBoundary.style.height = rbfSize + 'px';
+                    decisionBoundary.style.top = (150 - rbfSize/2) + 'px';
+                    decisionBoundary.style.left = (200 - rbfSize/2) + 'px';
+                    decisionBoundary.style.transform = 'rotate(0deg)';
+                    decisionBoundary.style.borderRadius = '50%';
+                    break;
+            }
+        }
+
+        degreeSlider.addEventListener('input', updateVisualization);
+        gammaSlider.addEventListener('input', updateVisualization);
+
+        // Initial visualization
+        updateVisualization();
+
         closeBtn.addEventListener('click', window.closeModal);
         overlay.addEventListener('click', (e) => { if (e.target === overlay) window.closeModal(); });
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && overlay.classList.contains('active')) window.closeModal(); });
+
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            for (let i = 0; i < 35; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 18 + 's';
+                element.style.animationDuration = (Math.random() * 12 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        createFloatingElements();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (!overlay.classList.contains('active')) {
+                if (e.key === 'ArrowLeft') {
+                    window.location.href = 'Week4_Slide74.html';
+                } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                    window.location.href = 'Week4_Slide76.html';
+                }
+            }
+        });
     })();
 </script>
 </body>
